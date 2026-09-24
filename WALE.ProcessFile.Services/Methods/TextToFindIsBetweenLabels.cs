@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -107,6 +108,7 @@ public static class TextToFindIsBetweenLabels
             labelLineAlreadyIncluded,
             request.label.DoNotTrimLines,
             request.label.AllowValueToWrapPastSameLineEndTag,
+            request.lookupConfiguration!,
             out var foundEndTag,
             out var matchedEndText);
 
@@ -223,6 +225,7 @@ public static class TextToFindIsBetweenLabels
         bool labelLineAlreadyIncluded,
         bool doNotTrimLines,
         bool allowValueToWrapPastSameLineEndTag,
+        LookupConfiguration config,
         out bool foundEndTag,
         out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
@@ -248,7 +251,8 @@ public static class TextToFindIsBetweenLabels
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
+            clonedLine.Columns.Add(new DocumentLineColumn());
+            ToColumns(textWords, clonedLine, config.HorizontalGapBetweenColumns);
             
             linesLoop.Add(clonedLine);
         }
@@ -364,7 +368,8 @@ public static class TextToFindIsBetweenLabels
                                 
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
+                                clonedLine2.Columns.Add(new DocumentLineColumn());
+                                ToColumns(ctWords, clonedLine2, config.HorizontalGapBetweenColumns);
 
                                 returnList.Add(clonedLine2);
                             }
@@ -401,5 +406,31 @@ public static class TextToFindIsBetweenLabels
         }
 
         return matchData == null ? null : returnList;
+    }
+    
+    // TODO move this to somewhere more standardised
+    private static void ToColumns(
+        List<DocumentLineWord> words,
+        DocumentLine line,
+        int horizontalGapBetweenColumns)
+    {
+        DocumentLineWord? previousWord = null;
+                
+        foreach (var word in words)
+        {
+            previousWord ??= word;
+
+            var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
+                    
+            if (xDiff >= horizontalGapBetweenColumns)
+            {
+                line.Columns.Add(new DocumentLineColumn());
+            }
+
+            var columnToAddTo = line.Columns.Last();
+            columnToAddTo.Words.Add(word);
+
+            previousWord = word;
+        }
     }
 }

@@ -10,6 +10,8 @@ public class LookupConfiguration(
     ICacheService cacheService,
     IOutputService outputService,
     ILicenceNumberServiceCore licenceNumberService,
+    ITableExtractorService structuredTableExtractorService,
+    ITableExtractorService unstructuredTableExtractorService,
     IDmsLookupService dmsLookupService,
     int regionId,
     DateTime requestedAt,
@@ -22,8 +24,9 @@ public class LookupConfiguration(
     object? naldLinkedLicenceHelper = null,
     bool useLockExclusivity = true,
     bool lockInProcess = false,
-    bool useAnchoredLineGrouping = false,
-    bool savePurposeMapping = false)
+    bool savePurposeMapping = false,
+    int horizontalGapBetweenColumns = 19,
+    bool inferMissingColumns = false)
 {
     // Settable (not just init) so a caller can run a cheap classification pass with one label
     // set, then re-run extraction with a different one chosen from the result - see
@@ -40,7 +43,13 @@ public class LookupConfiguration(
     public IOutputService OutputService { get; set; } = outputService;
 
     public ILicenceNumberServiceCore LicenceNumberService { get; set; } = licenceNumberService;
+
+    public ITableExtractorService StructuredTableExtractorService { get; set; } =
+        structuredTableExtractorService;
     
+    public ITableExtractorService UnstructuredTableExtractorService { get; set; } =
+        unstructuredTableExtractorService;
+
     public IDmsLookupService DmsLookupService { get; set; } = dmsLookupService;
 
     public int RegionId { get; set; } = regionId;
@@ -64,18 +73,12 @@ public class LookupConfiguration(
     public int LineHeight { get; set; } = lineHeight;
 
     public int MinimumRowsForDigital { get; set; } = minimumRowsForDigital;
-
-    // Opt-in only - default false preserves the existing PdfPig row-grouping algorithm
-    // for every consumer that doesn't set this explicitly (i.e. the licence pipeline).
-    // See PdfPigNoOcrDataExtractorService.FormatPageLines for why this exists: the
-    // default chain-merge grouping can splice a value stacked directly beneath its own
-    // label into that label's row purely by horizontal position, corrupting the label
-    // text itself. Anchored grouping fixes that but changes DocumentLine boundaries, so
-    // it's gated behind this flag rather than applied universally without a regression
-    // suite to verify it against the licence corpus.
-    public bool UseAnchoredLineGrouping { get; set; } = useAnchoredLineGrouping;
     
     public bool SavePurposeMapping { get; set; } = savePurposeMapping;
+
+    public int HorizontalGapBetweenColumns { get; set; } = horizontalGapBetweenColumns;
+
+    public bool InferMissingColumns { get; set; } = inferMissingColumns;
 
     public LookupConfiguration Clone()
     {
@@ -86,6 +89,8 @@ public class LookupConfiguration(
             CacheService,
             OutputService,
             LicenceNumberService,
+            StructuredTableExtractorService,
+            UnstructuredTableExtractorService,
             DmsLookupService,
             RegionId,
             RequestedAt,
@@ -98,7 +103,8 @@ public class LookupConfiguration(
             NaldLinkedLicenceHelper,
             UseLockExclusivity,
             LockInProcess,
-            UseAnchoredLineGrouping,
-            SavePurposeMapping);
+            SavePurposeMapping,
+            HorizontalGapBetweenColumns,
+            InferMissingColumns);
     }
 }

@@ -51,13 +51,14 @@ public class FileProcessSingleService(
             cacheService,
             outputService,
             new NullLicenceNumberService(),
+            null!,
+            null!,
             new DmsLookupService(),
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
             fileProcessSingleRequest.LockRetryCount,
             lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            minimumRowsForDigital: 30);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
         var processRun = processRuns.Single(pr => pr.ProcessRunId == fileProcessSingleRequest.ProcessRunId);
@@ -132,13 +133,15 @@ public class FileProcessSingleService(
 
         try
         {
-            var (stopExecution, alreadySaved, item, _) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
-                pdfFilename,
-                dmsDataForFile,
-                lookupConfig,
-                [pdfFilename],
-                processRun.ProcessRunId,
-                pdfDataExtractor);
+            var (stopExecution, alreadySaved, item, _) =
+                await WrInspectionReportExtractionOrchestrator.ExtractAsync(
+                    pdfFilename,
+                    dmsDataForFile,
+                    lookupConfig,
+                    lookupConfig,
+                    [pdfFilename],
+                    processRun.ProcessRunId,
+                    pdfDataExtractor);
 
             if (stopExecution)
             {

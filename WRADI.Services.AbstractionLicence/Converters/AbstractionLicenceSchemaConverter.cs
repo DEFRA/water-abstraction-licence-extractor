@@ -4967,7 +4967,7 @@ public static class AbstractionLicenceSchemaConverter
                 }
 
                 var description = allTextWithoutNumber != null
-                    ? string.Join('\n', allTextWithoutNumber)
+                    ? string.Join(' ', allTextWithoutNumber)
                     : null;
 
                 var number = purposeNumber?.Text?.FirstOrDefault()?.Text;

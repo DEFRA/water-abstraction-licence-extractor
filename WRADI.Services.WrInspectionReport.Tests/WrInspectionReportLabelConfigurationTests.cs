@@ -1,6 +1,5 @@
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
-using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
@@ -17,14 +16,17 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenOnlyTheSixTemplateMarkerGroupsAreExcluded()
     {
+        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        
         // GetT1Labels() is built additively from GetLabels() with the 6 classification-only
         // marker groups removed - see that method's own comment for the evidence that every
         // other "template-specific" alternate tried was actually needed by real T1 documents
         // too, and is deliberately NOT removed here.
-        var generalGroupNames = WrInspectionReportLabelConfiguration.GetLabels()
+        var generalGroupNames = allLabels
             .Select(l => l.LabelGroupName)
             .ToHashSet();
-        var t1GroupNames = WrInspectionT1LabelConfiguration.GetLabels()
+        
+        var t1GroupNames = WrInspectionT1LabelConfiguration.FilterFrom(allLabels)
             .Select(l => l.LabelGroupName)
             .ToHashSet();
 
@@ -43,9 +45,11 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenNameAndAddressDropsOnlyThePermitHolderAlternate()
     {
-        var generalAlternateCount = WrInspectionReportLabelConfiguration.GetLabels()
+        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        
+        var generalAlternateCount = allLabels
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
-        var t1AlternateCount = WrInspectionT1LabelConfiguration.GetLabels()
+        var t1AlternateCount = WrInspectionT1LabelConfiguration.FilterFrom(allLabels)
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
 
         Assert.Equal(generalAlternateCount - 1, t1AlternateCount);
@@ -54,13 +58,15 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenGeneralCommentsHasOnlyTheBaselineHeading()
     {
+        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        
         // The T1 GeneralComments variant should have exactly one TextStart entry (the literal
         // baseline heading) - none of the NonStandardNarrative-family alternates
         // (Introduction/Notes and Actions/Actions/Summary/background variants/etc.) apply to a
         // document already confirmed T1.
-        var t1GeneralComments = WrInspectionT1LabelConfiguration.GetLabels()
+        var t1GeneralComments = WrInspectionT1LabelConfiguration.FilterFrom(allLabels)
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
-        var generalGeneralComments = WrInspectionReportLabelConfiguration.GetLabels()
+        var generalGeneralComments = allLabels
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.GeneralComments).Labels.Single();
 
         Assert.Single(t1GeneralComments.TextStart!);
@@ -87,8 +93,10 @@ public class WrInspectionReportLabelConfigurationTests
             WrInspectionReportFieldNames.SpotCheckResult
         ];
 
-        var general = WrInspectionReportLabelConfiguration.GetLabels().ToDictionary(l => l.LabelGroupName);
-        var t1 = WrInspectionT1LabelConfiguration.GetLabels().ToDictionary(l => l.LabelGroupName);
+        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        
+        var general = allLabels.ToDictionary(l => l.LabelGroupName);
+        var t1 = WrInspectionT1LabelConfiguration.FilterFrom(allLabels).ToDictionary(l => l.LabelGroupName);
 
         foreach (var fieldName in fieldsThatMustStayIdentical)
         {
@@ -109,7 +117,7 @@ public class WrInspectionReportLabelConfigurationTests
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
             .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true);
 
-        Assert.Contains("Other", readingBaselineTwoColumnAlternate.ExcludeNextLineIfFirstColumnStartsWith ?? []);
+        Assert.Contains("Other", readingBaselineTwoColumnAlternate.LimitToExcludeNextLineIfFirstColumnStartsWith ?? []);
     }
 
     [Fact]

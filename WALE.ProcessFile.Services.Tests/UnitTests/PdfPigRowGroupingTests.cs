@@ -57,20 +57,6 @@ public class PdfPigRowGroupingTests
     }
 
     [Fact]
-    public void GroupWordsIntoRowsByChain_MergesValueIntoLabelRow_EvenThoughItIsADifferentVisualRow()
-    {
-        // Documents the pre-existing behaviour that the licence pipeline still relies on
-        // (LookupConfiguration.UseAnchoredLineGrouping defaults to false) - a change here is
-        // a deliberate, visible decision, not a silent regression.
-        var rows = PdfPigNoOcrDataExtractorService
-            .GroupWordsIntoRowsByChain(LabelWithValueBelowJitteryNeighbour(), lineHeight: 6)
-            .ToList();
-
-        var singleRow = Assert.Single(rows);
-        Assert.Equal(["Label", "Neighbour", "Value"], singleRow.Select(w => w.Text));
-    }
-
-    [Fact]
     public void GroupWordsIntoRowsByAnchor_KeepsGenuinelySameRowWordsTogether()
     {
         var words = new List<MinimalWord>
@@ -172,70 +158,5 @@ public class PdfPigRowGroupingTests
         Assert.Equal(2, rows.Count);
         Assert.Equal("Top", rows[0].Single().Text);
         Assert.Equal("Bottom", rows[1].Single().Text);
-    }
-
-    [Fact]
-    public void GroupWordsIntoRowsByChain_StillSplitsOnAGenuinelyLargeSingleGap()
-    {
-        // The bug is specifically about a CHAIN of small sub-threshold gaps. A single gap
-        // well over lineHeight must still split normally under the old algorithm too.
-        var words = new List<MinimalWord> { Word("Top", bottom: 100, left: 0), Word("Bottom", bottom: 50, left: 0) };
-
-        var rows = PdfPigNoOcrDataExtractorService
-            .GroupWordsIntoRowsByChain(words, lineHeight: 6)
-            .ToList();
-
-        Assert.Equal(2, rows.Count);
-    }
-
-    [Fact]
-    public void GroupWordsIntoRowsByChain_MergesSimpleSameRowJitter_LikeAnchorDoes()
-    {
-        // For the common, non-pathological case both algorithms should agree - this is not
-        // a story about anchor being "better" in general, only about the specific
-        // transitive-chain shape the bug depends on. Deliberately avoids p/q/y in the words
-        // here - the chain algorithm's below-the-line-character compensation (see
-        // GroupWordsIntoRowsByAnchor_KeepsGenuinelySameRowWordsTogether's sibling test file
-        // comment) can otherwise reorder words with identical raw Bottom values, which would
-        // muddy what this test is actually checking.
-        var words = new List<MinimalWord>
-        {
-            Word("Meter", bottom: 100, left: 0),
-            Word("Serial", bottom: 100, left: 60),
-            Word("Number", bottom: 100, left: 120)
-        };
-
-        var rows = PdfPigNoOcrDataExtractorService
-            .GroupWordsIntoRowsByChain(words, lineHeight: 6)
-            .ToList();
-
-        var singleRow = Assert.Single(rows);
-        Assert.Equal(["Meter", "Serial", "Number"], singleRow.Select(w => w.Text));
-    }
-
-    [Fact]
-    public void GroupWordsIntoRowsByChain_CanReorderWordsWithinARow_WhenOneContainsADescenderCharacter()
-    {
-        // Documents a real, pre-existing quirk (not something this session introduced): the
-        // chain algorithm's LineSnappingHelper.CompensateForBelowTheLineCharactersOffset
-        // treats any word containing p/q/y as sitting ~1pt lower, purely to correct noisy
-        // OCR bounding boxes. For words that otherwise share an identical raw Bottom, that
-        // shifts the descender-containing word into a different rounded bucket and it can
-        // sort AFTER words that were textually to its right - "Inspecting" ends up last here
-        // despite being leftmost, because it contains a 'p'. The anchor algorithm (used only
-        // by WR51) has no such compensation - see PdfPigNoOcrDataExtractorService.
-        var words = new List<MinimalWord>
-        {
-            Word("Inspecting", bottom: 100, left: 0),
-            Word("Officer:", bottom: 100, left: 60),
-            Word("Paul", bottom: 100, left: 110)
-        };
-
-        var rows = PdfPigNoOcrDataExtractorService
-            .GroupWordsIntoRowsByChain(words, lineHeight: 6)
-            .ToList();
-
-        var singleRow = Assert.Single(rows);
-        Assert.Equal(["Officer:", "Paul", "Inspecting"], singleRow.Select(w => w.Text));
     }
 }

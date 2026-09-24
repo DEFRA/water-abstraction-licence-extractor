@@ -28,7 +28,7 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
     private const int SharedPageNumber = 1;
     
     public async Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
-        byte[] documentBytes,
+        PdfDocument pdfDocument,
         Guid fileId,
         int processRunId)
     {
@@ -55,10 +55,15 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
 
             return ToOcrTables(cachedTables!);
         }
-
+        
+        if (pdfDocument.Bytes == null)
+        {
+            await pdfDocument.OpenInternalDocumentAsync();
+        }
+        
         var analyzeDocumentOptions = new AnalyzeDocumentOptions(
             "prebuilt-layout",
-            BinaryData.FromBytes(documentBytes));
+            BinaryData.FromBytes(pdfDocument.Bytes!));
 
         Operation<AnalyzeResult> documentResult = await _client.AnalyzeDocumentAsync(
             WaitUntil.Completed,
@@ -83,20 +88,22 @@ public class AzureAiServicesDocumentIntelligenceTableExtractorService(
 
     private static IReadOnlyList<DocumentTable> ToOcrTables(List<DeserialisableDocumentIntelligenceTable> tables)
     {
-        return tables.Select(t => new DocumentTable
-        {
-            PageNumber = t.PageNumber,
-            RowCount = t.RowCount,
-            ColumnCount = t.ColumnCount,
-            Cells = (t.Cells ?? []).Select(c => new DocumentTableCell
+        return tables
+            .Select(t => new DocumentTable
             {
-                RowIndex = c.RowIndex,
-                ColumnIndex = c.ColumnIndex,
-                Content = c.Content,
-                Left = c.Polygon is { Count: > 0 } ? c.Polygon[0] : null,
-                Top = c.Polygon is { Count: > 1 } ? c.Polygon[1] : null
-            }).ToList()
-        }).ToList();
+                PageNumber = t.PageNumber,
+                RowCount = t.RowCount,
+                ColumnCount = t.ColumnCount,
+                Cells = (t.Cells ?? []).Select(c => new DocumentTableCell
+                {
+                    RowIndex = c.RowIndex,
+                    ColumnIndex = c.ColumnIndex,
+                    Content = c.Content,
+                    Left = c.Polygon is { Count: > 0 } ? c.Polygon[0] : null,
+                    Top = c.Polygon is { Count: > 1 } ? c.Polygon[1] : null
+                }).ToList()
+            })
+            .ToList();
     }
 
     private static DocumentIntelligenceClient CreateClient(string endpoint, string key)

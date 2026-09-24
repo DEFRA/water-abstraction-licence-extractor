@@ -100,6 +100,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             CacheService,
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now,
@@ -231,7 +233,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(InformationSource.Document, licence.Purposes[0].ContainedIn![0].Source);
         Assert.Equal(InformationSource.Nald, licence.Purposes[0].ContainedIn![1].Source);
         Assert.Equal("4.1", licence.Purposes[0].Id);
-        Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for\npublic water supply", licence.Purposes[0].Description);
+        Assert.Equal("Transfer for the purpose of filling a reservoir for subsequent abstraction for public water supply", licence.Purposes[0].Description);
         Assert.Equal("10082040", licence.Purposes[0].NaldIds![0]);
         Assert.Equal("Water Supply", licence.Purposes[0].NaldLevel1Description);
         Assert.Equal("Water Supply Related", licence.Purposes[0].NaldLevel2Description);

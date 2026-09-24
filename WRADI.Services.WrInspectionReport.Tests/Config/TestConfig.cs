@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 
-namespace WRADI.Services.WrInspectionReport.Tests;
+namespace WRADI.Services.WrInspectionReport.Tests.Config;
 
 public static class TestConfig
 {

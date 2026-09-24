@@ -486,6 +486,8 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             licenceNumberService,
+            null,
+            null,
             dmsLookupService,
             -1,
             DateTime.Now,

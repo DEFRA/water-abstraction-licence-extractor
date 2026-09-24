@@ -44,7 +44,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pdfFileName,
             fileId,
             metadata != null,
-            metadata?.SizeBytes ?? -1,
+            null,
+            metadata?.SizeBytes,
             outputService,
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
@@ -69,7 +70,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             return pdfDocument;
         }
 
-        if (!await pdfDocument.OpenInternalDocumentAsync())
+        if (await pdfDocument.OpenInternalDocumentAsync() == null)
         {
             return null;
         }
@@ -254,7 +255,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 pageLines,
                 pageNumber,
                 configuration.LineHeight,
-                configuration.UseAnchoredLineGrouping);
+                configuration.HorizontalGapBetweenColumns,
+                configuration.InferMissingColumns);
 
             if (DataHelper.LikelyMapPage(pageLinesTransformed, numberOfImages))
             {
@@ -429,7 +431,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pageLines,
             page.Number,
             configuration.LineHeight,
-            configuration.UseAnchoredLineGrouping);
+            configuration.HorizontalGapBetweenColumns,
+            configuration.InferMissingColumns);
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -606,7 +609,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         IReadOnlyList<MinimalTextBlock> pageLineBlocks,
         int pageNumber,
         int lineHeight,
-        bool useAnchoredLineGrouping = false)
+        int horizontalGapBetweenColumns,
+        bool inferMissingColumns)
     {
         if (pageLineBlocks.Count == 0)
         {
@@ -623,14 +627,14 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             .SelectMany(textLine => textLine.Words)
             .ToList();
 
-        var groupedWords = useAnchoredLineGrouping
-            ? GroupWordsIntoRowsByAnchor(allWords, lineHeight)
-            : GroupWordsIntoRowsByChain(allWords, lineHeight);
+        var groupedWords = GroupWordsIntoRowsByAnchor(allWords, lineHeight);
 
         var returnList = groupedWords
             .SelectMany(lineWords =>
             {
-                var orderedWords = lineWords.OrderBy(x => x.BoundingBox.Left).ToList();
+                var orderedWords = lineWords
+                    .OrderBy(x => x.BoundingBox.Left)
+                    .ToList();
                 
                 var resultList = new List<DocumentLine>();
                 var firstLine = orderedWords.First();
@@ -668,7 +672,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                     
                     var xDiff = word.BoundingBox.Left - previousWord2.BoundingBox.Right;
                     
-                    if (xDiff >= 18)
+                    if (xDiff >= horizontalGapBetweenColumns)
                     {
                         columns.Add(new DocumentLineColumn());
                     }
@@ -698,53 +702,80 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             })
         .ToList();
 
-        AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
-        return returnList;
-    }
+        if (inferMissingColumns)
+        {
+            DocumentLine? previousLine = null;
 
-    /// <summary>
-    /// Original row-grouping algorithm (unchanged) - default for every caller that
-    /// doesn't opt into <see cref="GroupWordsIntoRowsByAnchor"/>. Sorts all page words by
-    /// rounded Bottom (descending) then CentroidX, then chain-merges consecutive words in
-    /// that order into the same row whenever the gap to the immediately PREVIOUS word is
-    /// under lineHeight. This is transitive: a sequence of small sub-threshold gaps can
-    /// drag a genuinely different visual row into the same group, and because ties are
-    /// broken by horizontal position, a dragged-in word can be sorted in between two
-    /// words of an unrelated row rather than after them.
-    /// </summary>
-    internal static IEnumerable<IGrouping<int, MinimalWord>> GroupWordsIntoRowsByChain(
-        List<MinimalWord> words,
-        int lineHeight)
-    {
-        MinimalWord? previousWord = null;
-        var lineIndex = 0;
-
-        return words
-            .OrderByDescending(word => LineSnappingHelper.RoundToNearestN(
-                word.BoundingBox.Bottom,
-                lineHeight,
-                word.Text))
-            .ThenBy(word => word.BoundingBox.CentroidX)
-            .GroupBy(word =>
+            // Add in missing columns based on lines above
+            foreach (var line in returnList)
             {
-                previousWord ??= word;
-
-                var yDiff =
-                    LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        previousWord.Text,
-                        previousWord.BoundingBox.Bottom)
-                    - LineSnappingHelper.CompensateForBelowTheLineCharactersOffset(
-                        word.Text,
-                        word.BoundingBox.Bottom);
-
-                if (yDiff >= lineHeight)
+                if (line.Columns.Count == 1 && previousLine?.Columns.Count >= 2)
                 {
-                    lineIndex += 1;
+                    var thisLineFirstColumnLeft = line.Columns[0].Words.FirstOrDefault()?.Coordinates.Left;
+                    var previousLineSecondColumnLeft = previousLine.Columns[1].Words.FirstOrDefault()?.Coordinates.Left;
+
+                    const double xLeeway = 10;
+
+                    if (thisLineFirstColumnLeft + xLeeway >= previousLineSecondColumnLeft)
+                    {
+                        line.Columns.Insert(0, new DocumentLineColumn());
+                    }
                 }
 
-                previousWord = word;
-                return lineIndex;
-            });
+                previousLine = line;
+            }
+        }
+
+        // Remove weird spaces in some words
+        foreach (var line in returnList)
+        {
+            foreach (var column in line.Columns)
+            {
+                var countSingleCharWords = column.Words.Count(w => w.Text.Length == 1);
+
+                if (countSingleCharWords < 4)
+                {
+                    continue;
+                }
+                
+                DocumentLineWord? prevWord = null;
+                var totalGapSize = column.Words.Sum(w =>
+                {
+                    if (prevWord == null)
+                    {
+                        prevWord = w;
+                        return 0;
+                    }
+
+                    var gap = w.Coordinates.Left - prevWord.Coordinates.Right;
+                    prevWord = w;
+                    
+                    return gap;
+                });
+
+                if (totalGapSize > (0.3 * column.Words.Count))
+                {
+                    continue;
+                }
+                
+                var originalColumnText = column.Text;
+                var columnText = originalColumnText.Replace(" ", string.Empty);
+                
+                var newWords = new List<DocumentLineWord>
+                {
+                    new(
+                        columnText,
+                        column.OcrConfidence,
+                        column.Words[0].Coordinates,
+                        column.Words[0].HandwrittenOrTyped)
+                };
+
+                column.Words = newWords;
+            }
+        }
+        
+        AutoCorrectHelper.RemoveSpacesAroundSlashes(returnList);
+        return returnList;
     }
 
     /// <summary>
@@ -788,18 +819,19 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         foreach (var word in orderedByY)
         {
-            var y = word.BoundingBox.Bottom;
+            var wordBottom = word.BoundingBox.Bottom;
 
-            if (anchorY == null || anchorY.Value - y >= lineHeight)
+            if (anchorY == null || anchorY.Value - wordBottom >= lineHeight)
             {
                 lineIndex += 1;
-                anchorY = y;
+                anchorY = wordBottom;
             }
 
             assignments.Add((lineIndex, word));
         }
 
-        return assignments.GroupBy(a => a.LineIndex, a => a.Word);
+        return assignments
+            .GroupBy(a => a.LineIndex, a => a.Word);
     }
 
     private static async Task<IReadOnlyList<TextBlock>> GetPageLinesAsync(Page page)

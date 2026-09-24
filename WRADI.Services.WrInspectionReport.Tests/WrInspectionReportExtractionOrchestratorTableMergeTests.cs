@@ -2,7 +2,6 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
-using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
@@ -24,7 +23,7 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         public string Name => "FakeTableExtractorService";
         public int CallCount { get; private set; }
 
-        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId)
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(PdfDocument pdfDocument, Guid fileId, int processRunId)
         {
             CallCount++;
             return Task.FromResult(tables);
@@ -35,7 +34,7 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
     {
         public string Name => "ThrowingTableExtractorService";
 
-        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(byte[] documentBytes, Guid fileId, int processRunId) =>
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(PdfDocument pdfDocument, Guid fileId, int processRunId) =>
             throw new InvalidOperationException("Simulated local-parser failure on a malformed PDF");
     }
 

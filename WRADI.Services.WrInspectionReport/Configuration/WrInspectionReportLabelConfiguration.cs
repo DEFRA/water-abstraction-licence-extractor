@@ -580,6 +580,12 @@ public static class WrInspectionReportLabelConfiguration
             WrFluentRule
                 .After("Certificates or records available for")
                 .Named(WrInspectionReportFieldNames.CertificatesOfRecords)
+                // No end boundary previously - "Date of certificate or" (the NEXT field's own
+                // label, wrapped mid-phrase by the same-line column split) sits in the very next
+                // column and was being accepted as this field's own value (confirmed: 17/21
+                // real documents extracted exactly that literal text). Reading/Units already
+                // guard against this same neighbour via AlsoEndsAt; this field just never got it.
+                .EndsAt("Date of certificate")
                 .FromLetterAndTableGrid()
                 .Build()]);
 

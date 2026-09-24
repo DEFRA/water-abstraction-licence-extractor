@@ -176,32 +176,23 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         foreach (var line in lines)
         {
             var letters = line
-                .SelectMany(word => word.TextElements.OrderBy(letter => letter.Left))
+                .SelectMany(wordOrChunk => wordOrChunk.TextElements)
+                .OrderBy(letter => letter.Left)
                 .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))
                 .ToList();
             
             TextElement? previousLetter = null;
-            var widestLetterWidth = -1.0;
-
-            foreach (var letter in letters)
-            {
-                if (letter.Width > widestLetterWidth)
-                {
-                    widestLetterWidth = letter.Letter.Width;
-                }
-            }
-
-            const double spaceSizeRatio = 0.3; // Ratio of a space compared to normal characters in that font
-            var maxDiffInX = widestLetterWidth * spaceSizeRatio;
+            const double spaceGapTolerance = 0.5;
         
             foreach (var letter in letters)
             {
                 if (previousLetter != null)
                 {
-                    var previousLetterEndX = previousLetter.Left + previousLetter.Letter.Width;
-                    var diffInX = letter.Left - previousLetterEndX;
-                
-                    if (diffInX > maxDiffInX)
+                    var previousLetterRight = previousLetter.Left + previousLetter.Letter.Width;
+                    var gap = letter.Left - previousLetterRight;
+                    var threshold = Math.Max(previousLetter.WidthOfSpace, letter.WidthOfSpace) * spaceGapTolerance;
+
+                    if (gap > threshold)
                     {
                         outputTextSb.Append(' ');
                     }

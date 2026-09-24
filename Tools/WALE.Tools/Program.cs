@@ -5,16 +5,16 @@ using WALE.Tools.Config;
 
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
-workflow = "ImportNaldData";
+//workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-workflow = "CopyS3Files";
+//workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
 //workflow = "GenerateLinkedLicencesCsv";
-workflow = "PurposeMapper";
+//workflow = "PurposeMapper";
 
 const int processRunId = 3266;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;

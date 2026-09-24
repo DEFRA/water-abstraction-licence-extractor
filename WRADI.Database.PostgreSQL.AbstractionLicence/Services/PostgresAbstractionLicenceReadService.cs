@@ -82,7 +82,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
-        bool slashesRemoved)
+        bool slashesRemoved,
+        bool includeDetail = true)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -207,6 +208,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);
             break;
+        }
+
+        if (!includeDetail)
+        {
+            return naldData;
         }
 
         var purposesTask = GetNaldLicencePurposesAsync(

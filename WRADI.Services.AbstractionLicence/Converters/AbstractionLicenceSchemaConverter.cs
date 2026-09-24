@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
@@ -177,7 +178,7 @@ public static class AbstractionLicenceSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
         
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldAbstractionDataLine);
+        var (naldStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldAbstractionDataLine);
 
         var sectionDataDict = new Dictionary<
             string,
@@ -1274,56 +1275,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         return text;
-    }
-
-    private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
-        NaldAbstractionData? naldData)
-    {
-        if (naldData == null)
-        {
-            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
-        }
-        
-        NaldLicenceStatus status;
-
-        if (naldData.RevocationDate != null && naldData.RevocationDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Revoked;
-        }
-        else if (naldData.ExpiryDate != null && naldData.ExpiryDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Expired;
-        }
-        else if (naldData.LapsedDate != null && naldData.LapsedDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Lapsed;
-        }
-        else if ((naldData.EffEndDate == null || naldData.EffEndDate.Value > DateTime.Now)
-            && (naldData.EffStDate == null || DateTime.Now > naldData.EffStDate.Value))
-        {
-            status = NaldLicenceStatus.Live;
-        }
-        else
-        {
-            status = NaldLicenceStatus.Unknown;
-        }
-        
-        var isImpoundmentLicence = false;
-        LicenceType type;
-        
-        if (isImpoundmentLicence)
-        {
-            type = LicenceType.Impoundment;
-        }
-        else
-            type = naldData.AsrcCode switch
-            {
-                "G" => LicenceType.GroundWaterAbstraction,
-                "S" => LicenceType.SurfaceWaterAbstraction,
-                _ => LicenceType.Abstraction
-            };
-
-        return (status, type);
     }
 
     private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionId)
@@ -2530,9 +2481,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
                 
             licenceType = LicenceType.Impoundment;
-            licenceStatus = naldDataLine?.RevocationDate == null ?
-                NaldLicenceStatus.Live
-                : NaldLicenceStatus.Revoked;
+            licenceStatus = NaldHelper.GetImpoundmentLicenceStatus(naldDataLine);
         }
         else
         {
@@ -2542,7 +2491,7 @@ public static class AbstractionLicenceSchemaConverter
 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
             licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
-            (licenceStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+            (licenceStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldDataLine);
         }
         
         return (regionId, licenceNumber, licenceType, licenceStatus);

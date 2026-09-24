@@ -65,7 +65,7 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
-    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, bool slashesRemoved);
+    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, bool slashesRemoved, bool includeDetail = true);
     
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     

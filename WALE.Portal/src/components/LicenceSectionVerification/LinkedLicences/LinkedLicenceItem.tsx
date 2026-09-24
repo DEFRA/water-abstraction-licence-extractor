@@ -66,7 +66,10 @@ export const LinkedLicenceItem = ({
 
     const handleChange = (field: keyof LinkedLicence, value: any) => {
         if (onUpdate) {
-            onUpdate(new LinkedLicence({...linkedLicence, [field]: value}));
+            const naldReset = field === 'licenceNumber'
+                ? {naldStatus: undefined, licenceType: undefined, regionId: undefined}
+                : {};
+            onUpdate(new LinkedLicence({...linkedLicence, ...naldReset, [field]: value}));
         }
     };
 

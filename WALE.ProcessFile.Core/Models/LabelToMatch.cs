@@ -124,7 +124,7 @@ public class LabelToMatch
     public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
     
     // When a label group has multiple sibling labels and a match returns empty text, allow
-    // the engine to try the next alternate instead of settings the group as matched. 
+    // the engine to try the next alternate instead of settings the group as matched.
     public bool RequireTextToBePresent { get; init; }
 
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
@@ -133,6 +133,17 @@ public class LabelToMatch
         = LayoutExtractorTableLookupType.Default;
     
     public LayoutExtractorTableShape LayoutExtractorTableShape { get; init; } = LayoutExtractorTableShape.Default;
+
+    // ApplicableToMost's Format=="Text" branch (the LabelIsBeforeTextToFind/LabelIsAfterTextToFind
+    // shape's actual winning matcher - it out-ranks LabelIsBeforeTextToFind.FunctionAsync itself,
+    // which never runs once ApplicableToMost already returns a match) builds its result purely
+    // from the label's own line; NextLinesToFetch/nextLines are computed upstream but never
+    // consulted here, so a plain rule with NextLines(1) has no effect on its own - confirmed on a
+    // real document where a value continues as its own line, same left margin, no other field
+    // sharing that row. Setting this appends the label's own already-narrowed nextLines onto the
+    // result. Defaults to false/no-op - a label that doesn't opt in keeps ignoring nextLines
+    // exactly as before.
+    public bool AllowValueToWrapToNextLine { get; init; }
 
     public LabelToMatch Clone()
     {
@@ -183,7 +194,8 @@ public class LabelToMatch
             RequireTextToBePresent = RequireTextToBePresent,
             LayoutExtractor = LayoutExtractor,
             LayoutExtractorTableLookupType = LayoutExtractorTableLookupType,
-            LayoutExtractorTableShape = LayoutExtractorTableShape
+            LayoutExtractorTableShape = LayoutExtractorTableShape,
+            AllowValueToWrapToNextLine = AllowValueToWrapToNextLine
         };
-    }    
+    }
 }

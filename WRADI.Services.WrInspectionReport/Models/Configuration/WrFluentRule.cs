@@ -29,7 +29,8 @@ public sealed class WrFluentRule
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
     private LayoutExtractorTableLookupType _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Default;
     private LayoutExtractorTableShape _layoutExtractorTableShape = LayoutExtractorTableShape.Default;
-    
+    private bool _allowValueToWrapToNextLine;
+
     public static WrFluentRule Between(string startText, string endText)
     {
         var rule = new WrFluentRule
@@ -215,6 +216,15 @@ public sealed class WrFluentRule
         return this;
     }
 
+    // See LabelToMatch.AllowValueToWrapToNextLine - pair with NextLines(n) (this alone doesn't
+    // fetch anything further; it only tells ApplicableToMost's Text-format winner to append what
+    // NextLines already fetched and narrowed).
+    public WrFluentRule AllowValueToWrapToNextLine()
+    {
+        _allowValueToWrapToNextLine = true;
+        return this;
+    }
+
     public WrFluentRule Remove(IEnumerable<TextToMatch> items)
     {
         _remove.AddRange(items);
@@ -247,6 +257,7 @@ public sealed class WrFluentRule
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         LayoutExtractor = _layoutExtractor,
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
-        LayoutExtractorTableShape = _layoutExtractorTableShape
+        LayoutExtractorTableShape = _layoutExtractorTableShape,
+        AllowValueToWrapToNextLine = _allowValueToWrapToNextLine
     };
 }

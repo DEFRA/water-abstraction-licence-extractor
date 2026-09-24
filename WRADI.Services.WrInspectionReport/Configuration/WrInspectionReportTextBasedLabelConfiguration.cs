@@ -310,11 +310,24 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 
+    // NextLines(1) + AllowValueToWrapToNextLine: "Met with" has no bound at all by default, so a
+    // name list that wraps onto the very next physical line - confirmed on a real document, a
+    // name sitting alone at the same left margin as "Met with:" itself, one line down - was
+    // structurally unreachable. NextLines(1) alone doesn't fix this: the actual winning matcher
+    // for this rule shape is ApplicableToMost's Format=="Text" branch, and that branch ignores
+    // nextLines entirely regardless of NextLinesToFetch - see LabelToMatch.AllowValueToWrapToNextLine.
     private static (string, List<LabelToMatch>) RuleMetWith() =>
         (WrInspectionReportFieldNames.MetWith, [
             WrFluentRule
                 .After("Met with")
                 .Named(WrInspectionReportFieldNames.MetWith)
+                .NextLines(1)
+                .AllowValueToWrapToNextLine()
+                // Confirmed real on a document where "Met with" is already complete on its own
+                // line, but the next row's first column happens to be "Inspecting Officer: ..."
+                // at the exact same left margin - without this, AllowValueToWrapToNextLine
+                // blindly swallowed a whole different field's answer.
+                .SkipNextLineWhenStartsWith("Inspecting Officer")
                 .FromText()
                 .Build()]);
 

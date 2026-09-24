@@ -34,7 +34,7 @@ public class TableMatcherHelperTests
         // fixture would be rejected before ever reaching the per-field logic under test here.
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -59,7 +59,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -85,7 +85,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -110,7 +110,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -131,7 +131,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -149,7 +149,7 @@ public class TableMatcherHelperTests
             ("SpecialConditions", Labels.Where(x => x.LabelGroupName == "SpecialConditions").SelectMany(x => x.Labels).ToList())
         };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], l, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -175,7 +175,7 @@ public class TableMatcherHelperTests
             ]
         };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [table], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -198,7 +198,7 @@ public class TableMatcherHelperTests
 
         var gridTable = BuildFullGridTable(specialConditionsValue: "✓");
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [headerTable, gridTable], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -216,7 +216,7 @@ public class TableMatcherHelperTests
             Cells = [Cell(0, 0, "Meter make: ABB")]
         };
 
-        var results = TableMatcherHelper.MatchPossibility(
+        var results = TableMatcherHelper.MatchToPossibilities(
             [unrelatedTable], Labels, "TestTableService",
             TickHelper.GetTickedOrAcceptedStatus);
 
@@ -262,7 +262,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 7, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchFreeTextFields(
+        var results = TableMatcherHelper.MatchTextFields(
             [table], Labels, "TestTableService");
 
         Assert.Equal("02380891203", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
@@ -279,7 +279,7 @@ public class TableMatcherHelperTests
         // header block itself isn't part of the same table Lattice detected for the grid).
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
-        var results = TableMatcherHelper.MatchFreeTextFields(
+        var results = TableMatcherHelper.MatchTextFields(
             [table], Labels, "TestTableService");
 
         Assert.Empty(results);
@@ -315,7 +315,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchFreeTextFields(
+        var results = TableMatcherHelper.MatchTextFields(
             [table], Labels, "TestTableService");
 
         Assert.Equal("3K220000854902", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
@@ -331,7 +331,7 @@ public class TableMatcherHelperTests
 
         var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
 
-        var results = TableMatcherHelper.MatchFreeTextFields(
+        var results = TableMatcherHelper.MatchTextFields(
             [table], Labels, "TestTableService");
 
         Assert.Equal("07794218297", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);

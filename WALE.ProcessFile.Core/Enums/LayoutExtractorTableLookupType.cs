@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Enums;
 
-public enum TableBasedLayoutExtractor
+public enum LayoutExtractorTableLookupType
 {
     Default, // Default is Grid
     Grid,

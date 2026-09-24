@@ -192,7 +192,7 @@ public static class WrInspectionReportExtractionOrchestrator
         // re-measuring it.
         if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
-            var matches = TableMatcherHelper.MatchFreeTextFields(
+            var matches = TableMatcherHelper.MatchTextFields(
                 tables,
                 labelLookups,
                 usedServiceName);
@@ -260,11 +260,11 @@ public static class WrInspectionReportExtractionOrchestrator
 
             var labels = labelLookups
                 .Where(labelGroup => labelGroup.Labels
-                    .Any(l => l.TableBasedExtractorType is TableBasedLayoutExtractor.Default
-                        or TableBasedLayoutExtractor.Grid))
+                    .Any(l => l.LayoutExtractorTableLookupType is LayoutExtractorTableLookupType.Default
+                        or LayoutExtractorTableLookupType.Grid))
                 .ToList();
             
-            var matches = TableMatcherHelper.MatchPossibility(
+            var matches = TableMatcherHelper.MatchToPossibilities(
                 tables,
                 labels,
                 tableExtractorService.Name,

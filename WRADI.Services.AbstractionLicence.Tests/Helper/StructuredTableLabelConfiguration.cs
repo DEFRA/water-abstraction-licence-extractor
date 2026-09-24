@@ -26,8 +26,7 @@ public static class StructuredTableLabelConfiguration
                 NextLinesToFetch = 0,
                 Position = LabelPosition.LabelIsActuallyResult,
                 LayoutExtractor = LayoutExtractor.TableBased,
-                TableBasedExtractorType = TableBasedLayoutExtractor.FreeText,
-                TableShape = TableShape.Structured
+                LayoutExtractorTableShape = LayoutExtractorTableShape.Structured
             }
         ];
     }

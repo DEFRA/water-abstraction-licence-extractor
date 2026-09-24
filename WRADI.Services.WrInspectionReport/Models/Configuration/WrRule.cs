@@ -27,8 +27,8 @@ public sealed class WrRule
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
-    private TableBasedLayoutExtractor _tableBasedExtractorType = TableBasedLayoutExtractor.Default;
-    private TableShape _tableShape = TableShape.Default;
+    private LayoutExtractorTableLookupType _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Default;
+    private LayoutExtractorTableShape _layoutExtractorTableShape = LayoutExtractorTableShape.Default;
     
     public static WrRule Between(string startText, string endText)
     {
@@ -88,8 +88,8 @@ public sealed class WrRule
     public WrRule FromLetterAndTableGrid()
     {
         _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
-        _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
-        _tableShape = TableShape.Unstructured;
+        _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Grid;
+        _layoutExtractorTableShape = LayoutExtractorTableShape.Unstructured;
         
         return this;
     }
@@ -97,8 +97,8 @@ public sealed class WrRule
     public WrRule FromTableGrid()
     {
         _layoutExtractor = LayoutExtractor.TableBased;
-        _tableBasedExtractorType = TableBasedLayoutExtractor.Grid;
-        _tableShape = TableShape.Unstructured;
+        _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Grid;
+        _layoutExtractorTableShape = LayoutExtractorTableShape.Unstructured;
         
         return this;
     }
@@ -106,8 +106,8 @@ public sealed class WrRule
     public WrRule FromLetterAndTableFreeText()
     {
         _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
-        _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
-        _tableShape = TableShape.Unstructured;
+        _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.FreeText;
+        _layoutExtractorTableShape = LayoutExtractorTableShape.Unstructured;
         
         return this;
     }
@@ -115,8 +115,8 @@ public sealed class WrRule
     public WrRule FromTableFreeText()
     {
         _layoutExtractor = LayoutExtractor.TableBased;
-        _tableBasedExtractorType = TableBasedLayoutExtractor.FreeText;
-        _tableShape = TableShape.Unstructured;
+        _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.FreeText;
+        _layoutExtractorTableShape = LayoutExtractorTableShape.Unstructured;
         
         return this;
     }
@@ -246,7 +246,7 @@ public sealed class WrRule
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         LayoutExtractor = _layoutExtractor,
-        TableBasedExtractorType = _tableBasedExtractorType,
-        TableShape = _tableShape
+        LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
+        LayoutExtractorTableShape = _layoutExtractorTableShape
     };
 }

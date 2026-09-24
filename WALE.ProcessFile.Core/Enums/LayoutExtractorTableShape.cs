@@ -1,6 +1,6 @@
 namespace WALE.ProcessFile.Core.Enums;
 
-public enum TableShape
+public enum LayoutExtractorTableShape
 {
     Default, // Default is Structured
     Structured,

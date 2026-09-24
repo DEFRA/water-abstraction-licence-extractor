@@ -14,7 +14,7 @@ namespace WALE.ProcessFile.Services.Helpers;
 // present in the returned dictionary.
 public static class TableMatcherHelper
 {
-    public static Dictionary<string, LabelGroupResult> MatchPossibility(
+    public static Dictionary<string, LabelGroupResult> MatchToPossibilities(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         string serviceName,
@@ -33,7 +33,7 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    var matchedContent = FindFreeTextValueInTable(table, label.TextStart);
+                    var matchedContent = FindTextValueInTable(table, label.TextStart);
 
                     if (transformContentFunction != null)
                     {
@@ -77,15 +77,7 @@ public static class TableMatcherHelper
         return results;
     }
 
-    // Resolves free-text fields (Time/SerialNumber/TelephoneNumber - not tick/cross answers)
-    // from the SAME table MatchGridFields would select, using the same majority-vote gate
-    // (gridFieldNames/FindBestGridTable) to decide whether a table is trustworthy at all. A
-    // genuine sibling to MatchGridFields, not a variant of it: no Possibilities matching - the
-    // raw cell remainder (or split-cell next cell) IS the value, whatever its length, since
-    // there's no fixed tick/cross vocabulary to check a phone number or serial number against.
-    // Tries every alternate's own TextStart (not just the first), since these fields commonly
-    // have several real-world label wordings across templates.
-    public static Dictionary<string, LabelGroupResult> MatchFreeTextFields(
+    public static Dictionary<string, LabelGroupResult> MatchTextFields(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         string serviceName)
@@ -94,20 +86,12 @@ public static class TableMatcherHelper
 
         var filteredLabelLookups = labelLookups
             .Where(labelGroup => labelGroup.Labels
-                .Any(l => l.TableBasedExtractorType is TableBasedLayoutExtractor.Default
-                    or TableBasedLayoutExtractor.FreeText))
+                .Any(l => l.LayoutExtractorTableLookupType is LayoutExtractorTableLookupType.FreeText))
             .ToList();
         
         foreach (var labelGroup in filteredLabelLookups)
         {
-            var labels = labelLookups
-                .FirstOrDefault(l => l.LabelGroupName == labelGroup.LabelGroupName)
-                .Labels;
-
-            if (labels == null)
-            {
-                continue;
-            }
+            var labels = labelGroup.Labels;
 
             string? rawValue = null;
             LabelToMatch? matchedLabel = null;
@@ -121,7 +105,7 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    rawValue = FindFreeTextValueInTable(table, label.TextStart);
+                    rawValue = FindTextValueInTable(table, label.TextStart);
 
                     if (!string.IsNullOrEmpty(rawValue))
                     {
@@ -168,7 +152,7 @@ public static class TableMatcherHelper
     /// <param name="table"></param>
     /// <param name="textToMatch"></param>
     /// <returns></returns>
-    private static string? FindFreeTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textToMatch)
+    private static string? FindTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textToMatch)
     {
         foreach (var cell in table.Cells)
         {
@@ -200,7 +184,7 @@ public static class TableMatcherHelper
                 return string.Empty;
             }
             
-            return nextCell?.Content?.Trim();
+            return nextCell.Content?.Trim();
         }
 
         return null;

@@ -290,13 +290,13 @@ public class PdfDataExtractorService(
         var needsToParseStructuredTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
                 or LayoutExtractor.LetterBasedAndTableBased
-                && label.TableShape is TableShape.Default
-                    or TableShape.Structured);
+                && label.LayoutExtractorTableShape is LayoutExtractorTableShape.Default
+                    or LayoutExtractorTableShape.Structured);
         
         var needsToParseUnstructuredTables = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
                 or LayoutExtractor.LetterBasedAndTableBased
-                && label.TableShape is TableShape.Unstructured);
+                && label.LayoutExtractorTableShape is LayoutExtractorTableShape.Unstructured);
 
         var needsToParseText = allLabels
             .Any(label => label.LayoutExtractor is LayoutExtractor.Default

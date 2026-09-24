@@ -2341,7 +2341,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("9. ") { LineMustStartWith = true }
                         ] : [],
                         Position = LabelPosition.ApplicableToMost,
-                        Format = "Number",
+                        Format = "Text",
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0
                     },

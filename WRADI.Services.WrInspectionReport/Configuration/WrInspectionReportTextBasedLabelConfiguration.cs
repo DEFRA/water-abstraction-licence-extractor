@@ -850,23 +850,45 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             MaintenanceLine("Readings taken:", "Where Kept",
                 WrInspectionReportFieldNames.ReadingsTakenLine));
 
-    // Tried and reverted (2026-09-09): adding a loose "Date:" alternate to catch the case where
-    // "Inspection Date:" wraps onto two lines ("Inspection" / "Date: ...") - confirmed on
-    // wr51__73417g0068__... and wr51__an0340003001r01__... (the golden set's own only
-    // InspectionDate Miss). Measured net regression against the golden set: recall 98%->40%
-    // (54 Hit->22 Hit, 32 newly Wrong) - bare "Date:" is too ambiguous against this document's
-    // other "Date:" occurrences (e.g. "Date of certificate or record:") and started winning over
-    // the correct match on documents where the primary rule already worked fine. Needs a
-    // genuinely two-line-aware match (the wrapped "Inspection" line immediately preceding the
-    // "Date:" line), not a same-line loose text search - AlsoStartsWithLoose only relaxes the
-    // column requirement, it doesn't span line boundaries. Not attempted further this session.
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
+            // The plain case: "Inspection Date:" as one unbroken phrase. RequireTextToClaimGroup
+            // covers a layout where AlsoEndsAt cuts the value to nothing; RequireCompleteDateToClaimGroup
+            // also rejects a non-blank match missing its year (wrapped past the "Inspecting
+            // Officer" row - see the fallback below), so either failure falls through instead
+            // of permanently claiming the group.
             WrFluentRule
                 .Between("Inspection Date:", "Quantities")
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
+                .RequireTextToClaimGroup()
+                .RequireCompleteDateToClaimGroup()
+                .FromText()
+                .Build(),
+            // Fallback for a squeezed layout where "Inspection Date:" (or just "Inspection")
+            // wraps onto its own row, with the full-width "Inspecting Officer: ... Time: ..."
+            // row landing between the label and its value. A bare "Inspection" start anchor is
+            // too ambiguous (also matches "Inspection report"/"Inspection Class:" elsewhere on
+            // the page), so this anchors on the unique "Inspecting Officer" label instead and
+            // walks WholeLine to "Licence provisions", which spans any number of rows
+            // regardless of how the value wraps. PreviousLines(1) additionally pulls in the
+            // row above the anchor, for a layout where the value splits across both sides of it.
+            // "Inspection"/"Inspection Date:"/"Date:" are stripped via Remove rather than used
+            // as start anchors - a loose "Date:" anchor collides with "Date of certificate or
+            // record:" elsewhere on the page (tried and reverted here previously: net regression
+            // 98%->40% recall). Relies on WrInspectionReportSchemaConverter.ToForm's
+            // "Inspecting Officer"/"Time" splitting, its month-day/year recombination, and its
+            // containsYear/not-today validation to reject whatever this captures on a
+            // differently-shaped document.
+            WrFluentRule
+                .Between("Inspecting Officer", "Licence provisions")
+                .Named(WrInspectionReportFieldNames.InspectionDate)
+                .PreviousLines(1)
+                .NextLines(3)
+                .WholeLine()
+                .Remove([new TextToMatch("Inspection Date:"), new TextToMatch("Inspection"), new TextToMatch("Date:")])
+                .RequireTextToClaimGroup()
                 .FromText()
                 .Build()
         ]);

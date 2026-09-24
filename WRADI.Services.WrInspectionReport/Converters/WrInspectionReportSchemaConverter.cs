@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -63,7 +64,22 @@ public static class WrInspectionReportSchemaConverter
                 .Replace("NI", string.Empty) // Don't know why we get this
                 .Replace("\r", string.Empty)
                 .Replace("  ", " ");
-            
+
+            // A "Mon D" fragment and its year can land on different lines of the raw capture,
+            // in either order - neither parses alone, and the line-splitting heuristics below
+            // only ever keep one line as the date candidate. Recombine both into one candidate
+            // here, before that splitting runs.
+            var monthDayMatch = Regex.Match(
+                rawInspectionDateTweaked,
+                @"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b",
+                RegexOptions.IgnoreCase);
+            var yearMatch = Regex.Match(rawInspectionDateTweaked, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+            if (monthDayMatch.Success && yearMatch.Success)
+            {
+                potentialDates.Add($"{monthDayMatch.Value} {yearMatch.Value}");
+            }
+
             if (rawInspectionDateTweaked.Contains('&'))
             {
                 var parts = rawInspectionDateTweaked.Split("&");
@@ -168,7 +184,11 @@ public static class WrInspectionReportSchemaConverter
                 && rawInspectionDateTweaked.All(c => c != '/')
                 && rawInspectionDateTweaked.All(c => c != ' '))
             {
-                potentialDates.Add(rawInspectionDateTweaked.Replace(".", ":"));
+                // e.g. "27.02:26" - one separator typoed as ':' instead of '.'. Normalise
+                // toward '.' (not the other way): confirmed via DateTime.TryParse that
+                // "27.02.26" parses fine but "27:02:26" (both separators as ':') doesn't -
+                // colon-separated numerics read as an invalid time, not a date.
+                potentialDates.Add(rawInspectionDateTweaked.Replace(":", "."));
             }
 
             var words = rawInspectionDateTweaked.Split(' ');

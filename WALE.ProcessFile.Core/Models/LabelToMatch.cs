@@ -127,6 +127,15 @@ public class LabelToMatch
     // the engine to try the next alternate instead of settings the group as matched.
     public bool RequireTextToBePresent { get; init; }
 
+    // Like RequireTextToBePresent, but requires a genuinely complete date (day, month AND
+    // year - numeric like "25/03/26", or a month name with a day and year like "Jul 26 2019")
+    // rather than any non-blank text, so a real-but-incomplete date fragment doesn't
+    // permanently block a later, more complete alternate. Checks for the full 3-component
+    // shape rather than just "any 4-digit year", since a bare day number and a bare 2-digit
+    // year are textually indistinguishable in isolation. Defaults to false to preserve
+    // existing behaviour for every rule that doesn't opt in.
+    public bool RequireCompleteDateToClaimGroup { get; init; }
+
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
 
     public LayoutExtractorTableLookupType LayoutExtractorTableLookupType { get; init; }
@@ -192,6 +201,7 @@ public class LabelToMatch
             LimitToColumnIndex = LimitToColumnIndex,
             LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(), 
             RequireTextToBePresent = RequireTextToBePresent,
+            RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,
             LayoutExtractor = LayoutExtractor,
             LayoutExtractorTableLookupType = LayoutExtractorTableLookupType,
             LayoutExtractorTableShape = LayoutExtractorTableShape,

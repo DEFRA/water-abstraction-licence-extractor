@@ -24,6 +24,9 @@ public sealed class WrFluentRule
     private readonly List<TextToMatch> _remove = [];
     private List<TextToMatch>? _possibilities;
     private bool _requireTextToClaimGroup;
+    private bool _requireCompleteDateToClaimGroup;
+    private int _previousLinesToFetch;
+    private int _leewayBefore;
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
@@ -146,6 +149,23 @@ public sealed class WrFluentRule
         return this;
     }
 
+    // See LabelToMatch.RequireCompleteDateToClaimGroup.
+    public WrFluentRule RequireCompleteDateToClaimGroup()
+    {
+        _requireCompleteDateToClaimGroup = true;
+        return this;
+    }
+
+    // Pulls the N line(s) immediately before the matched start label into the captured value -
+    // for a Between()-shaped rule whose real value starts on a physical line above its own
+    // label. Wires into TextToFindIsBetweenLabels' LeewayBefore/PreviousLinesToFetch mechanism.
+    public WrFluentRule PreviousLines(int n)
+    {
+        _previousLinesToFetch = n;
+        _leewayBefore = n;
+        return this;
+    }
+
     public WrFluentRule Possibilities(IEnumerable<TextToMatch> p)
     {
         _possibilities = p.ToList();
@@ -247,12 +267,14 @@ public sealed class WrFluentRule
         Position = _position,
         LimitTo = _limitTo,
         Format = "Text",
-        PreviousLinesToFetch = 0,
+        PreviousLinesToFetch = _previousLinesToFetch,
+        LeewayBefore = _leewayBefore,
         NextLinesToFetch = _nextLinesToFetch,
         Name = _name,
         Remove = _remove,
         Possibilities = _possibilities,
         RequireTextToBePresent = _requireTextToClaimGroup,
+        RequireCompleteDateToClaimGroup = _requireCompleteDateToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
         LayoutExtractor = _layoutExtractor,

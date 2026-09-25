@@ -16,7 +16,6 @@ public class ImagesController(
     ICacheService cacheService) : Controller
 {
     [HttpGet]
-    [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]
     public async Task<ActionResult> Thumbnail(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,

@@ -2,6 +2,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -9,11 +10,15 @@ namespace WALE.ProcessFile.Services.AwsS3;
 
 public class AwsS3FileService(
     string regionName,
-    string bucketName,
+    string ingressBucketName,
+    string assetsBucketName,
     string? accessKey,
     string? secretKey,
     string? sessionToken) : IFileService
 {
+    public string IngressFolderPath { get; set; } = ingressBucketName;
+    public string AssetsFolderPath { get; set; } = assetsBucketName;
+    
     public async Task<List<string>> GetAllFilesAsync()
     {
         // TODO use an approach of reading a file with a list of filenames in it instead
@@ -22,7 +27,7 @@ public class AwsS3FileService(
         var response = await client.ListObjectsV2Async(
             new ListObjectsV2Request
             {
-                BucketName = FolderPath
+                BucketName = IngressFolderPath
             });
 
 
@@ -41,7 +46,7 @@ public class AwsS3FileService(
                 new ListObjectsV2Request
                 {
                     ContinuationToken = response.NextContinuationToken,
-                    BucketName = FolderPath
+                    BucketName = IngressFolderPath
                 });
             
             returnList.AddRange(response.S3Objects
@@ -60,14 +65,14 @@ public class AwsS3FileService(
             ? await client.ListObjectsV2Async(
                 new ListObjectsV2Request
                 {
-                    BucketName = FolderPath,
+                    BucketName = IngressFolderPath,
                     StartAfter = startAfter,
                     MaxKeys = take
                 })
             : await client.ListObjectsV2Async(
                 new ListObjectsV2Request
                 {
-                    BucketName = FolderPath,
+                    BucketName = IngressFolderPath,
                     MaxKeys = take
                 });
 
@@ -98,7 +103,7 @@ public class AwsS3FileService(
                 new ListObjectsV2Request
                 {
                     ContinuationToken = response.NextContinuationToken,
-                    BucketName = FolderPath
+                    BucketName = IngressFolderPath
                 });
             
             returnList.AddRange(response.S3Objects
@@ -138,23 +143,23 @@ public class AwsS3FileService(
         var file = await client.GetObjectAsync(
             new GetObjectRequest
             {
-                BucketName = FolderPath,
+                BucketName = IngressFolderPath,
                 Key = filename
             });
 
         return file.ResponseStream;
     }
 
-    public Task UploadFileAsStreamAsync(string filename, Stream stream)
+    public Task UploadFileAsStreamAsync(string filename, Stream stream, string contentType, StorageFolder folder)
     {
         var client = GetS3Client();
         
         return client.PutObjectAsync(new PutObjectRequest
         {
-            BucketName = FolderPath,
+            BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
             Key = filename,
             InputStream = stream,
-            ContentType = "application/pdf"
+            ContentType = contentType
         }, CancellationToken.None);
     }
 
@@ -172,7 +177,7 @@ public class AwsS3FileService(
             var initiateResponse = await client.InitiateMultipartUploadAsync(
                 new InitiateMultipartUploadRequest
                 {
-                    BucketName = FolderPath,
+                    BucketName = IngressFolderPath,
                     Key = filename,
                     ContentType = "application/pdf"
                 });
@@ -188,7 +193,7 @@ public class AwsS3FileService(
         await client.UploadPartAsync(
             new UploadPartRequest
             {
-                BucketName = FolderPath,
+                BucketName = IngressFolderPath,
                 Key = filename,
                 UploadId = uploadId,
                 PartNumber = chunkIndex + 1,
@@ -203,14 +208,14 @@ public class AwsS3FileService(
         
         var parts = await client.ListPartsAsync(new ListPartsRequest
         {
-            BucketName = FolderPath,
+            BucketName = IngressFolderPath,
             Key = filename,
             UploadId = uploadId
         });
 
         await client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
         {
-            BucketName = FolderPath,
+            BucketName = IngressFolderPath,
             Key = filename,
             UploadId = uploadId,
             PartETags = parts.Parts.Select(p => new PartETag(p.PartNumber!.Value, p.ETag)).ToList()
@@ -218,8 +223,6 @@ public class AwsS3FileService(
 
         return uploadId;
     }
-
-    public string FolderPath { get; set; } = bucketName;
     
     public Task DeleteAsync(string filename)
     {
@@ -227,20 +230,21 @@ public class AwsS3FileService(
         
         return client.DeleteObjectAsync(new DeleteObjectRequest
         {
-            BucketName = FolderPath,
+            BucketName = IngressFolderPath,
             Key = filename
         });
     }
 
-    public async Task<bool> ExistsAsync(string filename)
+    public async Task<bool> ExistsAsync(string filename, StorageFolder folder)
     {
         try
         {
             var client = GetS3Client();
+            
             var file = await client.GetObjectAsync(
                 new GetObjectRequest
                 {
-                    BucketName = FolderPath,
+                    BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
                     Key = filename
                 });
 
@@ -264,16 +268,16 @@ public class AwsS3FileService(
         await client.CopyObjectAsync(
             new CopyObjectRequest
             {
-                SourceBucket = FolderPath,
+                SourceBucket = IngressFolderPath,
                 SourceKey = originalFilename,
-                DestinationBucket = FolderPath,
+                DestinationBucket = IngressFolderPath,
                 DestinationKey = newFilename
             });
         
         await client.DeleteObjectAsync(
             new DeleteObjectRequest
             {
-                BucketName = FolderPath,
+                BucketName = IngressFolderPath,
                 Key = originalFilename
             });
     }
@@ -285,20 +289,24 @@ public class AwsS3FileService(
         await client.CopyObjectAsync(
             new CopyObjectRequest
             {
-                SourceBucket = FolderPath,
+                SourceBucket = IngressFolderPath,
                 SourceKey = filename,
                 DestinationBucket = destinationBucketName,
                 DestinationKey = filename
             });
     }
     
-    public Task<string> GetPresignedUrlAsync(string filename)
+    public Task<string> GetPresignedUrlAsync(string filename, StorageFolder folder)
     {
+        var expires = folder == StorageFolder.Ingress
+            ? DateTime.Now.AddSeconds(30)
+            : DateTime.Now.AddSeconds(604800); // 7 days is max on pre-signed URLs
+        
         var request = new GetPreSignedUrlRequest
         {
-            BucketName = FolderPath,
+            BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
             Key = filename,
-            Expires = DateTime.Now.AddMinutes(2),
+            Expires = expires,
             Protocol = Protocol.HTTPS
         };
 

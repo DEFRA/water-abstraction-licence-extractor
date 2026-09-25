@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -10,7 +10,8 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class ImagesController(
     ICacheService cacheService,
-    IOutputService outputService) : Controller
+    IOutputService outputService,
+    IFileService fileService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -85,6 +86,63 @@ public class ImagesController(
             fileId);
 
         return Ok(data);
+    }
+
+    [HttpPut]
+    [DisableRequestSizeLimit]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = 1_048_576_000,
+        ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
+    public async Task<ActionResult<string>> UploadAsync()
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+
+        foreach (var file in Request.Form.Files)
+        {
+            if (!file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var lowercaseFileName = file.FileName.ToLowerInvariant();
+            var fileExtension = Path.GetExtension(lowercaseFileName);
+
+            if (!fileExtension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest();
+            }
+
+            string? presignedUrl;
+            
+            if (await fileService.ExistsAsync(lowercaseFileName, StorageFolder.Assets))
+            {
+                presignedUrl = await fileService.GetPresignedUrlAsync(
+                    lowercaseFileName,
+                    StorageFolder.Assets);
+                
+                return Ok(presignedUrl);
+            }
+
+            using MemoryStream stream = new();
+            await file.CopyToAsync(stream);
+            
+            await fileService.UploadFileAsStreamAsync(
+                lowercaseFileName,
+                stream,
+                "image/jpeg",
+                StorageFolder.Assets);
+            
+            presignedUrl = await fileService.GetPresignedUrlAsync(
+                lowercaseFileName,
+                StorageFolder.Assets);
+
+            return Ok(presignedUrl);
+        }
+
+        return Ok();
     }
     
     [HttpPost]

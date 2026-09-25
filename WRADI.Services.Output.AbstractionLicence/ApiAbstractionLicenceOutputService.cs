@@ -221,6 +221,22 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task UpdateThumbnailPathAsync(Guid fileId, string url)
+    {
+        var path = "/Extractor/Licence/UpdateThumbnailPath";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            fileId,
+            url
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";

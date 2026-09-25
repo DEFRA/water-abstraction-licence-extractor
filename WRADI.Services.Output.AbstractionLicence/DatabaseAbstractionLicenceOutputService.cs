@@ -188,6 +188,11 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseWriteService.AddDocumentNaldPurposeMatchAsync(licNo, documentDescription, naldPurpose, matchType);
     }
 
+    public Task UpdateThumbnailPathAsync(Guid fileId, string url)
+    {
+        return databaseWriteService.UpdateThumbnailPathAsync(fileId, url);
+    }
+
     public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
     {
         var licence = await databaseReadService.GetLicenceAsync(licenceId);

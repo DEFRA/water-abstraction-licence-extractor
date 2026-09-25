@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -11,6 +12,10 @@ namespace WALE.ProcessFile.Services.Services;
 
 public class ApiFileService(HttpClient httpClient) : IFileService
 {
+    public string IngressFolderPath { get; set; } = "N/A";
+    
+    public string AssetsFolderPath { get; set; } = "N/A";
+    
     public async Task<List<string>> GetAllFilesAsync()
     {
         var dtStart = DateTime.UtcNow;
@@ -117,7 +122,7 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public async Task UploadFileAsStreamAsync(string filename, Stream stream)
+    public async Task UploadFileAsStreamAsync(string filename, Stream stream, string contentType, StorageFolder folder)
     {
         var path = "/BFF/Files/Upload";
         var uri = new Uri(httpClient.BaseAddress!, path);
@@ -157,8 +162,6 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         response.EnsureSuccessStatusCode();
         return content;
     }
-
-    public string FolderPath { get; set; } = "N/A";
     
     public async Task DeleteAsync(string filename)
     {
@@ -170,9 +173,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<bool> ExistsAsync(string filename)
+    public async Task<bool> ExistsAsync(string filename, StorageFolder folder)
     {
-        var path = $"/Extractor/Files/Exists?filename={filename}";
+        var path = $"/Extractor/Files/Exists?filename={filename}&folder={folder.ToString().ToLower()}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -204,9 +207,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         throw new NotImplementedException();
     }
     
-    public async Task<string> GetPresignedUrlAsync(string filename)
+    public async Task<string> GetPresignedUrlAsync(string filename, StorageFolder folder)
     {
-        var path = $"/BFF/Files/Get?filename={filename}";
+        var path = $"/BFF/Files/Get?filename={filename}&folder={folder.ToString().ToLower()}";
        
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));

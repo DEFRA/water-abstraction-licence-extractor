@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -40,9 +41,16 @@ public class FilesController(IFileService fileService) : Controller
     }
     
     [HttpGet]
-    public async Task<ActionResult> ExistsAsync([FromQuery] string filename)
+    public async Task<ActionResult> ExistsAsync(
+        [FromQuery] string filename,
+        [FromQuery] string folder)
     {
-        var data = await fileService.ExistsAsync(filename);
+        var isAssets = "assets".Equals(folder, StringComparison.OrdinalIgnoreCase);
+        
+        var data = await fileService.ExistsAsync(
+            filename,
+            isAssets ? StorageFolder.Assets : StorageFolder.Ingress);
+        
         return Ok(data);
     }
 }

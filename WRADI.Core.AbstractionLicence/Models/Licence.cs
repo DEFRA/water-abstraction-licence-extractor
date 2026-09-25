@@ -63,6 +63,8 @@ public class Licence
     public LinkedLicence[] LinkedLicences { get; set; } = [];
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
+    
+    public string? ThumbnailUrl { get; set; }
 
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
 
@@ -92,6 +94,7 @@ public class Licence
             DefinitionOfYear = DefinitionOfYear,
             LinkedLicences = LinkedLicences,
             LicenceSets = LicenceSets,
+            ThumbnailUrl = ThumbnailUrl,
             NoneSchemaData = NoneSchemaData
         };
     }

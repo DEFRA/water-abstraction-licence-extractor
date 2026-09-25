@@ -51,7 +51,7 @@ public static class FileProcessServiceRegistration
             options.AwsAccessKey = configuration["AwsAccessKey"];
             options.AwsSecretKey = configuration["AwsSecretKey"];
             options.AwsRegionName = configuration["AwsRegionName"];
-            options.AwsS3BucketName = configuration["AwsS3BucketName"];
+            options.AwsS3IngressBucketName = configuration["AwsS3BucketName"];
             
             // SQS
             options.SqsQueueOrchestrationUrl = ConfigHelper.GetRequiredString(configuration, "SqsQueueOrchestrationUrl");
@@ -85,7 +85,8 @@ public static class FileProcessServiceRegistration
                 {
                     fileService = new AwsS3FileService(
                         settings.AwsRegionName!,
-                        settings.AwsS3BucketName!,
+                        settings.AwsS3IngressBucketName!,
+                        settings.AwsS3AssetsBucketName!,                        
                         settings.AwsAccessKey,
                         settings.AwsSecretKey,
                         settings.AwsSessionToken);

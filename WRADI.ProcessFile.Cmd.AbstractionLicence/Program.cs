@@ -90,7 +90,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
-            Description = $"Run using {services.FileService!.FolderPath}",
+            Description = $"Run using {services.FileService!.IngressFolderPath}",
             StartDateTimeUtc = startDateTimeUtc,
             NumberOfFiles = filesToProcess.Count
         });
@@ -465,13 +465,18 @@ ConfiguredServices ConfigureServices(
                 configurationForServices.GetRequiredValue<string>(
                     "AwsRegionName");
 
-            var bucketName =
+            var ingressBucketName =
                 configurationForServices.GetRequiredValue<string>(
                     "AwsS3BucketName");
+            
+            var assetsBucketName =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsS3AssetsBucketName");            
 
             fileService = new AwsS3FileService(
                 regionName,
-                bucketName,
+                ingressBucketName,
+                assetsBucketName,
                 accessKey,
                 secretKey,
                 null);

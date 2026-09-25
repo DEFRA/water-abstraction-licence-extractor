@@ -5,16 +5,17 @@ using WALE.Tools.Config;
 
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
-workflow = "ImportNaldData";
+//workflow = "ImportNaldData";
 //workflow = "ImportDmsData";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
 //workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
-workflow = "CopyS3Files";
+//workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
 //workflow = "GenerateLinkedLicencesCsv";
-workflow = "PurposeMapper";
+//workflow = "PurposeMapper";
+workflow = "GenerateS3Thumbnails";
 
 const int processRunId = 3266;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
@@ -111,8 +112,12 @@ switch (workflow)
         await ForceLowercaseS3Files.RunAsync();
         break;
     
-    case "PurposeMapper":
+    case "PurposeMapper": // One-off, or a few times
         await PurposeMapperSinglePurpose.RunAsync(processRunId);
+        break;
+    
+    case "GenerateS3Thumbnails": // One-off
+        await GenerateS3Thumbnails.RunAsync(processRunId);
         break;
 }
 

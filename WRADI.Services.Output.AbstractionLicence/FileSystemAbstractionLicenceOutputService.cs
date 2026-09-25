@@ -96,6 +96,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
+    public Task UpdateThumbnailPathAsync(Guid fileId, string url)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();

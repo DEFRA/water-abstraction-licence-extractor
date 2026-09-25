@@ -169,7 +169,12 @@ public static class TableMatcherHelper
                 continue;
             }
 
-            var rawRemainder = cell.Content[matchedTextToMatch.Text.Length..].Trim().TrimStart(':').Trim();
+            // TrimStart(':', '.'): a short-form label ("Licence No") that's a strict text
+            // prefix of the cell's own longer label ("Licence No.") leaves that trailing
+            // punctuation stuck to the front of the remainder once the short prefix is
+            // stripped - confirmed via the golden set (LicenceNumber PartialHit on ~15 docs,
+            // every one starting ". <the actual, otherwise-correct number>").
+            var rawRemainder = cell.Content[matchedTextToMatch.Text.Length..].Trim().TrimStart(':', '.').Trim();
 
             if (rawRemainder.Length > 0)
             {

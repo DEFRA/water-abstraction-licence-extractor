@@ -281,7 +281,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.LicenceNumber)
                 .NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Name and address", "Name / address")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Long form
             WrFluentRule
                 .Between("Licence No", "Inspection Class").Named(WrInspectionReportFieldNames.LicenceNumber)
@@ -297,7 +297,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                     new("(or Application No. or GIC No)"),
                     new("(or Application No. or GIC No.")
                 ])
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 

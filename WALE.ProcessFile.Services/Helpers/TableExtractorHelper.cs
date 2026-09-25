@@ -80,7 +80,10 @@ public static class TableMatcherHelper
     public static Dictionary<string, LabelGroupResult> MatchTextFields(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-        string serviceName)
+        string serviceName,
+        // Optional - see FindTextValueInTable's own doc comment. Only meaningful for fields
+        // whose adjacent-cell fallback can otherwise land on a sibling field's own label.
+        IReadOnlyList<string>? siblingLabels = null)
     {
         var results = new Dictionary<string, LabelGroupResult>();
 
@@ -105,7 +108,7 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    rawValue = FindTextValueInTable(table, label.TextStart);
+                    rawValue = FindTextValueInTable(table, label.TextStart, siblingLabels);
 
                     if (!string.IsNullOrEmpty(rawValue))
                     {
@@ -113,7 +116,7 @@ public static class TableMatcherHelper
                         break;
                     }
                 }
-                
+
                 if (!string.IsNullOrEmpty(rawValue))
                 {
                     break;
@@ -268,7 +271,20 @@ public static class TableMatcherHelper
                         .OrderBy(c => c.ColumnIndex)
                         .FirstOrDefault();
 
-                    if (!string.IsNullOrWhiteSpace(nextCell?.Content) && nextCell.Content!.Length <= MaxPlausibleValueLength)
+                    // A genuinely blank field (e.g. "Meter make:" with nothing filled in) sits
+                    // next to a sibling field's own label cell (e.g. "Serial number:" or "Serial
+                    // number: 96280940") more often than it sits next to a real value for THIS
+                    // field - without this guard that sibling cell (bare label, or the sibling's
+                    // own label+value merged together) gets taken as this field's value. Reject
+                    // whenever the next cell itself STARTS with one of the known field labels -
+                    // not just an exact bare-label match - since a populated sibling cell reads
+                    // just as plausible as a real value at a glance.
+                    var nextCellIsASiblingLabel = nextCell?.Content != null &&
+                        boundaryLabels.Any(b => FindWordBoundedIndex(nextCell.Content, b) == 0);
+
+                    if (!nextCellIsASiblingLabel &&
+                        !string.IsNullOrWhiteSpace(nextCell?.Content) &&
+                        nextCell.Content!.Length <= MaxPlausibleValueLength)
                     {
                         results.Add((cell.RowIndex, nextCell.Content!.Trim()));
                     }
@@ -341,8 +357,20 @@ public static class TableMatcherHelper
     /// </summary>
     /// <param name="table"></param>
     /// <param name="textToMatch"></param>
+    /// <param name="siblingLabels">
+    /// Optional - see MatchMultiValueTextFields/FindAllTextValuesInTable's own doc comment for
+    /// the underlying failure mode. When a field's own value is genuinely blank (e.g. "Meter
+    /// make:" with nothing filled in), both cell shapes above can otherwise return a sibling
+    /// field's own label - either merged into the same cell right after this field's label
+    /// ("Meter make: Serial number: 96280940"), or as the next cell's entire content ("Serial
+    /// number:" / "Serial number: 96280940" in the adjacent cell). Passing the sibling field
+    /// labels here bounds the merged case at the first one found and rejects the adjacent-cell
+    /// case outright when it starts with one. Left null for fields with no known siblings to
+    /// guard against, keeping their behaviour exactly as before.
+    /// </param>
     /// <returns></returns>
-    private static string? FindTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textToMatch)
+    private static string? FindTextValueInTable(
+        DocumentTable table, IReadOnlyList<TextToMatch> textToMatch, IReadOnlyList<string>? siblingLabels = null)
     {
         foreach (var cell in table.Cells)
         {
@@ -368,6 +396,25 @@ public static class TableMatcherHelper
 
             if (rawRemainder.Length > 0)
             {
+                if (siblingLabels != null)
+                {
+                    var boundaryIndex = siblingLabels
+                        .Select(b => rawRemainder.IndexOf(b, StringComparison.OrdinalIgnoreCase))
+                        .Where(i => i >= 0)
+                        .DefaultIfEmpty(-1)
+                        .Min();
+
+                    if (boundaryIndex == 0)
+                    {
+                        return string.Empty;
+                    }
+
+                    if (boundaryIndex > 0)
+                    {
+                        return rawRemainder[..boundaryIndex].Trim();
+                    }
+                }
+
                 return rawRemainder;
             }
 
@@ -386,6 +433,12 @@ public static class TableMatcherHelper
                 .FirstOrDefault();
 
             if (nextCell?.Content == null)
+            {
+                return string.Empty;
+            }
+
+            if (siblingLabels != null &&
+                siblingLabels.Any(b => FindWordBoundedIndex(nextCell.Content!, b) == 0))
             {
                 return string.Empty;
             }

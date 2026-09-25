@@ -255,7 +255,8 @@ public static class WrInspectionReportExtractionOrchestrator
             var matches = TableMatcherHelper.MatchTextFields(
                 tables,
                 labelLookups,
-                usedServiceName);
+                usedServiceName,
+                MeterFieldBoundaryLabels);
 
             foreach (var (key, value) in matches)
             {

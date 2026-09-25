@@ -146,15 +146,51 @@ public class TableMatcherHelperMultiValueTests
             Cells = [Cell(0, 0, "Meter make: FirstPageMeter")]
         };
 
+        // Deliberately passed page 2 before page 1 - both rows tie on RowIndex 0 (one row per
+        // table), so a naive RowIndex-only sort would fall back to list/table order and put
+        // SecondPageMeter first. Ordering by PageNumber first is what makes this deterministic
+        // regardless of the tables list's own order.
+        var results = TableMatcherHelper.MatchMultiValueTextFields(
+            [tablePage2, tablePage1], Labels, "TestTableService", MeterFieldBoundaryLabels);
+
+        var values = results[WrInspectionReportFieldNames.MeterMake].Text!.Select(t => t.Text).ToList();
+        Assert.Equal(["FirstPageMeter", "SecondPageMeter"], values);
+    }
+
+    [Fact]
+    public void WhenAnEarlierPagesMeterHasAHigherRowIndexThanALaterPagesMeter_ThenPageOrderStillWins()
+    {
+        // The actual bug this guards, not just a RowIndex tie: BuildDocumentTable resets
+        // RowIndex to 0 at the top of every page's own grid, so a real multi-page document's
+        // page 2 meter can easily land on a LOWER RowIndex than a page 1 meter that has several
+        // other rows above it - sorting by RowIndex alone (ignoring PageNumber) would put the
+        // page 2 meter first, scrambling which meter's fields get zipped together downstream.
+        var tablePage1 = new DocumentTable
+        {
+            PageNumber = 1,
+            RowCount = 4,
+            ColumnCount = 1,
+            Cells =
+            [
+                Cell(0, 0, "Unrelated header row"),
+                Cell(1, 0, "Another unrelated row"),
+                Cell(2, 0, "Yet another row"),
+                Cell(3, 0, "Meter make: FirstPageMeter")
+            ]
+        };
+        var tablePage2 = new DocumentTable
+        {
+            PageNumber = 2,
+            RowCount = 1,
+            ColumnCount = 1,
+            Cells = [Cell(0, 0, "Meter make: SecondPageMeter")]
+        };
+
         var results = TableMatcherHelper.MatchMultiValueTextFields(
             [tablePage1, tablePage2], Labels, "TestTableService", MeterFieldBoundaryLabels);
 
-        // Both values present - which one sorts first when RowIndex ties across pages is a
-        // secondary concern (SelectMany preserves table order, so page 1 wins in practice) - the
-        // real guarantee under test is that neither meter is silently dropped.
         var values = results[WrInspectionReportFieldNames.MeterMake].Text!.Select(t => t.Text).ToList();
-        Assert.Contains("FirstPageMeter", values);
-        Assert.Contains("SecondPageMeter", values);
+        Assert.Equal(["FirstPageMeter", "SecondPageMeter"], values);
     }
 
     [Fact]

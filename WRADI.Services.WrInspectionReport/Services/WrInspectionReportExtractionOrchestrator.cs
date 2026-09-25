@@ -54,6 +54,17 @@ public static class WrInspectionReportExtractionOrchestrator
         "Reading", "Flow Rate", "Units"
     ];
 
+    // Same guard as MeterFieldBoundaryLabels, for the 13 LicenceProvisions grid fields - the
+    // recognisable short form of each field's own row label (see the RuleXxx() definitions in
+    // WrInspectionReportTextBasedLabelConfiguration for the exact TextStart each one matches).
+    private static readonly string[] GridFieldBoundaryLabels =
+    [
+        "Source of supply", "Point of abstraction", "Means of abstraction", "Purpose",
+        "Period", "Quantities", "Means of measurement", "Records",
+        "Provision of information", "Special conditions", "Land", "Charging factors",
+        "Other provisions"
+    ];
+
     public static async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item, WrTemplateType Template)>
         ExtractAsync(
             string pdfFileName,
@@ -329,7 +340,8 @@ public static class WrInspectionReportExtractionOrchestrator
                 tables,
                 labels,
                 tableExtractorService.Name,
-                TickHelper.GetTickedOrAcceptedStatus);
+                TickHelper.GetTickedOrAcceptedStatus,
+                GridFieldBoundaryLabels);
 
             return (matches, tables, tableExtractorService.Name);
         }

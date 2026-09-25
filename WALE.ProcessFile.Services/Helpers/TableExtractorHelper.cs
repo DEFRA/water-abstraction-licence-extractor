@@ -18,10 +18,15 @@ public static class TableMatcherHelper
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         string serviceName,
-        Func<string?, string?>? transformContentFunction)
+        Func<string?, string?>? transformContentFunction,
+        // Optional - see FindTextValueInTable's own doc comment. Guards the same failure mode
+        // MatchTextFields already guards: a grid field with a genuinely blank answer otherwise
+        // risking a neighbouring field's own label as its "value" (only actually wrong here if
+        // that label text happens to also satisfy one of this field's own Possibilities).
+        IReadOnlyList<string>? siblingLabels = null)
     {
         var results = new Dictionary<string, LabelGroupResult>();
-        
+
         foreach (var labelGroup in labelLookups)
         {
             foreach (var label in labelGroup.Labels)
@@ -33,7 +38,7 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    var matchedContent = FindTextValueInTable(table, label.TextStart);
+                    var matchedContent = FindTextValueInTable(table, label.TextStart, siblingLabels);
 
                     if (transformContentFunction != null)
                     {
@@ -185,9 +190,17 @@ public static class TableMatcherHelper
                     continue;
                 }
 
+                // PageNumber first, then RowIndex within that page: RowIndex is a per-table
+                // ordinal (BuildDocumentTable clusters each page's own rows starting from 0), so
+                // sorting by RowIndex alone across tables mis-orders a document whose meters span
+                // multiple pages - a page 2 meter can land on a lower RowIndex than a page 1
+                // meter that should sort before it, scrambling which meter's make/serial/reading
+                // end up zipped together downstream (WrInspectionReportSchemaConverter.BuildMeters).
                 values = tables
-                    .SelectMany(table => FindAllTextValuesInTable(table, label.TextStart, boundaryLabels))
-                    .OrderBy(v => v.RowIndex)
+                    .SelectMany(table => FindAllTextValuesInTable(table, label.TextStart, boundaryLabels)
+                        .Select(v => (table.PageNumber, v.RowIndex, v.Value)))
+                    .OrderBy(v => v.PageNumber)
+                    .ThenBy(v => v.RowIndex)
                     .Select(v => v.Value)
                     .ToList();
 

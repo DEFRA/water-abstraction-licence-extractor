@@ -29,6 +29,31 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 /// </summary>
 public static class WrInspectionReportExtractionOrchestrator
 {
+    // The fields a real multi-meter document repeats per meter (one cell each) - see
+    // TableMatcherHelper.MatchMultiValueTextFields and its own doc comment for the WR51
+    // example this scoping exists for.
+    private static readonly string[] MeterFieldNames =
+    [
+        WrInspectionReportFieldNames.MeterName, WrInspectionReportFieldNames.MeterMake,
+        WrInspectionReportFieldNames.SerialNumber, WrInspectionReportFieldNames.MeterAssetNumber,
+        WrInspectionReportFieldNames.Reading, WrInspectionReportFieldNames.FlowRate,
+        WrInspectionReportFieldNames.Units
+    ];
+
+    // A value stops here when a sibling meter field's own label follows it within the same
+    // merged cell (e.g. "Meter make: VuAqua Serial number 25 061010" - the value for
+    // MeterMake must not swallow "Serial number 25 061010" too). Deliberately the field labels
+    // themselves, not each rule's full TextStart/AlsoStartsWith alternate list - these are
+    // substring searches within already-matched cell text, not label-matching TextStart
+    // comparisons, so the short, recognisable form of each name is what actually needs to be
+    // found here.
+    private static readonly string[] MeterFieldBoundaryLabels =
+    [
+        "Meter Name", "Meter make", "Meter Make", "Serial number", "Serial Number",
+        "Meter Serial Number", "Meter Asset Number", "Asset no", "Asset number",
+        "Reading", "Flow Rate", "Units"
+    ];
+
     public static async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item, WrTemplateType Template)>
         ExtractAsync(
             string pdfFileName,
@@ -203,6 +228,30 @@ public static class WrInspectionReportExtractionOrchestrator
         // re-measuring it.
         if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
+            // Meter-detail fields first, scoped to their own subset of labelLookups: a document
+            // with several meters has one cell per meter, and MatchMultiValueTextFields is the
+            // only one of the two that returns every meter's value (in row order) rather than
+            // silently picking whichever cell happened to match first and discarding the rest -
+            // see TableExtractorHelper's own doc comment for the real WR51 example this fixes.
+            // Deliberately NOT run over the full labelLookups: its Contains-based label search
+            // and boundary-bounded value extraction are untested outside this field set, so
+            // scoping it here keeps every other FreeText field on the already-validated
+            // MatchTextFields path unchanged.
+            var meterFieldLookups = labelLookups
+                .Where(l => MeterFieldNames.Contains(l.LabelGroupName))
+                .ToList();
+
+            var multiValueMatches = TableMatcherHelper.MatchMultiValueTextFields(
+                tables,
+                meterFieldLookups,
+                usedServiceName,
+                MeterFieldBoundaryLabels);
+
+            foreach (var (key, value) in multiValueMatches)
+            {
+                allMatches.TryAdd(key, value);
+            }
+
             var matches = TableMatcherHelper.MatchTextFields(
                 tables,
                 labelLookups,

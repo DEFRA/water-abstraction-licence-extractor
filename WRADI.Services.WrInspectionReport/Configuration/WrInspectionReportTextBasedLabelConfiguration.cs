@@ -449,7 +449,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Serial number", "Meter Serial No", "Serial no")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Meter Make", "Meter Serial Number")
@@ -457,7 +457,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
                 .AlsoEndsAt("Meter Serial No")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // T6 template
         ]);
 
@@ -471,21 +471,21 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .RequireTextToClaimGroup()
                 .AlsoStartsWithLoose("Serial number")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Meter Serial Number", "Meter Asset Number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // T6 template
             WrFluentRule
                 .Between("Serial number", "Units")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Baseline two-column table
         ]);
 
@@ -517,14 +517,14 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .After("Reading:")
                 .Named(WrInspectionReportFieldNames.Reading)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Meter Reading", "Flow Rate")
                 .Named(WrInspectionReportFieldNames.Reading)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // T6 template
             // Added alongside the MeterTableNextLines widening: when the meter table's own
             // "Units" header genuinely never reappears (blank/N-A table), the wider window
@@ -536,7 +536,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .SkipNextLineWhenStartsWith("Other")
                 .AlsoEndsAt("Other:-", "Certificates or records available for", "Date of certificate", "Meter verification")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Baseline two-column table
         ]);
 

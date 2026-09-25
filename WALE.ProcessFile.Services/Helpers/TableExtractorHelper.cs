@@ -144,6 +144,196 @@ public static class TableMatcherHelper
     }
 
     /// <summary>
+    /// For fields that can genuinely repeat per row in the same table (a document with several
+    /// meters, each its own row/cell) - MatchTextFields/FindTextValueInTable only ever return the
+    /// FIRST matching cell, which silently picks one meter's value at random (whichever cell
+    /// happened to be first in DocumentTable.Cells) and discards the rest; the schema converter's
+    /// own BuildMeters expects one LabelGroupResult.Text line per meter (see
+    /// WrInspectionReportSchemaConverter.GetMultilineTextLines), a shape this never produced
+    /// because MatchTextFields always returns exactly one line. Finds every cell containing the
+    /// label (not just a leading match - a real WR51 document has "Meter make:" appear mid-cell,
+    /// e.g. "Meter at previous site visit 25th March 2025 Meter make: ARAD Serial number:
+    /// ..."), bounds each value at the nearest sibling field's own label (boundaryLabels) so one
+    /// merged cell's several label+value pairs don't bleed into each other, and returns one line
+    /// per cell in row order (top to bottom matches the document's own meter ordering).
+    /// </summary>
+    public static Dictionary<string, LabelGroupResult> MatchMultiValueTextFields(
+        IReadOnlyList<DocumentTable> tables,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+        string serviceName,
+        IReadOnlyList<string> boundaryLabels)
+    {
+        var results = new Dictionary<string, LabelGroupResult>();
+
+        var filteredLabelLookups = labelLookups
+            .Where(labelGroup => labelGroup.Labels
+                .Any(l => l.LayoutExtractorTableLookupType is LayoutExtractorTableLookupType.FreeText))
+            .ToList();
+
+        foreach (var labelGroup in filteredLabelLookups)
+        {
+            LabelToMatch? matchedLabel = null;
+            List<string> values = [];
+
+            foreach (var label in labelGroup.Labels)
+            {
+                if (label.TextStart == null)
+                {
+                    continue;
+                }
+
+                values = tables
+                    .SelectMany(table => FindAllTextValuesInTable(table, label.TextStart, boundaryLabels))
+                    .OrderBy(v => v.RowIndex)
+                    .Select(v => v.Value)
+                    .ToList();
+
+                if (values.Count > 0)
+                {
+                    matchedLabel = label;
+                    break;
+                }
+            }
+
+            if (values.Count == 0)
+            {
+                continue;
+            }
+
+            results[matchedLabel!.Name!] = new LabelGroupResult
+            {
+                LabelGroupName = labelGroup.LabelGroupName,
+                MatchedLabelName = matchedLabel.Name,
+                ServiceName = serviceName,
+                Text = values
+                    .Select(value => new DocumentLine
+                    {
+                        Columns = [new DocumentLineColumn(DocumentLineColumn.TextToWords(value, null))]
+                    })
+                    .ToList()
+            };
+        }
+
+        return results;
+    }
+
+    // A real meter-detail value (make, serial number, reading, asset number, units) is never
+    // this long - a match this size means the "label" occurrence was coincidental, inside an
+    // unrelated long-form paragraph (a licence condition or narrative sentence) with no real
+    // boundary term to stop it. Generous headroom above the longest genuine value seen in the
+    // golden set ("Not available during site visit", ~35 chars) without coming close to a real
+    // sentence's length.
+    private const int MaxPlausibleValueLength = 60;
+
+    // Every occurrence of any of textToMatch in the table, not just the first - see
+    // MatchMultiValueTextFields. A value stops at the nearest occurrence of any boundaryLabels
+    // term after it in the same cell (a sibling field's own label bleeding in from the same
+    // merged cell), or at the cell's own end when no boundary term appears. Two real-document
+    // failure modes found via the golden set drove the two guards here: a label word embedded
+    // inside a longer, unrelated word ("serial numbers" in an unrelated photo caption
+    // wrongly matching "serial number", leaving just the stray trailing "s" once the match is
+    // stripped) - rejected via a word-boundary check on both sides of the match, same approach
+    // as BaseMethod.MatchesPossibility's own ExceptWhenInsideWord guard; and a label with no
+    // value in the SAME cell at all - the value sits in a separate, adjacent cell instead (the
+    // other real WR51 cell shape, already handled by FindTextValueInTable for the single-value
+    // case) - same nearest-populated-cell-to-the-right fallback applied here too.
+    private static List<(int RowIndex, string Value)> FindAllTextValuesInTable(
+        DocumentTable table, IReadOnlyList<TextToMatch> textToMatch, IReadOnlyList<string> boundaryLabels)
+    {
+        var results = new List<(int RowIndex, string Value)>();
+
+        foreach (var cell in table.Cells)
+        {
+            if (string.IsNullOrWhiteSpace(cell.Content))
+            {
+                continue;
+            }
+
+            foreach (var textStart in textToMatch)
+            {
+                var labelIndex = FindWordBoundedIndex(cell.Content, textStart.Text);
+
+                if (labelIndex < 0)
+                {
+                    continue;
+                }
+
+                var afterLabel = cell.Content[(labelIndex + textStart.Text.Length)..]
+                    .TrimStart().TrimStart(':', '.').TrimStart();
+
+                if (afterLabel.Length == 0)
+                {
+                    var nextCell = table.Cells
+                        .Where(c => c.RowIndex == cell.RowIndex && c.ColumnIndex > cell.ColumnIndex)
+                        .OrderBy(c => c.ColumnIndex)
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrWhiteSpace(nextCell?.Content) && nextCell.Content!.Length <= MaxPlausibleValueLength)
+                    {
+                        results.Add((cell.RowIndex, nextCell.Content!.Trim()));
+                    }
+
+                    break;
+                }
+
+                var boundaryIndex = boundaryLabels
+                    .Select(b => afterLabel.IndexOf(b, StringComparison.OrdinalIgnoreCase))
+                    .Where(i => i >= 0)
+                    .DefaultIfEmpty(-1)
+                    .Min();
+
+                // No boundary term found (boundaryIndex == -1) and the remainder still runs
+                // long is the tell that this cell's "label" occurrence was a coincidental match
+                // inside an unrelated long-form sentence (a licence-condition or narrative
+                // paragraph, not a real meter-detail cell) - a genuine value never needs this
+                // much text, so it's dropped rather than trusted.
+                var value = (boundaryIndex >= 0 ? afterLabel[..boundaryIndex] : afterLabel).Trim();
+
+                if (value.Length > 0 && value.Length <= MaxPlausibleValueLength)
+                {
+                    results.Add((cell.RowIndex, value));
+                }
+
+                break;
+            }
+        }
+
+        return results;
+    }
+
+    // The first occurrence of needle in haystack whose match isn't embedded inside a longer
+    // word on either side (letter/digit adjacency on both edges rejects it, same rule
+    // BaseMethod.MatchesPossibility already uses) - keeps searching past a false-positive
+    // occurrence rather than giving up on the whole cell.
+    private static int FindWordBoundedIndex(string haystack, string needle)
+    {
+        var searchStart = 0;
+
+        while (searchStart <= haystack.Length)
+        {
+            var index = haystack.IndexOf(needle, searchStart, StringComparison.OrdinalIgnoreCase);
+
+            if (index < 0)
+            {
+                return -1;
+            }
+
+            var charBeforeIsLetterOrDigit = index >= 1 && char.IsLetterOrDigit(haystack[index - 1]);
+            var charAfterIndex = index + needle.Length;
+            var charAfterIsLetterOrDigit = charAfterIndex < haystack.Length && char.IsLetterOrDigit(haystack[charAfterIndex]);
+
+            if (!charBeforeIsLetterOrDigit && !charAfterIsLetterOrDigit)
+            {
+                return index;
+            }
+
+            searchStart = index + 1;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
     /// Handles both cell shapes seen in practice: (a) label and value merged into one cell (the
     /// majority - strip the label prefix, remainder is the answer), and (b) label and value split
     /// into adjacent cells (label cell's own remainder is empty, answer is the next cell in the

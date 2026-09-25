@@ -294,6 +294,7 @@ public sealed class WrFluentRule
         RequireCompleteDateToClaimGroup = _requireCompleteDateToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
+        LimitToBoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
         LayoutExtractor = _layoutExtractor,
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
         LayoutExtractorTableShape = _layoutExtractorTableShape,

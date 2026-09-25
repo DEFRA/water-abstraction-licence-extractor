@@ -252,6 +252,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .InOrder("Special conditions", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.SpecialConditions)
+                .BoundByOtherLabels()
                 .FromText()
                 .Build()
         ]);

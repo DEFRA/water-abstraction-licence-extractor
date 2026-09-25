@@ -651,12 +651,8 @@ public static class ApplicableToMost
                         documentLine.Columns[0].Words.AddRange(
                             DocumentLineColumn.TextToWords(outputText, null, coords));
 
-                        // See LabelToMatch.AllowValueToWrapToNextLine - nextLines has already
-                        // been fetched and narrowed to this label's own column upstream, but
-                        // this branch otherwise never looks at it.
-                        var resultLines = request.label.AllowValueToWrapToNextLine && request.nextLines?.Count > 0
-                            ? (List<DocumentLine>) [documentLine, ..request.nextLines]
-                            : [documentLine];
+                        var resultLines = BuildResultLinesForConstantFormat(
+                            documentLine, request.nextLines, request.label.AllowValueToWrapToNextLine);
 
                         var lineMatch = labelGroupResult.Clone(resultLines);
                         returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
@@ -671,6 +667,20 @@ public static class ApplicableToMost
         }
         
         return CheckContains(request.label, returnListTop);
+    }
+
+    // Internal (not private): lets WALE.ProcessFile.Services.Tests exercise
+    // LabelToMatch.AllowValueToWrapToNextLine directly - see the csproj's InternalsVisibleTo.
+    // nextLines has already been fetched and narrowed to this label's own column upstream, but
+    // the Text.Constant branch above otherwise never looks at it.
+    internal static List<DocumentLine> BuildResultLinesForConstantFormat(
+        DocumentLine documentLine,
+        IReadOnlyList<DocumentLine>? nextLines,
+        bool allowValueToWrapToNextLine)
+    {
+        return allowValueToWrapToNextLine && nextLines?.Count > 0
+            ? [documentLine, ..nextLines]
+            : [documentLine];
     }
 
     private static List<LabelGroupResult> CheckContains(LabelToMatch? label, List<LabelGroupResult> results)

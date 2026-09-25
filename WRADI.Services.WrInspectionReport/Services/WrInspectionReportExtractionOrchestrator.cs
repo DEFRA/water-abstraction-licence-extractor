@@ -119,7 +119,12 @@ public static class WrInspectionReportExtractionOrchestrator
         // LabelGroupName keys it resolves confidently, never touches anything it doesn't, so a
         // template with no matching content just falls through with the heuristic result
         // untouched, at the cost of one extra (free, local) extraction attempt.
+        // NonStandardNarrative (25% of the real corpus) added 2026-09-25: WrTemplateType's own
+        // doc comment confirms it's classified separately purely on GeneralComments' heading
+        // wording, not grid structure - "otherwise T1-shaped (has the standard header and
+        // grid)" - so the same safe, additive mechanism applies unchanged.
         if (template is WrTemplateType.T1 or WrTemplateType.T4 or WrTemplateType.T6
+                or WrTemplateType.NonStandardNarrative
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {

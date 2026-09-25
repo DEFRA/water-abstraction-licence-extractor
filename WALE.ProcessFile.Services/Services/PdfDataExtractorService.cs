@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -1243,7 +1244,8 @@ public class PdfDataExtractorService(
                     throw new Exception("Neither lines nor tables passed");
                 }
 
-                if (!ShouldClaimLabelGroup(labelGroupMatchResult, label.RequireTextToBePresent))
+                if (!ShouldClaimLabelGroup(
+                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup))
                 {
                     continue;
                 }
@@ -1328,21 +1330,44 @@ public class PdfDataExtractorService(
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
     }
 
+    // Numeric date: 2-4 groups separated by /.- , last group 2 or 4 digits
+    // ("25/03/26", "06/05/2026", "25.03.2026").
+    private static readonly Regex CompleteNumericDateRegex = new(@"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b");
+
+    // Month-name date: month+day or day+month (with an optional ordinal suffix, itself
+    // possibly a separate token e.g. "15 th May") followed by a 2-4 digit year
+    // ("Jul 26 2019", "26 Jul 19", "15 th May 2026").
+    private static readonly Regex CompleteMonthNameDateRegex = new(
+        @"\b((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*,?\s*\d{1,2}" +
+        @"|\d{1,2}\s*(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?)" +
+        @"\s*,?\s*\d{2,4}\b",
+        RegexOptions.IgnoreCase);
+
     /// <summary>
     /// Decides whether an alternate's match result is good enough to claim its label group
     /// and stop trying further alternates. An empty result never claims. A non-empty result
     /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
-    /// Text is blank - that combination exists so a label group with multiple alternates
-    /// (one per template phrasing) doesn't get permanently claimed by an alternate that
-    /// matched the label text but captured no real value, which would stop later,
-    /// possibly-correct alternates from ever being tried. RequireTextToClaimGroup is opt-in
-    /// so every existing rule that doesn't set it keeps its exact current behaviour.
+    /// Text is blank, or opted into RequireCompleteDateToClaimGroup and the joined text of no
+    /// alternate looks like a complete date.
     /// </summary>
     internal static bool ShouldClaimLabelGroup(
         IReadOnlyList<LabelGroupResult> labelGroupMatch,
-        bool requireTextToClaimGroup)
+        bool requireTextToClaimGroup,
+        bool requireCompleteDateToClaimGroup = false)
     {
         if (labelGroupMatch.Count == 0)
+        {
+            return false;
+        }
+
+        // Joined, not per-line: a day/month fragment and its year can land on separate lines
+        // of the same match (e.g. a wrapped continuation).
+        if (requireCompleteDateToClaimGroup
+            && !labelGroupMatch.Any(lgm =>
+            {
+                var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
+                return CompleteNumericDateRegex.IsMatch(joined) || CompleteMonthNameDateRegex.IsMatch(joined);
+            }))
         {
             return false;
         }

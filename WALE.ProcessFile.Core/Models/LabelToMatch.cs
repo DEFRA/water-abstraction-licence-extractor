@@ -122,29 +122,44 @@ public class LabelToMatch
     // rejected text" apart from "this is really a different field's row" - checking the row's
     // own leading label first avoids that ambiguity
     public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
-    
+
+    // Bounds WalkSameLineColumns' same-line walk by the X-position of the nearest other known
+    // field's own column, built once per document (see PdfDataExtractorService.
+    // BuildLabelPositionIndex) - stops the walk wandering into a sibling field's column when
+    // nothing else bounds it. Opt-in (defaults to false/no-op): depends on the caller supplying
+    // that per-document position index.
+    public bool LimitToBoundSameLineWalkByOtherLabelPositions { get; init; }
+
     // When a label group has multiple sibling labels and a match returns empty text, allow
-    // the engine to try the next alternate instead of settings the group as matched. 
+    // the engine to try the next alternate instead of settings the group as matched.
     public bool RequireTextToBePresent { get; init; }
+
+    // Like RequireTextToBePresent, but requires a genuinely complete date (day, month and
+    // year) rather than any non-blank text, so an incomplete date fragment (e.g. a bare day
+    // number, textually indistinguishable from a bare 2-digit year) doesn't permanently block
+    // a later, more complete alternate.
+    public bool RequireCompleteDateToClaimGroup { get; init; }
 
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
 
     public LayoutExtractorTableLookupType LayoutExtractorTableLookupType { get; init; }
         = LayoutExtractorTableLookupType.Default;
-    
+
     public LayoutExtractorTableShape LayoutExtractorTableShape { get; init; } = LayoutExtractorTableShape.Default;
 
-    // GetTextBetween finds its end-tag on the label's OWN first line (e.g. a same-row
-    // "Meter make: <value> Serial number: <value>" layout) and stops there immediately -
-    // correct when nothing past the end-tag belongs to the field, but wrong when the value
-    // genuinely wraps onto a further line with no position/content signal telling it apart from
-    // an unrelated field's row (confirmed on wr51__SO0420031002__... - every line shares the
-    // same left margin). Setting this keeps the scan going past that first-line match instead,
-    // relying on this same label's own TextEnd to find the real boundary further down - only the
-    // first line's stop-immediately behaviour changes. Defaults to false/no-op for every label
-    // that doesn't opt in - see the wr51_metermake_wrap_gap memory for why a blanket version of
-    // this broke 9 of the other 10 tests in Wr51PdfPigNoOcrPdfTests.cs: this is the common
-    // correct-termination shape for most fields, not the rare case.
+    // ApplicableToMost's Format=="Text" branch builds its result purely from the label's own
+    // line - NextLines(n) alone has no effect there, since nextLines is fetched upstream but
+    // never consulted. Opt in to append the already-fetched nextLines onto the result, for a
+    // value that continues on the line below with no other field sharing that row.
+    public bool AllowValueToWrapToNextLine { get; init; }
+
+    // GetTextBetween stops at its end-tag on the label's own first line (e.g. a same-row
+    // "Meter make: <value> Serial number: <value>" layout) - correct when nothing past the
+    // end-tag belongs to the field, but wrong when the value genuinely wraps onto a further
+    // line with no signal telling it apart from an unrelated field's row. Opt in to keep
+    // scanning past that first-line match instead, relying on TextEnd to find the real boundary
+    // further down. Left off by default: a blanket version of this broke most other fields, for
+    // which stopping at the first line is the common, correct shape.
     public bool AllowValueToWrapPastSameLineEndTag { get; init; }
 
     public LabelToMatch Clone()
@@ -192,12 +207,15 @@ public class LabelToMatch
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
-            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(), 
+            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
+            LimitToBoundSameLineWalkByOtherLabelPositions = LimitToBoundSameLineWalkByOtherLabelPositions,
             RequireTextToBePresent = RequireTextToBePresent,
+            RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,
             LayoutExtractor = LayoutExtractor,
             LayoutExtractorTableLookupType = LayoutExtractorTableLookupType,
             LayoutExtractorTableShape = LayoutExtractorTableShape,
+            AllowValueToWrapToNextLine = AllowValueToWrapToNextLine,
             AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag
         };
-    }    
+    }
 }

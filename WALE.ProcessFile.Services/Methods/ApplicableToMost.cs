@@ -419,7 +419,7 @@ public static class ApplicableToMost
 
                     foreach (var possibility in matchedLabel.Possibilities)
                     {
-                        if (!outputText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                        if (!MatchesPossibility(outputText, possibility)
                             && !autoCorrectedOutput.Any(aco =>
                                 aco.Text.Equals(possibility.Text, StringComparison.OrdinalIgnoreCase)))
                         {
@@ -607,6 +607,15 @@ public static class ApplicableToMost
                     return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
 
+                // A candidate whose trimmed text is itself just "SomeLabel:" is another field's
+                // label, not this field's value (e.g. an empty "Reading:" cell picking up the
+                // neighbouring "Units:" column). Every label in this form ends with a colon and
+                // a genuine value never does, so this is a safe general signal.
+                if (outputText.TrimEnd().EndsWith(':'))
+                {
+                    continue;
+                }
+
                 if (!string.IsNullOrWhiteSpace(outputText))
                 {
                     if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)
@@ -642,7 +651,10 @@ public static class ApplicableToMost
                         documentLine.Columns[0].Words.AddRange(
                             DocumentLineColumn.TextToWords(outputText, null, coords));
 
-                        var lineMatch = labelGroupResult.Clone([documentLine]);
+                        var resultLines = BuildResultLinesForConstantFormat(
+                            documentLine, request.nextLines, request.label.AllowValueToWrapToNextLine);
+
+                        var lineMatch = labelGroupResult.Clone(resultLines);
                         returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
                     }
                 }
@@ -655,6 +667,20 @@ public static class ApplicableToMost
         }
         
         return CheckContains(request.label, returnListTop);
+    }
+
+    // Internal (not private): lets WALE.ProcessFile.Services.Tests exercise
+    // LabelToMatch.AllowValueToWrapToNextLine directly - see the csproj's InternalsVisibleTo.
+    // nextLines has already been fetched and narrowed to this label's own column upstream, but
+    // the Text.Constant branch above otherwise never looks at it.
+    internal static List<DocumentLine> BuildResultLinesForConstantFormat(
+        DocumentLine documentLine,
+        IReadOnlyList<DocumentLine>? nextLines,
+        bool allowValueToWrapToNextLine)
+    {
+        return allowValueToWrapToNextLine && nextLines?.Count > 0
+            ? [documentLine, ..nextLines]
+            : [documentLine];
     }
 
     private static List<LabelGroupResult> CheckContains(LabelToMatch? label, List<LabelGroupResult> results)

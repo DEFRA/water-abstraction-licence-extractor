@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -63,7 +64,22 @@ public static class WrInspectionReportSchemaConverter
                 .Replace("NI", string.Empty) // Don't know why we get this
                 .Replace("\r", string.Empty)
                 .Replace("  ", " ");
-            
+
+            // A "Mon D" fragment and its year can land on different lines of the raw capture,
+            // in either order - neither parses alone, and the line-splitting heuristics below
+            // only ever keep one line as the date candidate. Recombine both into one candidate
+            // here, before that splitting runs.
+            var monthDayMatch = Regex.Match(
+                rawInspectionDateTweaked,
+                @"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b",
+                RegexOptions.IgnoreCase);
+            var yearMatch = Regex.Match(rawInspectionDateTweaked, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+            if (monthDayMatch.Success && yearMatch.Success)
+            {
+                potentialDates.Add($"{monthDayMatch.Value} {yearMatch.Value}");
+            }
+
             if (rawInspectionDateTweaked.Contains('&'))
             {
                 var parts = rawInspectionDateTweaked.Split("&");
@@ -168,7 +184,11 @@ public static class WrInspectionReportSchemaConverter
                 && rawInspectionDateTweaked.All(c => c != '/')
                 && rawInspectionDateTweaked.All(c => c != ' '))
             {
-                potentialDates.Add(rawInspectionDateTweaked.Replace(".", ":"));
+                // e.g. "27.02:26" - one separator typoed as ':' instead of '.'. Normalise
+                // toward '.' (not the other way): confirmed via DateTime.TryParse that
+                // "27.02.26" parses fine but "27:02:26" (both separators as ':') doesn't -
+                // colon-separated numerics read as an invalid time, not a date.
+                potentialDates.Add(rawInspectionDateTweaked.Replace(":", "."));
             }
 
             var words = rawInspectionDateTweaked.Split(' ');
@@ -592,7 +612,7 @@ public static class WrInspectionReportSchemaConverter
     // One WrInspectionReportMeter per line, zipping corresponding lines across each field by
     // index (line 1 of MeterMake pairs with line 1 of SerialNumber, etc.) - correct as long as a
     // multi-meter table lists its points in the same order down every column, which is the only
-    // layout confirmed so far (wr51__1041260103__... spot-checked, see wr51_multi_meter memory).
+    // layout confirmed so far (spot-checked on a real multi-meter document).
     // Always returns at least one entry, even when every field is empty, matching
     // WrInspectionReportMeter's own single-meter-by-default contract. Doesn't attempt to parse
     // the "Point N, <site>:" prefix some documents embed in each value out into MeterName - that

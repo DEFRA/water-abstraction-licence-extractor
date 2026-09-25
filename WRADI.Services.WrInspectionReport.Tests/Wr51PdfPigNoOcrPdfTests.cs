@@ -34,8 +34,8 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// Assertions here were translated from the original branch's raw MatchesResult.Matches
 /// list (positional index into an implementation-specific ordering) to lookups by
 /// LabelGroupName, and re-verified against the current WrInspectionReportLabelConfiguration
-/// rule set (a full rewrite this session - see analysis docs) rather than carried over
-/// blind. Where current output still matches the original hand-verified ground truth, the
+/// rule set (a full rewrite) rather than carried over blind. Where current output still
+/// matches the original hand-verified ground truth, the
 /// assertion is kept as-is. Where it doesn't, the assertion still reflects the correct
 /// answer (per the original) - it is expected to fail, and that failure is the point: it's
 /// a real, known gap (see summary in the PR/commit this was added in), not a mistranslation.
@@ -2588,16 +2588,13 @@ public class Wr51PdfPigNoOcrPdfTests
         Assert.Equal("13/04/2022", inspectionDate.Text[0].Text);
     }
     
-    // Known gap: this document's MeterMake value wraps onto a continuation line ("under
-    // Fish Farm RPS") below a row where "Serial number" also happens to sit further along
-    // the same line. GetTextBetween finds "Serial number" as the end tag within the
-    // label's own row and breaks immediately, so it never looks at the continuation line
-    // to see it belongs to this field. Fixing this needs GetTextBetween's line-boundary
-    // loop to distinguish "value ends here, unrelated content follows" from "value
-    // continues after a same-row marker" - tried once (gating on end-tag-found-within-line
-    // + LimitTo.SameColumn), but that turned out to be the *common* shape for these fields,
-    // not the rare case, and broke 9 of the other 10 tests in this suite. Needs a genuine
-    // redesign (e.g. a position-based check on the continuation line itself), not a patch.
+    // This document's MeterMake value wraps onto a continuation line ("under Fish Farm
+    // RPS") below a row where "Serial number" also happens to sit further along the same
+    // line - previously a known gap (GetTextBetween would find "Serial number" as an
+    // end tag within the label's own row and break immediately, missing the wrap). That no
+    // longer reproduces: RuleMeterMake defaults to LimitTo.SameColumn, so the label's row
+    // is already narrowed to the Meter make column before GetTextBetween runs, and the
+    // same-row "Serial number" text (a different column) never enters the scan.
     [Fact]
     public async Task WhenWR51_POCA_10_ThenGood()
     {

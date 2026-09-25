@@ -216,7 +216,10 @@ public static class TextToFindIsBetweenLabels
         return await ProcessSubLabelsAsync(request, returnList);
     }
     
-    private static List<DocumentLine>? GetTextBetween(
+    // Internal (not private): lets WALE.ProcessFile.Services.Tests exercise this directly with
+    // synthetic DocumentLines, same pattern as FindLabelGroupMatchesHelper's own internal
+    // methods - see the csproj's InternalsVisibleTo.
+    internal static List<DocumentLine>? GetTextBetween(
         IReadOnlyList<TextToMatch> textEnd,
         string? firstLineTextAfterLabel,
         IReadOnlyList<DocumentLine> lines,

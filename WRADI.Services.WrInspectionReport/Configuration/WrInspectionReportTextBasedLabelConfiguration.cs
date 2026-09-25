@@ -374,6 +374,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
                 .FromText()
+                .Build(),
+            // A minority of documents use the plain "Tel No" wording as the actual label
+            // (not just a letter-spaced OCR variant of "Telephone No" - see AlsoStartsWith
+            // above), so it needs its own alternate rather than another AlsoStartsWith entry.
+            // NextLines(0): the value always sits on the label's own row on these documents,
+            // never wrapping - reaching into further rows risks sweeping up unrelated
+            // same-column content from "Site address"/"Met with", which live in a different
+            // column and so don't get recognised as an end tag once nextLines are cropped to
+            // Telephone No's own column.
+            WrFluentRule
+                .Between("Tel No", "Site address")
+                .Named(WrInspectionReportFieldNames.TelephoneNumber)
+                .NextLines(0)
+                .FromText()
                 .Build()
         ]);
 

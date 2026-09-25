@@ -89,7 +89,12 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, null!);
+        // A real (free/local) extractor is required now, not optional - some fields in the
+        // shared ruleset are LetterBasedAndTableBased+Unstructured (LicenceNumber, NameAndAddress,
+        // TelephoneNumber etc, wired in 2026-09-25), and PdfDataExtractorService throws if
+        // UnstructuredTableExtractorService is null whenever any active label needs it.
+        var lookupConfiguration = BuildLookupConfiguration(
+            pdfFolder, new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService(CacheService));
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();

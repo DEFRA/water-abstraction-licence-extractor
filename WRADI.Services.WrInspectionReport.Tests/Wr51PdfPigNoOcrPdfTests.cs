@@ -49,8 +49,26 @@ public class Wr51PdfPigNoOcrPdfTests
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
+    // Some fields in the shared ruleset are LetterBasedAndTableBased+Unstructured
+    // (LicenceNumber, NameAndAddress, TelephoneNumber etc, wired in 2026-09-25) -
+    // PdfDataExtractorService throws if UnstructuredTableExtractorService is null whenever
+    // any active label needs it. These tests are exact-value regression tests against the
+    // pure letter-based/heuristic path specifically (see class doc comment) - an empty stub
+    // satisfies the null-check without genuinely enabling table-based matching, so the
+    // original heuristic-only scope of every assertion here stays unchanged.
+    private class EmptyTableExtractorService : ITableExtractorService
+    {
+        public string Name => "Empty";
+
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+            PdfDocument pdfDocument, Guid fileId, int processRunId) =>
+            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
+    }
+
     private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
     {
+        var emptyTableExtractorService = new EmptyTableExtractorService();
+
         var config = new LookupConfiguration(
             WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
@@ -58,8 +76,8 @@ public class Wr51PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
-            null,
-            null,
+            emptyTableExtractorService,
+            emptyTableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);

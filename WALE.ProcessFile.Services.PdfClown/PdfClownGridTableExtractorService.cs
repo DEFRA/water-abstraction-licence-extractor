@@ -81,11 +81,11 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
 
         using var pdfPigDocument = UglyToad.PdfPig.PdfDocument.Open(bytes);
 
-        List<Segment> segments;
+        Dictionary<int, List<Segment>> segmentsByPage;
 
         try
         {
-            segments = ExtractSegments(bytes);
+            segmentsByPage = ExtractSegmentsByPage(bytes);
         }
         catch (Exception ex)
         {
@@ -94,24 +94,43 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
             return [];
         }
 
-        var cells = ReconstructCells(segments.Select(s => new BorderSegment(s.X, s.Y, s.Width, s.Height))).ToList();
+        // One DocumentTable per page that actually has a reconstructed grid - cells are built
+        // per page, never across pages, since each page's own coordinate space starts fresh
+        // (a page 2 cell at the same (X, Y) as a page 1 cell is pure coincidence, not the same
+        // table). Every WR51 document is several pages (sampled: 2-9, mode 4), so restricting to
+        // page 1 alone (this service's original scope) missed genuine content - multi-meter
+        // detail and later General Comments/footer content in particular often spill past it.
+        var tables = new List<DocumentTable>();
 
-        if (cells.Count == 0)
+        foreach (var (pageNumber, segments) in segmentsByPage)
         {
-            return [];
+            var cells = ReconstructCells(segments.Select(s => new BorderSegment(s.X, s.Y, s.Width, s.Height))).ToList();
+
+            if (cells.Count == 0)
+            {
+                continue;
+            }
+
+            var words = pdfPigDocument.GetPage(pageNumber).GetWords()
+                .Select(w => new WordBox(
+                    w.Text, w.BoundingBox.Left, w.BoundingBox.Right, w.BoundingBox.Top, w.BoundingBox.Bottom))
+                .ToList();
+
+            var populated = AssignWordsToCells(cells, words)
+                .Where(kv => kv.Value.Count > 0)
+                .ToList();
+
+            if (populated.Count == 0)
+            {
+                continue;
+            }
+
+            tables.Add(BuildDocumentTable(populated, pageNumber));
         }
 
-        var words = pdfPigDocument.GetPage(SharedPageNumber).GetWords()
-            .Select(w => new WordBox(
-                w.Text, w.BoundingBox.Left, w.BoundingBox.Right, w.BoundingBox.Top, w.BoundingBox.Bottom))
-            .ToList();
-
-        var populated = AssignWordsToCells(cells, words)
-            .Where(kv => kv.Value.Count > 0)
-            .ToList();
-
-        var tables = new List<DocumentTable> { BuildDocumentTable(populated, SharedPageNumber) };
-
+        // Cached as one entry under the shared page-1 key regardless of how many real pages
+        // contributed a table - same convention TabulaTableExtractorService already uses for
+        // its own multi-page result.
         await cacheService.SaveOcrImageTextAsync(
             request,
             JsonSerializer.Serialize(tables, JsonHelper.GetSerializerOptions()));
@@ -202,7 +221,9 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
     // suite running documents in parallel this session.
     private static readonly Lock PdfClownFileOpenLock = new();
 
-    private static List<Segment> ExtractSegments(byte[] bytes)
+    // Keyed 1-based to match PdfPig's own page numbering (pdfPigDocument.GetPage(n)), since
+    // callers pair a page's PdfClown-derived cells with that same page's PdfPig-derived words.
+    private static Dictionary<int, List<Segment>> ExtractSegmentsByPage(byte[] bytes)
     {
         org.pdfclown.files.File pdf;
 
@@ -213,11 +234,23 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
 
         using (pdf)
         {
-            var page = pdf.Document.Pages[0];
+            var segmentsByPage = new Dictionary<int, List<Segment>>();
+            var pageNumber = 0;
 
-            var segments = new List<Segment>();
-            Scan(new ContentScanner(page), segments);
-            return segments;
+            foreach (var page in pdf.Document.Pages)
+            {
+                pageNumber++;
+
+                var segments = new List<Segment>();
+                Scan(new ContentScanner(page), segments);
+
+                if (segments.Count > 0)
+                {
+                    segmentsByPage[pageNumber] = segments;
+                }
+            }
+
+            return segmentsByPage;
         }
     }
 

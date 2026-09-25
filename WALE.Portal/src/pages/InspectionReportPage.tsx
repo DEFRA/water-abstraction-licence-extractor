@@ -4,6 +4,7 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {ScrapeDocuments} from '../components/ScrapeDocuments';
+import {InspectionReportModal} from '../components/InspectionReportModal';
 
 interface SimpleMatchResult {
     fileId: string;
@@ -33,6 +34,8 @@ function InspectionReportPage() {
     const [inlineLoading, setInlineLoading] = useState(false);
 
     const [detailsByFileId, setDetailsByFileId] = useState<Record<string, FileDetails>>({});
+
+    const [modalFileId, setModalFileId] = useState<string | null>(null);
 
     const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
 
@@ -198,12 +201,14 @@ function InspectionReportPage() {
                             ))}
                         </select>
                     </td>
+                    <td></td>
                 </tr>
                 <tr>
                     <th style={{textAlign: 'left'}}>Filename</th>
                     <th style={{textAlign: 'left'}}>Status</th>
                     <th style={{textAlign: 'left'}}>Date</th>
                     <th style={{textAlign: 'left'}}>Template</th>
+                    <th style={{textAlign: 'left'}}>View</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -221,10 +226,18 @@ function InspectionReportPage() {
                             <td>{file.status}</td>
                             <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].date ?? '-') : '...'}</td>
                             <td>{detailsByFileId[file.fileId] ? (detailsByFileId[file.fileId].template ?? '-') : '...'}</td>
+                            <td>
+                                <a href="#" onClick={(e) => {
+                                    e.preventDefault();
+                                    setModalFileId(file.fileId);
+                                }}>
+                                    View PDF
+                                </a>
+                            </td>
                         </tr>
                         {inlineFileId === file.fileId && (
                             <tr>
-                                <td colSpan={4} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
+                                <td colSpan={5} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
                                     {inlineLoading
                                         ? <p>Loading...</p>
                                         : <JsonView src={inlineJson} collapsed={1} theme="default"/>}
@@ -236,6 +249,10 @@ function InspectionReportPage() {
                 </tbody>
             </table>
             </>
+            )}
+
+            {modalFileId && (
+                <InspectionReportModal fileId={modalFileId} processRunId={processRunId} onClose={() => setModalFileId(null)}/>
             )}
         </div>
     );

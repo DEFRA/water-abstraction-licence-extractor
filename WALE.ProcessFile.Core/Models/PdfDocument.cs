@@ -109,6 +109,8 @@ public class PdfDocument(
                         Number = page.Number,
                         NumberOfImages = page.NumberOfImages,
                         DigitalText = page.Text,
+                        Width = page.Width,
+                        Height = page.Height,
                         ScreenshotFilepaths = screenshotPaths
                             .Select(sp => sp.ImageReference)
                             .ToList()!

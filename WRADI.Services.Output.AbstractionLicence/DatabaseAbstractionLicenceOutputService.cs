@@ -188,9 +188,24 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseWriteService.AddDocumentNaldPurposeMatchAsync(licNo, documentDescription, naldPurpose, matchType);
     }
 
-    public Task UpdateThumbnailPathAsync(Guid fileId, string url)
+    public async Task UpdateThumbnailPathAsync(Guid fileId, string url)
     {
-        return databaseWriteService.UpdateThumbnailPathAsync(fileId, url);
+        var licences = await databaseReadService.GetLicencesByFileIdAsync(fileId);
+
+        foreach (var licence in licences)
+        {
+            licence.ThumbnailUrl = url;
+            
+            await databaseWriteService.UpdateLicenceAsync(
+                licence.LicenceId,
+                JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions()),
+                fileId,
+                licence.ProcessRunId!.Value,
+                licence.Status.ToString(),
+                licence.Filename,
+                licence.DmsPermitNumber,
+                licence.LicenceNumber?.Value);
+        }
     }
 
     public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)

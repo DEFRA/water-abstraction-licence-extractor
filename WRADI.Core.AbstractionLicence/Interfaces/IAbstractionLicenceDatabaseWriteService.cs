@@ -59,6 +59,4 @@ public interface IAbstractionLicenceDatabaseWriteService
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
     Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
-    
-    Task UpdateThumbnailPathAsync(Guid fileId, string url);
 }

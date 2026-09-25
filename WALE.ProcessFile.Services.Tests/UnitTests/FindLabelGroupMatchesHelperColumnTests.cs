@@ -195,6 +195,116 @@ public class FindLabelGroupMatchesHelperColumnTests
 
             Assert.Equal(["Calibration:", "x"], result.Select(c => c.Text));
         }
+
+        // LabelToMatch.LimitToBoundSameLineWalkByOtherLabelPositions: bounds the walk by the
+        // X-position of a known sibling field's own column, for the case where no TextEnd
+        // marker exists to stop it otherwise. This is the mechanism an earlier rewrite silently
+        // stopped wiring in (the caller still built nextFieldBoundaryX, but WalkSameLineColumns
+        // itself had lost the parameter) - restored, and covered here so a repeat drops back to
+        // a compile error instead of a silent behaviour change.
+
+        [Fact]
+        public void StopsAtNextFieldBoundaryX_EvenWithNoMatchingTextEndMarker()
+        {
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                ColumnAt(400, "some narrative value that never mentions a real end tag")
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns, "Special conditions", textEnd: null, nextFieldBoundaryX: 400);
+
+            Assert.Equal(["Special conditions:"], result.Select(c => c.Text));
+        }
+
+        [Fact]
+        public void DoesNotStopAtNextFieldBoundaryX_WhenColumnIsBeforeIt()
+        {
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                ColumnAt(200, "genuine value")
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns, "Special conditions", textEnd: null, nextFieldBoundaryX: 400);
+
+            Assert.Equal(["Special conditions:", "genuine value"], result.Select(c => c.Text));
+        }
+
+        [Fact]
+        public void StopsAtNextFieldBoundaryX_WhenColumnLeftIsExactlyOnTheBoundary()
+        {
+            // >=, not > - a column starting exactly at the next known field's own position is
+            // treated as belonging to that field, not this one.
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                ColumnAt(400, "value")
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns, "Special conditions", textEnd: null, nextFieldBoundaryX: 400);
+
+            Assert.Equal(["Special conditions:"], result.Select(c => c.Text));
+        }
+
+        [Fact]
+        public void NeverStopsOnPosition_WhenNextFieldBoundaryXIsNull()
+        {
+            // Opt-in, no-op by default - every rule that doesn't set
+            // LimitToBoundSameLineWalkByOtherLabelPositions must behave exactly as if this
+            // parameter didn't exist.
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                ColumnAt(999999, "far away value")
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns, "Special conditions", textEnd: null, nextFieldBoundaryX: null);
+
+            Assert.Equal(["Special conditions:", "far away value"], result.Select(c => c.Text));
+        }
+
+        [Fact]
+        public void DoesNotStopAtBoundary_WhenCandidateColumnHasNoWords()
+        {
+            // A column with no words has no position to compare, so it falls through to being
+            // included rather than treated as having reached the boundary.
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                new DocumentLineColumn([])
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns, "Special conditions", textEnd: null, nextFieldBoundaryX: 0);
+
+            Assert.Equal(2, result.Count);
+        }
+
+        [Fact]
+        public void TextEndMarkerStillStops_EvenWhenNextFieldBoundaryXIsFurtherAway()
+        {
+            // The two stop conditions are independent (isNextFieldStart || isPastKnownFieldBoundary)
+            // - a real TextEnd marker match stops the walk even before the position-based
+            // boundary would have been reached.
+            var columns = new List<DocumentLineColumn>
+            {
+                Column("Special conditions:"),
+                ColumnAt(50, "Measurement details")
+            };
+
+            var (result, _) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
+                columns,
+                "Special conditions",
+                [new TextToMatch("Measurement details")],
+                nextFieldBoundaryX: 999);
+
+            Assert.Equal(["Special conditions:"], result.Select(c => c.Text));
+        }
     }
 
     public class ShouldExcludeNextLineTests

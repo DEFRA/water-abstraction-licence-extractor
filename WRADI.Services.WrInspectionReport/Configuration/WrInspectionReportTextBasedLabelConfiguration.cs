@@ -609,6 +609,14 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .NextLines(1)
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Conformance")
+                // "Calibration" is a column-start-only text prefix of this document's own
+                // genuinely different "Calibration Certificate" field (a flat free-text list
+                // template, not the grid this rule targets) - without this guard, "Certificate"
+                // gets captured as if it were a real Yes/No answer. Confirmed via pdftotext on
+                // a real WR51 document, 2026-09-25 - this specific alternate is the one that
+                // actually claims the group first, so the T6/Grid alternate's own
+                // IgnoreIfContains below never gets a chance to run.
+                .IgnoreIfContains(["Certificate"])
                 .FromText()
                 .Build(), // New template
             WrFluentRule

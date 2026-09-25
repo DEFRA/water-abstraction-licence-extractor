@@ -1245,7 +1245,8 @@ public class PdfDataExtractorService(
                 }
 
                 if (!ShouldClaimLabelGroup(
-                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup))
+                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup,
+                        label.IgnoreBlockIfContains))
                 {
                     continue;
                 }
@@ -1348,12 +1349,17 @@ public class PdfDataExtractorService(
     /// and stop trying further alternates. An empty result never claims. A non-empty result
     /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
     /// Text is blank, or opted into RequireCompleteDateToClaimGroup and the joined text of no
-    /// alternate looks like a complete date.
+    /// alternate looks like a complete date, or opted into IgnoreBlockIfContains and every
+    /// alternate's joined text contains one of those terms (a sibling field's own label
+    /// bleeding in, e.g. a loose "Calibration" alternate wrongly matching this document's
+    /// unrelated "Calibration Certificate" field and capturing "Certificate" - confirmed via
+    /// pdftotext on a real WR51 document, 2026-09-25).
     /// </summary>
     internal static bool ShouldClaimLabelGroup(
         IReadOnlyList<LabelGroupResult> labelGroupMatch,
         bool requireTextToClaimGroup,
-        bool requireCompleteDateToClaimGroup = false)
+        bool requireCompleteDateToClaimGroup = false,
+        IReadOnlyList<string>? ignoreBlockIfContains = null)
     {
         if (labelGroupMatch.Count == 0)
         {
@@ -1367,6 +1373,16 @@ public class PdfDataExtractorService(
             {
                 var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
                 return CompleteNumericDateRegex.IsMatch(joined) || CompleteMonthNameDateRegex.IsMatch(joined);
+            }))
+        {
+            return false;
+        }
+
+        if (ignoreBlockIfContains is { Count: > 0 }
+            && labelGroupMatch.All(lgm =>
+            {
+                var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
+                return ignoreBlockIfContains.Any(term => joined.Contains(term, StringComparison.OrdinalIgnoreCase));
             }))
         {
             return false;

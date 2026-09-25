@@ -140,8 +140,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
-        new("") { ExceptWhenInsideWord = true }, // U+F0D6 - a fifth Wingdings-style tick codepoint,
-        // found on real documents missed by the original 789-doc scan (see comment above)
+        new("") { ExceptWhenInsideWord = true }, // U+F0D6 - a fifth Wingdings-style tick codepoint
         new("X") { ExceptWhenInsideWord = true },
         new("☒") { ExceptWhenInsideWord = true },
         new("×") { ExceptWhenInsideWord = true },
@@ -852,11 +851,9 @@ public static class WrInspectionReportTextBasedLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
-            // The plain case: "Inspection Date:" as one unbroken phrase. RequireTextToClaimGroup
-            // covers a layout where AlsoEndsAt cuts the value to nothing; RequireCompleteDateToClaimGroup
-            // also rejects a non-blank match missing its year (wrapped past the "Inspecting
-            // Officer" row - see the fallback below), so either failure falls through instead
-            // of permanently claiming the group.
+            // The plain case: "Inspection Date:" as one unbroken phrase. Both Require* calls let
+            // a blank or incomplete match fall through to the fallback below instead of
+            // permanently claiming the group.
             WrFluentRule
                 .Between("Inspection Date:", "Quantities")
                 .Named(WrInspectionReportFieldNames.InspectionDate)
@@ -866,21 +863,18 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireCompleteDateToClaimGroup()
                 .FromText()
                 .Build(),
-            // Fallback for a squeezed layout where "Inspection Date:" (or just "Inspection")
-            // wraps onto its own row, with the full-width "Inspecting Officer: ... Time: ..."
-            // row landing between the label and its value. A bare "Inspection" start anchor is
-            // too ambiguous (also matches "Inspection report"/"Inspection Class:" elsewhere on
-            // the page), so this anchors on the unique "Inspecting Officer" label instead and
-            // walks WholeLine to "Licence provisions", which spans any number of rows
-            // regardless of how the value wraps. PreviousLines(1) additionally pulls in the
-            // row above the anchor, for a layout where the value splits across both sides of it.
-            // "Inspection"/"Inspection Date:"/"Date:" are stripped via Remove rather than used
-            // as start anchors - a loose "Date:" anchor collides with "Date of certificate or
-            // record:" elsewhere on the page (tried and reverted here previously: net regression
-            // 98%->40% recall). Relies on WrInspectionReportSchemaConverter.ToForm's
-            // "Inspecting Officer"/"Time" splitting, its month-day/year recombination, and its
-            // containsYear/not-today validation to reject whatever this captures on a
-            // differently-shaped document.
+            // Fallback for a squeezed layout where "Inspection Date:" wraps onto its own row,
+            // with the full-width "Inspecting Officer: ... Time: ..." row landing between the
+            // label and its value. Anchors on "Inspecting Officer" instead (a bare "Inspection"
+            // anchor is too ambiguous - also matches "Inspection report"/"Inspection Class:"),
+            // and walks WholeLine to "Licence provisions" to span however many rows the value
+            // wraps across; PreviousLines(1) also pulls in the row above the anchor.
+            //
+            // "Date:" is stripped rather than used as an anchor: it collides with "Date of
+            // certificate or record:" elsewhere on the page (a measured net regression,
+            // 98%->40% recall, when tried directly). Relies on
+            // WrInspectionReportSchemaConverter.ToForm's date/time splitting and validation to
+            // reject whatever this captures on a differently-shaped document.
             WrFluentRule
                 .Between("Inspecting Officer", "Licence provisions")
                 .Named(WrInspectionReportFieldNames.InspectionDate)

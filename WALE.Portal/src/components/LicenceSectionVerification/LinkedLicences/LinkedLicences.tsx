@@ -13,6 +13,8 @@ import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
+import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
+import NaldStatusTag from "../../NaldStatusTag.tsx";
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     currentLicence?: Licence | null;
@@ -35,7 +37,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
                 return dateB - dateA;
             })[0];
-
+    
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -338,27 +340,53 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             textAlign: 'center'
                         }}>
                             <p style={{color: '#888', marginBottom: '16px'}}>Incoming links found.</p>
-                            <ul>
-                                {implicitLinkedLicences
-                                    .map((_, i) => i)
-                                    .sort((a, b) => compareAlphanumeric(
-                                        implicitLinkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
-                                        implicitLinkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
-                                    ))
-                                    .map((index) => {
-                                        const ll = implicitLinkedLicences[index];
+                            <ul style={{
+                                listStyle: "none"
+                            }}    >
+                                {implicitLinkedLicences.map((ll, index) => {
+                                    const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
+                                    const licenceNumber = ll.licenceNumber;
+
+                                    const linkedLicenceId = getLicenceId(licenceNumber);
+                                    const linkedMatchesResultId = getMatchesResultId(licenceNumber);
+                                    const linkedFileId = getFileId(licenceNumber);
+
+                                    const styledLicenceNumber = licenceNumber ?? '';
+                                    
+                                    if (linkedFileId) {
                                         return (
-                                            <LinkedLicenceItem
-                                                key={index}
-                                                linkedLicence={ll}
-                                                onJumpToPage={onJumpToPage}
-                                                onOpenReport={onOpenReport}
-                                                outputListDataItem={outputListDataItem}
-                                                scrapedView={scrapedView}
-                                                history={history}
-                                            />
+                                            <li key={index} title={styledLicenceNumber} >
+                                                <a  style={{
+                                                    color: '#888',
+                                                    textAlign: 'center'
+                                                }}                                               
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+
+                                                        onOpenReport?.(
+                                                            linkedFileId,
+                                                            linkedLicenceId!,
+                                                            linkedMatchesResultId!
+                                                        );
+                                                    }}
+                                                >
+                                                    {styledLicenceNumber}
+                                                    <NaldStatusTag status={ll.naldStatus} />
+                                                </a>                                                 
+                                            </li>
                                         );
-                                    })}
+                                    }
+
+                                    return (
+                                        <li key={index} title={styledLicenceNumber}>
+                                            {styledLicenceNumber}
+
+                                            <NaldStatusTag status={ll.naldStatus} />
+                                            
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </div>
                     )}

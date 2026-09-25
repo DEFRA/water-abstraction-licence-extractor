@@ -851,7 +851,7 @@ public static class WrInspectionReportLabelConfiguration
     // the correct match on documents where the primary rule already worked fine. Needs a
     // genuinely two-line-aware match (the wrapped "Inspection" line immediately preceding the
     // "Date:" line), not a same-line loose text search - AlsoStartsWithLoose only relaxes the
-    // column requirement, it doesn't span line boundaries. Not attempted further this session.
+    // column requirement, it doesn't span line boundaries.
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
             WrFluentRule

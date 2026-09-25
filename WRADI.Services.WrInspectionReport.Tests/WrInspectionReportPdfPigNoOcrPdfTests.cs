@@ -174,8 +174,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     /// Same full real corpus, with the cost-optimised table extraction overlay enabled (Tabula
     /// primary, free; Azure DI fallback, paid, only on documents where Tabula resolves fewer than
     /// WrInspectionReportExtractionOrchestrator's default minimumFieldsToSkipFallback (10) of the
-    /// 13 grid fields - see that class and the wr51_textract_tables_design memory for how that
-    /// default was tuned against the golden set). No ground truth exists at corpus scale, so this
+    /// 13 grid fields - see that class for how that default was tuned against the golden set).
+    /// No ground truth exists at corpus scale, so this
     /// reports coverage (field presence), not accuracy - compare against
     /// WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
     /// hand for the LicenceProvisions.*/meter fields the overlay targets. Real Azure DI cost is

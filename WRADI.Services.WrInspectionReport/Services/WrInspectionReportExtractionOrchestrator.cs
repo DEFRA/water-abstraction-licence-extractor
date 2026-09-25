@@ -52,9 +52,9 @@ public static class WrInspectionReportExtractionOrchestrator
             // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
             // behaviour unchanged.
             ITableExtractorService? fallbackTableExtractorService = null,
-            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08, see
-            // wr51_textract_tables_design memory for the full curve) - it's a step function, not
-            // smooth: 1/4/7 are flat at the same recall as Tabula alone (fallback usage climbs from
+            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08) -
+            // it's a step function, not smooth: 1/4/7 are flat at the same recall as Tabula
+            // alone (fallback usage climbs from
             // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
             // DI's own accuracy (154 Hit vs Azure-DI-alone's 151, on the same 187-field T1 grid
             // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the

@@ -122,18 +122,15 @@ public class LabelToMatch
     // rejected text" apart from "this is really a different field's row" - checking the row's
     // own leading label first avoids that ambiguity
     public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
-    
+
     // When a label group has multiple sibling labels and a match returns empty text, allow
     // the engine to try the next alternate instead of settings the group as matched.
     public bool RequireTextToBePresent { get; init; }
 
-    // Like RequireTextToBePresent, but requires a genuinely complete date (day, month AND
-    // year - numeric like "25/03/26", or a month name with a day and year like "Jul 26 2019")
-    // rather than any non-blank text, so a real-but-incomplete date fragment doesn't
-    // permanently block a later, more complete alternate. Checks for the full 3-component
-    // shape rather than just "any 4-digit year", since a bare day number and a bare 2-digit
-    // year are textually indistinguishable in isolation. Defaults to false to preserve
-    // existing behaviour for every rule that doesn't opt in.
+    // Like RequireTextToBePresent, but requires a genuinely complete date (day, month and
+    // year) rather than any non-blank text, so an incomplete date fragment (e.g. a bare day
+    // number, textually indistinguishable from a bare 2-digit year) doesn't permanently block
+    // a later, more complete alternate.
     public bool RequireCompleteDateToClaimGroup { get; init; }
 
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
@@ -143,28 +140,19 @@ public class LabelToMatch
 
     public LayoutExtractorTableShape LayoutExtractorTableShape { get; init; } = LayoutExtractorTableShape.Default;
 
-    // ApplicableToMost's Format=="Text" branch (the LabelIsBeforeTextToFind/LabelIsAfterTextToFind
-    // shape's actual winning matcher - it out-ranks LabelIsBeforeTextToFind.FunctionAsync itself,
-    // which never runs once ApplicableToMost already returns a match) builds its result purely
-    // from the label's own line; NextLinesToFetch/nextLines are computed upstream but never
-    // consulted here, so a plain rule with NextLines(1) has no effect on its own - confirmed on a
-    // real document where a value continues as its own line, same left margin, no other field
-    // sharing that row. Setting this appends the label's own already-narrowed nextLines onto the
-    // result. Defaults to false/no-op - a label that doesn't opt in keeps ignoring nextLines
-    // exactly as before.
+    // ApplicableToMost's Format=="Text" branch builds its result purely from the label's own
+    // line - NextLines(n) alone has no effect there, since nextLines is fetched upstream but
+    // never consulted. Opt in to append the already-fetched nextLines onto the result, for a
+    // value that continues on the line below with no other field sharing that row.
     public bool AllowValueToWrapToNextLine { get; init; }
 
-    // GetTextBetween finds its end-tag on the label's OWN first line (e.g. a same-row
-    // "Meter make: <value> Serial number: <value>" layout) and stops there immediately -
-    // correct when nothing past the end-tag belongs to the field, but wrong when the value
-    // genuinely wraps onto a further line with no position/content signal telling it apart from
-    // an unrelated field's row (confirmed on wr51__SO0420031002__... - every line shares the
-    // same left margin). Setting this keeps the scan going past that first-line match instead,
-    // relying on this same label's own TextEnd to find the real boundary further down - only the
-    // first line's stop-immediately behaviour changes. Defaults to false/no-op for every label
-    // that doesn't opt in - see the wr51_metermake_wrap_gap memory for why a blanket version of
-    // this broke 9 of the other 10 tests in Wr51PdfPigNoOcrPdfTests.cs: this is the common
-    // correct-termination shape for most fields, not the rare case.
+    // GetTextBetween stops at its end-tag on the label's own first line (e.g. a same-row
+    // "Meter make: <value> Serial number: <value>" layout) - correct when nothing past the
+    // end-tag belongs to the field, but wrong when the value genuinely wraps onto a further
+    // line with no signal telling it apart from an unrelated field's row. Opt in to keep
+    // scanning past that first-line match instead, relying on TextEnd to find the real boundary
+    // further down. Left off by default: a blanket version of this broke most other fields, for
+    // which stopping at the first line is the common, correct shape.
     public bool AllowValueToWrapPastSameLineEndTag { get; init; }
 
     public LabelToMatch Clone()
@@ -212,7 +200,7 @@ public class LabelToMatch
             GoOutsideTextBlock = GoOutsideTextBlock,
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
-            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(), 
+            LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
             RequireTextToBePresent = RequireTextToBePresent,
             RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,
             LayoutExtractor = LayoutExtractor,

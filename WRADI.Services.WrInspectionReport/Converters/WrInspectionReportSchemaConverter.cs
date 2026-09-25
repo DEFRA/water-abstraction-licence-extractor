@@ -612,7 +612,7 @@ public static class WrInspectionReportSchemaConverter
     // One WrInspectionReportMeter per line, zipping corresponding lines across each field by
     // index (line 1 of MeterMake pairs with line 1 of SerialNumber, etc.) - correct as long as a
     // multi-meter table lists its points in the same order down every column, which is the only
-    // layout confirmed so far (wr51__1041260103__... spot-checked, see wr51_multi_meter memory).
+    // layout confirmed so far (spot-checked on a real multi-meter document).
     // Always returns at least one entry, even when every field is empty, matching
     // WrInspectionReportMeter's own single-meter-by-default contract. Doesn't attempt to parse
     // the "Point N, <site>:" prefix some documents embed in each value out into MeterName - that

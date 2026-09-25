@@ -34,8 +34,8 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// Assertions here were translated from the original branch's raw MatchesResult.Matches
 /// list (positional index into an implementation-specific ordering) to lookups by
 /// LabelGroupName, and re-verified against the current WrInspectionReportLabelConfiguration
-/// rule set (a full rewrite this session - see analysis docs) rather than carried over
-/// blind. Where current output still matches the original hand-verified ground truth, the
+/// rule set (a full rewrite) rather than carried over blind. Where current output still
+/// matches the original hand-verified ground truth, the
 /// assertion is kept as-is. Where it doesn't, the assertion still reflects the correct
 /// answer (per the original) - it is expected to fail, and that failure is the point: it's
 /// a real, known gap (see summary in the PR/commit this was added in), not a mistranslation.

@@ -607,15 +607,10 @@ public static class ApplicableToMost
                     return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
 
-                // A candidate column whose own trimmed text is itself just "SomeLabel:" is
-                // another field's label, not this field's value - confirmed on a real document
-                // (wr51__sw0480192006, Reading genuinely blank): "Reading:" sits on the same
-                // line as "Units:" with a wide gap between them, the multi-column search (see
-                // ApplicableToMost's own per-column loop above) tries the "Units:" column once
-                // column 0 (genuinely empty) fails, and with no Number/Possibilities validation
-                // gating this general path, "Units:" gets accepted as Reading's own answer. Every
-                // label in this form's own convention ends with a colon; a genuine value never
-                // does, so this is a safe, general signal rather than a field-specific patch.
+                // A candidate whose trimmed text is itself just "SomeLabel:" is another field's
+                // label, not this field's value (e.g. an empty "Reading:" cell picking up the
+                // neighbouring "Units:" column). Every label in this form ends with a colon and
+                // a genuine value never does, so this is a safe general signal.
                 if (outputText.TrimEnd().EndsWith(':'))
                 {
                     continue;

@@ -341,6 +341,7 @@ export function ProcessRunLicenceFilters({
                     <option value="NaldStatusLive">Live</option>
                     <option value="NaldStatusRevoked">Revoked</option>
                     <option value="NaldStatusExpired">Expired</option>
+                    <option value="NoDocument">No Document</option>
                 </select>
             </td>
 

@@ -14,7 +14,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 
 /// <summary>
 /// Two-pass extraction: a cheap first pass with only the classification label groups
-/// (WrInspectionReportLabelConfiguration.GetClassificationLabels - 7 groups) decides
+/// (WrInspectionReportTextBasedLabelConfiguration.GetClassificationLabels - 7 groups) decides
 /// Metadata.Template, then a second pass runs GetT1Labels() or GetLabels() depending on that
 /// result. Exists so a T1-specific rule change (once it has real evidence behind it) can be made
 /// in GetT1Labels() alone, with no way to affect any other template's documents, rather than
@@ -64,7 +64,7 @@ public static class WrInspectionReportExtractionOrchestrator
             int minimumFieldsToSkipFallback = 10)
     {
         configuration1 = configuration1.Clone();
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
 
         var originalLabels = configuration1.Labels.ToList();
         
@@ -110,10 +110,16 @@ public static class WrInspectionReportExtractionOrchestrator
             return (stopExecution, alreadySaved, scrapeResult, template);
         }
         
-        // Gating on T1 here (rather than relying solely on WrInspectionReportTableMatcher's own
-        // content-based guards) avoids spending a real Document Intelligence call/cost on
-        // templates with no tick/cross grid for this mechanism to find
-        if (template == WrTemplateType.T1
+        // Gating on template here (rather than relying solely on WrInspectionReportTableMatcher's
+        // own content-based guards) avoids spending a real Document Intelligence call/cost on
+        // templates with no tick/cross grid for this mechanism to find. T1 is the template this
+        // was built and tuned against; T4/T6 added after PdfClownGridExtractionPocTests confirmed
+        // both draw a genuine border grid too (see WALE.ProcessFile.Services.PdfClown) - broadened
+        // here since ApplyTableBasedGridMatchesAsync only ever adds/replaces the specific
+        // LabelGroupName keys it resolves confidently, never touches anything it doesn't, so a
+        // template with no matching content just falls through with the heuristic result
+        // untouched, at the cost of one extra (free, local) extraction attempt.
+        if (template is WrTemplateType.T1 or WrTemplateType.T4 or WrTemplateType.T6
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {
@@ -196,7 +202,7 @@ public static class WrInspectionReportExtractionOrchestrator
                 tables,
                 labelLookups,
                 usedServiceName);
-            
+
             foreach (var (key, value) in matches)
             {
                 allMatches.TryAdd(key, value);

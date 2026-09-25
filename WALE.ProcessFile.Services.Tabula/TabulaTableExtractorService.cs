@@ -60,13 +60,23 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             return cachedTables!;
         }
         
-        var internalDocument = await pdfDocument.OpenInternalDocumentAsync();
+        // Deliberately reads pdfDocument.Bytes directly rather than going through
+        // OpenInternalDocumentAsync() - that path calls out to NoOcrPdfDocumentService/
+        // IFileService to fetch bytes by filename, machinery this extractor doesn't need since
+        // the bytes are already in hand. It also isn't populated on the ad-hoc PdfDocument
+        // WrInspectionReportExtractionOrchestrator.GetTableMatchesAsync constructs for this
+        // overlay - confirmed calling OpenInternalDocumentAsync() there throws a
+        // NullReferenceException, silently zeroing out this extractor's contribution through
+        // that path (see PdfClownGridTableExtractorService for the same fix, found first).
+        var bytes = pdfDocument.Bytes;
 
-        if (internalDocument?.UnderlyingDocument is not UglyToad.PdfPig.PdfDocument document)
+        if (bytes == null)
         {
-            throw new Exception("Tabula can only be used when provider is PdfPig");
+            return [];
         }
-        
+
+        using var document = UglyToad.PdfPig.PdfDocument.Open(bytes);
+
         var tables = new List<DocumentTable>();
         var latticeAlgorithm = new SpreadsheetExtractionAlgorithm();
         var streamDetector = new SimpleNurminenDetectionAlgorithm();

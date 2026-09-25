@@ -32,13 +32,10 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
     private static LookupConfiguration BuildLookupConfiguration(
         string pdfFolder,
-        bool textBasedConfig,
         ITableExtractorService tableExtractorService)
     {
         return new LookupConfiguration(
-            textBasedConfig
-                ? WrInspectionReportTextBasedLabelConfiguration.GetLabels()
-                : WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
@@ -92,7 +89,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, null!);
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, null!);
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -208,8 +205,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
         var primaryTableExtractorService = new WALE.ProcessFile.Services.Tabula.TabulaTableExtractorService(CacheService);
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, primaryTableExtractorService);
-        var lookupConfiguration2 = BuildLookupConfiguration(pdfFolder, false, primaryTableExtractorService);
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, primaryTableExtractorService);
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -249,7 +245,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
                             fileName,
                             dmsFileData,
                             lookupConfiguration,
-                            lookupConfiguration2,
+                            lookupConfiguration,
                             [fileName],
                             processRunId: -99,
                             pdfDataExtractor,

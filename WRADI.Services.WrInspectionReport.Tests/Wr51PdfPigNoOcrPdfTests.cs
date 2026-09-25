@@ -33,7 +33,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 ///
 /// Assertions here were translated from the original branch's raw MatchesResult.Matches
 /// list (positional index into an implementation-specific ordering) to lookups by
-/// LabelGroupName, and re-verified against the current WrInspectionReportLabelConfiguration
+/// LabelGroupName, and re-verified against the current WrInspectionReportTextBasedLabelConfiguration
 /// rule set (a full rewrite) rather than carried over blind. Where current output still
 /// matches the original hand-verified ground truth, the
 /// assertion is kept as-is. Where it doesn't, the assertion still reflects the correct
@@ -64,7 +64,7 @@ public class Wr51PdfPigNoOcrPdfTests
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
 
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
 

@@ -504,7 +504,7 @@ public static class WrInspectionReportSchemaConverter
     }
 
     // v2 classifier - see WrTemplateType and the TemplateMarker* label groups in
-    // WrInspectionReportLabelConfiguration for the literal markers, sourced from the client's
+    // WrInspectionReportTextBasedLabelConfiguration for the literal markers, sourced from the client's
     // TemplateSpec_v5.0.xlsx (T4/T6/T7 sheets) plus the GeneralComments heading catalogue for
     // the T1-vs-NonStandardNarrative check. Checked in order most-specific-first (Impounding and
     // T4/T6/T7 are all positive, distinguishing markers).
@@ -588,7 +588,7 @@ public static class WrInspectionReportSchemaConverter
     }
 
     // Same source as GetMultilineText, but as separate lines rather than one joined string -
-    // for a multi-meter table (WrInspectionReportLabelConfiguration.MeterTableNextLines) each
+    // for a multi-meter table (WrInspectionReportTextBasedLabelConfiguration.MeterTableNextLines) each
     // line is one meter's value for this field, e.g. "Point 1, Yaxley: Honeywell" / "Point 2,
     // Eye: Honeywell" / ... - see BuildMeters. Blank lines dropped (a table with fewer filled
     // rows than the widened window fetched shouldn't produce empty meter entries).
@@ -719,7 +719,7 @@ public static class WrInspectionReportSchemaConverter
 
         // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
         // export toolchain happened to produce, not consistently ✓ - see
-        // WrInspectionReportLabelConfiguration's InOrderPossibilities list for the
+        // WrInspectionReportTextBasedLabelConfiguration's InOrderPossibilities list for the
         // full evidence (corpus-wide symbol frequency behind each of these).
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)

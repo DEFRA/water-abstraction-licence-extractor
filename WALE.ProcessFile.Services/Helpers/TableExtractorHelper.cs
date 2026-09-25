@@ -88,7 +88,7 @@ public static class TableMatcherHelper
             .Where(labelGroup => labelGroup.Labels
                 .Any(l => l.LayoutExtractorTableLookupType is LayoutExtractorTableLookupType.FreeText))
             .ToList();
-        
+
         foreach (var labelGroup in filteredLabelLookups)
         {
             var labels = labelGroup.Labels;
@@ -176,14 +176,25 @@ public static class TableMatcherHelper
                 return rawRemainder;
             }
 
-            var nextCell = table.Cells.FirstOrDefault(c =>
-                c.RowIndex == cell.RowIndex && c.ColumnIndex == cell.ColumnIndex + 1);
+            // The nearest populated cell to the right, not strictly ColumnIndex+1: column
+            // indices are assigned per-table, not per-row, so a row whose own real neighbour
+            // column has no content anywhere else on the page (or a colspan label skips a
+            // column) leaves a gap - PdfClownGridTableExtractorService clusters ColumnIndex from
+            // populated-cell positions globally, so a sibling row's different column layout can
+            // leave this row's own "next" index unused (confirmed via a real WR51 doc: the
+            // Calibration/Conformance/Flow verification/Meter verification row's tick values sit
+            // two indices to the right of their own label, not one, because no other row uses the
+            // index in between).
+            var nextCell = table.Cells
+                .Where(c => c.RowIndex == cell.RowIndex && c.ColumnIndex > cell.ColumnIndex)
+                .OrderBy(c => c.ColumnIndex)
+                .FirstOrDefault();
 
             if (nextCell?.Content == null)
             {
                 return string.Empty;
             }
-            
+
             return nextCell.Content?.Trim();
         }
 

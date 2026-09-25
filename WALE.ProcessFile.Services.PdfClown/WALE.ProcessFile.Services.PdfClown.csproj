@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="PdfPig" Version="0.1.13" />
+        <PackageReference Include="PDFClown.NET" Version="2.0.0" />
+        <!-- Pinned, not latest - .NET 7+ removed working Unix GDI+ support (even the documented
+             EnableUnixSupport switch is ignored on newer versions); 6.0.0 is the last version
+             that still respects it. Also needs libgdiplus at runtime (brew install
+             mono-libgdiplus locally; bundle alongside this project's existing Tesseract/
+             Leptonica native deps for Lambda) and the EnableUnixSupport RuntimeHostConfigurationOption
+             below. -->
+        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+    </ItemGroup>
+</Project>

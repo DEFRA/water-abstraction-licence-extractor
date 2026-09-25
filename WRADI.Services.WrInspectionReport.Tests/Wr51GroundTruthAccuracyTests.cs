@@ -11,6 +11,7 @@ using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfClown;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tabula;
@@ -87,20 +88,23 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             MessageQueueService);
     }
 
-    private class TruthFile
+    // Internal (not private): lets PdfClownGoldenSetComparisonTests score against the exact
+    // same ground truth and classification rules, rather than a second, possibly-diverging
+    // implementation that would make the two harnesses' numbers not actually comparable.
+    internal class TruthFile
     {
         public string? SourceFile { get; set; }
         public List<string>? DocumentShape { get; set; }
         public Dictionary<string, TruthField> Fields { get; set; } = new();
     }
 
-    private class TruthField
+    internal class TruthField
     {
         public bool Present { get; set; }
         public string? TruthValue { get; set; }
     }
 
-    private enum Outcome
+    internal enum Outcome
     {
         Unmodeled,
         TrueNegative,
@@ -299,7 +303,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         return 1.0 - (double)distance / Math.Max(a.Length, b.Length);
     }
 
-    private static Outcome Classify(string fieldName, TruthField truth, string? extractedRaw)
+    internal static Outcome Classify(string fieldName, TruthField truth, string? extractedRaw)
     {
         if (UnmodeledFields.Contains(fieldName))
         {
@@ -401,6 +405,23 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>
+    /// Same harness, table-based grid extraction via PdfClownGridTableExtractorService instead -
+    /// reads the PDF's own drawn hairline table borders through PdfClown's content-stream
+    /// scanner (no cloud call, no cost). Unlike TabulaTableExtractorService this reuses the SAME
+    /// TableExtractorHelper matching (RowIndex/ColumnIndex adjacency, the label configuration's
+    /// own possibility lists) via a real DocumentTable, so this is a genuine apples-to-apples
+    /// run through the production matching pipeline - not the standalone PdfClownGoldenSetComparisonTests
+    /// script's own simplified extraction/scoring. Separate CSV (suffix "-pdfclown-table-based").
+    /// </summary>
+    [Fact]
+    public async Task WhenScoringWithPdfClownTableExtractionEnabled_ThenReportsPerFieldAccuracy()
+    {
+        var tableExtractorService = new PdfClownGridTableExtractorService(CacheService);
+
+        await RunHarnessAsync(tableExtractorService, outputSuffix: "-pdfclown-table-based");
+    }
+
+    /// <summary>
     /// The cost-optimised two-tier design actually wired into WrInspectionReportExtractionOrchestrator,
     /// at its default minimumFieldsToSkipFallback (10, tuned via
     /// WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve - see that
@@ -491,6 +512,14 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
         lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
+        // Same extractor for both roles - PdfDataExtractorService's own Structured/Unstructured
+        // split (LayoutExtractorTableShape) predates and is independent of this harness's
+        // table-overlay work; nothing here needs two different extractor instances. Needed as
+        // soon as any label uses LetterBasedAndTableBased + Unstructured (Phase B's retag of
+        // WrInspectionReportTextBasedLabelConfiguration's header-block/measurement fields is the
+        // first time this file's rules do) - PdfDataExtractorService throws if this is null and
+        // any active label requires it.
+        lookupConfiguration.UnstructuredTableExtractorService = tableExtractorService!;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();

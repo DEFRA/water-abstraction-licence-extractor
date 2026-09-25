@@ -319,7 +319,7 @@ public static class GenerateWrInspectionReportCsv
         IOutputService outputService)
     {
         var config = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             fileService,
             cacheService,
@@ -333,7 +333,7 @@ public static class GenerateWrInspectionReportCsv
             skipFileIfMoreThenPages: 100,
             skipFileIfMoreThenImages: 1000);
 
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
 }

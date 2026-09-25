@@ -45,7 +45,7 @@ public class FileProcessSingleService(
         }
 
         var lookupConfig = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             fileService,
             cacheService,

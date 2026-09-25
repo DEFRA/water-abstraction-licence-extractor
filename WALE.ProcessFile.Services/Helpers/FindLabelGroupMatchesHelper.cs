@@ -854,7 +854,7 @@ public static class FindLabelGroupMatchesHelper
     /// identifiable field (that field's own label starting the row) rather than being a blank
     /// or genuine continuation row for the label being matched. See
     /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
-    /// WrInspectionReportLabelConfiguration's Calibration/Conformance/FlowVerification/
+    /// WrInspectionReportTextBasedLabelConfiguration's Calibration/Conformance/FlowVerification/
     /// MeterVerification for the real case this exists for: on several real WR51 templates the
     /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
     /// row, with no dedicated value row for these fields in between at all.

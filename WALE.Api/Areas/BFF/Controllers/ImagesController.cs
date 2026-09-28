@@ -16,7 +16,7 @@ public class ImagesController(
     ICacheService cacheService) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult> Thumbnail(
+    public async Task<ActionResult> ThumbnailAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] string serviceName)
@@ -39,11 +39,11 @@ public class ImagesController(
         var originalResImage = SKImage.FromEncodedData(data[0]);
         var originalRegBitmap = SKBitmap.FromImage(originalResImage);
         var resizedBitmap = originalRegBitmap.Resize(
-            new SKSizeI(120, 160),
+            new SKSizeI(240, 320),
             SKSamplingOptions.Default);
 
         var resizedImage = SKImage.FromBitmap(resizedBitmap);
-        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 60);
+        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 70);
 
         thumbnail = resizedJpg.AsSpan().ToArray();
         await outputService.SavePageScreenshotThumbnailAsync(

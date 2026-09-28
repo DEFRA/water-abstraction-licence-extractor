@@ -40,14 +40,8 @@ public static class GenerateS3Thumbnails
             
             var response = await HttpClient.PutAsync(uploadUrl, form);
             
-            var presignedUrl = await response.Content.ReadAsStringAsync();
+            var responseStr = await response.Content.ReadAsStringAsync();
             response.EnsureSuccessStatusCode();
-
-            if (string.IsNullOrEmpty(presignedUrl))
-            {
-                ConsoleHelper.WriteLine("WARNING - No url returned");
-                continue;
-            }
         }
     }
     

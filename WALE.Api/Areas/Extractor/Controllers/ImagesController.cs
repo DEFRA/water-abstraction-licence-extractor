@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
@@ -268,5 +269,46 @@ public class ImagesController(
             processRunId);
 
         return Ok();
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult> ThumbnailAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string serviceName)
+    {
+        var thumbnail = await outputService.GetPageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId);
+
+        if (thumbnail != null)
+        {
+            return File(thumbnail, "image/jpeg");
+        }
+        
+        var data = await outputService.GetPageScreenshotDataAsync(
+            pageNumber,
+            serviceName,
+            fileId);
+
+        var originalResImage = SKImage.FromEncodedData(data[0]);
+        var originalRegBitmap = SKBitmap.FromImage(originalResImage);
+        var resizedBitmap = originalRegBitmap.Resize(
+            new SKSizeI(240, 320),
+            SKSamplingOptions.Default);
+
+        var resizedImage = SKImage.FromBitmap(resizedBitmap);
+        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 70);
+
+        thumbnail = resizedJpg.AsSpan().ToArray();
+        await outputService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId,
+            thumbnail,
+            -1);
+
+        return File(thumbnail, "image/jpeg");
     }
 }

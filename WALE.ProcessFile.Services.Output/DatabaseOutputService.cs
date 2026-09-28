@@ -194,6 +194,11 @@ public class DatabaseOutputService(
         return databaseReadService.GetMatchesResult(fileId, processRunId);
     }
 
+    public Task SaveThumbnailAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
         int processRunId)
     {

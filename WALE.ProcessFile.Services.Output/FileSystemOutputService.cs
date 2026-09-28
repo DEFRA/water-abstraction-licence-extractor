@@ -246,6 +246,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         return Task.FromResult<MatchesResult?>(null);
     }
 
+    public Task SaveThumbnailAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
     {
         throw new NotImplementedException();

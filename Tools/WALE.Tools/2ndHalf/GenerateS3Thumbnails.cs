@@ -1,5 +1,6 @@
-using System.Net.Http.Headers;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Services.Output;
 using WALE.Tools.Config;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -16,6 +17,9 @@ public static class GenerateS3Thumbnails
     
     private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
         new ApiAbstractionLicenceOutputService(HttpClient);
+    
+    private static readonly IOutputService OutputService =
+        new ApiOutputService(HttpClient);
 
     public static async Task RunAsync(int processRunId)
     {
@@ -26,22 +30,7 @@ public static class GenerateS3Thumbnails
         
         foreach (var fileId in fileIds)
         {
-            var thumbnailGeneratorUrl = $"{KeyConfig.ApiBaseUrl}/BFF/Images/Thumbnail?fileId={fileId}&pageNumber=1&serviceName=PdfPig";
-            
-            var bytes = await HttpClient.GetByteArrayAsync(thumbnailGeneratorUrl);
-            var s3Filename = $"thumbnail_{fileId.ToString().ToLower()}.jpg";
-
-            var uploadUrl = new Uri($"{KeyConfig.ApiBaseUrl}/Extractor/Images/Upload");
-
-            using var form = new MultipartFormDataContent();
-            var fileContent = new StreamContent(new MemoryStream(bytes));
-            fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
-            form.Add(fileContent, "file", s3Filename);
-            
-            var response = await HttpClient.PutAsync(uploadUrl, form);
-            
-            var responseStr = await response.Content.ReadAsStringAsync();
-            response.EnsureSuccessStatusCode();
+            await OutputService.SaveThumbnailAsync(fileId);
         }
     }
     

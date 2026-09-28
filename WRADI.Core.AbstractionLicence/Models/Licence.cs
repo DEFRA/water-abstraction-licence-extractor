@@ -64,8 +64,6 @@ public class Licence
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
     
-    public string? ThumbnailUrl { get; set; }
-
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
 
     public Licence CloneWithAbstractionLimits(AbstractionLimits abstractionLimits)
@@ -94,7 +92,6 @@ public class Licence
             DefinitionOfYear = DefinitionOfYear,
             LinkedLicences = LinkedLicences,
             LicenceSets = LicenceSets,
-            ThumbnailUrl = ThumbnailUrl,
             NoneSchemaData = NoneSchemaData
         };
     }

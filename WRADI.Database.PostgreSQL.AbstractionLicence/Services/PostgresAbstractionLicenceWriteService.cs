@@ -791,8 +791,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             summary.VerificationItemsCount,
             summary.HasVerifications,
             summary.SearchText,
-            SourceData = NullIfWhiteSpace(item.SourceData),
-            //ThumbnailUrl = item.ThumbnailUrl TODO ry
+            SourceData = NullIfWhiteSpace(item.SourceData)
         };
 
         return await connection.ExecuteScalarAsync<long>(

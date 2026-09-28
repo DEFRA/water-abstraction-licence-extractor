@@ -63,26 +63,6 @@ public static class LinkedLicenceVerificationMergeHelper
                 continue;
             }
 
-            // Apply data changed flag check
-            if (verification.ProcessRunId < processRunId)
-            {
-                var wasScrapedThisRun = (originalLinkedLicences ?? [])
-                    .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
-                              && x.ContainedIn != null
-                              && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
-
-                var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
-
-                if (wasScrapedThisRun != wasScrapedOnVerificationRun)
-                {
-                    var flagReason = wasScrapedThisRun
-                        ? "LL added to scraper output since the verification run"
-                        : "LL removed from scraper output since the verification run";
-                    
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
-                }
-            }
-
             // Apply verification
             try
             {
@@ -105,6 +85,38 @@ public static class LinkedLicenceVerificationMergeHelper
                     ConsoleHelper.WriteLine(
                         $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
                     continue;
+                }
+
+                // Apply data changed flag check
+                if (verification.ProcessRunId < processRunId)
+                {
+                    var scrapedLinkedLicence = (originalLinkedLicences ?? [])
+                        .FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId
+                                             && x.ContainedIn != null
+                                             && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
+
+                    var wasScrapedThisRun = scrapedLinkedLicence != null;
+                    var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
+
+                    string? flagReason = null;
+
+                    if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+                    {
+                        flagReason = wasScrapedThisRun
+                            ? "LL added to scraper output since the verification run"
+                            : "LL removed from scraper output since the verification run";
+                    }
+                    else if (scrapedLinkedLicence != null
+                             && IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
+                             && !IsDeadNaldStatus(verificationLicence.NaldStatus))
+                    {
+                        flagReason = $"Linked Licence {scrapedLinkedLicence.NaldStatus}";
+                    }
+
+                    if (flagReason != null)
+                    {
+                        FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
+                    }
                 }
 
                 var existingLinkedLicence =
@@ -374,4 +386,7 @@ public static class LinkedLicenceVerificationMergeHelper
 
     private static bool IsBusinessReview(string? verificationType)
         => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
+
+    private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
+        => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;
 }

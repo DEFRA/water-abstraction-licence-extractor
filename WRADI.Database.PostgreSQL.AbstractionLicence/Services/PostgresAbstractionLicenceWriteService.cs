@@ -600,28 +600,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
-    public async Task UpdateThumbnailPathAsync(Guid fileId, string url)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE licence
-                           SET
-                               thumbnail_url = @ThumbnailUrl
-                           WHERE
-                                file_id = @FileId
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                ThumbnailUrl = url
-            });
-    }
-
     private static async Task<long>
         UpsertLicenceListItemInternalAsync(
             NpgsqlConnection connection,

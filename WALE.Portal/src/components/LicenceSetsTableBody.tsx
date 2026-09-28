@@ -171,7 +171,7 @@ function renderListRow(
                 {licencesInSet.map((item, idx) => (
                     item.imagePath === undefined ? (
                         <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
-                    ) : TODO
+                    ) : 'TODO'
                 ))}
             </td>
             <td rowSpan={licencesInSet.length}>

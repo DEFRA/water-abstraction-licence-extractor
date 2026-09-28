@@ -1,6 +1,5 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -41,7 +40,7 @@ public static class LinkedLicenceVerificationMergeHelper
                                             l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing)))
                 {
                     // Flag this because the verification confirmed there are zero outgoing LLs but actually there are some
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, "'None Outgoing' verification contradicted by existence of LLs");
                     foreach (var linkedLicence in linkedLicences)
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
@@ -76,7 +75,11 @@ public static class LinkedLicenceVerificationMergeHelper
 
                 if (wasScrapedThisRun != wasScrapedOnVerificationRun)
                 {
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
+                    var flagReason = wasScrapedThisRun
+                        ? "LL added to scraper output since the verification run"
+                        : "LL removed from scraper output since the verification run";
+                    
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
                 }
             }
 
@@ -344,18 +347,20 @@ public static class LinkedLicenceVerificationMergeHelper
             if (!IsAutoOrBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
-                existingSummary.ScrapedDataIsDifferent = false;
+                existingSummary.IsFlagged = false;
+                existingSummary.FlagReason = null;
             }
         }
     }
 
-    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)
     {
         var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
 
         if (summary != null)
         {
-            summary.ScrapedDataIsDifferent = true;
+            summary.IsFlagged = true;
+            summary.FlagReason = flagReason;
             return;
         }
 

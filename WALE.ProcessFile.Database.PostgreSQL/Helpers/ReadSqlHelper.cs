@@ -351,7 +351,7 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
-                        AND item.scraped_data_is_different = true
+                        AND item.is_flagged = true
                   )
                 """);
 

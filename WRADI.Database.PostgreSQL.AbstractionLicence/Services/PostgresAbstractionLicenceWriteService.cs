@@ -1353,7 +1353,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_section_id,
                 licence_section_item_id,
                 verification_types,
-                scraped_data_is_different,
+                is_flagged,
+                flag_reason,
              current_verification_type,
              verification_types_with_notes
             )
@@ -1362,7 +1363,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @VerificationSectionId,
                 @LicenceSectionItemId,
                 @VerificationTypes,
-                @ScrapedDataIsDifferent,
+                @IsFlagged,
+                @FlagReason,
              @CurrentVerificationType,
              @VerificationTypesWithNotes
             )
@@ -1378,8 +1380,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 EXCLUDED.verification_types_with_notes,
                 current_verification_type = 
                 EXCLUDED.current_verification_type,
-                scraped_data_is_different =
-                    EXCLUDED.scraped_data_is_different;
+                is_flagged =
+                    EXCLUDED.is_flagged,
+                flag_reason =
+                    EXCLUDED.flag_reason;
             """;
 
         var verificationTypes =
@@ -1414,7 +1418,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     VerificationTypes =
                         verificationTypes,
 
-                    item.ScrapedDataIsDifferent,
+                    item.IsFlagged,
+
+                    item.FlagReason,
                     
                     item.CurrentVerificationType,
                    

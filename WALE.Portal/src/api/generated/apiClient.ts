@@ -7892,7 +7892,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     currentVerificationType?: string | undefined;
     verificationTypes!: string[];
     verificationTypesWithNotes?: string[];
-    scrapedDataIsDifferent?: boolean;
+    isFlagged?: boolean;
+    flagReason?: string | undefined;
 
     [key: string]: any;
 
@@ -7926,7 +7927,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 for (let item of _data["verificationTypesWithNotes"])
                     this.verificationTypesWithNotes!.push(item);
             }
-            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
+            this.isFlagged = _data["isFlagged"];
+            this.flagReason = _data["flagReason"];
         }
     }
 
@@ -7955,7 +7957,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
             for (let item of this.verificationTypesWithNotes)
                 data["verificationTypesWithNotes"].push(item);
         }
-        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
+        data["isFlagged"] = this.isFlagged;
+        data["flagReason"] = this.flagReason;
         return data;
     }
 }
@@ -7965,7 +7968,8 @@ export interface ILicenceSectionItemSummary {
     currentVerificationType?: string | undefined;
     verificationTypes: string[];
     verificationTypesWithNotes?: string[];
-    scrapedDataIsDifferent?: boolean;
+    isFlagged?: boolean;
+    flagReason?: string | undefined;
 
     [key: string]: any;
 }
@@ -7981,7 +7985,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
-    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
     deletedDateTimeUtc?: Date | undefined;
 
@@ -8012,7 +8015,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.verificationType = _data["verificationType"];
             this.licenceSectionItemId = _data["licenceSectionItemId"];
             this.notes = _data["notes"];
-            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
             this.deletedDateTimeUtc = _data["deletedDateTimeUtc"] ? new Date(_data["deletedDateTimeUtc"].toString()) : undefined as any;
         }
@@ -8041,7 +8043,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["verificationType"] = this.verificationType;
         data["licenceSectionItemId"] = this.licenceSectionItemId;
         data["notes"] = this.notes;
-        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
         data["deletedDateTimeUtc"] = this.deletedDateTimeUtc ? this.deletedDateTimeUtc.toISOString() : undefined as any;
         return data;
@@ -8059,7 +8060,6 @@ export interface ILicenceSectionVerification {
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
-    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
     deletedDateTimeUtc?: Date | undefined;
 

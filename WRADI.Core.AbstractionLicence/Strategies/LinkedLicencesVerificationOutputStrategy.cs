@@ -10,7 +10,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     public string SectionName => "Linked Licences";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Guid fileId, string licenceNumber, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var hasOutgoingVerifications =
             verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);

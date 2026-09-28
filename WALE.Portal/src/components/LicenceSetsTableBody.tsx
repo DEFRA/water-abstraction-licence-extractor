@@ -5,8 +5,8 @@ import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsTableBodyProps {
     data: OutputListDataItem[];
-    onOpenReport: (fileId: string, item: OutputListDataItem) => void;
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string, licenceId: number, matchesResultId: number, item: OutputListDataItem) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     onTotalsCalculated?: (totals: LicenceSetsTotals) => void;
 }
 
@@ -153,8 +153,8 @@ function renderListRow(
     rows: ReactNode[],
     dataSorted: OutputListDataItem[],
     indentLevel: number,
-    onOpenReport: (fileId: string, item: OutputListDataItem) => void,
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void
+    onOpenReport: (fileId: string, licenceId: number, matchesResultId: number, item: OutputListDataItem) => void,
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void
 ) {
     const oddRow = i % 2 === 0;
     const backgroundColor = oddRow ? "#F6F6F6" : "#FAFAFA";
@@ -181,7 +181,7 @@ function renderListRow(
                 <span className='lsId' title={licenceSetId}>
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(licencesInSet[0].fileId!, licenceSetId);
+                        onOpenLicenceSetReport(licencesInSet[0].fileId!, licencesInSet[0].licenceId!, licencesInSet[0].matchesResultId!, licenceSetId);
                     }}>
                         {licenceSet.shortLicenceSetId}
                     </a>
@@ -199,7 +199,7 @@ function renderListRow(
                 {firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenReport(firstLicenceInSet.fileId!, firstLicenceInSet);
+                        onOpenReport(firstLicenceInSet.fileId!, firstLicenceInSet.licenceId!, firstLicenceInSet.matchesResultId!,  firstLicenceInSet);
                     }} className='filenameSet'>
                         {firstLicenceInSet.filename}
                     </a>
@@ -217,9 +217,9 @@ function renderListRow(
                 <td className={currentLicenceInSetType}>{licenceInSet.licenceNumber}</td>
                 <td className='filename-cell'>
                     {licenceInSet.filename !== '--' ? (
-                        <a href='#' onClick={(e) => {
+                        <a href='#' onClick={(e) => {   
                             e.preventDefault();
-                            onOpenReport(licenceInSet.fileId!, licenceInSet);
+                            onOpenReport(licenceInSet.fileId!, licenceInSet.licenceId!, licenceInSet.matcheResultId!, licenceInSet);
                         }} className='filenameSet'>
                             {licenceInSet.filename}
                         </a>

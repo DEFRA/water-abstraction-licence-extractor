@@ -11,5 +11,5 @@ public interface IVerificationOutputStrategy
         LicenceVerificationLookups sectionVerificationLookups,
         Guid fileId,
         string licenceNumber,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping);
+        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping);
 }

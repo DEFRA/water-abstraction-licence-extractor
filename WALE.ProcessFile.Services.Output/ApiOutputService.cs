@@ -437,9 +437,17 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRuns;
     }
 
-    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+    public async Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId)
     {
-        throw new NotImplementedException();
+        var path = $"/BFF/FileData/GetMatchesResultByMatchesResultId?matchesResultId={matchesResultId}";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return string.IsNullOrEmpty(content)
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
     }
 
     public async Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)

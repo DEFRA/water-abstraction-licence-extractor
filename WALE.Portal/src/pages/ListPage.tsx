@@ -168,9 +168,9 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string) => {
+    const openReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number) => {
         const knownItem = outputList.find(item => item.fileId === fileId);
-        openReport(fileId, processRunId, knownItem, openReportWithId);
+        openReport(fileId, licenceId, matchesResultId, processRunId, knownItem, openReportWithId);
 
         if (!knownItem) {
             const licenceNumber = getLicenceNumber(fileId);
@@ -207,8 +207,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         }
     }, [openReport, processRunId, outputList, getLicenceNumber, updateModalOutputItem]);
 
-    const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
-        openLicenceSetReport(fileId, licenceSetId, processRunId);
+    const openLicenceSetReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => {
+        openLicenceSetReport(fileId, licenceId, matchesResultId, licenceSetId, processRunId);
     }, [openLicenceSetReport, processRunId]);
 
     const updateQuery = <K extends keyof ProcessRunQuery>(

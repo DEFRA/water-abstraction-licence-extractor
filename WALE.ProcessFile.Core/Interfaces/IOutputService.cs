@@ -67,8 +67,8 @@ public interface IOutputService
     Task<List<ProcessRun>> GetProcessRunsAsync();
 
     Task<List<ProcessRun>> GetAllProcessRunsAsync();
-    
-    Task<MatchesResult?> GetMatchesResultAsync(Guid fileId);
+
+    Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId);
     
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId);
     

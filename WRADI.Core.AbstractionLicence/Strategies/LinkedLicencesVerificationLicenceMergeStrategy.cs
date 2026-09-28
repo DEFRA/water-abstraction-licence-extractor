@@ -9,7 +9,7 @@ public class LinkedLicencesVerificationLicenceMergeStrategy : IVerificationLicen
     public string SectionName => "Linked Licences";
 
     public Licence ApplyVerifications(Licence licence, LicenceVerificationLookups sectionVerificationLookups,
-        Guid fileId, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Guid fileId, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var hasOutgoingVerifications =
             sectionVerificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);

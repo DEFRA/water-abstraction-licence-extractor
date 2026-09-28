@@ -46,6 +46,19 @@ public static class LinkedLicenceVerificationMergeHelper
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
                     }
+
+                    // These licences' active state is now contradicted by the newer NoneOutgoing confirmation
+                    var staleItemIds = sectionSummaries
+                        .Where(s => s.LicenceSectionItemId != NoneOutgoing
+                                    && s.LicenceSectionItemId != Review
+                                    && s.CurrentVerificationType != "Removed")
+                        .Select(s => s.LicenceSectionItemId)
+                        .ToList();
+
+                    foreach (var staleItemId in staleItemIds)
+                    {
+                        SimulateRemoval(sectionSummaries, staleItemId);
+                    }
                 }
 
                 continue;
@@ -111,6 +124,14 @@ public static class LinkedLicenceVerificationMergeHelper
                             linkedLicences.Remove(existingLinkedLicence);
                         }
 
+                        var noneOutgoingSummary =
+                            sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == NoneOutgoing);
+                        if (noneOutgoingSummary != null && noneOutgoingSummary.CurrentVerificationType != "Removed")
+                        {
+                            // This outgoing licence contradicts the earlier "confirmed none outgoing" state
+                            SimulateRemoval(sectionSummaries, NoneOutgoing);
+                        }
+
                         break;
                     case "Removed":
                         if (existingLinkedLicence != null)
@@ -133,7 +154,7 @@ public static class LinkedLicenceVerificationMergeHelper
     public static void MergeIncoming(
         List<LinkedLicence> linkedLicences,
         IEnumerable<LicenceSectionVerification> verifications,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var orderedVerifications = verifications
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -142,7 +163,7 @@ public static class LinkedLicenceVerificationMergeHelper
         foreach (var verification in orderedVerifications)
         {
             var fileId = verification.LicenceFileId;
-            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceLicenceNumber))
+            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceMapping))
             {
                 ConsoleHelper.WriteLine(
                     $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Incoming LL Verifications - No licence number found for {fileId}");
@@ -178,13 +199,15 @@ public static class LinkedLicenceVerificationMergeHelper
                     continue;
                 }
 
+                var licenceNumber = sourceMapping[0].LicenceNumber;
+                
                 var existingLinkedLicence =
-                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == sourceLicenceNumber);
+                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == licenceNumber);
 
                 // TODO: We need to convert the verification licence to an incoming link - use the logic in WalSchemaConverter - but much of this will require looking up
                 var convertedToIncoming = new LinkedLicence
                 {
-                    LicenceNumber = sourceLicenceNumber,
+                    LicenceNumber = licenceNumber,
                     DmsFileId = fileId,
                     ContainedIn = verificationLicence.ContainedIn?.Select(c => new ContainedInInformation
                     {
@@ -244,6 +267,17 @@ public static class LinkedLicenceVerificationMergeHelper
     private static void RemoveAllLinksForDirection(LinkedLicence linkedLicence, InformationDirection directionToRemove)
         => linkedLicence.ContainedIn = linkedLicence.ContainedIn?
             .Where(c => c.Direction != directionToRemove).ToArray();
+
+    private static void SimulateRemoval(List<LicenceSectionItemSummary> sectionSummaries, string itemId)
+    {
+        var syntheticVerification = new LicenceSectionVerification
+        {
+            LicenceSectionItemId = itemId,
+            VerificationType = "Removed"
+        };
+
+        UpdateSectionSummaries(sectionSummaries, syntheticVerification);
+    }
 
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)

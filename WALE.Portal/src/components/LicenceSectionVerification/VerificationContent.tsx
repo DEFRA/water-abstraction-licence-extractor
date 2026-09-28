@@ -14,7 +14,7 @@ interface VerificationContentProps {
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 type SubTabType = 'scraped' | 'current' | 'history';

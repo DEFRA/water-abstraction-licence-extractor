@@ -30,10 +30,12 @@ export interface ReportModal {
     id: number;
     type: 'report' | 'licenceSet';
     fileId: string;
+    licenceId: number,
+    matchesResultId: number,
     licenceSetId?: string;
     processRunId: number;
     position: { top: number; left: number };
     size: { width: string; height: string };
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }

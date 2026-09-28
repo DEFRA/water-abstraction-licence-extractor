@@ -9,7 +9,7 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
     public string SectionName => "Aggregates";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Guid fileId, string licenceNumber, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         if (!verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications))
         {

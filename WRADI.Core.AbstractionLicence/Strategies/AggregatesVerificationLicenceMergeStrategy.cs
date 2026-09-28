@@ -9,7 +9,7 @@ public class AggregatesVerificationLicenceMergeStrategy : IVerificationLicenceMe
     public string SectionName => "Aggregates";
 
     public Licence ApplyVerifications(Licence licence, LicenceVerificationLookups sectionVerificationLookups,
-        Guid fileId, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Guid fileId, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         if (!sectionVerificationLookups.ByFileId.TryGetValue(fileId, out var aggregateVerifications))
         {

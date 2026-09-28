@@ -61,6 +61,8 @@ public static class JsOutputHelper
         return new IntermediateOutputLicence
         {
             Filename = licence.Filename,
+            LicenceId = licence.LicenceId,
+            MatchesResultId = licence.MatchesResultId,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
@@ -85,7 +87,7 @@ public static class JsOutputHelper
     public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
         int processRunId,
         Dictionary<string, LicenceVerificationLookups> verificationLookups,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -135,6 +137,8 @@ public static class JsOutputHelper
                 processRunId = processRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
+                licenceId = outputLine.LicenceId,
+                matchesResultId = outputLine.MatchesResultId,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =

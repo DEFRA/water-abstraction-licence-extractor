@@ -82,7 +82,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
-        bool slashesRemoved)
+        bool slashesRemoved,
+        bool includeDetail = true)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -207,6 +208,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);
             break;
+        }
+
+        if (!includeDetail)
+        {
+            return naldData;
         }
 
         var purposesTask = GetNaldLicencePurposesAsync(
@@ -629,26 +635,43 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             query.LinkedLicencesType);
     }
     
-    public async Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public async Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
 
         const string sql = """
-                           SELECT max(licence_number) AS licence_number, file_id
+                           SELECT
+                               licence_number,
+                               licence_id,
+                               matches_result_id,
+                               file_id
                            FROM licence
-                           WHERE process_run_id = @ProcessRunId
-                             AND licence_number IS NOT NULL
-                             AND file_id IS NOT NULL
-                           GROUP BY file_id;
+                           WHERE
+                                process_run_id = @ProcessRunId
+                                AND licence_number IS NOT NULL
+                                AND file_id IS NOT NULL;
                            """;
 
-        var results = await QueryAsync<(string LicenceNumber, Guid FileId)>(
+        var results = await QueryAsync<LicenceFileMapEntry>(
             connection,
             sql,
             0,
             new { ProcessRunId = processRunId });
 
-        return results.ToDictionary(x => x.FileId, x => x.LicenceNumber);
+        var returnDictionary = new Dictionary<Guid, List<LicenceFileMapEntry>>();
+
+        foreach (var result in results)
+        {
+            if (returnDictionary.TryGetValue(result.FileId, out var value))
+            {
+                value.Add(result);
+                continue;
+            }
+            
+            returnDictionary.Add(result.FileId, [result]);
+        }
+        
+        return returnDictionary;
     }
     
     public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
@@ -1109,10 +1132,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var sql = new StringBuilder(
             """
-            SELECT data, licence_id
+            SELECT
+                data
+                 , licence_id
+                 , matches_result_id
             FROM licence
-            WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+            WHERE
+                process_run_id = @ProcessRunId
+                AND data::jsonb ->> 'status' = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -1130,7 +1157,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             OFFSET @Skip;
             """);
 
-        var results = await QueryAsync<(string Data, int LicenceId)>(
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId)>(
             connection,
             sql.ToString(),
             0,
@@ -1143,6 +1170,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                     result.Data,
                     GetSerializerOptions())!;
 
+                licence.LicenceId = result.LicenceId;
+                licence.MatchesResultId = result.MatchesResultId;
                 licence.NoneSchemaData.TryAdd(
                     "licenceId",
                     result.LicenceId);
@@ -1156,7 +1185,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data, licence_id 
+                           SELECT data, licence_id, matches_result_id 
                            FROM licence 
                            WHERE process_run_id = @ProcessRunId
                            ORDER BY licence_id
@@ -1164,7 +1193,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            OFFSET @skip;
                            """;
 
-        var results = await QueryAsync<(string Data, int LicenceId)>(
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId)>(
             connection,
             sql,
             0,
@@ -1178,7 +1207,10 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.Select(r =>
         {
             var licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+            
             licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+            licence.LicenceId = r.LicenceId;
+            licence.MatchesResultId = r.MatchesResultId;
 
             return licence;
         }).ToList();
@@ -1203,6 +1235,31 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             new
             {
                 ProcessRunId = processRunId
+            })).ToList();
+    }
+
+    public async Task<List<LicenceSetTable>> GetLicenceSetsSimpleByLicenceIdAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT DISTINCT
+                               ls.licence_set_id,
+                               ls.short_licence_set_id, 
+                               ls.schema_licence_set_id 
+                           FROM licence_set ls
+                           JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
+                           JOIN licence l on l.licence_id = lsl.licence_id
+                           WHERE
+                               l.licence_id = @LicenceId
+                           """;
+
+        return (await QueryAsync<LicenceSetTable>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
             })).ToList();
     }
 
@@ -1356,19 +1413,59 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return [];
     }
 
+    public async Task<Licence?> GetLicenceAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               data,
+                               process_run_id,
+                               matches_result_id
+                           FROM licence
+                           WHERE
+                               licence_id = @LicenceId;
+                           """;
+
+        var result = await QueryFirstOrDefaultAsync<(string Data, int ProcessRunId, int MatchesResultId)?>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
+            });
+        
+        if (result == null)
+        {
+            return null;
+        }
+
+        var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
+        data.NoneSchemaData.TryAdd("licenceId", licenceId);
+        data.LicenceId = licenceId;
+        
+        data.ProcessRunId = result.Value.ProcessRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
+        
+        return data;
+    }
+
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
-                           WHERE file_id = @FileId
-                           AND process_run_id = @ProcessRunId;
+                           WHERE
+                               file_id = @FileId
+                               AND process_run_id = @ProcessRunId;
                            """;
 
-        var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QueryFirstOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -1377,14 +1474,19 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                 FileId = fileId,
                 ProcessRunId = processRunId
             });
+        
         if (result == null)
         {
             return null;
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
+        
         data.ProcessRunId = processRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
         
         return data;
     }
@@ -1395,13 +1497,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
                            WHERE licence_number = @LicenceNumber 
                              AND process_run_id = @ProcessRunId;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -1417,8 +1520,13 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
+        
         data.ProcessRunId = processRunId;
+        data.MatchesResultId = result.Value.MatchesResultId;
+        
         return data;
     }
 
@@ -2159,14 +2267,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT 
                                data,
-                               licence_id 
+                               licence_id,
+                               matches_result_id
                            FROM licence
                            WHERE permit_number = @PermitNumber
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId)?>(
+        var result = await QuerySingleOrDefaultAsync<(string Data, int LicenceId, int MatchesResultId)?>(
             connection,
             sql,
             0,
@@ -2178,7 +2287,12 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
 
         var data = JsonSerializer.Deserialize<Licence>(result.Value.Data, GetSerializerOptions())!;
+        
         data.NoneSchemaData.TryAdd("licenceId", result.Value.LicenceId);
+        data.LicenceId = result.Value.LicenceId;
+        
+        data.MatchesResultId = result.Value.MatchesResultId;
+        
         return data;
     }
 
@@ -2943,10 +3057,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             ProcessRunQuery query,
             CancellationToken cancellationToken = default)
     {
-        await using var connection = GetPostgresConnection();
-
         var parents = await GetLicenceListItemParentsAsync(
-            connection,
             processRunId,
             query,
             cancellationToken);
@@ -2960,29 +3071,28 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .Select(x => x.LicenceListItemId)
             .ToArray();
 
-        var linkedLicences = await GetLinkedLicencesAsync(
-            connection,
+        var linkedLicencesTask = GetLinkedLicencesAsync(
             itemIds,
             cancellationToken);
 
-        var licenceSets = await GetLicenceSetsAsync(
-            connection,
+        var licenceSetsTask = GetLicenceSetsAsync(
             processRunId,
             itemIds,
             cancellationToken);
         
         var verificationSections =
-            await GetLicenceVerificationSectionsAsync(
-                connection,
+             await GetLicenceVerificationSectionsAsync(
                 processRunId,
                 itemIds,
                 cancellationToken);
+
+        var linkedLicences = await linkedLicencesTask;
+        var licenceSets = await licenceSetsTask;
         
         return parents
             .Select(parent => new LicenceListItemAggregate
             {
                 Licence = parent,
-                
                 LinkedLicences = linkedLicences.TryGetValue(
                     parent.LicenceListItemId,
                     out var itemLinkedLicences)
@@ -3077,14 +3187,15 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.ToList();
     }
 
-private static async Task<
+private async Task<
         Dictionary<long, List<LicenceSectionVerificationSummary>>>
     GetLicenceVerificationSectionsAsync(
-        NpgsqlConnection connection,
         int processRunId,
         IReadOnlyCollection<long> licenceListItemIds,
         CancellationToken cancellationToken)
 {
+    await using var connection = GetPostgresConnection();
+    
     if (licenceListItemIds.Count == 0)
     {
         return [];
@@ -3193,14 +3304,15 @@ private static async Task<
 }
 
 
-    private static async Task<
+    private async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLicenceSet>>>
         GetLicenceSetsAsync(
-            NpgsqlConnection connection,
             int processRunId,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
+        await using var connection = GetPostgresConnection();
+        
         const string sql =
             """
             SELECT
@@ -3267,13 +3379,14 @@ private static async Task<
                     group.ToArray());
     }
 
-    private static async Task<
+    private async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLinkedLicence>>>
         GetLinkedLicencesAsync(
-            NpgsqlConnection connection,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
+        await using var connection = GetPostgresConnection();
+        
         const string linkedSql =
             """
             SELECT
@@ -3409,17 +3522,20 @@ private static async Task<
     }
     
     
-    private static async Task<List<LicenceListItem>>
-    GetLicenceListItemParentsAsync(
-        NpgsqlConnection connection,
-        int processRunId,
-        ProcessRunQuery query,
-        CancellationToken cancellationToken)
+    private async Task<List<LicenceListItem>>
+        GetLicenceListItemParentsAsync(
+            int processRunId,
+            ProcessRunQuery query,
+            CancellationToken cancellationToken)
 {
+    await using var connection = GetPostgresConnection();
+    
     var sql = new StringBuilder(
         """
         SELECT
             licence_list_item_id AS LicenceListItemId,
+            licence_id AS LicenceId,
+            matches_result_id AS MatchesResultId,
             process_run_id AS ProcessRunId,
             file_id AS FileId,
             filename AS Filename,

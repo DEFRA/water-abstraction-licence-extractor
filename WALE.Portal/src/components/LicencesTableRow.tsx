@@ -17,7 +17,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
-                .
+                <img src={item.thumbnailUrl} />
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
                 <a href="#"

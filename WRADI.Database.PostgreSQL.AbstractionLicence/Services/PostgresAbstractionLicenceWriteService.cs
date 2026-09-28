@@ -110,28 +110,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
-    public async Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
+    public Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
     {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE licence_set_licence 
-                           SET licence_id = @LicenceId 
-                           WHERE licence_set_id = @LicenceSetId 
-                             AND licence_number = @LicenceNumber 
-                             AND process_run_id = @ProcessRunId
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                licenceSetLicence.LicenceSetId,
-                licenceSetLicence.LicenceId,
-                licenceSetLicence.LicenceNumber,
-                licenceSetLicence.ProcessRunId
-            });
+        throw new NotImplementedException();
     }
 
     public async Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber,
@@ -702,7 +683,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 search_text,
                 source_data,
                 created_date_time_utc,
-                updated_date_time_utc
+                updated_date_time_utc,
+                thumbnail_url
             )
             VALUES
             (
@@ -735,7 +717,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
-                NOW()
+                NOW(),
+                @ThumbnailUrl
             )
             ON CONFLICT
             (
@@ -774,7 +757,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.has_verifications,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
-                updated_date_time_utc = NOW()
+                updated_date_time_utc = NOW(),
+                thumbnail_url = @ThumbnailUrl
             RETURNING licence_list_item_id;
             """;
 

@@ -49,7 +49,55 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         return purposeMapping.ToList();
     }
-    
+
+    public async Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                data
+                                , licence_id
+                                , matches_result_id
+                                , process_run_id
+                           FROM licence
+                           WHERE
+                               file_id = @FileId
+                           """;
+
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId, int ProcessRunId)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId
+            });
+
+        return results
+            .Select(r =>
+            {
+                Licence licence;
+                
+                try
+                {
+                    licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+                }
+                catch
+                {
+                    return null;
+                }
+
+                licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+                licence.LicenceId = r.LicenceId;
+                licence.MatchesResultId = r.MatchesResultId;
+                licence.ProcessRunId = r.ProcessRunId;
+
+                return licence;
+            })
+            .Where(l => l != null)
+            .ToList()!;
+    }
+
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();

@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -12,9 +13,16 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class FilesController(IFileService fileService) : Controller
 {
     [HttpGet]
-    public async Task<ActionResult> GetAsync([FromQuery] string filename)
+    public async Task<ActionResult> GetAsync(
+        [FromQuery] string filename,
+        [FromQuery] string folder)
     {
-        var presignedUrl = await fileService.GetPresignedUrlAsync(filename);
+        var isAssets = "assets".Equals(folder, StringComparison.OrdinalIgnoreCase);
+        
+        var presignedUrl = await fileService.GetPresignedUrlAsync(
+            filename,
+            isAssets ? StorageFolder.Assets : StorageFolder.Ingress);
+        
         return Redirect(presignedUrl);
     }  
     
@@ -81,7 +89,7 @@ public class FilesController(IFileService fileService) : Controller
                 continue;
             }
             
-            if (await fileService.ExistsAsync(lowercaseFileName))
+            if (await fileService.ExistsAsync(lowercaseFileName, StorageFolder.Ingress))
             {
                 continue;
             }
@@ -89,8 +97,11 @@ public class FilesController(IFileService fileService) : Controller
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
             
-            await fileService.UploadFileAsStreamAsync(lowercaseFileName, stream);
-            resultSb.AppendLine($"File {lowercaseFileName} has been uploaded.");
+            await fileService.UploadFileAsStreamAsync(
+                lowercaseFileName,
+                stream,
+                "application/pdf",
+                StorageFolder.Ingress);
         }
 
         if (resultSb.Length == 0)

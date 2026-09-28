@@ -43,7 +43,7 @@ public class FileProcessOrchestrationService(
         var processRun = await outputService.StartProcessRunAsync(
             new ProcessRun
             {
-                Description = $"Batch process request for single file process from: {fileService.FolderPath}",
+                Description = $"Batch process request for single file process from: {fileService.IngressFolderPath}",
                 StartDateTimeUtc = DateTime.UtcNow,
                 NumberOfFiles = dmsFilesToProcess.Count,
                 Status = "Batch"

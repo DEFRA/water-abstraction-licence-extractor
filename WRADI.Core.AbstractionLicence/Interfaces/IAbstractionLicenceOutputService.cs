@@ -69,4 +69,6 @@ public interface IAbstractionLicenceOutputService
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
     Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(int processRunId);
 }

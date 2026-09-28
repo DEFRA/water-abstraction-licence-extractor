@@ -1,6 +1,5 @@
 import {OutputListDataItem, OutputListDataItemLicenceSet} from "../api/generated/apiClient.ts";
 import {useEffect, useState, useMemo, type ReactNode} from "react";
-import {getThumbnailUrl} from "../utils/images.ts";
 import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsTableBodyProps {
@@ -172,9 +171,7 @@ function renderListRow(
                 {licencesInSet.map((item, idx) => (
                     item.imagePath === undefined ? (
                         <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
-                    ) : (
-                        <img key={idx} src={getThumbnailUrl(item.fileId!)} style={{height: '80px'}} alt='No image found' onError={(e) => e.currentTarget.style.display = 'none'} />
-                    )
+                    ) : TODO
                 ))}
             </td>
             <td rowSpan={licencesInSet.length}>

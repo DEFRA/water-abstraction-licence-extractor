@@ -463,6 +463,29 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task SaveThumbnailAsync(Guid fileId)
+    {
+        var thumbnailGeneratorUrl = $"/Extractor/Images/Thumbnail?fileId={fileId}&pageNumber=1&serviceName=PdfPig";
+
+        var bytes = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetByteArrayAsync(new Uri(httpClient.BaseAddress!, thumbnailGeneratorUrl)));
+        
+        const string uploadUrl = "/Extractor/Images/Upload";
+
+        using var form = new MultipartFormDataContent();
+        var fileContent = new StreamContent(new MemoryStream(bytes));
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+
+        var s3Filename = $"thumbnail_{fileId.ToString().ToLower()}.jpg";
+        form.Add(fileContent, "file", s3Filename);
+            
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PutAsync(uploadUrl, form));
+            
+        var responseStr = await response.Content.ReadAsStringAsync();
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
     {
         var dtStart = DateTime.UtcNow;

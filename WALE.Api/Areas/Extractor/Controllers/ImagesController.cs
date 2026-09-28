@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
+using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -10,7 +12,8 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class ImagesController(
     ICacheService cacheService,
-    IOutputService outputService) : Controller
+    IOutputService outputService,
+    IFileService fileService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -85,6 +88,77 @@ public class ImagesController(
             fileId);
 
         return Ok(data);
+    }
+
+    [HttpPut]
+    [DisableRequestSizeLimit]
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = 1_048_576_000,
+        ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
+    public async Task<ActionResult> UploadAsync()
+    {
+        if (!Request.Form.Files.Any())
+        {
+            return BadRequest();
+        }
+
+        foreach (var file in Request.Form.Files)
+        {
+            if (!file.ContentType.Equals("image/jpeg", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var lowercaseFileName = file.FileName.ToLowerInvariant();
+            var fileExtension = Path.GetExtension(lowercaseFileName);
+
+            if (!fileExtension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest();
+            }
+            
+            if (await fileService.ExistsAsync(lowercaseFileName, StorageFolder.Assets))
+            {
+                return Ok();
+            }
+
+            using MemoryStream stream = new();
+            await file.CopyToAsync(stream);
+            
+            await fileService.UploadFileAsStreamAsync(
+                lowercaseFileName,
+                stream,
+                "image/jpeg",
+                StorageFolder.Assets);
+            
+            return Ok();
+        }
+
+        return Ok();
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> GeneratePresignedUrlsAsync(GeneratePresignedUrlsRequest request)
+    {
+        if (request.fileIds == null || string.IsNullOrEmpty(request.templateUrl))
+        {
+            return BadRequest();
+        }
+
+        var returnDict = new Dictionary<Guid, string>();
+        
+        foreach (var fileId in request.fileIds)
+        {
+            var lowercaseFileName = string.Format(request.templateUrl!, fileId);
+            
+            var presignedUrl = await fileService.GetPresignedUrlAsync(
+                lowercaseFileName,
+                StorageFolder.Assets);
+            
+            returnDict.Add(fileId, presignedUrl);
+        }
+        
+        return Ok(returnDict);
     }
     
     [HttpPost]
@@ -195,5 +269,46 @@ public class ImagesController(
             processRunId);
 
         return Ok();
+    }
+    
+    [HttpGet]
+    public async Task<ActionResult> ThumbnailAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int pageNumber,
+        [FromQuery] string serviceName)
+    {
+        var thumbnail = await outputService.GetPageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId);
+
+        if (thumbnail != null)
+        {
+            return File(thumbnail, "image/jpeg");
+        }
+        
+        var data = await outputService.GetPageScreenshotDataAsync(
+            pageNumber,
+            serviceName,
+            fileId);
+
+        var originalResImage = SKImage.FromEncodedData(data[0]);
+        var originalRegBitmap = SKBitmap.FromImage(originalResImage);
+        var resizedBitmap = originalRegBitmap.Resize(
+            new SKSizeI(240, 320),
+            SKSamplingOptions.Default);
+
+        var resizedImage = SKImage.FromBitmap(resizedBitmap);
+        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 70);
+
+        thumbnail = resizedJpg.AsSpan().ToArray();
+        await outputService.SavePageScreenshotThumbnailAsync(
+            pageNumber,
+            serviceName,
+            fileId,
+            thumbnail,
+            -1);
+
+        return File(thumbnail, "image/jpeg");
     }
 }

@@ -20,7 +20,7 @@ import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
-import {isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
+import {getFlaggedItem} from "../../../utils/verificationUtils.ts";
 
 interface AggregateItemProps {
     aggregate?: Aggregate;
@@ -589,10 +589,13 @@ export const AggregateItem = ({
         );
     }
 
+    const flaggedItem = getFlaggedItem(outputListDataItem, 'Aggregates', itemId);
+
     const summary = (
         <div style={{fontSize: '0.9rem'}}>
             <strong>{aggregate.id || 'N/A'}</strong>
-            {isScrapedDataDifferent(outputListDataItem, 'Aggregates', itemId) && ' 🚩'}
+            {flaggedItem && ' 🚩'}
+            {flaggedItem?.flagReason && <span> {flaggedItem.flagReason}</span>}
         </div>
     );
 

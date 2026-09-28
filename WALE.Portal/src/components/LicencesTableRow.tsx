@@ -83,7 +83,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                             {getVerificationTypeInitials(getVerificationWithNotesFirstPart(vt))}
                                                         </span>
                                                     ))}
-                                                    {v.scrapedDataIsDifferent && '🚩'}
+                                                    {v.isFlagged && <span title={v.flagReason || undefined}>🚩</span>}
                                                 </span>
                                             );
                                         })

@@ -3192,8 +3192,11 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            verification_item.scraped_data_is_different
-                AS ScrapedDataIsDifferent
+            verification_item.is_flagged
+                AS IsFlagged,
+
+            verification_item.flag_reason
+                AS FlagReason
 
         FROM licence_list_item_verification_section
             AS verification_section
@@ -3259,8 +3262,11 @@ private async Task<
                                     VerificationTypesWithNotes = 
                                         row.VerificationTypesWithNotes ?? [],
 
-                                    ScrapedDataIsDifferent =
-                                        row.ScrapedDataIsDifferent
+                                    IsFlagged =
+                                        row.IsFlagged,
+
+                                    FlagReason =
+                                        row.FlagReason
                                 })
                             .ToArray()
                     })

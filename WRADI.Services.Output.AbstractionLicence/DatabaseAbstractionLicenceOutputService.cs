@@ -208,6 +208,11 @@ public class DatabaseAbstractionLicenceOutputService(
         }
     }
 
+    public Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
     {
         var licence = await databaseReadService.GetLicenceAsync(licenceId);

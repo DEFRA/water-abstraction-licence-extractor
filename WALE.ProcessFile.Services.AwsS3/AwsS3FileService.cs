@@ -298,20 +298,15 @@ public class AwsS3FileService(
     
     public Task<string> GetPresignedUrlAsync(string filename, StorageFolder folder)
     {
-        var expires = folder == StorageFolder.Ingress
-            ? DateTime.Now.AddSeconds(30)
-            : DateTime.Now.AddSeconds(604800); // 7 days is max on pre-signed URLs
-        
         var request = new GetPreSignedUrlRequest
         {
             BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
             Key = filename,
-            Expires = expires,
+            Expires = DateTime.Now.AddMinutes(60),
             Protocol = Protocol.HTTPS
         };
 
-        var client = GetS3Client();
-        return client.GetPreSignedURLAsync(request);
+        return GetS3Client().GetPreSignedURLAsync(request);
     }
 
     private AmazonS3Client GetS3Client()

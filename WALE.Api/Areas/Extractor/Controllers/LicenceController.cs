@@ -72,14 +72,6 @@ public class LicenceController(
     }
     
     [HttpPost]
-    public async Task<IActionResult> UpdateThumbnailPathAsync(
-        [FromBody] UpdateThumbnailPathRequest request)
-    {
-        await abstractionLicenceOutputService.UpdateThumbnailPathAsync(request.fileId, request.url!);
-        return Ok();
-    }
-    
-    [HttpPost]
     public async Task<IActionResult> UpdateAsync(
         [FromBody] UpdateLicenceRequest request)
     {

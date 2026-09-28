@@ -705,7 +705,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 search_text,
                 source_data,
                 created_date_time_utc,
-                updated_date_time_utc
+                updated_date_time_utc,
+                thumbnail_url
             )
             VALUES
             (
@@ -738,7 +739,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
-                NOW()
+                NOW(),
+                @ThumbnailUrl
             )
             ON CONFLICT
             (
@@ -777,7 +779,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.has_verifications,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
-                updated_date_time_utc = NOW()
+                updated_date_time_utc = NOW(),
+                thumbnail_url = @ThumbnailUrl
             RETURNING licence_list_item_id;
             """;
 
@@ -810,7 +813,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             summary.VerificationItemsCount,
             summary.HasVerifications,
             summary.SearchText,
-            SourceData = NullIfWhiteSpace(item.SourceData)
+            SourceData = NullIfWhiteSpace(item.SourceData),
+            //ThumbnailUrl = item.ThumbnailUrl TODO ry
         };
 
         return await connection.ExecuteScalarAsync<long>(

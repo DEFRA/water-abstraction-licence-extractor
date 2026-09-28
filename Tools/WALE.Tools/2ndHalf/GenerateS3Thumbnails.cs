@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.Tools.Config;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -16,7 +17,7 @@ public static class GenerateS3Thumbnails
     
     private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
         new ApiAbstractionLicenceOutputService(HttpClient);
-    
+
     public static async Task RunAsync(int processRunId)
     {
         ConsoleHelper.WriteLine("Started generating thumbnails");
@@ -49,10 +50,37 @@ public static class GenerateS3Thumbnails
                 ConsoleHelper.WriteLine("WARNING - No url returned");
                 continue;
             }
-            
-            await AbsLicenceOutputService.UpdateThumbnailPathAsync(fileId, presignedUrl);
-            ConsoleHelper.WriteLine($"{idx++} of {fileIds.Count} done");
         }
+    }
+    
+    private static async Task<List<Guid>> GetFileIdsAsync(int processRunId)
+    {
+        var fileIds = new List<Guid>();
+        var loopLicences = new List<Licence>();
+        
+        const int licencesToTake = 10;
+        var first = true;
+        var loopIdx = 0;
+        
+        while (first || loopLicences.Count == licencesToTake)
+        {
+            first = false;
+            var startAt = loopIdx++ * licencesToTake;
+            
+            loopLicences = await AbsLicenceOutputService.GetLicencesAsync(processRunId, startAt, licencesToTake);
+            var loopFileIds = loopLicences
+                .Select(l => l.DmsFileId)
+                .Where(fid => fid != null)
+                .Select(fid => fid!.Value);
+            
+            fileIds.AddRange(loopFileIds);
+        }
+        
+        var uniqueFileIds = fileIds
+            .Distinct()
+            .ToList();
+
+        return uniqueFileIds;
     }
 
     private static async Task<List<Guid>> GetFileIdsWithoutThumbnailAsync(int processRunId)

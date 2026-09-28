@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models.OcrService;
@@ -93,7 +94,7 @@ public class ImagesController(
     [RequestFormLimits(
         MultipartBodyLengthLimit = 1_048_576_000,
         ValueLengthLimit = 83_886_080)] // 1Gb for all files, 80Mb per file
-    public async Task<ActionResult<string>> UploadAsync()
+    public async Task<ActionResult> UploadAsync()
     {
         if (!Request.Form.Files.Any())
         {
@@ -114,16 +115,10 @@ public class ImagesController(
             {
                 return BadRequest();
             }
-
-            string? presignedUrl;
             
             if (await fileService.ExistsAsync(lowercaseFileName, StorageFolder.Assets))
             {
-                presignedUrl = await fileService.GetPresignedUrlAsync(
-                    lowercaseFileName,
-                    StorageFolder.Assets);
-                
-                return Ok(presignedUrl);
+                return Ok();
             }
 
             using MemoryStream stream = new();
@@ -135,14 +130,34 @@ public class ImagesController(
                 "image/jpeg",
                 StorageFolder.Assets);
             
-            presignedUrl = await fileService.GetPresignedUrlAsync(
-                lowercaseFileName,
-                StorageFolder.Assets);
-
-            return Ok(presignedUrl);
+            return Ok();
         }
 
         return Ok();
+    }
+
+    [HttpPost]
+    public async Task<ActionResult> GeneratePresignedUrlsAsync(GeneratePresignedUrlsRequest request)
+    {
+        if (request.fileIds == null || string.IsNullOrEmpty(request.templateUrl))
+        {
+            return BadRequest();
+        }
+
+        var returnDict = new Dictionary<Guid, string>();
+        
+        foreach (var fileId in request.fileIds)
+        {
+            var lowercaseFileName = string.Format(request.templateUrl!, fileId);
+            
+            var presignedUrl = await fileService.GetPresignedUrlAsync(
+                lowercaseFileName,
+                StorageFolder.Assets);
+            
+            returnDict.Add(fileId, presignedUrl);
+        }
+        
+        return Ok(returnDict);
     }
     
     [HttpPost]

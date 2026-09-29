@@ -2,6 +2,7 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AwsTextract;
@@ -205,6 +206,8 @@ public static class FileProcessServiceRegistration
             if (!string.IsNullOrEmpty(settings.AzureAiVisionEndpoint)
                 && !string.IsNullOrEmpty(settings.AzureAiVisionKey))
             {
+                ConsoleHelper.WriteLine($"{nameof(FileProcessServiceRegistration)} - INFO - Using Azure AI Vision");
+                
                 var azureAiServices = new AzureAiVisionOcrDataExtractorService(
                     settings.AzureAiVisionEndpoint,
                     settings.AzureAiVisionKey,
@@ -215,6 +218,8 @@ public static class FileProcessServiceRegistration
             }
             else
             {
+                ConsoleHelper.WriteLine($"{nameof(FileProcessServiceRegistration)} - INFO - Using Amazon Textract");
+                
                 var awsTextract = AwsTextractOcrDataExtractorService.Instance(
                     settings.AwsAccessKey,
                     settings.AwsSecretKey,

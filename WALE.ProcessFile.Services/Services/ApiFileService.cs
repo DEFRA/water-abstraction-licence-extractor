@@ -22,13 +22,22 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiFileService)} - Started getting files");
         
         var path = "/BFF/Files/ListAll";
-       
-        var response = await HttpHelper.RateLimiter.Enqueue(() =>
-            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
+        string content;
+
+        try
+        {
+            var response = await HttpHelper.RateLimiter.Enqueue(() =>
+                httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         
-        response.EnsureSuccessStatusCode();
-        
-        var content = await response.Content.ReadAsStringAsync();
+            response.EnsureSuccessStatusCode();
+            content = await response.Content.ReadAsStringAsync();
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"ERROR - {nameof(ApiFileService)} - Failed getting files from API ({httpClient.BaseAddress}, {path}): {e}");
+            throw;
+        }
         
         var list = JsonSerializer.Deserialize<List<string>>(
             content,

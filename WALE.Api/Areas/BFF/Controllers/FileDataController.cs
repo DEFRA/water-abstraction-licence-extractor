@@ -20,8 +20,7 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
-    IMemoryCache memoryCache,
-    IFileService fileService) : Controller
+    IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
     public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
@@ -279,9 +278,16 @@ public class FileDataController(
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
                 var line = WrInspectionReportCsvLine.FromForm(form);
 
+                // A raw s3:// URI isn't clickable and needs direct bucket credentials nobody
+                // reading this export has - link through FilesController's own presigned-URL
+                // redirect instead, so it resolves to a real, working HTTPS download on click.
+                // Deliberately not embedding a presigned URL directly here: AwsS3FileService.
+                // GetPresignedUrlAsync expires in 2 minutes, which suits that redirect's
+                // generate-then-immediately-follow flow but would already have expired by the
+                // time anyone opens this CSV.
                 line.Metadata__FileUrl = matchesResult.Filename == null
                     ? null
-                    : $"s3://{fileService.FolderPath}/{matchesResult.Filename}";
+                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/GetAsync?filename={Uri.EscapeDataString(matchesResult.Filename)}";
 
                 return line;
             }

@@ -62,18 +62,8 @@ public class VerificationController(
         }
 
         var environment = dbConfigOptions.Value.PostgresqlHost;
-
         
-        if (!string.IsNullOrEmpty(environment))
-        {
-            if (!file.FileName.Contains(environment, StringComparison.OrdinalIgnoreCase))
-            {
-                foreach (var record in records)
-                {
-                    record.ProcessRunId = processRunId;
-                }
-            }
-        }
+        AssignProcessRun(file, processRunId, environment, records);
 
         await abstractionLicenceOutputService.ImportVerificationsAsync(records);
 
@@ -81,5 +71,18 @@ public class VerificationController(
         {
             imported = records.Count
         });
-    } 
+    }
+
+    private static void AssignProcessRun(IFormFile file, int processRunId, string? environment, List<LicenceSectionVerification> records)
+    {
+        if (string.IsNullOrEmpty(environment) || file.FileName.Contains(environment, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+        
+        foreach (var record in records)
+        {
+            record.ProcessRunId = processRunId;
+        }
+    }
 }

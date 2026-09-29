@@ -278,7 +278,9 @@ export function ExportImportVerifications() {
                         Target Process Run
                     </label>
 
-                    <select
+                    <select style={{
+                        width: '200px'
+                    }}
                         id="targetProcessRunId"
                         value={targetProcessRunId ?? ""}
                         onChange={e =>

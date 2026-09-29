@@ -847,8 +847,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 search_text,
                 source_data,
                 created_date_time_utc,
-                updated_date_time_utc,
-                thumbnail_url
+                updated_date_time_utc
             )
             VALUES
             (
@@ -881,8 +880,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
-                NOW(),
-                @ThumbnailUrl
+                NOW()
             )
             ON CONFLICT
             (
@@ -921,8 +919,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.has_verifications,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
-                updated_date_time_utc = NOW(),
-                thumbnail_url = @ThumbnailUrl
+                updated_date_time_utc = NOW()
             RETURNING licence_list_item_id;
             """;
 

@@ -15,7 +15,7 @@ public class FilesController(IFileService fileService) : Controller
     [HttpGet]
     public async Task<ActionResult> GetAsync(
         [FromQuery] string filename,
-        [FromQuery] string folder)
+        [FromQuery] string? folder = null)
     {
         var isAssets = "assets".Equals(folder, StringComparison.OrdinalIgnoreCase);
         

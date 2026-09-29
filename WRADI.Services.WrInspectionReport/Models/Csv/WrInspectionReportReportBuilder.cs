@@ -4,7 +4,7 @@ using System.Text;
 using ClosedXML.Excel;
 using CsvHelper;
 
-namespace WRADI.DocumentType.WrInspectionReport.Csv;
+namespace WRADI.DocumentType.WrInspectionReport.Models.Csv;
 
 public static class WrInspectionReportReportBuilder
 {

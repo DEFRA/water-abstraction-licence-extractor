@@ -44,14 +44,12 @@ public class BaseMethodPossibilityTests
     };
 
     [Fact]
-    public void WhenNoPossibilitiesSet_ThenReturnsResultUnchanged()
+    public void WhenNoPossibilitiesSet_ThenReturnsNull()
     {
         var request = new FunctionInputModel { label = new LabelToMatch() };
-        var result = new LabelGroupResult { Text = null };
+        var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
-
-        Assert.Same(result, restricted);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -60,10 +58,10 @@ public class BaseMethodPossibilityTests
         var request = Request("N/A", "In", "Not");
         var result = new LabelGroupResult { Text = [LineOf("N/A")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
-        Assert.Equal("N/A", restricted.Text?.Single().Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.Equal("N/A", restricted.LabelGroupResult.Text);
     }
 
     [Fact]
@@ -74,11 +72,11 @@ public class BaseMethodPossibilityTests
         var request = Request("N/A", "Not", "In", "");
         var result = new LabelGroupResult { Text = null };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        Assert.NotNull(restricted);
-        Assert.NotNull(restricted.Text);
-        Assert.Empty(restricted.Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotNull(restricted.LabelGroupResult.Text);
+        Assert.Empty(restricted.LabelGroupResult.Text);
     }
 
     [Fact]
@@ -87,11 +85,11 @@ public class BaseMethodPossibilityTests
         var request = Request("N/A", "Not", "In", "");
         var result = new LabelGroupResult { Text = [] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
-        Assert.NotNull(restricted.Text);
-        Assert.Empty(restricted.Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotNull(restricted.LabelGroupResult.Text);
+        Assert.Empty(restricted.LabelGroupResult.Text);
     }
 
     [Fact]
@@ -104,9 +102,9 @@ public class BaseMethodPossibilityTests
         var request = Request("Y", "N", "X", "x");
         var result = new LabelGroupResult { Text = null };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        Assert.Null(restricted);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -115,9 +113,9 @@ public class BaseMethodPossibilityTests
         var request = Request("N/A", "In", "Not");
         var result = new LabelGroupResult { Text = [LineOf("Garbage")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -129,11 +127,11 @@ public class BaseMethodPossibilityTests
         var request = Request("N/A", "In", "Not", "");
         var result = new LabelGroupResult { Text = [LineOf("")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
-        Assert.NotNull(restricted.Text);
-        Assert.Single(restricted.Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotNull(restricted.LabelGroupResult.Text);
+        Assert.Equal(string.Empty, restricted.LabelGroupResult.Text);
     }
 
     [Fact]
@@ -146,9 +144,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("N/A", "Not", "In");
         var result = new LabelGroupResult { Text = [LineOf("Point of abstraction:")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -157,10 +155,10 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("N/A", "Not", "In");
         var result = new LabelGroupResult { Text = [LineOf("Source of supply: In")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
-        Assert.Equal("In", restricted.Text?.Single().Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.Equal("In", restricted.LabelGroupResult.Text);
     }
 
     [Fact]
@@ -182,9 +180,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("N");
         var result = new LabelGroupResult { Text = [LineOf("Means of abstraction: N")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
+        Assert.NotNull(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -197,9 +195,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("Y");
         var result = new LabelGroupResult { Text = [LineOf("Y:")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
+        Assert.NotNull(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -208,9 +206,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("X");
         var result = new LabelGroupResult { Text = [LineOf("Context")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -225,9 +223,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("In");
         var result = new LabelGroupResult { Text = [LineOf("supply:In Order")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
+        Assert.NotNull(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -238,9 +236,8 @@ public class BaseMethodPossibilityTests
         var request = Request("In");
         var result = new LabelGroupResult { Text = [LineOf("Point of abstraction:")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
-
-        Assert.NotNull(restricted);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
+        Assert.Null(restricted.LabelGroupResult);
     }
 
     [Fact]
@@ -255,9 +252,9 @@ public class BaseMethodPossibilityTests
         var request = RequestExceptWhenInsideWord("✓");
         var result = new LabelGroupResult { Text = [LineOf("Source of supply: ✓")] };
 
-        var restricted = BaseMethod.RestrictToPossibility(request, result);
+        var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted);
-        Assert.Equal("✓", restricted.Text?.Single().Text);
+        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.Equal("✓", restricted.LabelGroupResult.Text);
     }
 }

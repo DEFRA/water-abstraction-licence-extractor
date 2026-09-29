@@ -1,4 +1,4 @@
-namespace WRADI.DocumentType.WrInspectionReport.Csv;
+namespace WRADI.DocumentType.WrInspectionReport.Models.Csv;
 
 public class WrInspectionReportCsvLine
 {

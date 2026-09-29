@@ -8,7 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
-using WRADI.DocumentType.WrInspectionReport.Csv;
+using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WALE.Api.Areas.BFF.Controllers;

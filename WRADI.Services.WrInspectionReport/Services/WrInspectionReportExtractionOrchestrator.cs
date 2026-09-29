@@ -1,11 +1,14 @@
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Services.Helpers;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Helpers;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -30,7 +33,8 @@ public static class WrInspectionReportExtractionOrchestrator
         ExtractAsync(
             string pdfFileName,
             DmsFileData dmsDataForFile,
-            LookupConfiguration configuration,
+            LookupConfiguration configuration1,
+            LookupConfiguration configuration2,
             List<string> previouslyParsedFiles,
             int processRunId,
             IPdfDataExtractorService pdfDataExtractor,
@@ -59,8 +63,14 @@ public static class WrInspectionReportExtractionOrchestrator
             // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
-        var classificationConfiguration = configuration.Clone();
-        classificationConfiguration.Labels = WrInspectionClassificationLabelConfiguration.GetLabels();
+        configuration1 = configuration1.Clone();
+        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
+
+        var originalLabels = configuration1.Labels.ToList();
+        
+        var classificationConfiguration = configuration1.Clone();
+        classificationConfiguration.Labels =
+            WrInspectionClassificationLabelConfiguration.FilterFrom(originalLabels);
         classificationConfiguration.UseLockExclusivity = false;
 
         var (classificationStopExecution, _, classificationResult) = await pdfDataExtractor.GetMatchesAsync(
@@ -83,37 +93,35 @@ public static class WrInspectionReportExtractionOrchestrator
             classificationResult,
             documentHeader);
 
-        var realLabels = template == WrTemplateType.T1
-            ? WrInspectionT1LabelConfiguration.GetLabels()
-            : WrInspectionReportLabelConfiguration.GetLabels();
+        configuration1 = configuration1.Clone();
+        configuration1.Labels = template == WrTemplateType.T1
+            ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
+            : originalLabels;
 
-        var realConfiguration = configuration.Clone();
-        realConfiguration.Labels = realLabels;
-
-        var (stopExecution, alreadySaved, item) = await pdfDataExtractor.GetMatchesAsync(
+        var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
             dmsDataForFile,
-            realConfiguration,
+            configuration1,
             previouslyParsedFiles,
             processRunId);
 
+        if (scrapeResult == null || stopExecution)
+        {
+            return (stopExecution, alreadySaved, scrapeResult, template);
+        }
+        
         // Gating on T1 here (rather than relying solely on WrInspectionReportTableMatcher's own
         // content-based guards) avoids spending a real Document Intelligence call/cost on
-        // templates with no tick/cross grid for this mechanism to find at all. Pure efficiency
-        // gate, not a correctness one - the matcher's own guards (majority-of-grid table
-        // selection, LooksLikeATickAnswer's narrative-length check) already make running this
-        // safe on any template.
-        if (!stopExecution
-            && item?.Matches != null
-            && template == WrTemplateType.T1
+        // templates with no tick/cross grid for this mechanism to find
+        if (template == WrTemplateType.T1
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {
             try
             {
                 await ApplyTableBasedGridMatchesAsync(
-                    item,
-                    realLabels,
+                    scrapeResult,
+                    configuration2.Labels,
                     tableExtractorService,
                     pdfBytesForTableExtraction,
                     dmsDataForFile.FileId,
@@ -121,32 +129,19 @@ public static class WrInspectionReportExtractionOrchestrator
                     fallbackTableExtractorService,
                     minimumFieldsToSkipFallback);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Final safety net, on top of TryGetTableMatchesAsync's own per-attempt catch -
-                // this overlay is opt-in and best-effort by design, the heuristic result above is
-                // already a complete, real extraction. Nothing here (a bug in the merge logic
-                // itself, say) must ever discard that already-good result; it should just mean
-                // this document gets the heuristic answer for the grid fields, same as any
-                // document where the table lookup legitimately finds nothing.
+                Console.WriteLine($"ERROR - {nameof(ApplyTableBasedGridMatchesAsync)} - {ex.Message}");
                 
-                // TODO log somewhere
+                // Never discard an already-good result, so carry on
             }
         }
 
-        // Persist this pass's own classification alongside whatever the caller saves item as -
-        // GetT1Labels() deliberately drops the TemplateMarker* labels ClassifyTemplate needs once
-        // a document is already confirmed T1, so re-deriving Template later from the saved
-        // matches alone (e.g. re-rendering the form for display) would silently misclassify every
-        // T1 document as NonStandardNarrative. See WrInspectionReportSchemaConverter.ToForm's
-        // knownTemplate parameter, which this key round-trips into.
-        if (item != null)
-        {
-            item.AdditionalInformation ??= [];
-            item.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey] = template.ToString();
-        }
+        scrapeResult.AdditionalInformation ??= [];
+        scrapeResult.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey]
+            = template.ToString();
 
-        return (stopExecution, alreadySaved, item, template);
+        return (stopExecution, alreadySaved, scrapeResult, template);
     }
 
     // Internal (not private): lets WRADI.Services.WrInspectionReport.Tests exercise the merge
@@ -163,8 +158,13 @@ public static class WrInspectionReportExtractionOrchestrator
         ITableExtractorService? fallbackTableExtractorService = null,
         int minimumFieldsToSkipFallback = 10)
     {
-        var (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
-            tableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+        var (allMatches, tables, usedServiceName) =
+            await GetTableMatchesAsync(
+                tableExtractorService,
+                labelLookups,
+                pdfBytes,
+                fileId,
+                processRunId);
 
         // Only reached - and only billed, for a paid fallback - when the primary extractor
         // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
@@ -172,11 +172,15 @@ public static class WrInspectionReportExtractionOrchestrator
         // triggers this, however much of the rest of the grid it missed - that's the cheapest,
         // most conservative setting. A caller wanting more of a paid fallback's accuracy back, at
         // the cost of more paid calls, raises this towards GridFieldNames.Length.
-        if (tableMatches.Count < minimumFieldsToSkipFallback
+        if (allMatches.Count < minimumFieldsToSkipFallback
             && fallbackTableExtractorService != null)
         {
-            (tableMatches, tables, usedServiceName) = await TryGetTableMatchesAsync(
-                fallbackTableExtractorService, labelLookups, pdfBytes, fileId, processRunId);
+            (allMatches, tables, usedServiceName) = await GetTableMatchesAsync(
+                fallbackTableExtractorService,
+                labelLookups,
+                pdfBytes,
+                fileId,
+                processRunId);
         }
 
         // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
@@ -186,29 +190,27 @@ public static class WrInspectionReportExtractionOrchestrator
         // against the 13 tick/cross grid fields; letting free-text hits count towards it would
         // silently change what "confident enough, skip the paid fallback" means without
         // re-measuring it.
-        if (tables != null && usedServiceName != null)
+        if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
-            var freeTextMatches = WrInspectionReportTableMatcher.MatchFreeTextFields(
+            var matches = TableMatcherHelper.MatchTextFields(
                 tables,
                 labelLookups,
-                GridFieldNames,
-                FreeTextFieldNames,
                 usedServiceName);
-
-            foreach (var (key, value) in freeTextMatches)
+            
+            foreach (var (key, value) in matches)
             {
-                tableMatches.TryAdd(key, value);
+                allMatches.TryAdd(key, value);
             }
         }
 
-        if (tableMatches.Count == 0)
+        if (allMatches.Count == 0)
         {
             return;
         }
 
         item.Matches = item.Matches!
-            .Where(m => m.LabelGroupName == null || !tableMatches.ContainsKey(m.LabelGroupName))
-            .Concat(tableMatches.Values)
+            .Where(m => m.LabelGroupName == null || !allMatches.ContainsKey(m.LabelGroupName))
+            .Concat(allMatches.Values)
             .ToList();
     }
 
@@ -219,29 +221,60 @@ public static class WrInspectionReportExtractionOrchestrator
     // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
     // tables afterward, without a second (and for a paid fallback, separately billed)
     // GetTablesAsync call.
-    private static async Task<(Dictionary<string, LabelGroupResult> Matches, IReadOnlyList<DocumentTable>? Tables, string? ServiceName)> 
-        TryGetTableMatchesAsync(
-            ITableExtractorService tableExtractorService,
-            List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
-            byte[] pdfBytes,
-            Guid fileId,
-            int processRunId)
+    private static async Task<(
+        Dictionary<string, LabelGroupResult> Matches,
+        IReadOnlyList<DocumentTable>? Tables,
+        string? ServiceName)>
+            GetTableMatchesAsync(
+                ITableExtractorService tableExtractorService,
+                List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
+                byte[] pdfBytes,
+                Guid fileId,
+                int processRunId)
     {
         try
         {
-            var tables = await tableExtractorService.GetTablesAsync(pdfBytes, fileId, processRunId);
+            var tables = await tableExtractorService.GetTablesAsync(
+                new PdfDocument(
+                    null!,
+                    fileId,
+                    false,
+                    pdfBytes,
+                    pdfBytes.Length,
+                    null!,
+                    null!, 
+                    null!, 
+                    new LookupConfiguration(
+                        [],
+                        [],
+                        null!,
+                        null!, null!,
+                        null!,
+                        null!,
+                        null!,
+                        null!,
+                        -1,
+                        DateTime.UtcNow)),
+                fileId,
+                processRunId);
 
-            var matches = WrInspectionReportTableMatcher.MatchGridFields(
+            var labels = labelLookups
+                .Where(labelGroup => labelGroup.Labels
+                    .Any(l => l.LayoutExtractorTableLookupType is LayoutExtractorTableLookupType.Default
+                        or LayoutExtractorTableLookupType.Grid))
+                .ToList();
+            
+            var matches = TableMatcherHelper.MatchToPossibilities(
                 tables,
-                labelLookups,
-                GridFieldNames,
-                tableExtractorService.Name);
+                labels,
+                tableExtractorService.Name,
+                TickHelper.GetTickedOrAcceptedStatus);
 
             return (matches, tables, tableExtractorService.Name);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // TODO log
+            Console.WriteLine($"ERROR - {nameof(GetTableMatchesAsync)} - {ex.Message}");
             return ([], null, null);
         }
     }
@@ -265,14 +298,6 @@ public static class WrInspectionReportExtractionOrchestrator
     // column-walk engine's own known leak bugs (see wr51_column_walk_bug memory). Resolved via
     // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
     // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
-    // Tried and reverted (2026-09-09): adding MeterMake/Reading/Units alongside Time/
-    // SerialNumber/TelephoneNumber. Measured against the golden-set harness with both table
-    // backends - Tabula: MeterMake/Reading unchanged, Units regressed (55%->52%); Azure DI: all
-    // three showed zero change at all. Not a wrong-table-extractor problem -
-    // FindFreeTextValueInTable's cell-matching (TextStart-prefix against cell.Content) isn't
-    // finding these fields' cells in either backend's output the way it does for SerialNumber. A
-    // real fix needs to understand why (e.g. inspect the actual cell contents returned for one of
-    // these documents), not just add more field names here - see wr51_metermake_wrap_gap memory.
     private static readonly string[] FreeTextFieldNames =
     [
         WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,

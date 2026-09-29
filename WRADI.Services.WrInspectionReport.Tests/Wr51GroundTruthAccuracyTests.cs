@@ -18,8 +18,9 @@ using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Services;
+using WRADI.Services.WrInspectionReport.Tests.Config;
 using Xunit.Abstractions;
-using Form = global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport;
+using Form = WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
@@ -61,18 +62,17 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
     {
         return new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
+            null,
+            null,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
-            DateTime.Now,
-            lineHeight: 6,
-            minimumRowsForDigital: 30,
-            useAnchoredLineGrouping: true);
+            DateTime.Now);
     }
 
     private static IPdfDataExtractorService BuildPdfDataExtractor()
@@ -395,7 +395,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     [Fact]
     public async Task WhenScoringWithTabulaTableExtractionEnabled_ThenReportsPerFieldAccuracy()
     {
-        var tableExtractorService = new TabulaTableExtractorService();
+        var tableExtractorService = new TabulaTableExtractorService(CacheService);
 
         await RunHarnessAsync(tableExtractorService, outputSuffix: "-tabula-table-based");
     }
@@ -422,7 +422,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             return;
         }
 
-        var primaryTableExtractorService = new TabulaTableExtractorService();
+        var primaryTableExtractorService = new TabulaTableExtractorService(CacheService);
         var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
             TestConfig.AiServicesEndpoint,
             TestConfig.AiServicesKey,
@@ -454,7 +454,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         foreach (var threshold in new[] { 1, 4, 7, 10, 13 })
         {
-            var primaryTableExtractorService = new TabulaTableExtractorService();
+            var primaryTableExtractorService = new TabulaTableExtractorService(CacheService);
             var fallbackTableExtractorService = new AzureAiServicesDocumentIntelligenceTableExtractorService(
                 TestConfig.AiServicesEndpoint,
                 TestConfig.AiServicesKey,
@@ -490,6 +490,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
+        lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
@@ -534,6 +535,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
                 var (stopExecution, _, matchesResult, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     truth.SourceFile,
                     dmsFileData,
+                    lookupConfiguration,
                     lookupConfiguration,
                     [truth.SourceFile],
                     processRunId: -99,

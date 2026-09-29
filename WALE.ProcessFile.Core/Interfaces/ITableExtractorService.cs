@@ -5,7 +5,7 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface ITableExtractorService
 {
     public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
-        byte[] documentBytes,
+        PdfDocument pdfDocument,
         Guid fileId,
         int processRunId);
 

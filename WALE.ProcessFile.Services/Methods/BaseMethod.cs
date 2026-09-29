@@ -175,8 +175,21 @@ public static class BaseMethod
 
                 break;
             case Text.Constant:
-                var result = RestrictToPossibility(request, labelGroupResult);
-                if (result?.Text != null) returnList.Add(result);
+                var result = RestrictToPossibility(request, lines);
+                
+                if (result.HasPossiblites)
+                {
+                    if (result.LabelGroupResult?.Text != null)
+                    {
+                        labelGroupResult.Text = [result.LabelGroupResult];
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                else
+                {
+                    labelGroupResult.Text = lines;
+                    returnList.Add(labelGroupResult);
+                }
 
                 break;
         }
@@ -331,42 +344,44 @@ public static class BaseMethod
 
         return false;
     }
-
-    internal static LabelGroupResult? RestrictToPossibility(
+    
+    internal static (bool HasPossiblites, DocumentLine? LabelGroupResult) RestrictToPossibility(
         FunctionInputModel request,
-        LabelGroupResult result)
+        IReadOnlyList<DocumentLine> lines)
     {
         if (request.label!.Possibilities?.Any() != true)
         {
-            return result;
+            return (false, null);
         }
 
-        var firstLineText = result.Text?.FirstOrDefault()?.Text;
-
-        var possiblityFound = request.label.Possibilities.Any(possibility =>
-            MatchesPossibility(firstLineText, possibility));
-
-        if (possiblityFound)
+        foreach (var line in lines)
         {
-            var possibility = request.label.Possibilities
-                .First(possibility => MatchesPossibility(result.Text!.First().Text, possibility));
+            var possiblityFound = request.label.Possibilities.Any(possibility =>
+                line.Text.Contains(possibility.Text));
 
-            var possibilityWords = result.Text!.First().Columns
+            if (!possiblityFound)
+            {
+                continue;
+            }
+
+            var possibility = request.label.Possibilities
+                .First(possibility => line.Text.Contains(possibility.Text));
+
+            var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
 
             possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
 
-            var clonedLine = result.Text!.First().Clone();
+            var clonedLine = line.Clone();
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
-            var clonedResult = result.Clone();
-            clonedResult.Text = [clonedLine];
-
-            return clonedResult;
+            return (true, clonedLine);
         }
-
+        
+        var firstLineText = lines.FirstOrDefault()?.Text;
+        
         // A field with no answer on the page produces zero captured lines, not one line with
         // empty text - so the "" catch-all possibility (added so a genuinely blank tick field
         // still survives as a match, e.g. WrInspectionReportLabelConfiguration.Rule.InOrder)
@@ -377,13 +392,10 @@ public static class BaseMethod
         if (string.IsNullOrEmpty(firstLineText)
             && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
         {
-            var clonedResult = result.Clone();
-            clonedResult.Text = [];
-
-            return clonedResult;
+            return (true, new DocumentLine());
         }
 
-        return null;
+        return (true, null);
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(

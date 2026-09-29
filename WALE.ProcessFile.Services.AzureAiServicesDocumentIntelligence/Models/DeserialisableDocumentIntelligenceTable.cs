@@ -17,6 +17,8 @@ public class DeserialisableDocumentIntelligenceTable
         PageNumber = pageNumber,
         RowCount = table.RowCount,
         ColumnCount = table.ColumnCount,
-        Cells = table.Cells.Select(DeserialisableDocumentIntelligenceTableCell.FromDocumentTableCell).ToList()
+        Cells = table.Cells
+            .Select(DeserialisableDocumentIntelligenceTableCell.FromDocumentTableCell)
+            .ToList()
     };
 }

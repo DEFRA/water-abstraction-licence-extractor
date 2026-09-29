@@ -10,7 +10,8 @@ namespace WALE.ProcessFile.Services.Output;
 
 public class DatabaseOutputService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService) : IOutputService
+    IDatabaseWriteService databaseWriteService,
+    IImageService imageService) : IOutputService
 {
     public string? OutputFolder { get; set; } = null;
 
@@ -28,31 +29,36 @@ public class DatabaseOutputService(
         return ImageReferenceHelper.GetPageScreenshotReferences(pageNumber, pdfServiceName, fileId);
     }
 
-    public Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    public async Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
-        return databaseReadService.GetPageScreenshotThumbnailAsync(
-            pageNumber,
-            fileId,
-            pdfServiceName);
+        // S3 first (all new writes land there - see SavePageScreenshotThumbnailAsync below),
+        // falling back to Postgres for rows written before this table moved to S3 and not yet
+        // migrated by the Tools backfill.
+        var s3Key = ImageReferenceHelper.GetPageScreenshotThumbnailS3Key(fileId, pdfServiceName, pageNumber);
+
+        return await imageService.DownloadAsync(s3Key)
+            ?? await databaseReadService.GetPageScreenshotThumbnailAsync(pageNumber, fileId, pdfServiceName);
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
-        var bytes1 = await databaseReadService.GetPageScreenshotAsync(
-            pageNumber,
-            fileId,
-            pdfServiceName);
-
-        var bytes2 = await databaseReadService.GetPageScreenshotAsync(
-            pageNumber,
-            fileId,
-            GeneralConstants.DocnetExtractorServiceName); // TODO tidy this up
+        var bytes1 = await GetPageScreenshotAsync(pageNumber, fileId, pdfServiceName);
+        var bytes2 = await GetPageScreenshotAsync(pageNumber, fileId, GeneralConstants.DocnetExtractorServiceName); // TODO tidy this up
 
         return
         [
             bytes1!,
             bytes2!
         ];
+    }
+
+    private async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
+    {
+        // Same S3-first, Postgres-fallback shape as GetPageScreenshotThumbnailAsync above.
+        var s3Key = ImageReferenceHelper.GetPageScreenshotS3Key(fileId, noOcrServiceName, pageNumber);
+
+        return await imageService.DownloadAsync(s3Key)
+            ?? await databaseReadService.GetPageScreenshotAsync(pageNumber, fileId, noOcrServiceName);
     }
 
     public Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
@@ -159,12 +165,8 @@ public class DatabaseOutputService(
         byte[] data,
         int processRunId)
     {
-        await databaseWriteService.SavePageScreenshotAsync(
-            pageNumber,
-            noOcrServiceName,
-            fileId,
-            data,
-            processRunId);
+        var s3Key = ImageReferenceHelper.GetPageScreenshotS3Key(fileId, noOcrServiceName, pageNumber);
+        await imageService.UploadAsync(s3Key, new MemoryStream(data), "image/jpeg");
     }
 
     public async Task SaveAllPagesTextAsync(List<DocumentLine> documentLines, Guid fileId, string noOcrServiceName,
@@ -202,12 +204,8 @@ public class DatabaseOutputService(
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
         int processRunId)
     {
-        return databaseWriteService.SavePageScreenshotThumbnailAsync(
-            pageNumber,
-            serviceName,
-            fileId,
-            thumbnail,
-            processRunId);
+        var s3Key = ImageReferenceHelper.GetPageScreenshotThumbnailS3Key(fileId, serviceName, pageNumber);
+        return imageService.UploadAsync(s3Key, new MemoryStream(thumbnail), "image/jpeg");
     }
 
     public Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)

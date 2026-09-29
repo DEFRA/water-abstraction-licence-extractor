@@ -25,13 +25,6 @@ public interface IDatabaseWriteService
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
-    public Task SavePageScreenshotAsync(
-        int pageNumber,
-        string noOcrServiceName,
-        Guid fileId, 
-        byte[] data,
-        int processRunId);
-
     Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
     Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
@@ -74,7 +67,4 @@ public interface IDatabaseWriteService
     Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
-
-    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
-        int processRunId);
 }

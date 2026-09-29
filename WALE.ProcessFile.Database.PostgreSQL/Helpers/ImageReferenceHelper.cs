@@ -34,4 +34,20 @@ public static class ImageReferenceHelper
     {
         return $"NoOcrPageReference-{fileId}-{noOcrServiceName}-{pageNumber}";
     }
+
+    public static string GetPageScreenshotS3Key(
+        Guid fileId,
+        string noOcrServiceName,
+        int pageNumber)
+    {
+        return $"page-screenshot/{fileId}/{noOcrServiceName}/{pageNumber}.jpg";
+    }
+
+    public static string GetPageScreenshotThumbnailS3Key(
+        Guid fileId,
+        string noOcrServiceName,
+        int pageNumber)
+    {
+        return $"page-screenshot-thumbnail/{fileId}/{noOcrServiceName}/{pageNumber}.jpg";
+    }
 }

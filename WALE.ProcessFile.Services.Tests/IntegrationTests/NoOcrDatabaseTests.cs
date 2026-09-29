@@ -40,6 +40,8 @@ public class NoOcrDatabaseTests
             TestConfig.PostgresPassword,
             maxPoolSize: 10);
     
+    private static readonly IImageService ImageService = A.Fake<IImageService>();
+
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
@@ -69,7 +71,7 @@ public class NoOcrDatabaseTests
             null!);
     
     private static readonly INaldDataLookupService NaldDataLookupService;
-    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService, ImageService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();

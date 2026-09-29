@@ -128,7 +128,7 @@ public class LabelToMatch
     // BuildLabelPositionIndex) - stops the walk wandering into a sibling field's column when
     // nothing else bounds it. Opt-in (defaults to false/no-op): depends on the caller supplying
     // that per-document position index.
-    public bool LimitToBoundSameLineWalkByOtherLabelPositions { get; init; }
+    public bool BoundSameLineWalkByOtherLabelPositions { get; init; }
 
     // When a label group has multiple sibling labels and a match returns empty text, allow
     // the engine to try the next alternate instead of settings the group as matched.
@@ -208,7 +208,7 @@ public class LabelToMatch
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
             LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
-            LimitToBoundSameLineWalkByOtherLabelPositions = LimitToBoundSameLineWalkByOtherLabelPositions,
+            BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions,
             RequireTextToBePresent = RequireTextToBePresent,
             RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,
             LayoutExtractor = LayoutExtractor,

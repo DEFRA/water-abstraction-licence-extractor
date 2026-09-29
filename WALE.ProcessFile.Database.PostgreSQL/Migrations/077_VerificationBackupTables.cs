@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WRADI.Database.Migrations;
 
-[Migration(76)]
+[Migration(77)]
 public class VerificationBackupTables : Migration
 {
     public override void Up()

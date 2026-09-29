@@ -50,7 +50,8 @@ public class NoOcrDatabaseTests
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(
         ReadService,
-        WriteService);
+        WriteService,
+        ImageService);
     
     private static IAbstractionLicenceDatabaseReadService AbsLicReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);

@@ -432,8 +432,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SaveImageOnPageAsync(
-        byte[] bytes,
+    public async Task SaveImageOnPageMetadataAsync(
         int width,
         int height,
         Guid fileId,
@@ -445,7 +444,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id) 
+                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id)
                            VALUES (@FileId, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Width, @Height, @Extension, @DateTimeUtc, @ProcessRunId)
                            """;
 
@@ -457,7 +456,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             {
                 FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
-                Data = bytes,
+                Data = Array.Empty<byte>(),
                 Width = width,
                 Height = height,
                 ImageNumber = imageNumber,

@@ -12,7 +12,8 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService) : ICacheService
+    IDatabaseWriteService databaseWriteService,
+    IImageService imageService) : ICacheService
 {
     public string? CacheFolderOrUrl { get; set; } = null;
 
@@ -51,18 +52,22 @@ public class DatabaseCacheService(
         
         var deflatedBytes = ImageHelper.Deflate(bytAry);
         var pix = Pix.LoadFromMemory(deflatedBytes);
-        
-        await databaseWriteService.SaveImageOnPageAsync(
-            deflatedBytes,
+
+        // Real bytes go to S3; the Postgres row carries only the metadata GetImagesAsync needs
+        // (width/height/page/image/extension) - see SaveImageOnPageAsync below for why.
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, serviceName, pageNumber, imageNumber, "jpg");
+        await imageService.UploadAsync(s3Key, new MemoryStream(deflatedBytes), "image/jpeg");
+
+        await databaseWriteService.SaveImageOnPageMetadataAsync(
             pix.Width,
             pix.Height,
-            fileId, 
+            fileId,
             serviceName,
             imageNumber,
             pageNumber,
             "jpg",
             processRunId);
-        
+
         return deflatedBytes;
     }
     
@@ -84,9 +89,20 @@ public class DatabaseCacheService(
         return databaseReadService.GetImagesAsync(request);
     }
 
-    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        return databaseReadService.GetImageBytesAsync(request);
+        // S3 first (all new writes land there - see SaveImageOnPageAsync below), falling back to
+        // Postgres for rows written before this table moved to S3 and not yet migrated by the
+        // Tools backfill.
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(
+            request.FileId,
+            request.NoOcrServiceName!,
+            request.PageNumber!.Value,
+            request.ImageNumber!.Value,
+            request.Extension!);
+
+        return await imageService.DownloadAsync(s3Key)
+            ?? await databaseReadService.GetImageBytesAsync(request);
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
@@ -232,7 +248,18 @@ public class DatabaseCacheService(
     
     public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, Guid fileId, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        await databaseWriteService.SaveImageOnPageAsync(bytes, width, height, fileId, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+        // Real bytes go to S3 only (image_on_page.data is NotNullable, so the Postgres row still
+        // exists - GetImagesAsync's metadata listing needs page/image/width/height/extension - but
+        // carries an empty placeholder instead of the real bytes; GetImageBytesAsync above checks
+        // S3 first so that placeholder is never actually served for a row written this way).
+        // Upload before the metadata insert so a failed upload doesn't leave a phantom row with no
+        // recoverable bytes anywhere.
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, noOcrServiceName, pageNumber, imageNumber, extension);
+        var contentType = extension.Equals("png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
+        await imageService.UploadAsync(s3Key, new MemoryStream(bytes), contentType);
+
+        await databaseWriteService.SaveImageOnPageMetadataAsync(
+            width, height, fileId, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
 
         return bytes.Length;
     }

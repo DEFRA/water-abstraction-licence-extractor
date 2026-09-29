@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using WALE.ProcessFile.Core.Helpers;
 
@@ -98,5 +99,30 @@ public static class ToolHelper
     {
         var dateStampedFileName = $"{fileName}-{DateTime.Today:yyyyMMdd}.csv";
         return Path.Combine(outputFolder, dateStampedFileName);
+    }
+    
+    /// <summary>
+    /// Create and returns CSV bytes.
+    /// </summary>
+    /// <param name="data"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns>Returns CSV bytes.</returns>
+    public static async Task<byte[]> CreateCsvAsync<T>(IEnumerable<T> data)
+    {
+        await using var memoryStream = new MemoryStream();
+
+        await using (var writer = new StreamWriter(
+                         memoryStream,
+                         Encoding.UTF8,
+                         leaveOpen: true))
+        await using (var csv = new CsvWriter(
+                         writer,
+                         new CultureInfo("en-GB")))
+        {
+            await csv.WriteRecordsAsync(data);
+            await writer.FlushAsync();
+        }
+
+        return memoryStream.ToArray();
     }
 }

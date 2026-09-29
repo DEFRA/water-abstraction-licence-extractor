@@ -16,6 +16,7 @@ import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
+import ExportImportVerifications from "../components/ExportImportVerifications.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
@@ -368,6 +369,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             {activeTab === 'actions' && (
                 <div id="actions">
                     <ScrapeDocuments/>
+                    <ExportImportVerifications />
                 </div>
             )}
 

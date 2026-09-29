@@ -40,7 +40,16 @@ public interface IAbstractionLicenceOutputService
     Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync();
+    
+    Task<int> GetCurrentVerificationsBackupVersionAsync();
+    Task<int> GetCurrentVerificationsCountAsync();
+    Task<int> GetCurrentBackupVerificationsCountAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
 
+    Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification> verifications);
+    
+    Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications);
     Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);

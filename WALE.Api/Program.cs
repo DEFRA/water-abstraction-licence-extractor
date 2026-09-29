@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Interfaces;
+using WALE.Api.Models;
 using WALE.Api.Services;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Database.PostgreSQL;
@@ -77,7 +78,8 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
                 .SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials();
+                .AllowCredentials()
+                .WithExposedHeaders("Content-Disposition");
         });
     });
 
@@ -125,5 +127,9 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
-        .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>();
+        .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
+        .Configure<DbConfig>(options =>
+        {
+            options.PostgresqlHost = dbHost;
+        });
 }

@@ -78,7 +78,8 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
                 .SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials();
+                .AllowCredentials()
+                .WithExposedHeaders("Content-Disposition");
         });
     });
 

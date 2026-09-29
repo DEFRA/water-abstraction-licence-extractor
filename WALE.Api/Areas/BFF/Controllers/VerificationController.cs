@@ -32,7 +32,7 @@ public class VerificationController(
             fileName);
     }
     
-    [HttpPost]
+    [HttpPut]
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> ImportCsv(
         [FromForm] IFormFile file,
@@ -63,6 +63,7 @@ public class VerificationController(
 
         var environment = dbConfigOptions.Value.PostgresqlHost;
 
+        
         if (!string.IsNullOrEmpty(environment))
         {
             if (!file.FileName.Contains(environment, StringComparison.OrdinalIgnoreCase))

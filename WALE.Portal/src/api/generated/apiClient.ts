@@ -625,14 +625,19 @@ export class Client {
 
     /**
      * @param filename (optional) 
+     * @param folder (optional) 
      * @return OK
      */
-    exists(filename: string | undefined): Promise<void> {
+    exists(filename: string | undefined, folder: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Files/Exists?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (folder === null)
+            throw new globalThis.Error("The parameter 'folder' cannot be null.");
+        else if (folder !== undefined)
+            url_ += "folder=" + encodeURIComponent("" + folder) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -892,6 +897,76 @@ export class Client {
     }
 
     protected processGetPageScreenshot(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    upload(): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Images/Upload";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpload(_response);
+        });
+    }
+
+    protected processUpload(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    generatePresignedUrls(body: GeneratePresignedUrlsRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Images/GeneratePresignedUrls";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGeneratePresignedUrls(_response);
+        });
+    }
+
+    protected processGeneratePresignedUrls(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -4217,14 +4292,19 @@ export class Client {
 
     /**
      * @param filename (optional) 
+     * @param folder (optional) 
      * @return OK
      */
-    get5(filename: string | undefined): Promise<void> {
+    get5(filename: string | undefined, folder: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Files/Get?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
+        if (folder === null)
+            throw new globalThis.Error("The parameter 'folder' cannot be null.");
+        else if (folder !== undefined)
+            url_ += "folder=" + encodeURIComponent("" + folder) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4439,7 +4519,7 @@ export class Client {
     /**
      * @return OK
      */
-    upload(): Promise<string> {
+    upload2(): Promise<string> {
         let url_ = this.baseUrl + "/BFF/Files/Upload";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -4451,11 +4531,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpload(_response);
+            return this.processUpload2(_response);
         });
     }
 
-    protected processUpload(response: Response): Promise<string> {
+    protected processUpload2(response: Response): Promise<string> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -7225,6 +7305,66 @@ export interface IFileProcessSingleRequest {
     [key: string]: any;
 }
 
+export class GeneratePresignedUrlsRequest implements IGeneratePresignedUrlsRequest {
+    fileIds?: string[] | undefined;
+    templateUrl?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IGeneratePresignedUrlsRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["fileIds"])) {
+                this.fileIds = [] as any;
+                for (let item of _data["fileIds"])
+                    this.fileIds!.push(item);
+            }
+            this.templateUrl = _data["templateUrl"];
+        }
+    }
+
+    static fromJS(data: any): GeneratePresignedUrlsRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new GeneratePresignedUrlsRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.fileIds)) {
+            data["fileIds"] = [];
+            for (let item of this.fileIds)
+                data["fileIds"].push(item);
+        }
+        data["templateUrl"] = this.templateUrl;
+        return data;
+    }
+}
+
+export interface IGeneratePresignedUrlsRequest {
+    fileIds?: string[] | undefined;
+    templateUrl?: string | undefined;
+
+    [key: string]: any;
+}
+
 export enum InformationSource {
     Unknown = "Unknown",
     Nald = "Nald",
@@ -8006,7 +8146,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     currentVerificationType?: string | undefined;
     verificationTypes!: string[];
     verificationTypesWithNotes?: string[];
-    scrapedDataIsDifferent?: boolean;
+    isFlagged?: boolean;
+    flagReason?: string | undefined;
 
     [key: string]: any;
 
@@ -8040,7 +8181,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
                 for (let item of _data["verificationTypesWithNotes"])
                     this.verificationTypesWithNotes!.push(item);
             }
-            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
+            this.isFlagged = _data["isFlagged"];
+            this.flagReason = _data["flagReason"];
         }
     }
 
@@ -8069,7 +8211,8 @@ export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
             for (let item of this.verificationTypesWithNotes)
                 data["verificationTypesWithNotes"].push(item);
         }
-        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
+        data["isFlagged"] = this.isFlagged;
+        data["flagReason"] = this.flagReason;
         return data;
     }
 }
@@ -8079,7 +8222,8 @@ export interface ILicenceSectionItemSummary {
     currentVerificationType?: string | undefined;
     verificationTypes: string[];
     verificationTypesWithNotes?: string[];
-    scrapedDataIsDifferent?: boolean;
+    isFlagged?: boolean;
+    flagReason?: string | undefined;
 
     [key: string]: any;
 }
@@ -8095,7 +8239,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
-    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
     deletedDateTimeUtc?: Date | undefined;
 
@@ -8126,7 +8269,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             this.verificationType = _data["verificationType"];
             this.licenceSectionItemId = _data["licenceSectionItemId"];
             this.notes = _data["notes"];
-            this.scrapedDataIsDifferent = _data["scrapedDataIsDifferent"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
             this.deletedDateTimeUtc = _data["deletedDateTimeUtc"] ? new Date(_data["deletedDateTimeUtc"].toString()) : undefined as any;
         }
@@ -8155,7 +8297,6 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         data["verificationType"] = this.verificationType;
         data["licenceSectionItemId"] = this.licenceSectionItemId;
         data["notes"] = this.notes;
-        data["scrapedDataIsDifferent"] = this.scrapedDataIsDifferent;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
         data["deletedDateTimeUtc"] = this.deletedDateTimeUtc ? this.deletedDateTimeUtc.toISOString() : undefined as any;
         return data;
@@ -8173,7 +8314,6 @@ export interface ILicenceSectionVerification {
     verificationType?: string | undefined;
     licenceSectionItemId?: string | undefined;
     notes?: string | undefined;
-    scrapedDataIsDifferent?: boolean;
     createdDateTimeUtc?: Date;
     deletedDateTimeUtc?: Date | undefined;
 
@@ -9209,6 +9349,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     issuer?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
+    thumbnailUrl?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -9260,6 +9401,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.issuer = _data["issuer"];
             this.meansFound = _data["meansFound"];
             this.status = _data["status"];
+            this.thumbnailUrl = _data["thumbnailUrl"];
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
@@ -9321,6 +9463,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["issuer"] = this.issuer;
         data["meansFound"] = this.meansFound;
         data["status"] = this.status;
+        data["thumbnailUrl"] = this.thumbnailUrl;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
@@ -9359,6 +9502,7 @@ export interface IOutputListDataItem {
     issuer?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
+    thumbnailUrl?: string | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;

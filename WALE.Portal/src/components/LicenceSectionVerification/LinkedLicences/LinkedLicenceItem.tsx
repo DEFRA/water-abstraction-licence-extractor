@@ -13,7 +13,7 @@ import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
 import NaldStatusTag from "../../NaldStatusTag.tsx";
-import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, isScrapedDataDifferent} from "../../../utils/verificationUtils.ts";
+import {hasOnlyOneOutgoingSection, hasAnyOutgoingSections, getFlaggedItem} from "../../../utils/verificationUtils.ts";
 import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 import NaldOnlyTag from "../../NaldOnlyTag.tsx";
 import ImpoundmentTag from "../../ImpoundmentTag.tsx";
@@ -292,6 +292,8 @@ export const LinkedLicenceItem = ({
         );
     }
 
+    const flaggedItem = getFlaggedItem(outputListDataItem, 'Linked Licences', linkedLicence.licenceNumber);
+
     const summary = (
         <div style={{display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', fontSize: '0.9rem'}}>
             <strong>{linkedFileId ? (
@@ -306,7 +308,11 @@ export const LinkedLicenceItem = ({
             <NaldStatusTag status={linkedLicence.naldStatus}/>
             <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
             <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
-            {isScrapedDataDifferent(outputListDataItem, 'Linked Licences', linkedLicence.licenceNumber) && '🚩'}
+            {flaggedItem && (
+                <span>
+                    🚩{flaggedItem.flagReason && ` ${flaggedItem.flagReason}`}
+                </span>
+            )}
         </div>
     );
 

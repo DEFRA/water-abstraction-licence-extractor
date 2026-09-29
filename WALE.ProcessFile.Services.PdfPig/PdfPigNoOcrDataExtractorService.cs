@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -368,6 +369,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var dtStart = DateTime.Now;
         var size = await SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);
         var roundedSizeMb = (size / 1024.0 / 1024.0).ToString("0.0");
+
+        if (page.Number == 1)
+        {
+            await outputService.SaveThumbnailAsync(pdfDocument.FileId);
+        }
         
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SavePageScreenshotAsync P{page.Number} ({roundedSizeMb}mb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -430,7 +436,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             
         return pageLinesFormatted;
     }
-    
+
     private async Task<ImageMetadata>
         GetImageMetadataAndSaveImagesAsync(
             PdfDocument pdfDocument,

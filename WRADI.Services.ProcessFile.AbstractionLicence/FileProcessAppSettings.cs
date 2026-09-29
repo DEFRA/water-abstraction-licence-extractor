@@ -23,7 +23,8 @@ public class FileProcessAppSettings
     public string? AwsRegionName { get; set; }
     
     // S3 settings
-    public string? AwsS3BucketName { get; set; }
+    public string? AwsS3IngressBucketName { get; set; }
+    public string? AwsS3AssetsBucketName { get; set; }
     
     // SQS settings
     public string SqsQueueOrchestrationUrl { get; set; } = null!;

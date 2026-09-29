@@ -36,6 +36,12 @@ export default function Paging({
         setSearchText(e.target.value);
     };
 
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            applySearch();
+        }
+    };
+
     const applySearch = () => {
         const trimmedValue = searchText.trim();
 
@@ -67,6 +73,7 @@ export default function Paging({
                     type="text"
                     value={searchText}
                     onChange={handleSearchChange}
+                    onKeyDown={handleSearchKeyDown}
                     placeholder="Search..."
                     style={{ width: '180px' }}
                 />

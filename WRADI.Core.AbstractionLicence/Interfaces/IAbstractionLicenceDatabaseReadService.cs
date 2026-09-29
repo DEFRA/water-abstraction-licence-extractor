@@ -111,4 +111,6 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<int> GetCurrentVerificationsBackupVersionAsync();
     Task<int> GetCurrentVerificationsCount();
     Task<int> GetCurrentBackupVerificationsCount();
+    
+    Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
 }

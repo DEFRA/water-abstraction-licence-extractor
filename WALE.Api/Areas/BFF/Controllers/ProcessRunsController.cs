@@ -22,6 +22,7 @@ public class ProcessRunsController(
     ILicenceListItemModelService licenceListItemModelService,
     ILicenceListRepository licenceListRepository,
     IUiProcessRunService uiProcessRunService,
+    IFileService fileService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -139,8 +140,91 @@ public class ProcessRunsController(
             LicenceSetIds = await licenceSetIdsTask,
             IssueDates = await issueDatesTask
         };
+        
+        var thumbnailPaths = await GetThumbnailPathsAsync(
+            processRun.Records
+                .Select(r => r.fileId)
+                .Where(fid => fid != Guid.Empty)
+                .Distinct()
+                .ToList());
+
+        foreach (var record in processRun.Records)
+        {
+            if (record.fileId == Guid.Empty)
+            {
+                continue;
+            }
+
+            var thumbnailPath = thumbnailPaths.TryGetValue(record.fileId, out var path) ? path : null;
+            record.thumbnailUrl = thumbnailPath;
+        }
 
         return Ok(processRun);
+    }
+
+    private async Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(List<Guid> fileIds)
+    {
+        var templateUrl = "thumbnail_{0}.jpg";
+        
+        var returnDict = new Dictionary<Guid, string>();
+        var fileIdChunks = fileIds.Chunk(20);
+
+        foreach (var fileIdChunk in fileIdChunks)
+        {
+            var kvps = new List<(Guid, Task<string>)>();
+            
+            foreach (var fileId in fileIdChunk)
+            {
+                var lowercaseFileName = string.Format(templateUrl, fileId);
+                var task = fileService.GetPresignedUrlAsync(
+                    lowercaseFileName,
+                    StorageFolder.Assets);
+                
+                kvps.Add((fileId, task));
+            }
+
+            foreach (var kvp in kvps)
+            {
+                var url = await kvp.Item2;
+                returnDict.Add(kvp.Item1, url);
+            }
+        }
+
+        return returnDict;
+    }
+    
+    private async Task<List<Guid>> GetFileIdsAsync(int processRunId)
+    {
+        var fileIds = new List<Guid>();
+        var loopLicences = new List<Licence>();
+        
+        const int licencesToTake = 10;
+        var first = true;
+        var loopIdx = 0;
+        
+        while (first || loopLicences.Count == licencesToTake)
+        {
+            first = false;
+            var startAt = loopIdx++ * licencesToTake;
+            
+            loopLicences = await abstractionLicenceOutputService.GetLicencesAsync(
+                processRunId,
+                startAt,
+                licencesToTake);
+            
+            var loopFileIds = loopLicences
+                .Select(l => l.DmsFileId)
+                .Where(fid => fid != null)
+                .Select(fid => fid!.Value);
+            
+            fileIds.AddRange(loopFileIds);
+        }
+        
+        var uniqueFileIds = fileIds
+            .Distinct()
+            .ToList();
+
+        return uniqueFileIds;
     }
     
     [HttpPost("{processRunId:int}")]

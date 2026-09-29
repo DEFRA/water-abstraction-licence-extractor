@@ -1,25 +1,20 @@
+using System.Text;
+using System.Text.Json;
 using Tabula;
 using Tabula.Detectors;
 using Tabula.Extractors;
 using UglyToad.PdfPig;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.OcrService;
+using PdfDocument = WALE.ProcessFile.Core.Models.PdfDocument;
 
 namespace WALE.ProcessFile.Services.Tabula;
 
-// Reads tables directly off the PDF's own text/vector layer via PdfPig (the same library
-// already used elsewhere in this pipeline for native-text extraction) - no OCR, no cloud call,
-// no per-document cost, works entirely offline. The trade-off: it only sees anything at all on
+// Reads tables directly off the PDF's own text/vector layer via PdfPig. Only sees anything at all on
 // pages that have a real text layer. A genuinely scanned page (no text/vector content at all)
-// yields nothing here and still needs Azure DI/OCR.
-//
-// Spot-checked against 4 real WR51 documents (2 baseline/T1, 1 water_company_template/T4, 1
-// multi_meter_table/T6) before building this - Lattice mode (SpreadsheetExtractionAlgorithm)
-// cleanly extracted the LicenceProvisions grid, the Maintenance/Readings-taken sub-cells, and
-// the multi-meter table on all 4. See the wr51_textract_tables_design memory for the full
-// evidence; this class is the first real (not scratchpad) implementation, wired through the
-// existing ITableExtractorService/OcrTable abstraction with zero change needed to
-// WrInspectionReportTableMatcher.
+// yields nothing here and still needs OCR.
 //
 // Runs BOTH algorithms per page and returns every candidate table from either - not "try Lattice,
 // fall back to Stream only if Lattice found nothing". WrInspectionReportTableMatcher.
@@ -35,19 +30,43 @@ namespace WALE.ProcessFile.Services.Tabula;
 //
 // No caching - unlike the cloud-based implementations of this interface, there's no API cost to
 // avoid on a repeat call, only CPU time, which is fast (local PDF parsing, no network round trip).
-public class TabulaTableExtractorService : ITableExtractorService
+public class TabulaTableExtractorService(ICacheService cacheService) : ITableExtractorService
 {
     public string Name => "TabulaSharp";
+    private const int SharedPageNumber = 1;
 
-    public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
-        byte[] documentBytes,
+    public async Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+        PdfDocument pdfDocument,
         Guid fileId,
         int processRunId)
     {
-        using var document = UglyToad.PdfPig.PdfDocument.Open(
-            documentBytes,
-            new ParsingOptions { ClipPaths = true });
+        var request = new OcrServiceImageTextCacheRequest
+        {
+            PageNumber = SharedPageNumber,
+            ImageNumber = 0,
+            FileId = fileId,
+            OcrServiceName = Name,
+            ProcessRunId = processRunId
+        };
+        
+        var cacheText = await cacheService.GetOcrImageTextAsync(request);
 
+        if (!string.IsNullOrEmpty(cacheText))
+        {
+            var cachedTables = JsonSerializer.Deserialize<List<DocumentTable>>(
+                cacheText,
+                JsonHelper.GetSerializerOptions());
+
+            return cachedTables!;
+        }
+        
+        var internalDocument = await pdfDocument.OpenInternalDocumentAsync();
+
+        if (internalDocument?.UnderlyingDocument is not UglyToad.PdfPig.PdfDocument document)
+        {
+            throw new Exception("Tabula can only be used when provider is PdfPig");
+        }
+        
         var tables = new List<DocumentTable>();
         var latticeAlgorithm = new SpreadsheetExtractionAlgorithm();
         var streamDetector = new SimpleNurminenDetectionAlgorithm();
@@ -66,12 +85,12 @@ public class TabulaTableExtractorService : ITableExtractorService
                     .Extract(page)
                     .Select(table => ToOcrTable(table, pageNumber)));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Falls through to Stream mode below for this page; the caller's own try/catch
                 // around the whole overlay covers the case where even that isn't enough.
                 
-                // TODO log
+                Console.WriteLine($"INFO - {nameof(TabulaTableExtractorService)} - Lattice, exception {ex.Message}, continuing");
             }
 
             try
@@ -83,15 +102,42 @@ public class TabulaTableExtractorService : ITableExtractorService
                         .Select(table => ToOcrTable(table, pageNumber)));
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Lattice's results for this page (if any) are still returned.
                 
-                // TODO log
+                Console.WriteLine($"INFO - {nameof(TabulaTableExtractorService)} - Stream, exception {ex.Message}, continuing");
             }
         }
 
-        return Task.FromResult<IReadOnlyList<DocumentTable>>(tables);
+        var noneEmptyTables = new List<DocumentTable>();
+        
+        foreach (var table in tables)
+        {
+            var anyNoneEmptyCells = false;
+
+            foreach (var cell in table.Cells)
+            {
+                if (!string.IsNullOrEmpty(cell.Content))
+                {
+                    anyNoneEmptyCells = true;
+                    break;
+                }
+            }
+
+            if (anyNoneEmptyCells)
+            {
+                noneEmptyTables.Add(table);
+            }
+        }
+        
+        tables = noneEmptyTables;
+        
+        await cacheService.SaveOcrImageTextAsync(
+            request,
+            JsonSerializer.Serialize(tables, JsonHelper.GetSerializerOptions()));
+        
+        return tables;
     }
 
     private static DocumentTable ToOcrTable(Table table, int pageNumber)
@@ -107,7 +153,7 @@ public class TabulaTableExtractorService : ITableExtractorService
                 {
                     RowIndex = rowIndex,
                     ColumnIndex = columnIndex,
-                    Content = cell.GetText().Trim(),
+                    Content = GetCellText(cell).Trim(),
                     Left = cell.Left,
                     Top = cell.Top
                 }));
@@ -120,5 +166,68 @@ public class TabulaTableExtractorService : ITableExtractorService
             ColumnCount = table.ColumnCount,
             Cells = cells
         };
+    }
+    
+    private static string GetCellText(Cell cell)
+    {
+        var lines = GroupIntoLines(cell.TextElements);
+        var outputTextSb = new StringBuilder();
+        
+        foreach (var line in lines)
+        {
+            var letters = line
+                .SelectMany(wordOrChunk => wordOrChunk.TextElements)
+                .OrderBy(letter => letter.Left)
+                .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))
+                .ToList();
+            
+            TextElement? previousLetter = null;
+            const double spaceGapTolerance = 0.5;
+        
+            foreach (var letter in letters)
+            {
+                if (previousLetter != null)
+                {
+                    var previousLetterRight = previousLetter.Left + previousLetter.Letter.Width;
+                    var gap = letter.Left - previousLetterRight;
+                    var threshold = Math.Max(previousLetter.WidthOfSpace, letter.WidthOfSpace) * spaceGapTolerance;
+
+                    if (gap > threshold)
+                    {
+                        outputTextSb.Append(' ');
+                    }
+                }
+
+                outputTextSb.Append(letter.Letter.Value);
+                previousLetter = letter;
+            }
+            
+            outputTextSb.Append('\n');
+        }
+
+        return outputTextSb.ToString().Trim();
+    }
+    
+    private static List<List<TextChunk>> GroupIntoLines(IReadOnlyList<TextChunk> wordsOrChunks)
+    {
+        var lines = new List<List<TextChunk>>();
+        const double lineGroupingTolerance = 2.5;
+        
+        // PDF space is Y-up (0 at bottom of the document)
+        foreach (var wordOrChunk in wordsOrChunks.OrderByDescending(chunk => chunk.Top))
+        {
+            var currentLine = lines.Count > 0 ? lines[^1] : null;
+
+            if (currentLine != null && currentLine[0].Top - wordOrChunk.Top <= lineGroupingTolerance)
+            {
+                currentLine.Add(wordOrChunk);
+            }
+            else
+            {
+                lines.Add([wordOrChunk]);
+            }
+        }
+
+        return lines;
     }
 }

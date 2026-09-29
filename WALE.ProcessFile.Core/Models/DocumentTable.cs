@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Core.Enums;
+
 namespace WALE.ProcessFile.Core.Models;
 
 public class DocumentTable
@@ -9,4 +11,6 @@ public class DocumentTable
     public int ColumnCount { get; set; }
 
     public List<DocumentTableCell> Cells { get; set; } = [];
+    
+    public DocumentTableType? TableType { get; set; }
 }

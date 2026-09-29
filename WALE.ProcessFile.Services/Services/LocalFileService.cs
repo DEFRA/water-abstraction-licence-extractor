@@ -86,8 +86,12 @@ public class LocalFileService(string folderPath) : IFileService
         throw new NotImplementedException();
     }
     
+    // No real presigned-URL concept for the local filesystem - point at FilesController's own
+    // GetRawAsync action instead, which streams the file's bytes directly. Relative rather than
+    // absolute (no base URL available here) - Redirect()/the browser both resolve a relative
+    // Location against the current origin fine.
     public Task<string> GetPresignedUrlAsync(string filename)
     {
-        throw new NotImplementedException();
+        return Task.FromResult($"/BFF/Files/GetRaw?filename={Uri.EscapeDataString(filename)}");
     }
 }

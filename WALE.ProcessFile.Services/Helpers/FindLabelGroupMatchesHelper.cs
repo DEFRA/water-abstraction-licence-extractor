@@ -13,6 +13,113 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FindLabelGroupMatchesHelper
 {
+    public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInTablesAsync(
+        IReadOnlyList<DocumentTable> tables,
+        IReadOnlyList<LabelToMatch> labels,
+        bool isOcr,
+        string? serviceName,
+        string labelGroupName,
+        IReadOnlyList<LabelGroupResult> siblingMatches,
+        List<string> previouslyParsedPaths,
+        int regionCode,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        PdfDataExtractorService pdfDataExtractorService,
+        IDocumentLineService? documentLineService,
+        Dictionary<string, object?> additionalInformationStore,
+        IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
+    {
+        var returnList = new List<LabelGroupResult>();
+        
+        foreach (var table in tables)
+        {
+            foreach (var cell in table.Cells)
+            {
+                var cellContent = cell.Content!;
+                var cellLines = cellContent
+                    .Replace("\r\n", "\n")
+                    .Replace("\r", "\n")
+                    .Split('\n');
+
+                var psuedoLines = new List<DocumentLineWrapped>();
+                var cellLineIndex = 0;
+                
+                foreach (var cellLine in cellLines)
+                {
+                    var words = cellLine
+                        .Trim()
+                        .Split(' ')
+                        .Select(w => new DocumentLineWord(
+                            w,
+                            null,
+                            DocumentLineWordCoordinates.NotKnown(),
+                            null))
+                        .ToList();
+                    
+                    var psuedoLine = new DocumentLine
+                    {
+                        Columns = [new DocumentLineColumn(words)]
+                    };
+                    
+                    psuedoLines.Add(new DocumentLineWrapped
+                    {
+                        Line = psuedoLine,
+                        Index = cellLineIndex++
+                    });
+                }
+
+                foreach (var psuedoLineWrapped in psuedoLines)
+                {
+                    foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
+                    {
+                        var (continueOut,
+                                _,
+                                _,
+                                returnResults,
+                                labelGroupResults)
+                            = await FindLabelGroupMatchesInLineAsync(
+                                label,
+                                psuedoLineWrapped.Line,
+                                psuedoLineWrapped.Line,
+                                psuedoLineWrapped,
+                                psuedoLines,
+                                returnList,
+                                psuedoLines.Count,
+                                psuedoLines.Count,
+                                isOcr,
+                                serviceName,
+                                labelGroupName,
+                                lookupConfiguration,
+                                siblingMatches,
+                                null,
+                                null,
+                                pdfDataExtractorService,
+                                processRunId,
+                                regionCode,
+                                documentLineService,
+                                previouslyParsedPaths,
+                                additionalInformationStore,
+                                labelPositionIndex);
+
+                        returnList = labelGroupResults;
+                        
+                        if (continueOut)
+                        {
+                            continue;
+                        }
+                        
+                        if (returnResults != null)
+                        {
+                            return returnResults;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return returnList;
+    }
+
     public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInLinesAsync(
         IReadOnlyList<DocumentLineWrapped> lines,
         IReadOnlyList<LabelToMatch> labels,
@@ -25,7 +132,7 @@ public static class FindLabelGroupMatchesHelper
         int processRunId,
         LookupConfiguration lookupConfiguration,
         PdfDataExtractorService pdfDataExtractorService,
-        IDocumentLineService documentLineService,
+        IDocumentLineService? documentLineService,
         Dictionary<string, object?> additionalInformationStore,
         IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
     {
@@ -33,20 +140,20 @@ public static class FindLabelGroupMatchesHelper
 
         var lineCount = -1;
         var totalLineCount = lines.Count;
-        
+
         foreach (var line in lines)
         {
             var fullLine = line.Line;
-            var breakLineLoop = false;
 
-            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed)) // TODO we should change this to just accept one label
+            // TODO we should change this to just accept one label
+            foreach (var label in labels.Where(whereLabel => !whereLabel.Completed))
             {
                 var partialLine = fullLine;
                 DocumentLine? previousPartialLine = null;
 
                 IReadOnlyList<DocumentLine>? previousLines = null;
                 IReadOnlyList<DocumentLine>? nextLines = null;
-                
+
                 lineCount += 1;
 
                 while (partialLine?.Columns.Any(c => c.Text.Length > 0) == true)
@@ -55,448 +162,68 @@ public static class FindLabelGroupMatchesHelper
                     {
                         throw new Exception("Infinite loop detected - coding error");
                     }
-                    
+
                     previousPartialLine = partialLine;
-                    
-                    var textBeforeAtAndAfterLabel = new List<TextAndLabelAndPosition>();
-                    var continuePartialLoop = false;
-                    var matchedLabel = label;
 
-                    switch (label.Format)
-                    {
-                        case LinkedLicenceDontInline.Constant:
-                            partialLine = null;
-                            continue;
-                        case LinkedLicence.Constant:
-                        {
-                            var linkedLicences = await ProcessLinkedLicenceAsync(
-                                partialLine,
-                                siblingMatches,
-                                label,
-                                previouslyParsedPaths,
-                                regionCode,
-                                processRunId,
-                                lookupConfiguration,
-                                pdfDataExtractorService);
-
-                            returnList.AddRange(linkedLicences);
-
-                            partialLine = null;
-                            continue;
-                        }
-                    }
-                    
-                    if (FormattingHelper.IsLineEmpty(partialLine)
-                        && label.TextToMatch?.Any(text =>
-                            text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
-                        && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
-                    {
-                        partialLine = null;
-                        continue;
-                    }
-                    
-                    TextToMatch? matchedStartText = null;
-
-                    var labelStartPageNumber = partialLine.PageNumber;
-                    var labelStartLineNumber = partialLine.LineNumber;
-                    var labelStartCharIndex = 0;
-                    var labelEndPageNumber = partialLine.PageNumber;
-                    var labelEndLineNumber = partialLine.LineNumber;
-                    var labelEndCharIndex = 0;
-
-                    var labelTextLookingForSingleLine = label.Text?
-                        .Where(t => t.SingleLinePerItem)
-                        .ToList();
-                    
-                    var lookingForSingleLine = labelTextLookingForSingleLine?.Count >= 1;
-                    var rulePassed = false;
-                    
-                    if (lookingForSingleLine)
-                    {
-                        previousLines ??= line.PreviousLines(lines, label);
-                        nextLines ??= line.NextLines(lines, label);
-                        
-                        var nextLine = nextLines.FirstOrDefault();
-                        
-                        var thisLineStartsWithCapital = char.IsUpper(partialLine.Text[0]);
-                        var thisIsLastLine = nextLine == null;
-                        var nextLineStartsWithCapital = !thisIsLastLine
-                            && nextLines.Count >= 1
-                            && !string.IsNullOrEmpty(nextLine?.Text)
-                            && char.IsUpper(nextLine.Text[0]);
-
-                        const int maxNoneWrappedLineLength = 60;
-                        
-                        var lineIsNotWrapping = partialLine.Text.Length <= maxNoneWrappedLineLength;
-                        var previousLineIsNotWrapping = previousLines.Count == 0 || previousLines[0].Text.Length <= maxNoneWrappedLineLength;
-                        
-                        var matchesRule = thisLineStartsWithCapital
-                            && lineIsNotWrapping
-                            && previousLineIsNotWrapping
-                            && (nextLineStartsWithCapital || thisIsLastLine);
-
-                        if (matchesRule)
-                        {
-                            rulePassed = true;
-                            label.Text = [label.Text!.First(lt => lt.SingleLinePerItem)];
-                            matchedStartText = label.Text.Single();
-                            
-                            // Clear out the next lines, as we are doing it in isolation
-                            nextLines = [];
-                        }
-                        else
-                        {
-                            var anyNotLookingForSingleLine = label.TextToMatch?.Count >= 1;
-
-                            if (!anyNotLookingForSingleLine)
-                            {
-                                partialLine = null;
-                                continue;
-                            }
-                        }
-                    }
-                    
-                    if (rulePassed)
-                    {
-                        // Skip through to the next step
-                    }
-                    else if (label.TextToMatch?.Any() == true)
-                    {
-                        nextLines ??= line.NextLines(lines, label);
-                        var nextLine = nextLines.FirstOrDefault();
-
-                        if (!LabelMatchingHelper.LineContainsLabel(
+                    var (continueOut,
+                            nullOutPartialLine,
+                            setPartialLine,
+                            returnResults,
+                            labelGroupResults)
+                        = await FindLabelGroupMatchesInLineAsync(
+                            label,
+                            fullLine,
                             partialLine,
-                            nextLine,
-                            fullLine!,
-                            label.TextToMatch,
-                            label.Position,
+                            line,
+                            lines,
+                            returnList,
                             lineCount,
                             totalLineCount,
-                            out matchedStartText,
-                            out labelStartPageNumber,
-                            out labelStartLineNumber,
-                            out labelStartCharIndex,
-                            out labelEndPageNumber,
-                            out labelEndLineNumber,
-                            out labelEndCharIndex))
-                        {
-                            partialLine = null;
-                            continue;
-                        }
-                    }
-                    else if (label.Possibilities?.Any() == true && label.Format == "Text")
-                    {
-                        var matchedPossibilities =
-                            BaseMethod.RestrictToPossibilities(label.Possibilities, [partialLine]); 
-                        
-                        if (matchedPossibilities.Count == 0)
-                        {
-                            partialLine = null;
-                            continue;
-                        }
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            lookupConfiguration,
+                            siblingMatches,
+                            previousLines,
+                            nextLines,
+                            pdfDataExtractorService,
+                            processRunId,
+                            regionCode,
+                            documentLineService,
+                            previouslyParsedPaths,
+                            additionalInformationStore,
+                            labelPositionIndex);
 
-                        matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
+                    returnList = labelGroupResults;
+
+                    if (setPartialLine != null)
+                    {
+                        partialLine = setPartialLine;
                     }
                     
-                    if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
+                    if (nullOutPartialLine)
                     {
                         partialLine = null;
-                        continue;
-                    }
-
-                    if (label.MatchAllText)
-                    {
-                        previousLines ??= line.PreviousLines(lines, label);
-                        nextLines ??= line.NextLines(lines, label);
-
-                        if (NotMatchedAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
-                        {
-                            partialLine = null;
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        matchedLabel = label.Clone();
-
-                        if (matchedStartText != null)
-                        {
-                            matchedLabel.Text = [matchedStartText];
-                        }
                     }
                     
-                    var over2Lines = labelEndPageNumber > labelStartPageNumber
-                        || (labelEndPageNumber == labelStartPageNumber && labelEndLineNumber > labelStartLineNumber);
-                    
-                    DocumentLine? nextLine2 = null;
-                    
-                    if (over2Lines)
-                    {
-                        nextLines ??= line.NextLines(lines, label);
-                        nextLine2 = nextLines.FirstOrDefault();
-                    }
-                    
-                    textBeforeAtAndAfterLabel.AddRange(
-                        GetLineBeforeAtAndAfterText(
-                            partialLine,
-                            nextLine2,
-                            matchedLabel));
-                    
-                    var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
-                        .ToList();
-                    
-                    var labelGroupResult = new LabelGroupResult
-                    {
-                        IsOcr = isOcr,
-                        LabelStartPageNumber = labelStartPageNumber,
-                        LabelStartLineNumber = labelStartLineNumber,
-                        LabelStartCharPosition = labelStartCharIndex,
-                        LabelEndPageNumber = labelEndPageNumber,
-                        LabelEndLineNumber = labelEndLineNumber,
-                        LabelEndCharPosition = labelEndCharIndex,                        
-                        ServiceName = serviceName
-                    };
-                    
-                    previousLines ??= line.PreviousLines(lines, label);
-                    nextLines ??= line.NextLines(lines, label);
-
-                    var lineForPosition = fullLine;
-                    var lineForRequest = partialLine;
-
-                    if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
-                    {
-                        var clonedPartialLine = partialLine.Clone();
-                        var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
-
-                        // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of
-                        // the nearest other known field's column, restricted to this field's own
-                        // section (via FindSectionEndTop) so an unrelated field in a different
-                        // section can't coincidentally bound it. Skipped if the section end can't
-                        // be found, rather than falling back to an unbounded document-wide search.
-                        double? nextFieldBoundaryX = null;
-
-                        if (label.BoundSameLineWalkByOtherLabelPositions
-                            && labelPositionIndex != null
-                            && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
-                        {
-                            var sectionEndTop = FindSectionEndTop(lines, matchedLabel.TextEnd);
-
-                            if (sectionEndTop.HasValue)
-                            {
-                                nextFieldBoundaryX = labelPositionIndex
-                                    .Where(kv => kv.Key != labelGroupName
-                                        && kv.Value.Left > ownFieldPosition.Left
-                                        && kv.Value.Top > sectionEndTop.Value)
-                                    .Select(kv => (double?)kv.Value.Left)
-                                    .DefaultIfEmpty(null)
-                                    .Min();
-                            }
-                        }
-
-                        var (newColumns, columnIndex) = WalkSameLineColumns(
-                            clonedPartialLine.Columns,
-                            matchedText,
-                            matchedLabel.TextEnd,
-                            nextFieldBoundaryX);
-
-                        clonedPartialLine.Columns = newColumns;
-                        lineForPosition = clonedPartialLine;
-                        lineForRequest = clonedPartialLine;
-
-                        textBeforeAtAndAfterLabel = clonedPartialLine.Columns.Count == 0
-                            ? []
-                            : [
-                                new TextAndLabelAndPosition
-                                {
-                                    ColumnsText = clonedPartialLine.Columns.Select(c => c.Text).ToList(),
-                                    Label = matchedLabel
-                                }
-                            ];
-
-                        if (label.LimitTo == LimitTo.SpecifiedColumn)
-                        {
-                            columnIndex = label.LimitToColumnIndex;
-                        }
-
-                        var firstLineColumnLeftPosition = newColumns
-                            .FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates.Left;
-
-                        var newNextLines = new List<DocumentLine>();
-
-                        foreach (var nextLine in nextLines)
-                        {
-                            if (ShouldExcludeNextLine(nextLine, label.ExcludeNextLineIfFirstColumnStartsWith))
-                            {
-                                continue;
-                            }
-
-                            var columnToKeep = FindNextLineColumnByPosition(
-                                nextLine,
-                                label.LimitTo,
-                                columnIndex,
-                                firstLineColumnLeftPosition);
-
-                            if (columnToKeep == null)
-                            {
-                                continue;
-                            }
-
-                            var newNextLine = nextLine.Clone();
-                            newNextLine.Columns.Clear();
-                            newNextLine.Columns.Add(columnToKeep);
-                            newNextLines.Add(newNextLine);
-                        }
-
-                        nextLines = newNextLines;
-                    }
-
-                    var request = new FunctionInputModel
-                    {
-                        actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
-                        textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
-                        isCompanyType = matchedLabel.Format == CompanyName.Constant,
-                        isDateLookup = matchedLabel.Format == Date.Constant,
-                        isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
-                        isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
-                        isNumberLookup = matchedLabel.Format == Number.Constant,
-                        isOcr = isOcr,
-                        label = matchedLabel,
-                        labelGroupName = labelGroupName,
-                        labelGroupResult = labelGroupResult,
-                        pdfDataExtractorService = pdfDataExtractorService,
-                        previouslyParsedPaths = previouslyParsedPaths,
-                        previousLines = previousLines,
-                        nextLines = nextLines,
-                        serviceName = serviceName,
-                        siblingMatches = siblingMatches,
-                        outputService = lookupConfiguration.OutputService,
-                        cacheService = lookupConfiguration.CacheService,
-                        licenceNumberService = lookupConfiguration.LicenceNumberService,
-                        dmsLookupService = lookupConfiguration.DmsLookupService,
-                        isSingleWord = matchedLabel.Format == SingleWord.Constant,
-                        isUnitsLookup = matchedLabel.Format == Units.Constant,
-                        line = lineForRequest,
-                        lineForPosition = lineForPosition,
-                        lineNumber = partialLine.LineNumber,
-                        processRunId = processRunId,
-                        regionCode = regionCode,
-                        lookupConfiguration = lookupConfiguration,
-                        documentLineService = documentLineService,
-                        additionalInformationStore = additionalInformationStore
-                    };
-                    
-                    var singleValueWanted = matchedLabel.MultipleMatchBehaviour is
-                        MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue
-                        or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
-                    
-                    foreach (var expression in lookupExpressions)
-                    {
-                        var dtStart = DateTime.Now;
-                        
-                        var result = await ProcessExpressionResultAsync(
-                            expression.Value,
-                            request,
-                            partialLine!,
-                            singleValueWanted);
-                        
-                        if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
-                        {
-                            ConsoleHelper.WriteLine(
-                                $"INFO - {nameof(FindLabelGroupMatchesHelper)} - ProcessExpressionResultAsync ({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
-                        }
-                        
-                        var itsAFailedSplitAndWeHaveSucessfullySplitAlready =
-                            label.Position == LabelPosition.SplitAtLabel
-                            && result.Results.Count == 1
-                            && returnList.Count > 1;
-
-                        if (itsAFailedSplitAndWeHaveSucessfullySplitAlready)
-                        {
-                            break;
-                        }
-                        
-                        if (request.label.FindMultipleOnSingleLine
-                            && request.textBeforeAtAndAfterLabel.Count >= 1
-                            && request.label.Position is not LabelPosition.SplitAtLabel
-                            and not LabelPosition.TextToFindIsBetweenLabels
-                            and not LabelPosition.RelatedCategoryPosition)
-                        {
-                            var clonedRequest = request.Clone();
-                            
-                            var matchBefore = clonedRequest.textBeforeAtAndAfterLabel?.FirstOrDefault(x =>
-                                x.Label?.Position == LabelPosition.LabelIsAfterTextToFind);
-
-                            if (matchBefore != null)
-                            {
-                                clonedRequest.textBeforeAtAndAfterLabel?.Remove(matchBefore);
-                            }
-                            
-                            var additionalResults = await ProcessExpressionResultAsync(
-                                AfterTextContainsAnotherMatch.FunctionAsync,
-                                clonedRequest,
-                                partialLine!,
-                                singleValueWanted);
-                            
-                            result.Results.AddRange(additionalResults.Results);
-                            result.Results = FilterDownResults(result.Results, request.label);
-                        }
-                        
-                        if (result.Continue)
-                        {
-                            continue;
-                        }
-                        
-                        if (result.Return)
-                        {
-                            return result.Results;
-                        }
-                        
-                        if (result.ContinuePartialLoop)
-                        {
-                            if (result.NewPartialLine == null)
-                            {
-                                partialLine = null;
-                            }
-                            
-                            continuePartialLoop = true;
-                        }
-                        
-                        returnList.AddRange(result.Results);
-                        
-                        if (result.Break)
-                        {
-                            break;
-                        }
-
-                        returnList = FilterDownResults(returnList, request.label);
-                        
-                        if (result.NewPartialLine != null)
-                        {
-                            partialLine = result.NewPartialLine;
-                        }
-                    }
-
-                    if (continuePartialLoop)
+                    if (continueOut)
                     {
                         continue;
                     }
 
-                    partialLine = null;
+                    if (returnResults != null)
+                    {
+                        return returnResults;
+                    }
                 }
             }
-            
-            if (breakLineLoop)
-            {
-                break;
-            }
         }
-
-        var atLeastOneResultFound = returnList.Count > 1;
         
+        var atLeastOneResultFound = returnList.Count > 1;
+            
         var allAreSingleLabelMultipleLines = returnList.All(match =>
-            match.MatchedLabel?.MultipleMatchBehaviour is
-                MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
+                match.MatchedLabel?.MultipleMatchBehaviour is
+                    MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines);
 
         if (atLeastOneResultFound && allAreSingleLabelMultipleLines)
         {
@@ -508,7 +235,7 @@ public static class FindLabelGroupMatchesHelper
             }
 
             var returnItem = returnList.First();
-            
+                
             return
             [
                 new()
@@ -529,6 +256,447 @@ public static class FindLabelGroupMatchesHelper
         return returnList;
     }
 
+    private static async Task<(
+            bool ContinueOut,
+            bool NullOutPartialLine,
+            DocumentLine? SetPartialLine,
+            List<LabelGroupResult>? ReturnResults,
+            List<LabelGroupResult> ReturnList)>
+        FindLabelGroupMatchesInLineAsync(
+            LabelToMatch label,
+            DocumentLine? fullLine,
+            DocumentLine? partialLine,
+            DocumentLineWrapped line,
+            IReadOnlyList<DocumentLineWrapped> lines,
+            List<LabelGroupResult> returnList,
+            int lineCount,
+            int totalLineCount,
+            bool isOcr,
+            string? serviceName,
+            string labelGroupName,
+            LookupConfiguration lookupConfiguration,
+            IReadOnlyList<LabelGroupResult> siblingMatches,
+            IReadOnlyList<DocumentLine>? previousLines,
+            IReadOnlyList<DocumentLine>? nextLines,
+            PdfDataExtractorService pdfDataExtractorService,
+            int processRunId,
+            int regionCode,
+            IDocumentLineService? documentLineService,
+            List<string> previouslyParsedPaths,
+            Dictionary<string, object?> additionalInformationStore,
+            IReadOnlyDictionary<string, (double Left, double Top)>? labelPositionIndex = null)
+    {
+        var setPartialLine = false;
+        
+        if (partialLine == null)
+        {
+            return (false, false, setPartialLine ? partialLine : null, null, returnList);
+        }
+        
+        var textBeforeAtAndAfterLabel = new List<TextAndLabelAndPosition>();
+        var continuePartialLoop = false;
+        var matchedLabel = label;
+
+        switch (label.Format)
+        {
+            case LinkedLicenceDontInline.Constant:
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
+            case LinkedLicence.Constant:
+            {
+                var linkedLicences = await ProcessLinkedLicenceAsync(
+                    partialLine,
+                    siblingMatches,
+                    label,
+                    previouslyParsedPaths,
+                    regionCode,
+                    processRunId,
+                    lookupConfiguration,
+                    pdfDataExtractorService);
+
+                returnList.AddRange(linkedLicences);
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
+            }
+        }
+        
+        if (FormattingHelper.IsLineEmpty(partialLine)
+            && label.TextToMatch?.Any(text =>
+                text.Text.Equals("[START_OF_BLOCK]", StringComparison.OrdinalIgnoreCase)) != true
+            && !(label.Position == LabelPosition.SplitAtLabel && lineCount == totalLineCount - 1))
+        {
+            return (true, true, setPartialLine ? partialLine : null, null, returnList);
+        }
+        
+        TextToMatch? matchedStartText = null;
+
+        var labelStartPageNumber = partialLine.PageNumber;
+        var labelStartLineNumber = partialLine.LineNumber;
+        var labelStartCharIndex = 0;
+        var labelEndPageNumber = partialLine.PageNumber;
+        var labelEndLineNumber = partialLine.LineNumber;
+        var labelEndCharIndex = 0;
+
+        var labelTextLookingForSingleLine = label.Text?
+            .Where(t => t.SingleLinePerItem)
+            .ToList();
+        
+        var lookingForSingleLine = labelTextLookingForSingleLine?.Count >= 1;
+        var rulePassed = false;
+        
+        if (lookingForSingleLine)
+        {
+            previousLines ??= line.PreviousLines(lines, label);
+            nextLines ??= line.NextLines(lines, label);
+            
+            var nextLine = nextLines.FirstOrDefault();
+            
+            var thisLineStartsWithCapital = char.IsUpper(partialLine.Text[0]);
+            var thisIsLastLine = nextLine == null;
+            var nextLineStartsWithCapital = !thisIsLastLine
+                && nextLines.Count >= 1
+                && !string.IsNullOrEmpty(nextLine?.Text)
+                && char.IsUpper(nextLine.Text[0]);
+
+            const int maxNoneWrappedLineLength = 60;
+            
+            var lineIsNotWrapping = partialLine.Text.Length <= maxNoneWrappedLineLength;
+            var previousLineIsNotWrapping = previousLines.Count == 0 || previousLines[0].Text.Length <= maxNoneWrappedLineLength;
+            
+            var matchesRule = thisLineStartsWithCapital
+                && lineIsNotWrapping
+                && previousLineIsNotWrapping
+                && (nextLineStartsWithCapital || thisIsLastLine);
+
+            if (matchesRule)
+            {
+                rulePassed = true;
+                label.Text = [label.Text!.First(lt => lt.SingleLinePerItem)];
+                matchedStartText = label.Text.Single();
+                
+                // Clear out the next lines, as we are doing it in isolation
+                nextLines = [];
+            }
+            else
+            {
+                var anyNotLookingForSingleLine = label.TextToMatch?.Count >= 1;
+
+                if (!anyNotLookingForSingleLine)
+                {
+                    return (true, true, setPartialLine ? partialLine : null, null, returnList);
+                }
+            }
+        }
+        
+        if (rulePassed)
+        {
+            // Skip through to the next step
+        }
+        else if (label.TextToMatch?.Any() == true)
+        {
+            nextLines ??= line.NextLines(lines, label);
+            var nextLine = nextLines.FirstOrDefault();
+
+            if (!LabelMatchingHelper.LineContainsLabel(
+                partialLine,
+                nextLine,
+                fullLine!,
+                label.TextToMatch,
+                label.Position,
+                lineCount,
+                totalLineCount,
+                out matchedStartText,
+                out labelStartPageNumber,
+                out labelStartLineNumber,
+                out labelStartCharIndex,
+                out labelEndPageNumber,
+                out labelEndLineNumber,
+                out labelEndCharIndex))
+            {
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
+            }
+        }
+        else if (label.Possibilities?.Any() == true && label.Format == "Text")
+        {
+            var matchedPossibilities =
+                BaseMethod.RestrictToPossibilities(label.Possibilities, [partialLine]); 
+            
+            if (matchedPossibilities.Count == 0)
+            {
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
+            }
+
+            matchedStartText = new TextToMatch(matchedPossibilities[0].Text);
+        }
+        
+        if (LabelMatchingHelper.ShouldSkipLineAsForbidden(partialLine.Text, label))
+        {
+            return (true, true, setPartialLine ? partialLine : null, null, returnList);
+        }
+
+        if (label.MatchAllText)
+        {
+            previousLines ??= line.PreviousLines(lines, label);
+            nextLines ??= line.NextLines(lines, label);
+
+            if (NotMatchedAll(partialLine, fullLine!, label, lineCount, previousLines, nextLines))
+            {
+                return (true, true, setPartialLine ? partialLine : null, null, returnList);
+            }
+        }
+        else
+        {
+            matchedLabel = label.Clone();
+
+            if (matchedStartText != null)
+            {
+                matchedLabel.Text = [matchedStartText];
+            }
+        }
+        
+        var over2Lines = labelEndPageNumber > labelStartPageNumber
+            || (labelEndPageNumber == labelStartPageNumber && labelEndLineNumber > labelStartLineNumber);
+        
+        DocumentLine? nextLine2 = null;
+        
+        if (over2Lines)
+        {
+            nextLines ??= line.NextLines(lines, label);
+            nextLine2 = nextLines.FirstOrDefault();
+        }
+        
+        textBeforeAtAndAfterLabel.AddRange(
+            GetLineBeforeAtAndAfterText(
+                partialLine,
+                nextLine2,
+                matchedLabel));
+        
+        var lookupExpressions = GetRelevantLookupExpressions(matchedLabel)
+            .ToList();
+        
+        var labelGroupResult = new LabelGroupResult
+        {
+            IsOcr = isOcr,
+            LabelStartPageNumber = labelStartPageNumber,
+            LabelStartLineNumber = labelStartLineNumber,
+            LabelStartCharPosition = labelStartCharIndex,
+            LabelEndPageNumber = labelEndPageNumber,
+            LabelEndLineNumber = labelEndLineNumber,
+            LabelEndCharPosition = labelEndCharIndex,                        
+            ServiceName = serviceName
+        };
+        
+        previousLines ??= line.PreviousLines(lines, label);
+        nextLines ??= line.NextLines(lines, label);
+
+        var lineForPosition = fullLine;
+        var lineForRequest = partialLine;
+
+        if (label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn)
+        {
+            var clonedPartialLine = partialLine.Clone();
+            var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
+
+            var (newColumns, columnIndex) = WalkSameLineColumns(
+                clonedPartialLine.Columns,
+                matchedText,
+                matchedLabel.TextEnd);
+
+            clonedPartialLine.Columns = newColumns;
+            lineForPosition = clonedPartialLine;
+            lineForRequest = clonedPartialLine;
+
+            textBeforeAtAndAfterLabel = clonedPartialLine.Columns.Count == 0
+                ? []
+                : [
+                    new TextAndLabelAndPosition
+                    {
+                        ColumnsText = clonedPartialLine.Columns.Select(c => c.Text).ToList(),
+                        Label = matchedLabel
+                    }
+                ];
+
+            if (label.LimitTo == LimitTo.SpecifiedColumn)
+            {
+                columnIndex = label.LimitToColumnIndex;
+            }
+
+            var firstLineColumnLeftPosition = newColumns
+                .FirstOrDefault()?.Words.FirstOrDefault()?.Coordinates.Left;
+
+            var newNextLines = new List<DocumentLine>();
+
+            foreach (var nextLine in nextLines)
+            {
+                if (ShouldExcludeNextLine(nextLine, label.LimitToExcludeNextLineIfFirstColumnStartsWith))
+                {
+                    continue;
+                }
+
+                var columnToKeep = FindNextLineColumnByPosition(
+                    nextLine,
+                    label.LimitTo,
+                    columnIndex,
+                    firstLineColumnLeftPosition);
+
+                if (columnToKeep == null)
+                {
+                    continue;
+                }
+
+                var newNextLine = nextLine.Clone();
+                newNextLine.Columns.Clear();
+                newNextLine.Columns.Add(columnToKeep);
+                newNextLines.Add(newNextLine);
+            }
+
+            nextLines = newNextLines;
+        }
+
+        var request = new FunctionInputModel
+        {
+            actsLikeSingleWord = matchedLabel.Format == ActsLikeSingleWord.Constant,
+            textBeforeAtAndAfterLabel = textBeforeAtAndAfterLabel,
+            isCompanyType = matchedLabel.Format == CompanyName.Constant,
+            isDateLookup = matchedLabel.Format == Date.Constant,
+            isDateOrPurposeLookup = matchedLabel.Format == DateOrPurpose.Constant,
+            isLicenceNumberLookup = matchedLabel.Format == LicenceNumber.Constant,
+            isNumberLookup = matchedLabel.Format == Number.Constant,
+            isOcr = isOcr,
+            label = matchedLabel,
+            labelGroupName = labelGroupName,
+            labelGroupResult = labelGroupResult,
+            pdfDataExtractorService = pdfDataExtractorService,
+            previouslyParsedPaths = previouslyParsedPaths,
+            previousLines = previousLines,
+            nextLines = nextLines,
+            serviceName = serviceName,
+            siblingMatches = siblingMatches,
+            outputService = lookupConfiguration.OutputService,
+            cacheService = lookupConfiguration.CacheService,
+            licenceNumberService = lookupConfiguration.LicenceNumberService,
+            dmsLookupService = lookupConfiguration.DmsLookupService,
+            isSingleWord = matchedLabel.Format == SingleWord.Constant,
+            isUnitsLookup = matchedLabel.Format == Units.Constant,
+            line = lineForRequest,
+            lineForPosition = lineForPosition,
+            lineNumber = partialLine.LineNumber,
+            processRunId = processRunId,
+            regionCode = regionCode,
+            lookupConfiguration = lookupConfiguration,
+            documentLineService = documentLineService,
+            additionalInformationStore = additionalInformationStore
+        };
+        
+        var singleValueWanted = matchedLabel.MultipleMatchBehaviour is
+            MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue
+            or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel;
+        
+        foreach (var expression in lookupExpressions)
+        {
+            var dtStart = DateTime.Now;
+            
+            var result = await ProcessExpressionResultAsync(
+                expression.Value,
+                request,
+                partialLine!,
+                singleValueWanted);
+            
+            if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
+            {
+                ConsoleHelper.WriteLine(
+                    $"INFO - {nameof(FindLabelGroupMatchesHelper)} - ProcessExpressionResultAsync " +
+                    $"({request.label.Name}, {expression.Key}) took {(DateTime.Now - dtStart).TotalMilliseconds}ms");
+            }
+            
+            var itsAFailedSplitAndWeHaveSucessfullySplitAlready =
+                label.Position == LabelPosition.SplitAtLabel
+                && result.Results.Count == 1
+                && returnList.Count > 1;
+
+            if (itsAFailedSplitAndWeHaveSucessfullySplitAlready)
+            {
+                break;
+            }
+            
+            if (request.label.FindMultipleOnSingleLine
+                && request.textBeforeAtAndAfterLabel.Count >= 1
+                && request.label.Position is not LabelPosition.SplitAtLabel
+                and not LabelPosition.TextToFindIsBetweenLabels
+                and not LabelPosition.RelatedCategoryPosition)
+            {
+                var clonedRequest = request.Clone();
+                
+                var matchBefore = clonedRequest.textBeforeAtAndAfterLabel?.FirstOrDefault(x =>
+                    x.Label?.Position == LabelPosition.LabelIsAfterTextToFind);
+
+                if (matchBefore != null)
+                {
+                    clonedRequest.textBeforeAtAndAfterLabel?.Remove(matchBefore);
+                }
+                
+                var additionalResults = await ProcessExpressionResultAsync(
+                    AfterTextContainsAnotherMatch.FunctionAsync,
+                    clonedRequest,
+                    partialLine!,
+                    singleValueWanted);
+                
+                result.Results.AddRange(additionalResults.Results);
+                result.Results = FilterDownResults(result.Results, request.label);
+            }
+            
+            if (result.Continue)
+            {
+                continue;
+            }
+            
+            if (result.Return)
+            {
+                return (false, false, setPartialLine ? partialLine : null, result.Results, returnList);
+            }
+            
+            if (result.ContinuePartialLoop)
+            {
+                if (result.NewPartialLine == null)
+                {
+                    partialLine = null;
+                }
+                
+                continuePartialLoop = true;
+            }
+            
+            returnList.AddRange(result.Results);
+            
+            if (result.Break)
+            {
+                break;
+            }
+
+            returnList = FilterDownResults(returnList, request.label);
+            
+            if (result.NewPartialLine != null)
+            {
+                partialLine = result.NewPartialLine;
+                setPartialLine = true;
+            }
+        }
+
+        if (continuePartialLoop)
+        {
+            return (
+                true,
+                partialLine == null,
+                setPartialLine ? partialLine : null,
+                null,
+                returnList);
+        }
+        
+        return (
+            true,
+            true,
+            setPartialLine ? partialLine : null,
+            null,
+            returnList);
+    }
+
     /// <summary>
     /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - the Y (top) of the first line
     /// starting with one of the field's own real TextEnd markers (skips the "[END_OF_BLOCK]"
@@ -537,13 +705,14 @@ public static class FindLabelGroupMatchesHelper
     /// this grid" from "an unrelated field in the next section down" - on real documents these
     /// have sat as little as ~20 units apart.
     /// </summary>
-    internal static double? FindSectionEndTop(
+    private static double? FindSectionEndTop(
         IReadOnlyList<DocumentLineWrapped> lines,
         IReadOnlyList<TextToMatch>? textEnd)
     {
         var realEndMarkers = (textEnd ?? [])
-            .Where(end => !string.IsNullOrEmpty(end.Text) && end.Text != "[END_OF_BLOCK]")
-            .Select(end => end.Text)
+            .Where(textToMatch => !string.IsNullOrEmpty(textToMatch.Text)
+                && textToMatch.Text != "[END_OF_BLOCK]")
+            .Select(textToMatch => textToMatch.Text)
             .ToList();
 
         if (realEndMarkers.Count == 0)
@@ -586,8 +755,7 @@ public static class FindLabelGroupMatchesHelper
     internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
         IReadOnlyList<DocumentLineColumn> columns,
         string? matchedText,
-        IReadOnlyList<TextToMatch>? textEnd,
-        double? nextFieldBoundaryX = null)
+        IReadOnlyList<TextToMatch>? textEnd)
     {
         var newColumns = new List<DocumentLineColumn>();
         var columnIndex = 0;
@@ -636,12 +804,7 @@ public static class FindLabelGroupMatchesHelper
                 !string.IsNullOrEmpty(end.Text)
                 && column.Text.StartsWith(end.Text, StringComparison.OrdinalIgnoreCase)) == true;
 
-            var candidateLeft = column.Words.FirstOrDefault()?.Coordinates.Left;
-            var isPastKnownFieldBoundary = nextFieldBoundaryX.HasValue
-                && candidateLeft.HasValue
-                && candidateLeft.Value >= nextFieldBoundaryX.Value;
-
-            if (isNextFieldStart || isPastKnownFieldBoundary)
+            if (isNextFieldStart)
             {
                 break;
             }
@@ -1260,6 +1423,18 @@ public static class FindLabelGroupMatchesHelper
                 ColumnsText = [textAfterLabel],
                 Label = returnLabel,
                 Position = "AfterLabel"
+            });
+        }
+
+        if (label.Position == LabelPosition.LabelIsActuallyResult
+            && !string.IsNullOrEmpty(textAtLabel) 
+            && returnItems.All(item => item.Position != nameof(LabelPosition.LabelIsActuallyResult)))
+        {
+            returnItems.Add(new TextAndLabelAndPosition
+            {
+                ColumnsText = [textAtLabel],
+                Label = label,
+                Position = "AtLabel"
             });
         }
 

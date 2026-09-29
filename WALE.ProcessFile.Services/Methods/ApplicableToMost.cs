@@ -100,259 +100,444 @@ public static class ApplicableToMost
         foreach (var item in textBeforeAtAndAfterLabel)
         {
             var matchedLabel = item.Label!;
-            var text = item.ColumnsText![0];
-            
-            var labelGroupResult = request.labelGroupResult;
-            labelGroupResult.MatchedPosition = MatchedPosition.FullyOnSameLine;
-            labelGroupResult.MatchedLabel = matchedLabel;
-            
-            var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
-            var labelText = matchedLabel.TextToMatch?.FirstOrDefault()?.Text;
 
-            var columnTextOnly = matchedLabel.Name == "CompanyName"; // TODO make it a flag in config
-            
-            if (columnTextOnly && labelText != null)
+            foreach (var text in item.ColumnsText!)
             {
-                var column = request.line!.Columns
-                    .FirstOrDefault(c =>
-                        c.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase));
+                var labelGroupResult = request.labelGroupResult;
+                labelGroupResult.MatchedPosition = MatchedPosition.FullyOnSameLine;
+                labelGroupResult.MatchedLabel = matchedLabel;
 
-                if (column != null)
+                var t = matchedLabel.IncludeStartLabelText ? request.line!.Text : text;
+                var labelText = matchedLabel.TextToMatch?.FirstOrDefault()?.Text;
+
+                var columnTextOnly = matchedLabel.Name == "CompanyName"; // TODO make it a flag in config
+
+                if (columnTextOnly && labelText != null)
                 {
-                    t = column.Text[(column.Text.IndexOf(labelText, StringComparison.Ordinal) + labelText.Length)..]
-                        .Trim();
-                }
-            }
-            
-            var over2Lines = false;
-            var outputText = DataHelper.RemoveExcludes(
-                matchedLabel,
-                t,
-                true,
-                false,
-                null,
-                out var removedLines);
-            
-            if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
-            {
-                continue;
-            }
+                    var column = request.line!.Columns
+                        .FirstOrDefault(c =>
+                            c.Text.Contains(labelText, StringComparison.OrdinalIgnoreCase));
 
-            var lineWords = request.line!.Columns
-                .SelectMany(c => c.Words)
-                .Select((w, idx) =>
-                {
-                    var clonedWord = w.Clone();
-                    clonedWord.Text = DataHelper.RemoveExcludes(
-                        matchedLabel,
-                        clonedWord.Text,
-                        idx == 0,
-                        false,
-                        idx,
-                        out _);
-
-                    return clonedWord;
-                })
-                .ToList();
-
-            lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);
-            
-            var documentLine = request.line.Clone();
-            documentLine.Columns.Clear();
-            documentLine.Columns.Add(new DocumentLineColumn(lineWords));
-            
-            if (request.isDateLookup)
-            {
-                // TODO can swap this out now for shared method in Base
-                
-                if (Date.AnyIsDate([documentLine], out var matchedLines))
-                {
-                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
-                    
-                    foreach (var matchedLine in matchedLines)
+                    if (column != null)
                     {
-                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
-                        
-                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                        labelGroupResult = CheckContains(request.label, labelGroupResult);
-                        
-                        if (labelGroupResult == null)
-                        {
-                            return [];
-                        }
-                        
-                        return await ProcessSubLabelsAsync(request, labelGroupResult);
+                        t = column.Text[(column.Text.IndexOf(labelText, StringComparison.Ordinal) + labelText.Length)..]
+                            .Trim();
                     }
                 }
-                
-                continue;
-            }
-            
-            if (request.isDateOrPurposeLookup)
-            {
-                // TODO can swap this out now for shared method in Base
-                
-                if (DateOrPurpose.AnyIsDateOrPurpose([documentLine], out var matchedLines))
-                {
-                    matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
-                    
-                    foreach (var matchedLine in matchedLines)
-                    {
-                        labelGroupResult = labelGroupResult.Clone([matchedLine]);
-                        
-                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                        labelGroupResult = CheckContains(request.label, labelGroupResult);
-                        
-                        if (labelGroupResult == null)
-                        {
-                            return [];
-                        }
-                        
-                        return await ProcessSubLabelsAsync(request, labelGroupResult);
-                    }
-                }
-                
-                continue;
-            }
-            
-            if (request.isCompanyType
-                && !string.IsNullOrEmpty(outputText)
-                && (char.IsLower(outputText[0])
-                    || outputText.StartsWith("trading as", StringComparison.OrdinalIgnoreCase)))
-            {
-                over2Lines = true;
-                outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
-            }
 
-            if (request.isNumberLookup)
-            {
-                // TODO can swap this out now for shared method in Base
-                
-                if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
-                {
-                    numberLines = RestrictToPossibilities(request.label?.Possibilities, [documentLine]);
+                var over2Lines = false;
+                var outputText = DataHelper.RemoveExcludes(
+                    matchedLabel,
+                    t,
+                    true,
+                    false,
+                    null,
+                    out var removedLines);
 
-                    if (numberLines.Count > 0)
-                    {
-                        // Remove any trailing dots
-                        foreach (var numberLine in numberLines)
-                        {
-                            foreach (var column in numberLine.Columns)
-                            {
-                                foreach (var word in column.Words)
-                                {
-                                    if (word.Text.EndsWith('.'))
-                                    {
-                                        word.Text = word.Clone().Text[..^1];
-                                    }
-                                }
-                            }
-                        }
-                        
-                        labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
-
-                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                        labelGroupResult = CheckContains(request.label, labelGroupResult);
-                        
-                        if (labelGroupResult == null)
-                        {
-                            return [];
-                        }
-                        
-                        return await ProcessSubLabelsAsync(request, labelGroupResult);
-                    }
-                }
-                
-                continue;
-            }
-
-            if (request.isLicenceNumberLookup)
-            {
-                // TODO can swap this out now for shared method in Base
-
-                var isLast = textBeforeAtAndAfterLabel.Last() == item;
-                var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
-
-                var (anyIsLicenceNumber, licenceNumberLines) =
-                    request.licenceNumberService!.AnyIsLicenceNumber(
-                        [documentLine],
-                        request.label!,
-                        request.isOcr,
-                        request.additionalInformationStore);
-                
-                if (!isTableLine && anyIsLicenceNumber)
-                {
-                    licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
-                    var returnList = new List<LabelGroupResult>();
-                    
-                    // If its a floating number, its usually some weird internal reference number
-                    if (licenceNumberLines.Count == 1
-                        && licenceNumberLines[0].Text == request.line.Text
-                        && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
-                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
-                    {
-                        licenceNumberLines = [];
-                    }
-                    
-                    // If its a number then 'M', its usually some weird internal reference number
-                    if (licenceNumberLines.Count == 1
-                        && request.line.Text == $"{licenceNumberLines[0].Text} M"
-                        && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
-                    {
-                        licenceNumberLines = [];
-                    }
-                    
-                    foreach (var licenceNumberLine in licenceNumberLines)
-                    {
-                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
-                    }
-                    
-                    if (!isMultiple)
-                    {
-                        return CheckContains(request.label, returnList);
-                    }
-
-                    returnListTop.AddRange(returnList);
-                }
-                
-                if (isLast)
-                {
-                    return CheckContains(request.label, returnListTop);
-                }
-                
-                continue;
-            }
-            
-            if (request.label?.Format == LicenceNumberFilename.Constant)
-            {
-                // TODO can swap this out now for shared method in Base
-                
-                var (anyIsLicenceNumberF, licenceNumberLinesF) =
-                    request.licenceNumberService!.AnyIsLicenceNumber(
-                        [documentLine],
-                        request.label!,
-                        request.isOcr,
-                        request.additionalInformationStore);
-
-                if (!anyIsLicenceNumberF)
+                if (string.IsNullOrEmpty(outputText) || DataHelper.IsCorruptedLine(outputText, request.isOcr))
                 {
                     continue;
                 }
 
-                licenceNumberLinesF = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLinesF);
-                var returnList = new List<LabelGroupResult>();
-                    
-                foreach (var licenceNumberLine in licenceNumberLinesF)
+                var lineWords = request.line!.Columns
+                    .SelectMany(c => c.Words)
+                    .Select((w, idx) =>
+                    {
+                        var clonedWord = w.Clone();
+                        clonedWord.Text = DataHelper.RemoveExcludes(
+                            matchedLabel,
+                            clonedWord.Text,
+                            idx == 0,
+                            false,
+                            idx,
+                            out _);
+
+                        return clonedWord;
+                    })
+                    .ToList();
+
+                lineWords = DocumentLineColumn.FilterWordsFromText(lineWords, outputText);
+
+                var documentLine = request.line.Clone();
+                documentLine.Columns.Clear();
+                documentLine.Columns.Add(new DocumentLineColumn(lineWords));
+
+                if (request.isDateLookup)
                 {
-                    var dmsFileData = await request.dmsLookupService!.GetDmsFileDataAsync(
-                        licenceNumberLine.Text,
-                        request.cacheService!);
-                    
-                    if (dmsFileData == null)
+                    // TODO can swap this out now for shared method in Base
+
+                    if (Date.AnyIsDate([documentLine], out var matchedLines))
+                    {
+                        matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
+
+                        foreach (var matchedLine in matchedLines)
+                        {
+                            labelGroupResult = labelGroupResult.Clone([matchedLine]);
+
+                            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                            labelGroupResult = CheckContains(request.label, labelGroupResult);
+
+                            if (labelGroupResult == null)
+                            {
+                                return [];
+                            }
+
+                            return await ProcessSubLabelsAsync(request, labelGroupResult);
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (request.isDateOrPurposeLookup)
+                {
+                    // TODO can swap this out now for shared method in Base
+
+                    if (DateOrPurpose.AnyIsDateOrPurpose([documentLine], out var matchedLines))
+                    {
+                        matchedLines = RestrictToPossibilities(request.label?.Possibilities, matchedLines);
+
+                        foreach (var matchedLine in matchedLines)
+                        {
+                            labelGroupResult = labelGroupResult.Clone([matchedLine]);
+
+                            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                            labelGroupResult = CheckContains(request.label, labelGroupResult);
+
+                            if (labelGroupResult == null)
+                            {
+                                return [];
+                            }
+
+                            return await ProcessSubLabelsAsync(request, labelGroupResult);
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (request.isCompanyType
+                    && !string.IsNullOrEmpty(outputText)
+                    && (char.IsLower(outputText[0])
+                        || outputText.StartsWith("trading as", StringComparison.OrdinalIgnoreCase)))
+                {
+                    over2Lines = true;
+                    outputText = $"{request.previousLines!.FirstOrDefault()?.Text} {outputText}";
+                }
+
+                if (request.isNumberLookup)
+                {
+                    // TODO can swap this out now for shared method in Base
+
+                    if (Number.AnyIsNumber([documentLine], request.label, request.isOcr, out var numberLines))
+                    {
+                        numberLines = RestrictToPossibilities(request.label?.Possibilities, [documentLine]);
+
+                        if (numberLines.Count > 0)
+                        {
+                            // Remove any trailing dots
+                            foreach (var numberLine in numberLines)
+                            {
+                                foreach (var column in numberLine.Columns)
+                                {
+                                    foreach (var word in column.Words)
+                                    {
+                                        if (word.Text.EndsWith('.'))
+                                        {
+                                            word.Text = word.Clone().Text[..^1];
+                                        }
+                                    }
+                                }
+                            }
+
+                            labelGroupResult = labelGroupResult.Clone(numberLines.Take(1));
+
+                            FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                            labelGroupResult = CheckContains(request.label, labelGroupResult);
+
+                            if (labelGroupResult == null)
+                            {
+                                return [];
+                            }
+
+                            return await ProcessSubLabelsAsync(request, labelGroupResult);
+                        }
+                    }
+
+                    continue;
+                }
+
+                if (request.isLicenceNumberLookup)
+                {
+                    // TODO can swap this out now for shared method in Base
+
+                    var isLast = textBeforeAtAndAfterLabel.Last() == item;
+                    var isTableLine = request.line.Columns.Count >= 5 && !request.line.Text.Any(char.IsLetter);
+
+                    var (anyIsLicenceNumber, licenceNumberLines) =
+                        request.licenceNumberService!.AnyIsLicenceNumber(
+                            [documentLine],
+                            request.label!,
+                            request.isOcr,
+                            request.additionalInformationStore);
+
+                    if (!isTableLine && anyIsLicenceNumber)
+                    {
+                        licenceNumberLines = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLines);
+                        var returnList = new List<LabelGroupResult>();
+
+                        // If its a floating number, its usually some weird internal reference number
+                        if (licenceNumberLines.Count == 1
+                            && licenceNumberLines[0].Text == request.line.Text
+                            && string.IsNullOrEmpty(request.previousLines?.FirstOrDefault()?.Text)
+                            && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                        {
+                            licenceNumberLines = [];
+                        }
+
+                        // If its a number then 'M', its usually some weird internal reference number
+                        if (licenceNumberLines.Count == 1
+                            && request.line.Text == $"{licenceNumberLines[0].Text} M"
+                            && string.IsNullOrEmpty(request.nextLines?.FirstOrDefault()?.Text))
+                        {
+                            licenceNumberLines = [];
+                        }
+
+                        foreach (var licenceNumberLine in licenceNumberLines)
+                        {
+                            labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+                            returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
+                        }
+
+                        if (!isMultiple)
+                        {
+                            return CheckContains(request.label, returnList);
+                        }
+
+                        returnListTop.AddRange(returnList);
+                    }
+
+                    if (isLast)
+                    {
+                        return CheckContains(request.label, returnListTop);
+                    }
+
+                    continue;
+                }
+
+                if (request.label?.Format == LicenceNumberFilename.Constant)
+                {
+                    // TODO can swap this out now for shared method in Base
+
+                    var (anyIsLicenceNumberF, licenceNumberLinesF) =
+                        request.licenceNumberService!.AnyIsLicenceNumber(
+                            [documentLine],
+                            request.label!,
+                            request.isOcr,
+                            request.additionalInformationStore);
+
+                    if (!anyIsLicenceNumberF)
                     {
                         continue;
                     }
+
+                    licenceNumberLinesF = RestrictToPossibilities(request.label?.Possibilities, licenceNumberLinesF);
+                    var returnList = new List<LabelGroupResult>();
+
+                    foreach (var licenceNumberLine in licenceNumberLinesF)
+                    {
+                        var dmsFileData = await request.dmsLookupService!.GetDmsFileDataAsync(
+                            licenceNumberLine.Text,
+                            request.cacheService!);
+
+                        if (dmsFileData == null)
+                        {
+                            continue;
+                        }
+
+                        var coords = documentLine
+                            .Columns
+                            .First()
+                            .Words
+                            .First()
+                            .Coordinates;
+
+                        licenceNumberLine.Columns[0].Words.Clear();
+                        licenceNumberLine.Columns[0].Words.AddRange(
+                            DocumentLineColumn.TextToWords(dmsFileData.DestinationFileName!, null, coords));
+                        labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
+
+                        returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
+                    }
+
+                    return CheckContains(request.label, returnList);
+                }
+
+                if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
+                {
+                    var coords = request
+                        .line
+                        .Columns
+                        .First()
+                        .Words
+                        .First()
+                        .Coordinates;
+
+                    documentLine.Columns[0].Words.Clear();
+                    documentLine.Columns[0].Words.Add(new DocumentLineWord(
+                        request.isSingleWord ? t.Split(' ')[0] : t,
+                        null,
+                        coords,
+                        null));
+
+                    labelGroupResult.Clone([documentLine]);
+
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                    labelGroupResult = CheckContains(request.label, labelGroupResult);
+                    if (labelGroupResult == null)
+                    {
+                        return [];
+                    }
+
+                    return await ProcessSubLabelsAsync(request, labelGroupResult);
+                }
+
+                var loopIsPossiblity = false;
+                var matchedPossibility = (TextToMatch?)null;
+
+                if (matchedLabel.Possibilities?.Any() == true)
+                {
+                    hasToBePossibility = true;
+                    var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
+
+                    var autoCorrectedOutput = request.isOcr
+                        ? AutoCorrectHelper.AutoCorrectText(
+                            words,
+                            false,
+                            request.label?.AutoCorrect ?? false)
+                        : words;
+
+                    foreach (var possibility in matchedLabel.Possibilities)
+                    {
+                        if (!outputText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                            && !autoCorrectedOutput.Any(aco =>
+                                aco.Text.Equals(possibility.Text, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            continue;
+                        }
+
+                        outputText = possibility.Text;
+                        loopIsPossiblity = true;
+
+                        if (loopIsPossiblity)
+                        {
+                            isPossiblity = true;
+                        }
+
+                        matchedPossibility = possibility;
+
+                        break;
+                    }
+                }
+
+                if (request.isUnitsLookup)
+                {
+                    if (loopIsPossiblity)
+                    {
+                        var dLineWords = documentLine.Columns
+                            .SelectMany(c => c.Words)
+                            .ToList();
+
+                        dLineWords = DocumentLineColumn.FilterWordsFromText(dLineWords, outputText);
+
+                        documentLine.Columns.Clear();
+                        documentLine.Columns.Add(new DocumentLineColumn(dLineWords));
+
+                        labelGroupResult.Text = [documentLine];
+                        labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
+
+                        FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+                        labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];
+
+                        labelGroupResult = CheckContains(request.label, labelGroupResult);
+                        if (labelGroupResult == null)
+                        {
+                            return [];
+                        }
+
+                        return await ProcessSubLabelsAsync(request, labelGroupResult);
+                    }
+
+                    // TODO can swap this out now for shared method in Base
+
+                    var r = Units.GetMatchesToPossibilities(
+                        request.label!,
+                        [documentLine],
+                        false,
+                        labelGroupResult);
+
+                    if (r.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    labelGroupResult = labelGroupResult.Clone([documentLine]);
+                    return CheckContains(request.label, r);
+                }
+
+                if (!request.label!.DoNotTrimLines)
+                {
+                    outputText = FormattingHelper.TrimFormatting(outputText, true, true);
+                }
+
+                var previousLine = request.previousLines!.FirstOrDefault();
+
+                var inputWords = over2Lines && previousLine != null
+                    ? new List<DocumentLine> { previousLine, documentLine }
+                        .SelectMany(dl => dl.Columns)
+                        .SelectMany(c => c.Words)
+                        .ToList()
+                    : documentLine.Columns
+                        .SelectMany(c => c.Words)
+                        .ToList();
+
+                var tWords = DocumentLineColumn.FilterWordsFromText(
+                    inputWords,
+                    outputText!);
+
+                if (request.isOcr)
+                {
+                    tWords = AutoCorrectHelper.AutoCorrectText(
+                        tWords,
+                        request.isCompanyType,
+                        request.label.AutoCorrect);
+                }
+
+                outputText = string.Join(' ', tWords.Select(tw => tw.Text));
+
+                if (request.isCompanyType
+                    && CompanyName.TryGetCompanyOrPersonalName(
+                        outputText,
+                        matchedLabel,
+                        request.lookupConfiguration,
+                        out _))
+                {
+                    if (request.label?.Position == LabelPosition.LabelIsInMiddleOfTextToFind)
+                    {
+                        continue;
+                    }
+
+                    // Need to look at the next lines also
+                    /*if (request.label?.Position != LabelPosition.ApplicableToMost
+                        && request.nextLines?.Count > 0
+                        && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(request.nextLines[0].Text), matchedLabel, out _))
+                    {
+                        continue;
+                    }*/
+
+                    var matchType = over2Lines
+                        ? MatchedPosition.PartiallyOnSameLine
+                        : MatchedPosition.FullyOnSameLine;
 
                     var coords = documentLine
                         .Columns
@@ -360,254 +545,37 @@ public static class ApplicableToMost
                         .Words
                         .First()
                         .Coordinates;
-                        
-                    licenceNumberLine.Columns[0].Words.Clear();
-                    licenceNumberLine.Columns[0].Words.AddRange(
-                        DocumentLineColumn.TextToWords(dmsFileData.DestinationFileName!, null, coords));
-                    labelGroupResult = labelGroupResult.Clone([licenceNumberLine]);
-                        
-                    returnList.AddRange(await ProcessSubLabelsAsync(request, labelGroupResult));
-                }
-                    
-                return CheckContains(request.label, returnList);
-            }
 
-            if ((request.isSingleWord || request.actsLikeSingleWord) && !string.IsNullOrEmpty(t))
-            {
-                var coords = request
-                    .line
-                    .Columns
-                    .First()
-                    .Words
-                    .First()
-                    .Coordinates;
-                
-                documentLine.Columns[0].Words.Clear();
-                documentLine.Columns[0].Words.Add(new DocumentLineWord(
-                    request.isSingleWord ? t.Split(' ')[0] : t,
-                    null,
-                    coords,
-                    null));
-                
-                labelGroupResult.Clone([documentLine]);
-                
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                labelGroupResult = CheckContains(request.label, labelGroupResult);
-                if (labelGroupResult == null)
-                {
-                    return [];
-                }
-                
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
-            }
+                    documentLine.Columns[0].Words.Clear();
+                    documentLine.Columns[0].Words.AddRange(DocumentLineColumn.TextToWords(
+                        outputText!,
+                        null,
+                        coords));
 
-            var loopIsPossiblity = false;
-            var matchedPossibility = (TextToMatch?)null;
-            
-            if (matchedLabel.Possibilities?.Any() == true)
-            {
-                hasToBePossibility = true;
-                var words = documentLine.Columns.SelectMany(c => c.Words).ToList();
-                
-                var autoCorrectedOutput = request.isOcr
-                    ? AutoCorrectHelper.AutoCorrectText(
-                        words,
-                        false,
-                        request.label?.AutoCorrect ?? false)
-                    : words;
-
-                foreach (var possibility in matchedLabel.Possibilities)
-                {
-                    if (!outputText.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase)
-                        && !autoCorrectedOutput.Any(aco => aco.Text.Equals(possibility.Text, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        continue;
-                    }
-                    
-                    outputText = possibility.Text;
-                    loopIsPossiblity = true;
-
-                    if (loopIsPossiblity)
-                    {
-                        isPossiblity = true;
-                    }
-                    
-                    matchedPossibility = possibility;
-                    
-                    break;
-                }
-            }
-
-            if (request.isUnitsLookup)
-            {
-                if (loopIsPossiblity)
-                {
-                    var dLineWords = documentLine.Columns
-                        .SelectMany(c => c.Words)
-                        .ToList();
-                 
-                    dLineWords = DocumentLineColumn.FilterWordsFromText(dLineWords, outputText);
-                    
-                    documentLine.Columns.Clear();
-                    documentLine.Columns.Add(new DocumentLineColumn(dLineWords));
-                
                     labelGroupResult.Text = [documentLine];
-                    labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
-                
+                    labelGroupResult.MatchedPosition = matchType;
+
                     FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];
+
+                    if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
+                    {
+                        labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];
+                    }
 
                     labelGroupResult = CheckContains(request.label, labelGroupResult);
                     if (labelGroupResult == null)
                     {
                         return [];
                     }
-                    
+
                     return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
-                
-                // TODO can swap this out now for shared method in Base
-                
-                var r = Units.GetMatchesToPossibilities(
-                    request.label!,
-                    [documentLine],
-                    false,
-                    labelGroupResult);
 
-                if (r.Count == 0)
-                {
-                    continue;
-                }
+                var trimmedWords = outputText.Trim().Split(' ');
 
-                labelGroupResult = labelGroupResult.Clone([documentLine]);
-                return CheckContains(request.label, r);
-            }
-            
-            if (!request.label!.DoNotTrimLines)
-            {
-                outputText = FormattingHelper.TrimFormatting(outputText, true, true);    
-            }
-
-            var previousLine = request.previousLines!.FirstOrDefault();
-            
-            var inputWords = over2Lines && previousLine != null
-                ? new List<DocumentLine> { previousLine, documentLine }
-                    .SelectMany(dl => dl.Columns)
-                    .SelectMany(c => c.Words)
-                    .ToList()
-                : documentLine.Columns
-                    .SelectMany(c => c.Words)
-                    .ToList();
-            
-            var tWords = DocumentLineColumn.FilterWordsFromText(
-                inputWords,
-                outputText!);
-
-            if (request.isOcr)
-            {
-                tWords = AutoCorrectHelper.AutoCorrectText(
-                    tWords,
-                    request.isCompanyType,
-                    request.label.AutoCorrect);
-            }
-
-            outputText = string.Join(' ', tWords.Select(tw => tw.Text));
-            
-            if (request.isCompanyType
-                && CompanyName.TryGetCompanyOrPersonalName(
-                    outputText,
-                    matchedLabel,
-                    request.lookupConfiguration,
-                    out _))
-            {
-                if (request.label?.Position == LabelPosition.LabelIsInMiddleOfTextToFind)
-                {
-                    continue;
-                }
-                
-                // Need to look at the next lines also
-                /*if (request.label?.Position != LabelPosition.ApplicableToMost
-                    && request.nextLines?.Count > 0
-                    && CompanyName.TryGetCompanyOrPersonalName(docLine.Clone(request.nextLines[0].Text), matchedLabel, out _))
-                {
-                    continue;
-                }*/
-                
-                var matchType = over2Lines ?
-                    MatchedPosition.PartiallyOnSameLine
-                    : MatchedPosition.FullyOnSameLine;
-
-                var coords = documentLine
-                    .Columns
-                    .First()
-                    .Words
-                    .First()
-                    .Coordinates;
-                
-                documentLine.Columns[0].Words.Clear();
-                documentLine.Columns[0].Words.AddRange(DocumentLineColumn.TextToWords(
-                    outputText!,
-                    null,
-                    coords));
-                
-                labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchedPosition = matchType;
-                
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-
-                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
-                {
-                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
-                }
-                
-                labelGroupResult = CheckContains(request.label, labelGroupResult);
-                if (labelGroupResult == null)
-                {
-                    return [];
-                }
-                
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
-            }
-            
-            var trimmedWords = outputText.Trim().Split(' ');
-
-            if (trimmedWords.Length == 1
-                && !string.IsNullOrEmpty(trimmedWords[0])
-                && request.isCompanyType)
-            {
-                var coords = documentLine
-                    .Columns
-                    .First()
-                    .Words
-                    .First()
-                    .Coordinates;
-                
-                documentLine.Columns[0].Words.Clear();
-                documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
-                
-                labelGroupResult.Text = [documentLine];
-                labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
-                
-                FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
-                
-                if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
-                {
-                    labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];   
-                }
-
-                labelGroupResult = CheckContains(request.label, labelGroupResult);
-                
-                if (labelGroupResult == null)
-                {
-                    return [];
-                }
-                
-                return await ProcessSubLabelsAsync(request, labelGroupResult);
-            }
-            
-            if (!string.IsNullOrWhiteSpace(outputText))
-            {
-                if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)
+                if (trimmedWords.Length == 1
+                    && !string.IsNullOrEmpty(trimmedWords[0])
+                    && request.isCompanyType)
                 {
                     var coords = documentLine
                         .Columns
@@ -615,33 +583,68 @@ public static class ApplicableToMost
                         .Words
                         .First()
                         .Coordinates;
-                    
-                    documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.AddRange(
-                        DocumentLineColumn.TextToWords(outputText, null, coords));
-                    
-                    var lineMatch = labelGroupResult.Clone([documentLine]);
-                    lineMatch.MatchedPosition = MatchedPosition.BetweenLabels;
-                    
-                    FormattingHelper.RemoveRemoves(lineMatch, removedLines);
 
-                    returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
-                }
-                else if (request.label?.Format == Text.Constant)
-                {
-                    var coords = documentLine
-                        .Columns
-                        .First()
-                        .Words
-                        .First()
-                        .Coordinates;
-                    
                     documentLine.Columns[0].Words.Clear();
-                    documentLine.Columns[0].Words.AddRange(
-                        DocumentLineColumn.TextToWords(outputText, null, coords));
-                    
-                    var lineMatch = labelGroupResult.Clone([documentLine]);
-                    returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
+                    documentLine.Columns[0].Words.Add(new DocumentLineWord(outputText, null, coords, null));
+
+                    labelGroupResult.Text = [documentLine];
+                    labelGroupResult.MatchedPosition = MatchedPosition.OnSameLineSingleWord;
+
+                    FormattingHelper.RemoveRemoves(labelGroupResult, removedLines);
+
+                    if (labelGroupResult.MatchedLabel.Possibilities != null && loopIsPossiblity)
+                    {
+                        labelGroupResult.MatchedLabel.Possibilities = [matchedPossibility!];
+                    }
+
+                    labelGroupResult = CheckContains(request.label, labelGroupResult);
+
+                    if (labelGroupResult == null)
+                    {
+                        return [];
+                    }
+
+                    return await ProcessSubLabelsAsync(request, labelGroupResult);
+                }
+
+                if (!string.IsNullOrWhiteSpace(outputText))
+                {
+                    if (request.label?.TextToMatch?.FirstOrDefault()?.Text == null)
+                    {
+                        var coords = documentLine
+                            .Columns
+                            .First()
+                            .Words
+                            .First()
+                            .Coordinates;
+
+                        documentLine.Columns[0].Words.Clear();
+                        documentLine.Columns[0].Words.AddRange(
+                            DocumentLineColumn.TextToWords(outputText, null, coords));
+
+                        var lineMatch = labelGroupResult.Clone([documentLine]);
+                        lineMatch.MatchedPosition = MatchedPosition.BetweenLabels;
+
+                        FormattingHelper.RemoveRemoves(lineMatch, removedLines);
+
+                        returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
+                    }
+                    else if (request.label?.Format == Text.Constant)
+                    {
+                        var coords = documentLine
+                            .Columns
+                            .First()
+                            .Words
+                            .First()
+                            .Coordinates;
+
+                        documentLine.Columns[0].Words.Clear();
+                        documentLine.Columns[0].Words.AddRange(
+                            DocumentLineColumn.TextToWords(outputText, null, coords));
+
+                        var lineMatch = labelGroupResult.Clone([documentLine]);
+                        returnListTop.AddRange(await ProcessSubLabelsAsync(request, lineMatch));
+                    }
                 }
             }
         }

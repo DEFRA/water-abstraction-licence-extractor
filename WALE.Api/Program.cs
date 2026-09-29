@@ -98,7 +98,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var s3IngressBucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
     var s3AssetsBucketName = config.GetValue<string>("AwsS3AssetsBucketName")
-        ?? throw new NullReferenceException("AwsS3AssetsBucketName");
+        ?? s3IngressBucketName.Replace("ingress", "assets");
     var awsAccessKey = config.GetValue<string>("AwsAccessKey");
     var awsSecretKey = config.GetValue<string>("AwsSecretKey");
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");

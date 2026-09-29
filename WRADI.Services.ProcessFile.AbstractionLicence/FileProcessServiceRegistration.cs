@@ -50,7 +50,6 @@ public static class FileProcessServiceRegistration
             // Optional S3 support
             options.AwsAccessKey = configuration["AwsAccessKey"];
             options.AwsSecretKey = configuration["AwsSecretKey"];
-            options.AwsRegionName = configuration["AwsRegionName"];
             options.AwsS3IngressBucketName = configuration["AwsS3BucketName"];
             
             // SQS

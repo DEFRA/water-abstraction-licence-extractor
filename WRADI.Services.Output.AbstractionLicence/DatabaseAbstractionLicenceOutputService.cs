@@ -259,6 +259,41 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetAllVerificationsAsync(maxProcessRunId);
     }
 
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    {
+        return databaseReadService.GetExportVerificationsAsync();
+    }
+
+    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        return await databaseReadService.GetCurrentVerificationsBackupVersionAsync();
+    }
+
+    public async Task<int> GetCurrentVerificationsCountAsync()
+    {
+        return await databaseReadService.GetCurrentVerificationsCount();
+    }
+
+    public async Task<int> GetCurrentBackupVerificationsCountAsync()
+    {
+       return await databaseReadService.GetCurrentBackupVerificationsCount();
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        return databaseReadService.GetVerificationsBackupVersionAsync(versionNumber);
+    }
+
+    public async Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification>  verifications)
+    {
+        return await databaseWriteService.CreateVerificationsBackupVersionAsync(verifications);
+    }
+
+    public Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        return databaseWriteService.ImportVerificationsAsync(verifications);
+    }
+
     public async Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
     {
         var all = (await GetAllVerificationsAsync(maxProcessRunId)).ToList();

@@ -42,6 +42,10 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync();
+
+    Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
+    
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
@@ -103,6 +107,10 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber);
     
     Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
+    
+    Task<int> GetCurrentVerificationsBackupVersionAsync();
+    Task<int> GetCurrentVerificationsCount();
+    Task<int> GetCurrentBackupVerificationsCount();
     
     Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
 }

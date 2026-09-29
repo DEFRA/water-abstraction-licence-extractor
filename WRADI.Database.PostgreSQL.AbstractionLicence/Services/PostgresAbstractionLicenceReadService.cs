@@ -50,6 +50,57 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return purposeMapping.ToList();
     }
 
+    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT backup_version
+            FROM public.licence_section_verification_backup_version
+            ORDER BY backup_version DESC
+            LIMIT 1;
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentBackupVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification_backup
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+
     public async Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
@@ -1577,7 +1628,43 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         
         return data;
     }
-    
+
+    public async Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               licence_section_verification_id AS LicenceSectionVerificationId,
+                               licence_file_id AS LicenceFileId,
+                               process_run_id AS ProcessRunId,
+                               licence_section_name AS LicenceSectionName,
+                               licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_snapshot_value AS LicenceSectionSnapshotValue,
+                               licence_section_override_value AS LicenceSectionOverrideValue,
+                               verification_type AS VerificationType,
+                               licence_section_item_id AS LicenceSectionItemId,
+                               notes AS Notes,
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
+                           FROM licence_section_verification
+                           ORDER BY
+                               licence_file_id,
+                               licence_section_name,
+                               created_date_time_utc DESC,
+                               licence_section_verification_id DESC
+                           """;
+
+        return await QueryAsync<LicenceSectionVerification>(
+            connection,
+            sql,
+            0);
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
         await using var connection = GetPostgresConnection();

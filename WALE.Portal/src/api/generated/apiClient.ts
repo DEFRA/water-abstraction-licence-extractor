@@ -5533,6 +5533,120 @@ export class Client {
         }
         return Promise.resolve<number>(null as any);
     }
+
+    /**
+     * @return OK
+     */
+    extractHistory(): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Verification/ExtractHistory";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processExtractHistory(_response);
+        });
+    }
+
+    protected processExtractHistory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getVerificationDataStatus(): Promise<VerificationDataStatus> {
+        let url_ = this.baseUrl + "/BFF/Verification/GetVerificationDataStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetVerificationDataStatus(_response);
+        });
+    }
+
+    protected processGetVerificationDataStatus(response: Response): Promise<VerificationDataStatus> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = VerificationDataStatus.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<VerificationDataStatus>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    importCsv(processRunId: number | undefined, body: Body2): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Verification/ImportCsv?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = Object.keys(body as any).map((key) => {
+            return encodeURIComponent(key) + '=' + encodeURIComponent((body as any)[key]);
+        }).join('&')
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processImportCsv(_response);
+        });
+    }
+
+    protected processImportCsv(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
 }
 
 export class AbstractionLimit implements IAbstractionLimit {
@@ -11710,6 +11824,62 @@ export interface IValueWithConfidenceOfstring {
     [key: string]: any;
 }
 
+export class VerificationDataStatus implements IVerificationDataStatus {
+    currentVerificationsCount?: number | undefined;
+    currentVerificationsBackupCount?: number | undefined;
+    currentVerificationsBackupVersion?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IVerificationDataStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.currentVerificationsCount = _data["currentVerificationsCount"];
+            this.currentVerificationsBackupCount = _data["currentVerificationsBackupCount"];
+            this.currentVerificationsBackupVersion = _data["currentVerificationsBackupVersion"];
+        }
+    }
+
+    static fromJS(data: any): VerificationDataStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new VerificationDataStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["currentVerificationsCount"] = this.currentVerificationsCount;
+        data["currentVerificationsBackupCount"] = this.currentVerificationsBackupCount;
+        data["currentVerificationsBackupVersion"] = this.currentVerificationsBackupVersion;
+        return data;
+    }
+}
+
+export interface IVerificationDataStatus {
+    currentVerificationsCount?: number | undefined;
+    currentVerificationsBackupCount?: number | undefined;
+    currentVerificationsBackupVersion?: number | undefined;
+
+    [key: string]: any;
+}
+
 export class VersionFile implements IVersionFile {
     permitNumber?: string | undefined;
     fullPath?: string | undefined;
@@ -12055,6 +12225,86 @@ export interface IBody extends IAnonymous {
     chunkIndex?: number;
     totalChunks?: number;
     uploadId?: string;
+
+    [key: string]: any;
+}
+
+export class Body2 implements IBody2 {
+    contentType?: string;
+    contentDisposition?: string;
+    headers?: { [key: string]: string[]; };
+    length?: number;
+    name?: string;
+    fileName?: string;
+
+    [key: string]: any;
+
+    constructor(data?: IBody2) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.contentType = _data["ContentType"];
+            this.contentDisposition = _data["ContentDisposition"];
+            if (_data["Headers"]) {
+                this.headers = {} as any;
+                for (let key in _data["Headers"]) {
+                    if (_data["Headers"].hasOwnProperty(key))
+                        (this.headers as any)![key] = _data["Headers"][key] !== undefined ? _data["Headers"][key] : [];
+                }
+            }
+            this.length = _data["Length"];
+            this.name = _data["Name"];
+            this.fileName = _data["FileName"];
+        }
+    }
+
+    static fromJS(data: any): Body2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new Body2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["ContentType"] = this.contentType;
+        data["ContentDisposition"] = this.contentDisposition;
+        if (this.headers) {
+            data["Headers"] = {};
+            for (let key in this.headers) {
+                if (this.headers.hasOwnProperty(key))
+                    (data["Headers"] as any)[key] = (this.headers as any)[key];
+            }
+        }
+        data["Length"] = this.length;
+        data["Name"] = this.name;
+        data["FileName"] = this.fileName;
+        return data;
+    }
+}
+
+export interface IBody2 {
+    contentType?: string;
+    contentDisposition?: string;
+    headers?: { [key: string]: string[]; };
+    length?: number;
+    name?: string;
+    fileName?: string;
 
     [key: string]: any;
 }

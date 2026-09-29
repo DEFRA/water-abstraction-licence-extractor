@@ -267,9 +267,7 @@ public class ProcessRunsController(
             {
                 cacheEntry.AbsoluteExpirationRelativeToNow =
                     TimeSpan.FromMinutes(10);
-
-
-
+                
                 var setIds = await licenceListRepository.GetLicenceListLicenceSetIdsAsync(processRunId);
 
                 return setIds.Where(x => x.Contains('-')).OrderDescending().ToArray();

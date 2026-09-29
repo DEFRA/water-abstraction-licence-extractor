@@ -22,6 +22,13 @@ RUN dnf install -y \
     giflib-devel \
     libwebp-devel \
     openjpeg2-devel \
+    cairo-devel \
+    glib2-devel \
+    libexif-devel \
+    freetype-devel \
+    fontconfig-devel \
+    libX11-devel \
+    gettext-devel \
     && dnf clean all
 
 WORKDIR /tmp
@@ -48,6 +55,24 @@ RUN mkdir -p /opt/tesseract/share/tessdata \
     && wget -O /opt/tesseract/share/tessdata/eng.traineddata \
        https://github.com/tesseract-ocr/tessdata_fast/raw/main/eng.traineddata
 
+# Build libgdiplus 6.1 - required by System.Drawing.Common (see WALE.ProcessFile.Services.PdfClown's
+# own csproj: pinned to 6.0.0 with System.Drawing.EnableUnixSupport=true) for
+# PdfClownGridTableExtractorService.ContentScanner to resolve each border rectangle's real
+# page-space coordinates. Archived/frozen upstream since 2025-03-07 (no further releases), so
+# pinning to its last tag is also the only option, not just the safe one.
+#
+# KNOWN ISSUE: this makes libgdiplus load correctly, but PDFClown.NET's own ContentScanner has at
+# least two confirmed memory-corruption bugs independent of this Dockerfile - a native Matrix
+# handle leak in GraphicsState.Clone()/CopyTo() that segfaults after a document-dependent number of
+# table-border rectangles, and a separate AccessViolationException in CompositeFont.LoadEncoding()
+# on documents with composite/CID-keyed fonts. Both crash the whole process. See git history/session
+# notes on the task/wradi-208 lineage for the investigation that found these.
+RUN git clone --branch 6.1 --depth 1 https://github.com/mono/libgdiplus.git \
+    && cd libgdiplus \
+    && ./autogen.sh --prefix=/opt/libgdiplus \
+    && make -j$(nproc) \
+    && make install
+
 
 # ============================================================
 # Final Lambda runtime image
@@ -56,7 +81,7 @@ FROM public.ecr.aws/lambda/dotnet:10
 
 WORKDIR /var/task
 
-# Runtime dependencies required by Tesseract/Leptonica
+# Runtime dependencies required by Tesseract/Leptonica/libgdiplus
 RUN dnf install -y \
     findutils \
     file \
@@ -76,10 +101,15 @@ RUN dnf install -y \
     fontconfig \
     freetype \
     libgomp \
+    cairo \
+    glib2 \
+    libexif \
+    libX11 \
     && dnf clean all
 
-# Copy Tesseract/Leptonica built in the native-build stage
+# Copy Tesseract/Leptonica/libgdiplus built in the native-build stage
 COPY --from=native-build /opt/tesseract /opt/tesseract
+COPY --from=native-build /opt/libgdiplus /opt/libgdiplus
 
 # Copy your published Lambda app.
 # This assumes your deploy script publishes to:
@@ -113,7 +143,7 @@ RUN mkdir -p /var/task/x64 \
     && ln -sf /opt/tesseract/lib/libtesseract.so /var/task/x64/libtesseract.so \
     && ln -sf /opt/tesseract/lib/libtesseract.so.5 /var/task/x64/libtesseract.so.5
 
-ENV LD_LIBRARY_PATH="/var/task:/var/task/x64:/var/task/runtimes/linux-x64/native:/opt/tesseract/lib:/lib64:/usr/lib64:/usr/lib:/lib"
+ENV LD_LIBRARY_PATH="/var/task:/var/task/x64:/var/task/runtimes/linux-x64/native:/opt/tesseract/lib:/opt/libgdiplus/lib:/lib64:/usr/lib64:/usr/lib:/lib"
 ENV PATH="/opt/tesseract/bin:${PATH}"
 ENV TESSDATA_PREFIX="/opt/tesseract/share/tessdata"
 
@@ -129,6 +159,15 @@ RUN echo "---- libdl files ----" && \
     echo "---- ldd libleptonica ----" && \
     ldd /var/task/x64/libleptonica-1.82.0.so && \
     echo "---- ldd libtesseract ----" && \
-    ldd /var/task/x64/libtesseract50.so
+    ldd /var/task/x64/libtesseract50.so && \
+    echo "---- libgdiplus files ----" && \
+    find /opt/libgdiplus -iname "*gdiplus*" 2>/dev/null | sort && \
+    echo "---- ldd libgdiplus.so ----" && \
+    ldd /opt/libgdiplus/lib/libgdiplus.so && \
+    echo "---- checking for missing libgdiplus dependencies ----" && \
+    if ldd /opt/libgdiplus/lib/libgdiplus.so | grep "not found"; then \
+      echo "ERROR: libgdiplus has missing dependencies"; \
+      exit 1; \
+    fi
 
 CMD ["WRADI.Lambda.FileProcess.Single::WRADI.Lambda.FileProcess.Single.MessageReceivedFunction::FunctionHandler"]

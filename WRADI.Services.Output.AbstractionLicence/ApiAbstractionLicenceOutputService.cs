@@ -381,6 +381,21 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentBackupVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
     {
         throw new NotImplementedException();

@@ -259,6 +259,21 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetExportVerificationsAsync();
     }
 
+    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        return await databaseReadService.GetCurrentVerificationsBackupVersionAsync();
+    }
+
+    public async Task<int> GetCurrentVerificationsCountAsync()
+    {
+        return await databaseReadService.GetCurrentVerificationsCount();
+    }
+
+    public async Task<int> GetCurrentBackupVerificationsCountAsync()
+    {
+       return await databaseReadService.GetCurrentBackupVerificationsCount();
+    }
+
     public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
     {
         return databaseReadService.GetVerificationsBackupVersionAsync(versionNumber);

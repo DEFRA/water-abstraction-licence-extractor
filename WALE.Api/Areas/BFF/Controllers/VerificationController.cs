@@ -3,10 +3,12 @@ using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.Options;
+using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Models;
 using WALE.Tools.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -30,6 +32,28 @@ public class VerificationController(
             file,
             "text/csv",
             fileName);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<VerificationDataStatus>> GetVerificationDataStatus()
+    {
+        var currentVerificationCountTask =  abstractionLicenceOutputService.GetCurrentVerificationsCountAsync();
+        var currentBackupCountTask =  abstractionLicenceOutputService.GetCurrentBackupVerificationsCountAsync();
+        var currentBackupVersionTask = abstractionLicenceOutputService.GetCurrentVerificationsBackupVersionAsync();
+
+        await Task.WhenAll(
+            currentBackupVersionTask,
+            currentVerificationCountTask,
+            currentBackupCountTask);
+
+        var result = new VerificationDataStatus
+        {
+            CurrentVerificationsBackupCount = await currentBackupCountTask,
+            CurrentVerificationsCount = await currentVerificationCountTask,
+            CurrentVerificationsBackupVersion = await currentBackupVersionTask
+        };
+        
+        return Ok(result);
     }
     
     [HttpPut]

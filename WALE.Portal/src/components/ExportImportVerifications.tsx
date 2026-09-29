@@ -4,21 +4,25 @@ import { ProcessRun } from '../api/generated/apiClient.ts'
 import {
     getProcessRuns
 } from '.././utils/dropDownUtils';
+import {
+    getVerificationDataStatus
+} from '.././utils/verificationsDataUtils.tsx';
 export function ExportImportVerifications() {
 
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isStarting, setIsStarting] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState({current: 0, total: 0, currentChunk: 0, totalChunks: 0});
     const [failedUploads, setFailedUploads] = useState<{ filename: string; error: string }[]>([]);
     const [targetProcessRunId, setTargetProcessRunId] = useState<number | undefined>();
     const canUpload = targetProcessRunId !== undefined;
     const [processRuns, setProcessRuns] = useState<ProcessRun[]>([]);
+    const [currentBackupVersion, setCurrentBackupVersion] = useState<number | undefined>();
+    const [currentBackupVerificationsCount, setCurrentBackupVerificationsCount] = useState<number | undefined>();
+    const [currentVerificationsCount, setCurrentVerificationsCount] = useState<number | undefined>();
 
     const uploadFileAsync = async (
         file: File,
-        idx: number,
         failed: { filename: string; error: string }[],
         targetProcessRunId: number
     ) => {
@@ -59,60 +63,43 @@ export function ExportImportVerifications() {
 
         const filesToUpload = event.dataTransfer.files;
 
-        if (filesToUpload.length === 0) {
+        if (filesToUpload.length !== 1) {
+            setError("Please upload one CSV file at a time.");
+            return;
+        }
+
+        const file = filesToUpload[0];
+
+        if (!file.name.toLowerCase().endsWith(".csv")) {
+            setError("Please upload a CSV file.");
             return;
         }
 
         setUploading(true);
         setSuccessMessage(null);
         setFailedUploads([]);
-
-        setUploadProgress({
-            current: 0,
-            total: filesToUpload.length,
-            currentChunk: 0,
-            totalChunks: 0
-        });
+        setError(null);
 
         const failed: { filename: string; error: string }[] = [];
 
-        const maxConcurrentScrapers = 5;
-        let uploadTasks: Promise<void>[] = [];
-
-        for (let idx = 0; idx < filesToUpload.length; idx++) {
-            const file = filesToUpload[idx];
-
-            uploadTasks.push(
-                uploadFileAsync(
-                    file,
-                    idx,
-                    failed,
-                    targetProcessRunId
-                )
+        try {
+            await uploadFileAsync(
+                file,
+                failed,
+                targetProcessRunId
             );
 
-            if (uploadTasks.length === maxConcurrentScrapers) {
-                await Promise.all(uploadTasks);
-                uploadTasks = [];
+            setFailedUploads(failed);
+
+            if (failed.length === 0) {
+                setSuccessMessage(
+                    "Verification CSV file uploaded successfully"
+                );
+
+                await refreshVerificationData(true);
             }
-        }
-
-        if (uploadTasks.length > 0) {
-            await Promise.all(uploadTasks);
-        }
-
-        setUploading(false);
-        setFailedUploads(failed);
-
-        const successfulCount =
-            filesToUpload.length - failed.length;
-
-        if (successfulCount > 0) {
-            setSuccessMessage(
-                `Uploaded ${successfulCount} ${
-                    successfulCount === 1 ? "file" : "files"
-                } successfully`
-            );
+        } finally {
+            setUploading(false);
         }
 
     }, [targetProcessRunId]);
@@ -180,25 +167,35 @@ export function ExportImportVerifications() {
         }
     };
 
-    if (error) {
-        return (
-            <div className="container error">
-                <p>Error: {error}</p>
-                <button onClick={() => setError(null)}>Clear</button>
-            </div>
+    const refreshVerificationData = async (forceRefresh: boolean) => {
+        const verificationDataStatusResult = await getVerificationDataStatus(forceRefresh);
+
+        setCurrentVerificationsCount(
+            verificationDataStatusResult.currentVerificationsCount
         );
-    }
+
+        setCurrentBackupVerificationsCount(
+            verificationDataStatusResult.currentVerificationsBackupCount
+        );
+
+        setCurrentBackupVersion(
+            verificationDataStatusResult.currentVerificationsBackupVersion
+        );
+    };
+
     useEffect(() => {
         Promise.all([
-            getProcessRuns()
+            getProcessRuns(),
+            refreshVerificationData(false)
         ])
             .then(([processRunsResult]) => {
-                setProcessRuns(processRunsResult);               
+                setProcessRuns(processRunsResult);
             })
             .catch(error => {
-                console.error('Error loading dropdown values:', error);
+                console.error('Error loading utility values:', error);
             });
     }, []);
+    
     return (
         <>
             
@@ -211,6 +208,11 @@ export function ExportImportVerifications() {
                 borderRadius: '4px',
                 position: 'relative'
             }} >
+                
+                <p>Current Verification Count : {currentVerificationsCount} </p>
+                <p>Current Backup Verification Count : {currentBackupVerificationsCount}</p>
+                <p>Current Backup Version Number : {currentBackupVersion}</p>
+                
                 <h3>Export Verifications Section</h3>
             <div style={{
                 padding: '10px',
@@ -233,7 +235,38 @@ export function ExportImportVerifications() {
                     {isStarting ? 'Starting...' : 'Start Verification Export Process'}
                 </button>
             </div>
-
+                {error && (
+                    <div
+                        style={{
+                            backgroundColor: 'red',
+                            border: '1px solid #c3e6cb',
+                            color: '#155724',
+                            padding: '10px',
+                            marginBottom: '10px',
+                            borderRadius: '4px',
+                            position: 'relative'
+                        }}
+                    >
+                        <p style={{ margin: 0 }}>{error}</p>
+                        <button
+                            onClick={() => setError(null)}
+                            style={{
+                                position: 'absolute',
+                                top: '5px',
+                                right: '10px',
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#155724',
+                                fontSize: '20px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                           Clear
+                        </button>
+                    </div>
+                )}
+                
             {successMessage && (
                 <div
                     style={{
@@ -312,7 +345,7 @@ export function ExportImportVerifications() {
                 >
                     <p>
                         {canUpload
-                            ? "Drop csv import file here"
+                            ? "Drop one verification CSV file here"
                             : "Select a target process run before uploading"}
                     </p>
                 </div>
@@ -326,12 +359,7 @@ export function ExportImportVerifications() {
                     borderRadius: '4px'
                 }}>
                     <p style={{margin: 0}}>
-                        Uploading {uploadProgress.current} of {uploadProgress.total} files...
-                        {uploadProgress.totalChunks > 0 && (
-                            <span style={{marginLeft: '10px', fontSize: '0.9em', color: '#555'}}>
-                                (Part {uploadProgress.currentChunk} of {uploadProgress.totalChunks})
-                            </span>
-                        )}
+                        Uploading verification csv...
                     </p>
                 </div>
             )}

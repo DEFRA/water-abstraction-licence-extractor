@@ -5457,14 +5457,13 @@ export class Client {
     /**
      * @return OK
      */
-    extractHistory(): Promise<FileContentResult> {
+    extractHistory(): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Verification/ExtractHistory";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
             method: "GET",
             headers: {
-                "Accept": "text/csv"
             }
         };
 
@@ -5473,14 +5472,48 @@ export class Client {
         });
     }
 
-    protected processExtractHistory(response: Response): Promise<FileContentResult> {
+    protected processExtractHistory(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getVerificationDataStatus(): Promise<VerificationDataStatus> {
+        let url_ = this.baseUrl + "/BFF/Verification/GetVerificationDataStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetVerificationDataStatus(_response);
+        });
+    }
+
+    protected processGetVerificationDataStatus(response: Response): Promise<VerificationDataStatus> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = FileContentResult.fromJS(resultData200);
+            result200 = VerificationDataStatus.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -5488,7 +5521,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<FileContentResult>(null as any);
+        return Promise.resolve<VerificationDataStatus>(null as any);
     }
 
     /**
@@ -5509,7 +5542,7 @@ export class Client {
 
         let options_: RequestInit = {
             body: content_,
-            method: "POST",
+            method: "PUT",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
             }
@@ -7048,126 +7081,6 @@ export interface IDocumentLineWordCoordinates {
     right?: number;
     bottom?: number;
     left?: number;
-
-    [key: string]: any;
-}
-
-export class EntityTagHeaderValue implements IEntityTagHeaderValue {
-    tag?: StringSegment;
-    isWeak?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: IEntityTagHeaderValue) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.tag = _data["tag"] ? StringSegment.fromJS(_data["tag"]) : undefined as any;
-            this.isWeak = _data["isWeak"];
-        }
-    }
-
-    static fromJS(data: any): EntityTagHeaderValue {
-        data = typeof data === 'object' ? data : {};
-        let result = new EntityTagHeaderValue();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["tag"] = this.tag ? this.tag.toJSON() : undefined as any;
-        data["isWeak"] = this.isWeak;
-        return data;
-    }
-}
-
-export interface IEntityTagHeaderValue {
-    tag?: StringSegment;
-    isWeak?: boolean;
-
-    [key: string]: any;
-}
-
-export class FileContentResult implements IFileContentResult {
-    fileContents?: string;
-    contentType?: string | undefined;
-    fileDownloadName?: string | undefined;
-    lastModified?: Date | undefined;
-    entityTag?: EntityTagHeaderValue | undefined;
-    enableRangeProcessing?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: IFileContentResult) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.fileContents = _data["fileContents"];
-            this.contentType = _data["contentType"];
-            this.fileDownloadName = _data["fileDownloadName"];
-            this.lastModified = _data["lastModified"] ? new Date(_data["lastModified"].toString()) : undefined as any;
-            this.entityTag = _data["entityTag"] ? EntityTagHeaderValue.fromJS(_data["entityTag"]) : undefined as any;
-            this.enableRangeProcessing = _data["enableRangeProcessing"];
-        }
-    }
-
-    static fromJS(data: any): FileContentResult {
-        data = typeof data === 'object' ? data : {};
-        let result = new FileContentResult();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["fileContents"] = this.fileContents;
-        data["contentType"] = this.contentType;
-        data["fileDownloadName"] = this.fileDownloadName;
-        data["lastModified"] = this.lastModified ? this.lastModified.toISOString() : undefined as any;
-        data["entityTag"] = this.entityTag ? this.entityTag.toJSON() : undefined as any;
-        data["enableRangeProcessing"] = this.enableRangeProcessing;
-        return data;
-    }
-}
-
-export interface IFileContentResult {
-    fileContents?: string;
-    contentType?: string | undefined;
-    fileDownloadName?: string | undefined;
-    lastModified?: Date | undefined;
-    entityTag?: EntityTagHeaderValue | undefined;
-    enableRangeProcessing?: boolean;
 
     [key: string]: any;
 }
@@ -11455,70 +11368,6 @@ export enum ScrapeStatus {
     Error = "Error",
 }
 
-export class StringSegment implements IStringSegment {
-    buffer?: string | undefined;
-    offset?: number;
-    length?: number;
-    value?: string | undefined;
-    hasValue?: boolean;
-
-    [key: string]: any;
-
-    constructor(data?: IStringSegment) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.buffer = _data["buffer"];
-            this.offset = _data["offset"];
-            this.length = _data["length"];
-            this.value = _data["value"];
-            this.hasValue = _data["hasValue"];
-        }
-    }
-
-    static fromJS(data: any): StringSegment {
-        data = typeof data === 'object' ? data : {};
-        let result = new StringSegment();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["buffer"] = this.buffer;
-        data["offset"] = this.offset;
-        data["length"] = this.length;
-        data["value"] = this.value;
-        data["hasValue"] = this.hasValue;
-        return data;
-    }
-}
-
-export interface IStringSegment {
-    buffer?: string | undefined;
-    offset?: number;
-    length?: number;
-    value?: string | undefined;
-    hasValue?: boolean;
-
-    [key: string]: any;
-}
-
 export class TimeCutoff implements ITimeCutoff {
     cutoffType?: NullableOfCutoffType | undefined;
     date?: string | undefined;
@@ -11827,6 +11676,62 @@ export interface IValueWithConfidenceOfstring {
     value?: string | undefined;
     ocrConfidence?: number | undefined;
     confidence?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class VerificationDataStatus implements IVerificationDataStatus {
+    currentVerificationsCount?: number | undefined;
+    currentVerificationsBackupCount?: number | undefined;
+    currentVerificationsBackupVersion?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IVerificationDataStatus) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.currentVerificationsCount = _data["currentVerificationsCount"];
+            this.currentVerificationsBackupCount = _data["currentVerificationsBackupCount"];
+            this.currentVerificationsBackupVersion = _data["currentVerificationsBackupVersion"];
+        }
+    }
+
+    static fromJS(data: any): VerificationDataStatus {
+        data = typeof data === 'object' ? data : {};
+        let result = new VerificationDataStatus();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["currentVerificationsCount"] = this.currentVerificationsCount;
+        data["currentVerificationsBackupCount"] = this.currentVerificationsBackupCount;
+        data["currentVerificationsBackupVersion"] = this.currentVerificationsBackupVersion;
+        return data;
+    }
+}
+
+export interface IVerificationDataStatus {
+    currentVerificationsCount?: number | undefined;
+    currentVerificationsBackupCount?: number | undefined;
+    currentVerificationsBackupVersion?: number | undefined;
 
     [key: string]: any;
 }

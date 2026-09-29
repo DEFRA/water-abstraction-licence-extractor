@@ -49,7 +49,57 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         return purposeMapping.ToList();
     }
-    
+
+    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT backup_version
+            FROM public.licence_section_verification_backup_version
+            ORDER BY backup_version DESC
+            LIMIT 1;
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentBackupVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification_backup
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();

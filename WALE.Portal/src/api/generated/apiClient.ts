@@ -1161,6 +1161,54 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
+     * @param pageNumber (optional) 
+     * @param serviceName (optional) 
+     * @return OK
+     */
+    thumbnail(fileId: string | undefined, pageNumber: number | undefined, serviceName: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Images/Thumbnail?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (pageNumber === null)
+            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
+        else if (pageNumber !== undefined)
+            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
+        if (serviceName === null)
+            throw new globalThis.Error("The parameter 'serviceName' cannot be null.");
+        else if (serviceName !== undefined)
+            url_ += "serviceName=" + encodeURIComponent("" + serviceName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processThumbnail(_response);
+        });
+    }
+
+    protected processThumbnail(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param dataSource (optional) 
      * @return OK
      */
@@ -3878,6 +3926,114 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    incomingLinkedLicences(fileId: string | undefined, processRunId: number | undefined): Promise<LinkedLicence[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/IncomingLinkedLicences?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processIncomingLinkedLicences(_response);
+        });
+    }
+
+    protected processIncomingLinkedLicences(response: Response): Promise<LinkedLicence[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LinkedLicence[]>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    outgoingLinkedLicences(fileId: string | undefined, processRunId: number | undefined): Promise<LinkedLicence[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/OutgoingLinkedLicences?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processOutgoingLinkedLicences(_response);
+        });
+    }
+
+    protected processOutgoingLinkedLicences(response: Response): Promise<LinkedLicence[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LinkedLicence[]>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @return OK
      */
     licenceSets(fileId: string | undefined): Promise<LicenceSet[]> {
@@ -4596,54 +4752,6 @@ export class Client {
             });
         }
         return Promise.resolve<string>(null as any);
-    }
-
-    /**
-     * @param fileId (optional) 
-     * @param pageNumber (optional) 
-     * @param serviceName (optional) 
-     * @return OK
-     */
-    thumbnail(fileId: string | undefined, pageNumber: number | undefined, serviceName: string | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Images/Thumbnail?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        if (pageNumber === null)
-            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
-        else if (pageNumber !== undefined)
-            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
-        if (serviceName === null)
-            throw new globalThis.Error("The parameter 'serviceName' cannot be null.");
-        else if (serviceName !== undefined)
-            url_ += "serviceName=" + encodeURIComponent("" + serviceName) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processThumbnail(_response);
-        });
-    }
-
-    protected processThumbnail(response: Response): Promise<void> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            return;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<void>(null as any);
     }
 
     /**

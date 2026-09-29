@@ -5,6 +5,7 @@ using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -109,6 +110,53 @@ public class FileDataController(
     {
         var result = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId, applyVerifications);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> IncomingLinkedLicencesAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var linkedLicences = licence?.LinkedLicences;
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+
+        var filtered = linkedLicences
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.Incoming) == true);
+
+        return Ok(filtered);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> OutgoingLinkedLicencesAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var linkedLicences = licence?.LinkedLicences;
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+
+        // Only return the outgoing links even if there are also incoming links for the same licence
+        var filtered = linkedLicences
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.Outgoing) == true)
+            .ToList();
+
+        foreach (var lic in filtered)
+        {
+            lic.ContainedIn = lic.ContainedIn!
+                .Where(c => c.Direction == InformationDirection.Outgoing)
+                .ToArray();
+        }
+
+        return Ok(filtered);
     }
 
     [HttpGet]

@@ -106,11 +106,26 @@ public static class LinkedLicenceVerificationMergeHelper
                             ? "LL added to scraper output since the verification run"
                             : "LL removed from scraper output since the verification run";
                     }
-                    else if (scrapedLinkedLicence != null
-                             && IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
-                             && !IsDeadNaldStatus(verificationLicence.NaldStatus))
+                    else if (scrapedLinkedLicence != null)
                     {
-                        flagReason = $"Linked Licence {scrapedLinkedLicence.NaldStatus}";
+                        var changes = new List<string>();
+
+                        if (IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
+                            && !IsDeadNaldStatus(verificationLicence.NaldStatus))
+                        {
+                            changes.Add(scrapedLinkedLicence.NaldStatus.ToString());
+                        }
+
+                        if (IsSuperseded(scrapedLinkedLicence)
+                            && !IsSuperseded(verificationLicence))
+                        {
+                            changes.Add("Superseded");
+                        }
+
+                        if (changes.Count > 0)
+                        {
+                            flagReason = $"Linked Licence {string.Join(" & ", changes)}";
+                        }
                     }
 
                     if (flagReason != null)
@@ -389,4 +404,10 @@ public static class LinkedLicenceVerificationMergeHelper
 
     private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
         => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;
+
+    private static bool IsSuperseded(LinkedLicence linkedLicence)
+        => linkedLicence.ContainedIn?
+            .SelectMany(c => c.History ?? [])
+            .Any(h => h.LicenceNumber == linkedLicence.LicenceNumber
+                      && h.FollowOnLicenceNumbers.Count > 0) == true;
 }

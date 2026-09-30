@@ -110,9 +110,31 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
-    public Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
+    public async Task UpdateLicenceSetLicenceAsync(LicenceSetLicence licenceSetLicence)
     {
-        throw new NotImplementedException();
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE
+                                licence_set_licence
+                           SET
+                                licence_id = @LicenceId
+                           WHERE
+                                licence_set_id = @LicenceSetId
+                                AND licence_number = @LicenceNumber
+                                AND process_run_id = @ProcessRunId
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                licenceSetLicence.LicenceSetId,
+                licenceSetLicence.LicenceId,
+                licenceSetLicence.LicenceNumber,
+                licenceSetLicence.ProcessRunId
+            });
     }
 
     public async Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber,

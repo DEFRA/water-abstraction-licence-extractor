@@ -127,6 +127,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.WrInspectionReport.Tests", "WRADI.Services.WrInspectionReport.Tests\WRADI.Services.WrInspectionReport.Tests.csproj", "{FB937036-A9AB-44E5-8762-FE046AB6C8DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WALE.ProcessFile.Services.Tabula", "WALE.ProcessFile.Services.Tabula\WALE.ProcessFile.Services.Tabula.csproj", "{49138433-84A6-44EC-B199-2889CF969BF6}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.Cache.WrInspectionReport", "WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj", "{D418B6B4-2D99-469C-922F-97A0CB4F3DDA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Inspection Reports", "Inspection Reports", "{870A5EEB-1C64-4E7F-A195-A7DF4190710C}"
@@ -142,6 +143,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.ProcessFile.Local", "WRADI.ProcessFile.Local\WRADI.ProcessFile.Local.csproj", "{477BF0A5-38B6-4DAE-80D2-F0AD4CF52B3B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.ProcessFile.Local.Tests", "WRADI.ProcessFile.Local.Tests\WRADI.ProcessFile.Local.Tests.csproj", "{815CBD78-1C11-4DE5-BF5C-81E2549C9056}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdfClownDockerVerify", "PdfClownDockerVerify\PdfClownDockerVerify.csproj", "{E478AD60-406A-4E74-9C93-7A4DEDE08B84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -633,6 +636,18 @@ Global
 		{815CBD78-1C11-4DE5-BF5C-81E2549C9056}.Release|x64.Build.0 = Release|Any CPU
 		{815CBD78-1C11-4DE5-BF5C-81E2549C9056}.Release|x86.ActiveCfg = Release|Any CPU
 		{815CBD78-1C11-4DE5-BF5C-81E2549C9056}.Release|x86.Build.0 = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|x64.Build.0 = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Debug|x86.Build.0 = Debug|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|x64.ActiveCfg = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|x64.Build.0 = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|x86.ActiveCfg = Release|Any CPU
+		{E478AD60-406A-4E74-9C93-7A4DEDE08B84}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

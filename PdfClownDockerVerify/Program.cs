@@ -10,7 +10,8 @@ using PdfClownPath = org.pdfclown.documents.contents.objects.Path;
 //
 // Usage: dotnet PdfClownDockerVerify.dll <path-to-pdf>
 
-var pdfPath = args[0];
+var pdfPath = "wr51__sw0480192006__c9b5d652-2132-42be-9542-58f7dd894d92.pdf";//args[0];
+
 Console.WriteLine($"Reading {pdfPath}");
 var bytes = File.ReadAllBytes(pdfPath);
 

@@ -77,6 +77,8 @@ public class FileProcessSingleService(
             cacheService,
             outputService,
             licenceNumberService,
+            null,
+            null,
             dmsLookupService,
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,

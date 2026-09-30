@@ -17,10 +17,12 @@ public class MessageController(
 {
     [HttpPost]
     public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
-        [FromQuery] int delayInSeconds = 0)
+        [FromQuery] int delayInSeconds = 0,
+        [FromQuery] string documentType = "AbstractionLicence")
     {
-        var payload = JsonSerializer.Serialize(new
+        var payload = JsonSerializer.Serialize(new WALE.ProcessFile.Core.Models.FileProcessOrchestrationRequest
         {
+            DocumentType = documentType,
             RequestedAt = DateTime.UtcNow
         });
 
@@ -31,10 +33,10 @@ public class MessageController(
                 MessageBody = payload,
                 DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
             });
-        
+
         return Ok();
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> SendFileProcessSingleMessageAsync(
         [FromBody] FileProcessSingleRequest request)
@@ -49,9 +51,10 @@ public class MessageController(
             request.RegionId,
             request.ProcessRunId,
             request.RequestedAt,
-            request.LockRetryCount
+            request.LockRetryCount,
+            request.DocumentType
         });
-        
+
         await sqsClient.SendMessageAsync(
             new SendMessageRequest
             {
@@ -59,7 +62,7 @@ public class MessageController(
                 MessageBody = payload,
                 DelaySeconds = request.DelayInSeconds > 0 ? request.DelayInSeconds : null
             });
-        
+
         return Ok();
     }
 }

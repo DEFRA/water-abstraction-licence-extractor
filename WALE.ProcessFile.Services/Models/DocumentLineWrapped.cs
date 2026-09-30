@@ -34,8 +34,16 @@ public class DocumentLineWrapped
         return returnList;
     }
     
-    private static IReadOnlyList<DocumentLine> GetNextLines(IReadOnlyList<DocumentLineWrapped> lines, int index, int n)
+    private static IReadOnlyList<DocumentLine>? GetNextLines(
+        IReadOnlyList<DocumentLineWrapped>? lines,
+        int index,
+        int n)
     {
+        if (lines == null)
+        {
+            return null;
+        }
+        
         var newIndex = index + 1;
         var returnList = new List<DocumentLine>();
         var count = 0;
@@ -51,10 +59,9 @@ public class DocumentLineWrapped
         return returnList;
     }
     
-    public static List<DocumentLineWrapped> WrapLines(IReadOnlyList<DocumentLine> lines, bool clone)
+    public static List<DocumentLineWrapped>? WrapLines(IReadOnlyList<DocumentLine>? lines, bool clone)
     {
-        return lines
-            .Select((line, index) => new DocumentLineWrapped
+        return lines?.Select((line, index) => new DocumentLineWrapped
             {
                 Line = line.Clone(),
                 Index = index

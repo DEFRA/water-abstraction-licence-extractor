@@ -39,8 +39,10 @@ public interface IDatabaseReadService
     
     Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId);
 
-    Task<MatchesResult?> GetMatchesResult(int matchesResultId);    
-    
+    Task<MatchesResult?> GetMatchesResult(int matchesResultId);
+
+    Task<MatchesResult?> GetMatchesResult(Guid fileId);
+
     Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
     
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);

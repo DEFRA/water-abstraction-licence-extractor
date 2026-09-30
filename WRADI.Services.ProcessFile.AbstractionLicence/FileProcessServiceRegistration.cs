@@ -236,7 +236,8 @@ public static class FileProcessServiceRegistration
                 outputService,
                 pdfPigDocumentService,
                 docnetAlternativeDocumentService,
-                messageQueueService);
+                messageQueueService,
+                documentType: "AbstractionLicence");
 
             return pdfDataExtractor;
         });

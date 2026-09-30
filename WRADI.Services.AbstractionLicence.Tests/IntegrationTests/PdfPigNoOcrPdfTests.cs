@@ -98,6 +98,8 @@ public class PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now,
@@ -110,7 +112,7 @@ public class PdfPigNoOcrPdfTests
         // Arrange
         var regionCode = 3;
 
-        const string filename = "NE0270023036__Application - New - Issued Licence 03.03.2017 9705232.pdf";
+        const string filename = "NE0270023036__Application - New - Issued Licence 03.03.2017 9705232.pdf"; // This file messes up as it seems to remove spaces
 
         // Act
         var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);

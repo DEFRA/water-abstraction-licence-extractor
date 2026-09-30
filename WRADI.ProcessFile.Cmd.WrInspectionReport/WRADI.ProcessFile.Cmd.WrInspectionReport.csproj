@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>22b0fb72-b4c1-4e72-9fa8-7884c59ee26c</UserSecretsId>
+        <RootNamespace>WRADI.ProcessFile.Cmd.WrInspectionReport</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WRADI.Services.ProcessFile.WrInspectionReport\WRADI.Services.ProcessFile.WrInspectionReport.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.10" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.10" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+    </ItemGroup>
+</Project>

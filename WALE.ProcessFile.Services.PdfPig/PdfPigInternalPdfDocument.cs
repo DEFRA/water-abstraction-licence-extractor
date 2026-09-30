@@ -5,7 +5,8 @@ using PdfDocument = UglyToad.PdfPig.PdfDocument;
 
 namespace WALE.ProcessFile.Services.PdfPig;
 
-public class PdfPigInternalPdfDocument(PdfDocument pdfDocument, Stream fileStream, long sizeBytes) : IInternalPdfDocument
+public class PdfPigInternalPdfDocument(PdfDocument pdfDocument, Stream fileStream, long sizeBytes)
+    : IInternalPdfDocument
 {
     public List<IInternalPdfDocumentPage> GetPages()
     {
@@ -28,6 +29,8 @@ public class PdfPigInternalPdfDocument(PdfDocument pdfDocument, Stream fileStrea
     public Stream FileStream { get; } = fileStream;
 
     public long SizeBytes { get; } = sizeBytes;
+
+    public object UnderlyingDocument { get; } = pdfDocument;
 
     public void Dispose()
     {

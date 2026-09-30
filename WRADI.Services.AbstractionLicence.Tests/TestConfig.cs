@@ -68,6 +68,36 @@ public static class TestConfig
             return field;
         }
     }
+    
+    [field: AllowNull, MaybeNull]
+    public static string AiServicesEndpoint
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["AiServicesEndpoint"]!;
+            return field;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
+    public static string AiServicesKey
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+            
+            field = Config["AiServicesKey"]!;
+            return field;
+        }
+    }
 
     [field: AllowNull, MaybeNull]
     public static string TesseractPath

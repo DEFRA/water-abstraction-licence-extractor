@@ -21,7 +21,8 @@ public class ProcessRunController(
             Description = request.description,
             StartDateTimeUtc = DateTime.UtcNow,
             NumberOfFiles = request.numberOfFiles,
-            Status = request.status
+            Status = request.status,
+            DocumentType = request.documentType ?? "AbstractionLicence"
         });
 
         return Ok(processRun.ProcessRunId);

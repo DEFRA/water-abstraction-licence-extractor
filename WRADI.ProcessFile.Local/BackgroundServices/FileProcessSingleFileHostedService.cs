@@ -1,5 +1,6 @@
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -7,11 +8,11 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Services.ProcessFile.AbstractionLicence;
 
-namespace WRADI.ProcessFile.Local.AbstractionLicence.BackgroundServices;
+namespace WRADI.ProcessFile.Local.BackgroundServices;
 
 public sealed class FileProcessSingleFileHostedService(
     IAmazonSQS sqsClient,
-    IFileProcessSingleService fileProcessSingleService,
+    DocumentTypeServiceProviders documentTypeServiceProviders,
     FileProcessAppSettings settings,
     ILogger<FileProcessSingleFileHostedService> logger)
     : BackgroundService
@@ -99,6 +100,13 @@ public sealed class FileProcessSingleFileHostedService(
             {
                 return;
             }
+
+            var serviceProvider = documentTypeServiceProviders.Get(
+                fileProcessSingleRequest.DocumentType, logger);
+
+            using var scope = serviceProvider.CreateScope();
+            var fileProcessSingleService = scope.ServiceProvider
+                .GetRequiredService<IFileProcessSingleService>();
 
             var result = await fileProcessSingleService.RunAsync(
                 fileProcessSingleRequest,

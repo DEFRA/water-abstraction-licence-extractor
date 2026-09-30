@@ -10,7 +10,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// property it's supposed to land on, rather than trusted by inspection. This is the gap that
 /// let an earlier rewrite silently drop BoundByOtherLabels' wiring (the builder still had the
 /// method and the backing field, Build() just stopped reading it into
-/// LimitToBoundSameLineWalkByOtherLabelPositions) while leaving no failing test behind.
+/// BoundSameLineWalkByOtherLabelPositions) while leaving no failing test behind.
 /// </summary>
 public class WrFluentRuleTests
 {
@@ -169,7 +169,7 @@ public class WrFluentRuleTests
     }
 
     [Fact]
-    public void BoundByOtherLabels_SetsLimitToBoundSameLineWalkByOtherLabelPositions()
+    public void BoundByOtherLabels_SetsBoundSameLineWalkByOtherLabelPositions()
     {
         // The exact property whose wiring was silently dropped by an earlier rewrite (the
         // method and backing field survived, Build() just stopped reading it) - restored, and
@@ -178,15 +178,15 @@ public class WrFluentRuleTests
             .BoundByOtherLabels()
             .Build();
 
-        Assert.True(label.LimitToBoundSameLineWalkByOtherLabelPositions);
+        Assert.True(label.BoundSameLineWalkByOtherLabelPositions);
     }
 
     [Fact]
-    public void WithoutBoundByOtherLabels_LimitToBoundSameLineWalkByOtherLabelPositionsDefaultsFalse()
+    public void WithoutBoundByOtherLabels_BoundSameLineWalkByOtherLabelPositionsDefaultsFalse()
     {
         var label = WrFluentRule.InOrder("Source of supply", null, "Quantities").Build();
 
-        Assert.False(label.LimitToBoundSameLineWalkByOtherLabelPositions);
+        Assert.False(label.BoundSameLineWalkByOtherLabelPositions);
     }
 
     [Fact]

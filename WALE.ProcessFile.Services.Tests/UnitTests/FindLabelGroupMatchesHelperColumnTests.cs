@@ -196,7 +196,7 @@ public class FindLabelGroupMatchesHelperColumnTests
             Assert.Equal(["Calibration:", "x"], result.Select(c => c.Text));
         }
 
-        // LabelToMatch.LimitToBoundSameLineWalkByOtherLabelPositions: bounds the walk by the
+        // LabelToMatch.BoundSameLineWalkByOtherLabelPositions: bounds the walk by the
         // X-position of a known sibling field's own column, for the case where no TextEnd
         // marker exists to stop it otherwise. This is the mechanism an earlier rewrite silently
         // stopped wiring in (the caller still built nextFieldBoundaryX, but WalkSameLineColumns
@@ -254,7 +254,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         public void NeverStopsOnPosition_WhenNextFieldBoundaryXIsNull()
         {
             // Opt-in, no-op by default - every rule that doesn't set
-            // LimitToBoundSameLineWalkByOtherLabelPositions must behave exactly as if this
+            // BoundSameLineWalkByOtherLabelPositions must behave exactly as if this
             // parameter didn't exist.
             var columns = new List<DocumentLineColumn>
             {

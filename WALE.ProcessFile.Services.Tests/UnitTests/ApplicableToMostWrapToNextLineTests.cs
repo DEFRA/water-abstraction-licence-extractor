@@ -6,7 +6,7 @@ namespace WALE.ProcessFile.Services.Tests.UnitTests;
 /// <summary>
 /// LabelToMatch.AllowValueToWrapToNextLine - only ever exercised end-to-end through real PDFs
 /// otherwise (ApplicableToMost.cs has no other direct unit tests at all). The decision this
-/// flag drives (BuildResultLinesForConstantFormat) was extracted out of the Text.Constant
+/// flag drives (AppendNextLinesWhenWrapToNextLineAllowed) was extracted out of the Text.Constant
 /// branch specifically so it could be checked here without needing to build the rest of
 /// FunctionAsync's upstream textBeforeAtAndAfterLabel structure by hand.
 /// </summary>
@@ -22,7 +22,7 @@ public class ApplicableToMostWrapToNextLineTests
     [Fact]
     public void WhenFlagIsOff_ReturnsOnlyTheLabelsOwnLine_EvenWhenNextLinesExist()
     {
-        var result = ApplicableToMost.BuildResultLinesForConstantFormat(
+        var result = ApplicableToMost.AppendNextLinesWhenWrapToNextLineAllowed(
             Line("Nathan Atkins"),
             [Line("Continuation line")],
             allowValueToWrapToNextLine: false);
@@ -33,7 +33,7 @@ public class ApplicableToMostWrapToNextLineTests
     [Fact]
     public void WhenFlagIsOn_AndNextLinesExist_AppendsThemAfterTheLabelsOwnLine()
     {
-        var result = ApplicableToMost.BuildResultLinesForConstantFormat(
+        var result = ApplicableToMost.AppendNextLinesWhenWrapToNextLineAllowed(
             Line("Nathan Atkins"),
             [Line("under Fish Farm RPS")],
             allowValueToWrapToNextLine: true);
@@ -44,7 +44,7 @@ public class ApplicableToMostWrapToNextLineTests
     [Fact]
     public void WhenFlagIsOn_ButNextLinesIsNull_ReturnsOnlyTheLabelsOwnLine()
     {
-        var result = ApplicableToMost.BuildResultLinesForConstantFormat(
+        var result = ApplicableToMost.AppendNextLinesWhenWrapToNextLineAllowed(
             Line("Nathan Atkins"),
             nextLines: null,
             allowValueToWrapToNextLine: true);
@@ -55,7 +55,7 @@ public class ApplicableToMostWrapToNextLineTests
     [Fact]
     public void WhenFlagIsOn_ButNextLinesIsEmpty_ReturnsOnlyTheLabelsOwnLine()
     {
-        var result = ApplicableToMost.BuildResultLinesForConstantFormat(
+        var result = ApplicableToMost.AppendNextLinesWhenWrapToNextLineAllowed(
             Line("Nathan Atkins"),
             nextLines: [],
             allowValueToWrapToNextLine: true);
@@ -66,7 +66,7 @@ public class ApplicableToMostWrapToNextLineTests
     [Fact]
     public void WhenFlagIsOn_AndMultipleNextLinesExist_AppendsAllOfThemInOrder()
     {
-        var result = ApplicableToMost.BuildResultLinesForConstantFormat(
+        var result = ApplicableToMost.AppendNextLinesWhenWrapToNextLineAllowed(
             Line("Simon Mcfarlane"),
             [Line("Ellena Waller-Murray"), Line("Third continuation")],
             allowValueToWrapToNextLine: true);

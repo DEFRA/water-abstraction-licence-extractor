@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
+using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WALE.Api.Areas.BFF.Controllers;
@@ -66,7 +67,7 @@ public class FileDataController(
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(result);
     }
-    
+
     // This version of the method just here so the generated TS client doesn't mangle some properties
     [HttpGet]
     public async Task<ActionResult<string?>> GetMatchesResultByMatchesResultIdStringAsync(
@@ -74,6 +75,29 @@ public class FileDataController(
     {
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportCsvAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns);
+        return File(bytes, "text/csv", $"WR51-ProcessRun-{processRunId}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportXlsxAsync(
+        [FromQuery] int processRunId,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildWrInspectionReportCsvLinesAsync(processRunId);
+        var bytes = WrInspectionReportReportBuilder.BuildXlsx(lines, excludeInternalColumns);
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"WR51-ProcessRun-{processRunId}.xlsx");
     }
 
     [HttpGet]
@@ -231,6 +255,50 @@ public class FileDataController(
             await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
                 licenceList.ToArray());
         }
+    }
+
+    private async Task<List<WrInspectionReportCsvLine>> BuildWrInspectionReportCsvLinesAsync(int processRunId)
+    {
+        var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
+
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = simpleResults.Select(async simpleResult =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                if (matchesResult == null)
+                {
+                    return null;
+                }
+
+                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
+                var line = WrInspectionReportCsvLine.FromForm(form);
+
+                // A raw s3:// URI isn't clickable and needs direct bucket credentials nobody
+                // reading this export has - link through FilesController's own presigned-URL
+                // redirect instead, so it resolves to a real, working HTTPS download on click.
+                // Deliberately not embedding a presigned URL directly here: AwsS3FileService.
+                // GetPresignedUrlAsync expires in 2 minutes, which suits that redirect's
+                // generate-then-immediately-follow flow but would already have expired by the
+                // time anyone opens this CSV.
+                line.Metadata__FileUrl = matchesResult.Filename == null
+                    ? null
+                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/GetAsync?filename={Uri.EscapeDataString(matchesResult.Filename)}";
+
+                return line;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var lines = await Task.WhenAll(tasks);
+        return lines.Where(line => line != null).Cast<WrInspectionReportCsvLine>().ToList();
     }
 
     private static WrTemplateType? GetKnownTemplate(MatchesResult matchesResult)

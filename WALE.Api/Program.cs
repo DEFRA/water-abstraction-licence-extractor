@@ -109,7 +109,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             s3BucketName,
             awsAccessKey,
             awsSecretKey,
-            awsSessionToken)   
+            awsSessionToken)
         .AddAwsSqsServices(
             awsRegionName,
             awsAccessKey,

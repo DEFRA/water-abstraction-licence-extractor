@@ -495,14 +495,14 @@ public static class FindLabelGroupMatchesHelper
             var clonedPartialLine = partialLine.Clone();
             var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
 
-            // LabelToMatch.LimitToBoundSameLineWalkByOtherLabelPositions - X-position of the
+            // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of the
             // nearest other known field's column, restricted to this field's own section (via
             // FindSectionEndTop) so an unrelated field in a different section can't
             // coincidentally bound it. Skipped if the section end can't be found, rather than
             // falling back to an unbounded document-wide search.
             double? nextFieldBoundaryX = null;
 
-            if (label.LimitToBoundSameLineWalkByOtherLabelPositions
+            if (label.BoundSameLineWalkByOtherLabelPositions
                 && labelPositionIndex != null
                 && labelPositionIndex.TryGetValue(labelGroupName, out var ownFieldPosition))
             {
@@ -774,7 +774,7 @@ public static class FindLabelGroupMatchesHelper
     /// Returns the columns to keep, and the 0-based index of the label's own column (used by
     /// <see cref="FindNextLineColumnByPosition"/> for LimitTo.SpecifiedColumn).
     ///
-    /// nextFieldBoundaryX (LabelToMatch.LimitToBoundSameLineWalkByOtherLabelPositions) also
+    /// nextFieldBoundaryX (LabelToMatch.BoundSameLineWalkByOtherLabelPositions) also
     /// stops the walk once a candidate column reaches or passes it - a position-based bound
     /// alongside the textEnd check, for intruding content that isn't itself another field's
     /// label text.

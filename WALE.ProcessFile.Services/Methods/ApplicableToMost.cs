@@ -651,7 +651,7 @@ public static class ApplicableToMost
                         documentLine.Columns[0].Words.AddRange(
                             DocumentLineColumn.TextToWords(outputText, null, coords));
 
-                        var resultLines = BuildResultLinesForConstantFormat(
+                        var resultLines = AppendNextLinesWhenWrapToNextLineAllowed(
                             documentLine, request.nextLines, request.label.AllowValueToWrapToNextLine);
 
                         var lineMatch = labelGroupResult.Clone(resultLines);
@@ -673,7 +673,7 @@ public static class ApplicableToMost
     // LabelToMatch.AllowValueToWrapToNextLine directly - see the csproj's InternalsVisibleTo.
     // nextLines has already been fetched and narrowed to this label's own column upstream, but
     // the Text.Constant branch above otherwise never looks at it.
-    internal static List<DocumentLine> BuildResultLinesForConstantFormat(
+    internal static List<DocumentLine> AppendNextLinesWhenWrapToNextLineAllowed(
         DocumentLine documentLine,
         IReadOnlyList<DocumentLine>? nextLines,
         bool allowValueToWrapToNextLine)

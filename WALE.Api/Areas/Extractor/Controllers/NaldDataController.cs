@@ -91,12 +91,14 @@ public class NaldDataController(
     public async Task<IActionResult> GetAsync(
         [FromQuery] string licenceNumber,
         [FromQuery] int regionCode,
-        [FromQuery] bool slashesRemoved)
+        [FromQuery] bool slashesRemoved,
+        [FromQuery] bool includeDetail = true)
     {
         var naldData = await abstractionLicenceCacheService.GetNaldAbstractionLicenceAsync(
             licenceNumber,
             regionCode,
-            slashesRemoved);
+            slashesRemoved,
+            includeDetail);
         
         return Ok(naldData);
     }

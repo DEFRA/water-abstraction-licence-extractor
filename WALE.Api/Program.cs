@@ -77,7 +77,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
                 .SetIsOriginAllowed(_ => true)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
-                .AllowCredentials();
+                .AllowCredentials()
+                .WithExposedHeaders(
+                    "Content-Disposition",
+                    "X-Has-More");
         });
     });
 
@@ -95,8 +98,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsRegionName = config.GetValue<string>("AwsRegionName")
         ?? config.GetValue<string>("AwsS3RegionName")
         ?? throw new NullReferenceException("AwsRegionName");
-    var s3BucketName = config.GetValue<string>("AwsS3BucketName")
+    var s3IngressBucketName = config.GetValue<string>("AwsS3BucketName")
         ?? throw new NullReferenceException("AwsS3BucketName");
+    var s3AssetsBucketName = config.GetValue<string>("AwsS3AssetsBucketName")
+        ?? s3IngressBucketName.Replace("ingress", "assets");
     var awsAccessKey = config.GetValue<string>("AwsAccessKey");
     var awsSecretKey = config.GetValue<string>("AwsSecretKey");
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
@@ -106,7 +111,8 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddAbstractionLicencePostgreSqlServices()
         .AddAwsS3Services(
             awsRegionName,
-            s3BucketName,
+            s3IngressBucketName,
+            s3AssetsBucketName,
             awsAccessKey,
             awsSecretKey,
             awsSessionToken)
@@ -122,5 +128,9 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
-        .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>();
+        .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
+        .Configure<VerificationConfig>(options =>
+        {
+            options.PostgresqlHost = dbHost;
+        });
 }

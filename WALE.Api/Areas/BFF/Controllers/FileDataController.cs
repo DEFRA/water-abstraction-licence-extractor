@@ -5,6 +5,7 @@ using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
@@ -159,6 +160,53 @@ public class FileDataController(
     }
 
     [HttpGet]
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> IncomingLinkedLicencesAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var linkedLicences = licence?.LinkedLicences;
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+
+        var filtered = linkedLicences
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.Incoming) == true);
+
+        return Ok(filtered);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> OutgoingLinkedLicencesAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var linkedLicences = licence?.LinkedLicences;
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+
+        // Only return the outgoing links even if there are also incoming links for the same licence
+        var filtered = linkedLicences
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.Outgoing) == true)
+            .ToList();
+
+        foreach (var lic in filtered)
+        {
+            lic.ContainedIn = lic.ContainedIn!
+                .Where(c => c.Direction == InformationDirection.Outgoing)
+                .ToArray();
+        }
+
+        return Ok(filtered);
+    }
+
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSet>>> LicenceSetsAsync([FromQuery] Guid fileId)
     {
         var results = await abstractionLicenceOutputService.GetLicenceSetsAsync(fileId);
@@ -241,8 +289,29 @@ public class FileDataController(
 
     private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
-        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+        var processRuns = await outputService.GetAllProcessRunsAsync();
 
+        var currentProcessId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId;
+        var processRunIds = new List<int> {verification.ProcessRunId};
+
+        if (currentProcessId is > 0 &&
+            currentProcessId > verification.ProcessRunId)
+        {
+            foreach (var processRun in processRuns
+                         .Where(x => x.ProcessRunId > verification.ProcessRunId)
+                         .OrderBy(x => x.ProcessRunId))
+            {
+                processRunIds.Add(processRun.ProcessRunId);
+
+                if (processRun.ProcessRunId == currentProcessId)
+                {
+                    break;
+                }
+            }
+        }
+        
+        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+        
         if (!string.IsNullOrWhiteSpace(mainLicence))
         {
             var licenceList = new List<string> { mainLicence };
@@ -252,8 +321,11 @@ public class FileDataController(
                 licenceList.Add(verification.LicenceSectionItemId);
             }
 
-            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
-                licenceList.ToArray());
+            foreach (var processRunId in processRunIds)
+            {
+                await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId,
+                    licenceList.ToArray());
+            }
         }
     }
 

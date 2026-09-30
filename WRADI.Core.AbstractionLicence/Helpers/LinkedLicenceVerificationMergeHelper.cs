@@ -1,6 +1,5 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -41,7 +40,7 @@ public static class LinkedLicenceVerificationMergeHelper
                                             l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing)))
                 {
                     // Flag this because the verification confirmed there are zero outgoing LLs but actually there are some
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, "'None Outgoing' verification contradicted by existence of LLs");
                     foreach (var linkedLicence in linkedLicences)
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
@@ -62,22 +61,6 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 continue;
-            }
-
-            // Apply data changed flag check
-            if (verification.ProcessRunId < processRunId)
-            {
-                var wasScrapedThisRun = (originalLinkedLicences ?? [])
-                    .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
-                              && x.ContainedIn != null
-                              && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
-
-                var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
-
-                if (wasScrapedThisRun != wasScrapedOnVerificationRun)
-                {
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
-                }
             }
 
             // Apply verification
@@ -102,6 +85,53 @@ public static class LinkedLicenceVerificationMergeHelper
                     ConsoleHelper.WriteLine(
                         $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
                     continue;
+                }
+
+                // Apply data changed flag check
+                if (verification.ProcessRunId < processRunId)
+                {
+                    var scrapedLinkedLicence = (originalLinkedLicences ?? [])
+                        .FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId
+                                             && x.ContainedIn != null
+                                             && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
+
+                    var wasScrapedThisRun = scrapedLinkedLicence != null;
+                    var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
+
+                    string? flagReason = null;
+
+                    if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+                    {
+                        flagReason = wasScrapedThisRun
+                            ? "LL added to scraper output since the verification run"
+                            : "LL removed from scraper output since the verification run";
+                    }
+                    else if (scrapedLinkedLicence != null)
+                    {
+                        var changes = new List<string>();
+
+                        if (IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
+                            && !IsDeadNaldStatus(verificationLicence.NaldStatus))
+                        {
+                            changes.Add(scrapedLinkedLicence.NaldStatus.ToString());
+                        }
+
+                        if (IsSuperseded(scrapedLinkedLicence)
+                            && !IsSuperseded(verificationLicence))
+                        {
+                            changes.Add("Superseded");
+                        }
+
+                        if (changes.Count > 0)
+                        {
+                            flagReason = $"Linked Licence {string.Join(" & ", changes)}";
+                        }
+                    }
+
+                    if (flagReason != null)
+                    {
+                        FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
+                    }
                 }
 
                 var existingLinkedLicence =
@@ -344,18 +374,20 @@ public static class LinkedLicenceVerificationMergeHelper
             if (!IsAutoOrBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
-                existingSummary.ScrapedDataIsDifferent = false;
+                existingSummary.IsFlagged = false;
+                existingSummary.FlagReason = null;
             }
         }
     }
 
-    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)
     {
         var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
 
         if (summary != null)
         {
-            summary.ScrapedDataIsDifferent = true;
+            summary.IsFlagged = true;
+            summary.FlagReason = flagReason;
             return;
         }
 
@@ -369,4 +401,13 @@ public static class LinkedLicenceVerificationMergeHelper
 
     private static bool IsBusinessReview(string? verificationType)
         => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
+
+    private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
+        => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;
+
+    private static bool IsSuperseded(LinkedLicence linkedLicence)
+        => linkedLicence.ContainedIn?
+            .SelectMany(c => c.History ?? [])
+            .Any(h => h.LicenceNumber == linkedLicence.LicenceNumber
+                      && h.FollowOnLicenceNumbers.Count > 0) == true;
 }

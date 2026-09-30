@@ -201,6 +201,33 @@ public static class ReadSqlHelper
 
             return;
         }
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "NoDocument",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                      AND NOT EXISTS
+                      (
+                          SELECT 1
+                          FROM licence_list_item licence
+                          WHERE licence.licence_number = linked_licence.licence_number
+                            AND licence.process_run_id = @ProcessRunId
+                            AND licence.file_id IS NOT NULL
+                      )
+                )
+                """);
+
+            return;
+        }
 
         if (string.Equals(
                 linkedLicencesType,
@@ -324,7 +351,7 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
-                        AND item.scraped_data_is_different = true
+                        AND item.is_flagged = true
                   )
                 """);
 

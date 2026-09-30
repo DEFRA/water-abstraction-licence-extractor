@@ -13,7 +13,9 @@ public sealed class VerificationSectionRow
 
     public string? LicenceSectionItemId { get; init; }
 
-    public bool ScrapedDataIsDifferent { get; init; }
+    public bool IsFlagged { get; init; }
+
+    public string? FlagReason { get; init; }
 
     public string[] VerificationTypes { get; init; } = [];
     

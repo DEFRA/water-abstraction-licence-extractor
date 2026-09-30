@@ -84,6 +84,11 @@ public static class FileProcessServiceRegistration
                     fileService = new AwsS3FileService(
                         settings.AwsRegionName!,
                         settings.AwsS3BucketName!,
+                        // WR51 has no separate assets bucket - this IFileService is only ever used
+                        // here for ingress-bucket file discovery (GetAllFilesAsync), so reusing the
+                        // same bucket name satisfies the constructor without adding an unused config
+                        // option.
+                        settings.AwsS3BucketName!,
                         settings.AwsAccessKey,
                         settings.AwsSecretKey,
                         settings.AwsSessionToken);

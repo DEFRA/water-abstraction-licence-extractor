@@ -49,7 +49,106 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         return purposeMapping.ToList();
     }
-    
+
+    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT backup_version
+            FROM public.licence_section_verification_backup_version
+            ORDER BY backup_version DESC
+            LIMIT 1;
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+    public async Task<int> GetCurrentBackupVerificationsCount()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql = new StringBuilder(
+            """
+            SELECT count(*)
+            FROM licence_section_verification_backup
+            """);
+        
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql.ToString(),
+            0);
+    }
+
+
+    public async Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                                data
+                                , licence_id
+                                , matches_result_id
+                                , process_run_id
+                           FROM licence
+                           WHERE
+                               file_id = @FileId
+                           """;
+
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId, int ProcessRunId)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId
+            });
+
+        return results
+            .Select(r =>
+            {
+                Licence licence;
+                
+                try
+                {
+                    licence = JsonSerializer.Deserialize<Licence>(r.Data, GetSerializerOptions())!;
+                }
+                catch
+                {
+                    return null;
+                }
+
+                licence.NoneSchemaData.TryAdd("licenceId", r.LicenceId);
+                licence.LicenceId = r.LicenceId;
+                licence.MatchesResultId = r.MatchesResultId;
+                licence.ProcessRunId = r.ProcessRunId;
+
+                return licence;
+            })
+            .Where(l => l != null)
+            .ToList()!;
+    }
+
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -82,7 +181,8 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
-        bool slashesRemoved)
+        bool slashesRemoved,
+        bool includeDetail = true)
     {
         await using var connection = GetPostgresConnection();
         var licenceNumbers = new List<string> { licenceNumber };
@@ -207,6 +307,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         {
             NaldHelper.AddNaldAbstractionLicenceVersionData(version, naldData);
             break;
+        }
+
+        if (!includeDetail)
+        {
+            return naldData;
         }
 
         var purposesTask = GetNaldLicencePurposesAsync(
@@ -1126,10 +1231,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         var sql = new StringBuilder(
             """
-            SELECT data, licence_id
+            SELECT
+                data
+                 , licence_id
+                 , matches_result_id
             FROM licence
-            WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+            WHERE
+                process_run_id = @ProcessRunId
+                AND data::jsonb ->> 'status' = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -1147,7 +1256,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             OFFSET @Skip;
             """);
 
-        var results = await QueryAsync<(string Data, int LicenceId)>(
+        var results = await QueryAsync<(string Data, int LicenceId, int MatchesResultId)>(
             connection,
             sql.ToString(),
             0,
@@ -1161,6 +1270,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                     GetSerializerOptions())!;
 
                 licence.LicenceId = result.LicenceId;
+                licence.MatchesResultId = result.MatchesResultId;
                 licence.NoneSchemaData.TryAdd(
                     "licenceId",
                     result.LicenceId);
@@ -1518,7 +1628,52 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         
         return data;
     }
-    
+
+    public async Task<IEnumerable<LicenceSectionVerification>>
+        GetExportVerificationsAsync(int skip, int take)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT
+                               licence_section_verification_id AS LicenceSectionVerificationId,
+                               licence_file_id AS LicenceFileId,
+                               process_run_id AS ProcessRunId,
+                               licence_section_name AS LicenceSectionName,
+                               licence_section_scraped_value AS LicenceSectionScrapedValue,
+                               licence_section_snapshot_value AS LicenceSectionSnapshotValue,
+                               licence_section_override_value AS LicenceSectionOverrideValue,
+                               verification_type AS VerificationType,
+                               licence_section_item_id AS LicenceSectionItemId,
+                               notes AS Notes,
+                               created_date_time_utc AS CreatedDateTimeUtc,
+                               deleted_date_time_utc AS DeletedDateTimeUtc
+                           FROM licence_section_verification
+                           ORDER BY
+                               licence_file_id,
+                               licence_section_name,
+                               created_date_time_utc DESC,
+                               licence_section_verification_id DESC
+                           LIMIT @Take
+                           OFFSET @Skip
+                           """;
+
+        return await QueryAsync<LicenceSectionVerification>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                Skip = skip,
+                Take = take
+            });
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
     {
         await using var connection = GetPostgresConnection();
@@ -3181,8 +3336,11 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            verification_item.scraped_data_is_different
-                AS ScrapedDataIsDifferent
+            verification_item.is_flagged
+                AS IsFlagged,
+
+            verification_item.flag_reason
+                AS FlagReason
 
         FROM licence_list_item_verification_section
             AS verification_section
@@ -3248,8 +3406,11 @@ private async Task<
                                     VerificationTypesWithNotes = 
                                         row.VerificationTypesWithNotes ?? [],
 
-                                    ScrapedDataIsDifferent =
-                                        row.ScrapedDataIsDifferent
+                                    IsFlagged =
+                                        row.IsFlagged,
+
+                                    FlagReason =
+                                        row.FlagReason
                                 })
                             .ToArray()
                     })

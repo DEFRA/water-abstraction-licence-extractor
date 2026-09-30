@@ -59,7 +59,8 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
             {
                 LicenceSectionItemId = linkedLicenceNumber,
                 VerificationTypes = [],
-                ScrapedDataIsDifferent = true
+                IsFlagged = true,
+                FlagReason = "New linked licence"
             });
         }
 

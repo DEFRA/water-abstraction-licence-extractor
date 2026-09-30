@@ -38,6 +38,8 @@ public class OutputListDataItem
     
     public string? status{ get; set; }
     
+    public string? thumbnailUrl { get; set; }
+    
     public LinkedLicence[]? linkedLicences { get; set; }
     
     public OutputListDataItemLicenceSet?[]? licenceSets { get; set; }

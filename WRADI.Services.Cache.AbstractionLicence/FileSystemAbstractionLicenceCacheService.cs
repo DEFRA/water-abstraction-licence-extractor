@@ -101,7 +101,8 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     public Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
         int regionCode,
-        bool slashesRemoved = false)
+        bool slashesRemoved = false,
+        bool includeDetail = true)
     {
         throw new NotImplementedException();
     }

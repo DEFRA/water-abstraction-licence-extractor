@@ -31,8 +31,7 @@ public static class AggregateVerificationMergeHelper
             {
                 if (ids.Count > 0)
                 {
-                    // Flag this because the verification confirmed there are zero aggregates but actually there are some
-                    FlagItemSummary(summaries, itemId);
+                    FlagItemSummary(summaries, itemId, "'None' verification contradicted by existence of aggregates");
                 }
 
                 continue;
@@ -43,7 +42,10 @@ public static class AggregateVerificationMergeHelper
 
             if (wasScrapedThisRun != wasScrapedOnVerificationRun)
             {
-                FlagItemSummary(summaries, itemId);
+                var flagReason = wasScrapedThisRun
+                    ? "Aggregate added to scraper output since the verification run"
+                    : "Aggregate removed from scraper output since the verification run";
+                FlagItemSummary(summaries, itemId, flagReason);
             }
 
             switch (verification.VerificationType)
@@ -208,18 +210,20 @@ public static class AggregateVerificationMergeHelper
             if (!IsAutoOrBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
-                existingSummary.ScrapedDataIsDifferent = false;
+                existingSummary.IsFlagged = false;
+                existingSummary.FlagReason = null;
             }
         }
     }
 
-    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)
     {
         var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
 
         if (summary != null)
         {
-            summary.ScrapedDataIsDifferent = true;
+            summary.IsFlagged = true;
+            summary.FlagReason = flagReason;
             return;
         }
 

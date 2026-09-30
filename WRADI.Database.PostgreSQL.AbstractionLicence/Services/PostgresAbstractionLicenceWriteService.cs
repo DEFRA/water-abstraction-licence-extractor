@@ -114,11 +114,14 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           UPDATE licence_set_licence 
-                           SET licence_id = @LicenceId 
-                           WHERE licence_set_id = @LicenceSetId 
-                             AND licence_number = @LicenceNumber 
-                             AND process_run_id = @ProcessRunId
+                           UPDATE
+                                licence_set_licence
+                           SET
+                                licence_id = @LicenceId
+                           WHERE
+                                licence_set_id = @LicenceSetId
+                                AND licence_number = @LicenceNumber
+                                AND process_run_id = @ProcessRunId
                            """;
 
         await ExecuteAsync(
@@ -619,6 +622,170 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
+    public Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification>  verifications)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        await using var connection = GetPostgresConnection();
+        // Get backup version
+      var versionNumber =  await GetBackupVersionNumber(connection);
+
+        // Backup current Data set
+        var savedBackupCount = await BackupCurrentDataSet(connection, versionNumber);
+        
+       // Validate Export
+       var currentVerificationsCount = await GetCurrentVerificationCount(connection);
+
+       if (savedBackupCount != currentVerificationsCount)
+       {
+           // rollback export and exit
+           await DeleteBackedUpVersionData(connection, versionNumber);
+           
+           await DeleteBackupVersion(connection, versionNumber);
+           
+           throw new Exception("Import failed");
+       }
+       
+       // Delete current data set
+       await DeleteAllVerifications(connection);
+       
+       // Import verifications
+       await ImportNewVerifications(connection, verifications);
+       
+       return true;
+    }
+
+    private async Task ImportNewVerifications(NpgsqlConnection connection,
+        IEnumerable<LicenceSectionVerification> verifications)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification
+                           (
+                               licence_file_id,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_snapshot_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               deleted_date_time_utc
+                           )
+                           VALUES
+                           (
+                               @LicenceFileId,
+                               @ProcessRunId,
+                               @LicenceSectionName,
+                               @VerificationType,
+                               @CreatedDateTimeUtc,
+                               NULLIF(@LicenceSectionScrapedValue, '')::jsonb,
+                               NULLIF(@LicenceSectionSnapshotValue, '')::jsonb,
+                               NULLIF(@LicenceSectionOverrideValue, '')::jsonb,
+                               @Notes,
+                               @LicenceSectionItemId,
+                               @DeletedDateTimeUtc
+                           );
+                           """;
+
+        await connection.ExecuteAsync(sql, verifications);
+    }
+
+    private static async Task DeleteAllVerifications(NpgsqlConnection connection)
+    {
+        await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification;
+            """);
+    }
+
+    private static async Task DeleteBackupVersion(NpgsqlConnection connection, int versionNumber)
+    {
+       await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification_backup_version
+            WHERE backup_version = @BackupVersion;
+            """,
+            new { BackupVersion = versionNumber });
+    }
+
+    private static async Task DeleteBackedUpVersionData(NpgsqlConnection connection, int versionNumber)
+    {
+        await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification_backup
+            WHERE backup_version = @BackupVersion;
+            """,
+            new { BackupVersion = versionNumber });
+    }
+
+    private static async Task<int> GetCurrentVerificationCount(NpgsqlConnection connection)
+    {
+        const string sql = """
+                           SELECT COUNT(*)
+                           FROM licence_section_verification;
+                           """;
+
+        return await connection.ExecuteScalarAsync<int>(sql);
+    }
+
+    private static async Task<int> BackupCurrentDataSet(NpgsqlConnection connection, int backupVersion)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification_backup
+                           (
+                               backup_version,
+                               licence_section_verification_id,
+                               licence_file_id,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               licence_section_snapshot_value,
+                               deleted_date_time_utc
+                           )
+                           SELECT
+                               @BackupVersion,
+                               licence_section_verification_id,
+                               licence_file_id,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               licence_section_snapshot_value,
+                               deleted_date_time_utc
+                           FROM licence_section_verification;
+                           """;
+
+        return await connection.ExecuteAsync(sql, new
+        {
+            BackupVersion = backupVersion
+        });
+    }
+
+    private static async Task<int> GetBackupVersionNumber(NpgsqlConnection connection)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification_backup_version
+                           DEFAULT VALUES
+                           RETURNING backup_version;
+                           """;
+
+        return await connection.QuerySingleAsync<int>(sql);
+    }
+
     private static async Task<long>
         UpsertLicenceListItemInternalAsync(
             NpgsqlConnection connection,
@@ -658,7 +825,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             licenceListItemId,
             item.LicenceSectionVerifications,
             cancellationToken);
-
 
         return licenceListItemId;
     }
@@ -745,8 +911,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_number
             )
             DO UPDATE SET
-                licence_id = EXCLUDED.licence_id,
-                matches_result_id = EXCLUDED.matches_result_id,
+                licence_id = @LicenceId,
+                matches_result_id = @MatchesResultId,
                 filename = EXCLUDED.filename,
                 licence_holder = EXCLUDED.licence_holder,
                 limits_count = EXCLUDED.limits_count,
@@ -1354,7 +1520,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_section_id,
                 licence_section_item_id,
                 verification_types,
-                scraped_data_is_different,
+                is_flagged,
+                flag_reason,
              current_verification_type,
              verification_types_with_notes
             )
@@ -1363,7 +1530,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @VerificationSectionId,
                 @LicenceSectionItemId,
                 @VerificationTypes,
-                @ScrapedDataIsDifferent,
+                @IsFlagged,
+                @FlagReason,
              @CurrentVerificationType,
              @VerificationTypesWithNotes
             )
@@ -1379,8 +1547,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 EXCLUDED.verification_types_with_notes,
                 current_verification_type = 
                 EXCLUDED.current_verification_type,
-                scraped_data_is_different =
-                    EXCLUDED.scraped_data_is_different;
+                is_flagged =
+                    EXCLUDED.is_flagged,
+                flag_reason =
+                    EXCLUDED.flag_reason;
             """;
 
         var verificationTypes =
@@ -1415,7 +1585,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     VerificationTypes =
                         verificationTypes,
 
-                    item.ScrapedDataIsDifferent,
+                    item.IsFlagged,
+
+                    item.FlagReason,
                     
                     item.CurrentVerificationType,
                    

@@ -16,8 +16,8 @@ public class AwsTextractOcrDataExtractorService
     private static AwsTextractOcrDataExtractorService? _instance;
     
     private AwsTextractOcrDataExtractorService(
-        string accessKey,
-        string secretKey,
+        string? accessKey,
+        string? secretKey,
         ICacheService cacheService,
         IOutputService outputService)
     {
@@ -26,10 +26,11 @@ public class AwsTextractOcrDataExtractorService
         _cacheService = cacheService;
         _outputService = outputService;
     }
-
+    
+    // Best practice (TODO confirm this) because of rate limiting etc is to use a singleton instance
     public static AwsTextractOcrDataExtractorService Instance(
-        string accessKey,
-        string secretKey,
+        string? accessKey,
+        string? secretKey,
         ICacheService cacheService,
         IOutputService outputService)
     {
@@ -46,13 +47,15 @@ public class AwsTextractOcrDataExtractorService
         
         return _instance;
     }
-
-    private readonly string _accessKey;
-    private readonly string _secretKey;
+    
     private readonly ICacheService _cacheService;
     private readonly IOutputService _outputService;
     
-    public bool HasDirectCost => false;
+    // These 2 properties are only set in a certain auth mode
+    private readonly string? _accessKey;
+    private readonly string? _secretKey;
+    
+    public bool HasDirectCost => true;
     public string Name => "AwsTextractOcrDataExtractorService";
     
     private static readonly Lock ClientInitialisationLock = new();
@@ -191,7 +194,9 @@ public class AwsTextractOcrDataExtractorService
     
     private static AmazonTextractClient? _client;
     
-    private static AmazonTextractClient GetTextractClient(string accessKey, string secretKey)
+    private static AmazonTextractClient GetTextractClient(
+        string? accessKey,
+        string? secretKey)
     {
         lock (ClientInitialisationLock)
         {
@@ -200,16 +205,25 @@ public class AwsTextractOcrDataExtractorService
                 return _client;
             }
 
-            var awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
-            var client = new AmazonTextractClient(
-                awsCredentials,
-                new AmazonTextractConfig
-                {
-                    RetryMode = RequestRetryMode.Standard,
-                    MaxErrorRetry = 5,
-                    RegionEndpoint = RegionEndpoint.EUWest2
-                });
-
+            var config = new AmazonTextractConfig
+            {
+                RetryMode = RequestRetryMode.Standard,
+                MaxErrorRetry = 5,
+                RegionEndpoint = RegionEndpoint.EUWest2
+            };
+            
+            AmazonTextractClient client;
+            
+            if (!string.IsNullOrEmpty(accessKey))
+            {
+                var awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
+                client = new AmazonTextractClient(awsCredentials, config);
+            }
+            else
+            {
+                client = new AmazonTextractClient(config);
+            }
+            
             _client = client;
             return client;
         }

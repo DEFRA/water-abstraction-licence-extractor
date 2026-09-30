@@ -112,12 +112,12 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
         if (!pendingVerificationType) return;
         
         const isConfirmNone = pendingVerificationType === 'ConfirmNone';
-        const isBusinessReview = pendingVerificationType === 'RequestBusinessReview' || pendingVerificationType === 'CompleteBusinessReview';
+        const isRequestBusinessReview = pendingVerificationType === 'RequestBusinessReview';
         
         if (bodyRef.current) {
-            const data = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getData(pendingVerificationItemId);
-            const scrapedData = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getScrapedData(pendingVerificationItemId);
-            const snapshotData = (isConfirmNone || isBusinessReview) ? undefined : await bodyRef.current.getSnapshotData(pendingVerificationItemId);
+            const data = (isConfirmNone || isRequestBusinessReview) ? undefined : await bodyRef.current.getData(pendingVerificationItemId);
+            const scrapedData = (isConfirmNone || isRequestBusinessReview) ? undefined : await bodyRef.current.getScrapedData(pendingVerificationItemId);
+            const snapshotData = (isConfirmNone || isRequestBusinessReview) ? undefined : await bodyRef.current.getSnapshotData(pendingVerificationItemId);
             
             // Map the pending verification type to the required verificationType string
             let verificationType: string;
@@ -166,8 +166,8 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                         processRunId: processRunId,
                         licenceSectionName: title,
                         licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
-                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isBusinessReview) ? undefined : JSON.stringify(snapshotData),
-                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isBusinessReview) ? JSON.stringify(data) : undefined,
+                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isRequestBusinessReview) ? undefined : JSON.stringify(snapshotData),
+                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isRequestBusinessReview) ? JSON.stringify(data) : undefined,
                         verificationType: verificationType,
                         licenceSectionItemId: pendingVerificationItemId,
                         notes: verificationNotes

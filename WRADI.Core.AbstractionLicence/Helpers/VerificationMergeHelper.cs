@@ -4,6 +4,8 @@ namespace WRADI.Core.AbstractionLicence.Helpers;
 
 public static class VerificationMergeHelper
 {
+    public const string MissingJsonFlagReason = "BC Missing JSON";
+
     public static string GetVerificationWithNotes(LicenceSectionVerification verification)
     {
         return $"{(string.IsNullOrWhiteSpace(verification.Notes) ? verification.VerificationType : $"{verification.VerificationType}::{verification.Notes}")}";
@@ -19,7 +21,14 @@ public static class VerificationMergeHelper
     
     public static bool IsBusinessReview(string? verificationType)
         => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
-    
+
+    // CompleteBusinessReview verifications saved before JSON was recorded for them can't be merged
+    public static bool IsCompleteBusinessReviewMissingJson(LicenceSectionVerification verification)
+        => verification.VerificationType is "CompleteBusinessReview"
+           && string.IsNullOrEmpty(verification.LicenceSectionOverrideValue)
+           && string.IsNullOrEmpty(verification.LicenceSectionSnapshotValue)
+           && string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
+
     public static void AddNewVerificationType(LicenceSectionVerification verification,
         LicenceSectionItemSummary existingSummary)
     {

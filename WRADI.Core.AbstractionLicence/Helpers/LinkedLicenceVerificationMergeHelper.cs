@@ -29,7 +29,7 @@ public static class LinkedLicenceVerificationMergeHelper
 
             // Ignore review and auto-warn/fail - we just want the tags to appear to flag them for review
             if (verification.LicenceSectionItemId == Review
-                || IsAutoOrBusinessReview(verification.VerificationType))
+                || IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 continue;
             }
@@ -60,6 +60,12 @@ public static class LinkedLicenceVerificationMergeHelper
                     }
                 }
 
+                continue;
+            }
+
+            if (VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
+            {
+                FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, VerificationMergeHelper.MissingJsonFlagReason);
                 continue;
             }
 
@@ -140,6 +146,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
+                    case "CompleteBusinessReview":
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
@@ -201,7 +208,8 @@ public static class LinkedLicenceVerificationMergeHelper
             }
 
             // Ignore auto-warn/fail - it has no effect on incoming LLs
-            if (IsAutoOrBusinessReview(verification.VerificationType))
+            if (IsAutoOrRequestBusinessReview(verification.VerificationType)
+                || VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
             {
                 continue;
             }
@@ -261,6 +269,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
+                    case "CompleteBusinessReview":
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
@@ -341,10 +350,10 @@ public static class LinkedLicenceVerificationMergeHelper
         else
         {
             // New business review tags should override previous ones - clear the previous ones first
-            if (IsBusinessReview(verification.VerificationType))
+            if (VerificationMergeHelper.IsBusinessReview(verification.VerificationType))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Where(x => !IsBusinessReview(x))
+                    .Where(x => !VerificationMergeHelper.IsBusinessReview(x))
                     .ToArray();
                 
                 existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
@@ -371,7 +380,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
 
-            if (!IsAutoOrBusinessReview(verification.VerificationType))
+            if (!IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
                 existingSummary.IsFlagged = false;
@@ -395,12 +404,9 @@ public static class LinkedLicenceVerificationMergeHelper
             $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Flag was not set - no summary found for {itemId}");
     }
 
-    private static bool IsAutoOrBusinessReview(string? verificationType)
+    private static bool IsAutoOrRequestBusinessReview(string? verificationType)
         => verificationType is "AutoWarn" or "AutoFail"
-           || IsBusinessReview(verificationType);
-
-    private static bool IsBusinessReview(string? verificationType)
-        => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
+           or "RequestBusinessReview";
 
     private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
         => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;

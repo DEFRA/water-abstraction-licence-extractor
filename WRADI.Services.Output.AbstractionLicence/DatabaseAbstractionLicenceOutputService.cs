@@ -259,9 +259,9 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetAllVerificationsAsync(maxProcessRunId);
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take)
     {
-        return databaseReadService.GetExportVerificationsAsync();
+        return databaseReadService.GetExportVerificationsAsync(skip, take);
     }
 
     public async Task<int> GetCurrentVerificationsBackupVersionAsync()

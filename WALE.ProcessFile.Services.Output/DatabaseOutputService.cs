@@ -191,6 +191,11 @@ public class DatabaseOutputService(
         return databaseReadService.GetMatchesResult(matchesResultId);
     }
 
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+    {
+        return databaseReadService.GetMatchesResult(fileId);
+    }
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
         return databaseReadService.GetMatchesResult(fileId, processRunId);

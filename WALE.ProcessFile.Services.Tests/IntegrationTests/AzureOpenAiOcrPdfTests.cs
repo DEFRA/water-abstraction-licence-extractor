@@ -105,6 +105,8 @@ public class AzureOpenAiOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(4),
+            null,
+            null,
             new DmsLookupService(),
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is

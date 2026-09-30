@@ -175,8 +175,26 @@ public static class BaseMethod
 
                 break;
             case Text.Constant:
-                var result = RestrictToPossibility(request, labelGroupResult);
-                if (result?.Text != null) returnList.Add(result);
+                var result = RestrictToPossibility(request, lines);
+
+                if (result.HasPossiblites)
+                {
+                    if (result.LabelGroupResult?.Text != null)
+                    {
+                        labelGroupResult.Text = [result.LabelGroupResult];
+                        returnList.Add(labelGroupResult);
+                    }
+                }
+                else if (lines.Count > 0)
+                {
+                    // Only add a result when this candidate actually found something. An
+                    // empty-but-present result here previously made downstream single-value
+                    // selection stop trying the field's other alternates - e.g. Units's
+                    // same-line .After("Units") alternate finding nothing blocked its own
+                    // wrap-aware .Between("Units","Flow Rate") alternate from ever running.
+                    labelGroupResult.Text = lines;
+                    returnList.Add(labelGroupResult);
+                }
 
                 break;
         }
@@ -272,40 +290,98 @@ public static class BaseMethod
         return results;
     }
     
-    private static LabelGroupResult? RestrictToPossibility(
+    // Contains check, but ExceptWhenInsideWord rejects a match embedded in a longer word (e.g.
+    // "in" inside "Point") - otherwise a short possibility like "In" or "N" matches as a
+    // coincidental substring. Boundary is letter/digit adjacency, not whitespace: some real WR51
+    // fixtures glue a label to its value with no space ("supply:In Order" is one word,
+    // "supply:In"), so a colon must count as a valid boundary too. Checks every occurrence, not
+    // just the first, since a possibility can appear both embedded and standalone in the same
+    // text. Public: also used by WrInspectionReportTableMatcher.
+    public static bool MatchesPossibility(string? text, TextToMatch possibility)
+    {
+        if (text == null)
+        {
+            return false;
+        }
+
+        if (!possibility.ExceptWhenInsideWord || possibility.Text.Length == 0)
+        {
+            return text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase);
+        }
+
+        var searchStart = 0;
+
+        while (searchStart <= text.Length)
+        {
+            var indexOf = text.IndexOf(possibility.Text, searchStart, StringComparison.OrdinalIgnoreCase);
+
+            if (indexOf == -1)
+            {
+                return false;
+            }
+
+            var charBeforeIsLetterOrDigit = indexOf >= 1 && char.IsLetterOrDigit(text[indexOf - 1]);
+            var charAfterIsLetterOrDigit = text.Length > indexOf + possibility.Text.Length
+                && char.IsLetterOrDigit(text[indexOf + possibility.Text.Length]);
+
+            if (!charBeforeIsLetterOrDigit && !charAfterIsLetterOrDigit)
+            {
+                return true;
+            }
+
+            searchStart = indexOf + 1;
+        }
+
+        return false;
+    }
+    
+    internal static (bool HasPossiblites, DocumentLine? LabelGroupResult) RestrictToPossibility(
         FunctionInputModel request,
-        LabelGroupResult result)
+        IReadOnlyList<DocumentLine> lines)
     {
         if (request.label!.Possibilities?.Any() != true)
         {
-            return result;
+            return (false, null);
         }
 
-        var possiblityFound = request.label.Possibilities.Any(possibility =>
-            result.Text?.FirstOrDefault()?.Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase) == true);
-
-        if (possiblityFound)
+        foreach (var line in lines)
         {
+            var possiblityFound = request.label.Possibilities.Any(possibility =>
+                MatchesPossibility(line.Text, possibility));
+
+            if (!possiblityFound)
+            {
+                continue;
+            }
+
             var possibility = request.label.Possibilities
-                .First(possibility => result.Text!.First().Text.Contains(possibility.Text, StringComparison.OrdinalIgnoreCase));
-            
-            var possibilityWords = result.Text!.First().Columns
+                .First(possibility => MatchesPossibility(line.Text, possibility));
+
+            var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
-            
+
             possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
-            
-            var clonedLine = result.Text!.First().Clone();
+
+            var clonedLine = line.Clone();
             clonedLine.Columns.Clear();
             clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
 
-            var clonedResult = result.Clone();
-            clonedResult.Text = [clonedLine];
-            
-            return clonedResult;
+            return (true, clonedLine);
+        }
+        
+        var firstLineText = lines.FirstOrDefault()?.Text;
+        
+        // A field with no answer produces zero captured lines, not one empty-text line, so the
+        // "" catch-all possibility (a genuinely blank tick field) never reaches the Contains
+        // check above. Without this, that case looks identical to "label not found" downstream.
+        if (string.IsNullOrEmpty(firstLineText)
+            && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
+        {
+            return (true, new DocumentLine());
         }
 
-        return null;
+        return (true, null);
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(

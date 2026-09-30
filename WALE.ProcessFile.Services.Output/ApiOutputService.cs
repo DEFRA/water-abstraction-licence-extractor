@@ -69,9 +69,10 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         {
             processRun.Description,
             processRun.NumberOfFiles,
-            processRun.Status
+            processRun.Status,
+            processRun.DocumentType
         }, JsonHelper.GetSerializerOptions());
-        
+
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
@@ -448,6 +449,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return string.IsNullOrEmpty(content)
             ? null
             : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
+    }
+
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)

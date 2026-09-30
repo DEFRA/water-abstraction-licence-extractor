@@ -2,8 +2,10 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.AwsS3;
+using WALE.ProcessFile.Services.AwsTextract;
 using WALE.ProcessFile.Services.AzureComputerVision;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
@@ -40,9 +42,9 @@ public static class FileProcessServiceRegistration
             options.TesseractExeDirectory = ConfigHelper.GetRequiredString(configuration, "TesseractExeDirectory");
             options.TessDataPrefix = ConfigHelper.GetRequiredString(configuration, "TESSDATA_PREFIX");
             
-            // Azure AI
-            options.AzureAiVisionEndpoint = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionEndpoint");
-            options.AzureAiVisionKey = ConfigHelper.GetRequiredString(configuration, "AzureAIVisionKey");
+            // Azure AI (optional)
+            options.AzureAiVisionEndpoint = ConfigHelper.GetOptionalString(configuration, "AzureAIVisionEndpoint");
+            options.AzureAiVisionKey = ConfigHelper.GetOptionalString(configuration, "AzureAIVisionKey");
 
             // AWS general
             options.AwsRegionName = ConfigHelper.GetRequiredString(configuration, "AwsRegionName");
@@ -195,24 +197,47 @@ public static class FileProcessServiceRegistration
                 settings.TesseractExeName,
                 settings.TesseractExeDirectory);
 
-            var azureAiServices = new AzureAiVisionOcrDataExtractorService(
-                settings.AzureAiVisionEndpoint,
-                settings.AzureAiVisionKey,
-                cacheService,
-                outputService);
+            var ocrDataExtractorServices = new List<IOcrDataExtractorService>
+            {
+                tesseractOcrSparse,
+                tesseractOcrDefault
+            };
+            
+            if (!string.IsNullOrEmpty(settings.AzureAiVisionEndpoint)
+                && !string.IsNullOrEmpty(settings.AzureAiVisionKey))
+            {
+                ConsoleHelper.WriteLine($"{nameof(FileProcessServiceRegistration)} - INFO - Using Azure AI Vision");
+                
+                var azureAiServices = new AzureAiVisionOcrDataExtractorService(
+                    settings.AzureAiVisionEndpoint,
+                    settings.AzureAiVisionKey,
+                    cacheService,
+                    outputService);
+                
+                ocrDataExtractorServices.Add(azureAiServices);
+            }
+            else
+            {
+                ConsoleHelper.WriteLine($"{nameof(FileProcessServiceRegistration)} - INFO - Using Amazon Textract");
+                
+                var awsTextract = AwsTextractOcrDataExtractorService.Instance(
+                    settings.AwsAccessKey,
+                    settings.AwsSecretKey,
+                    cacheService,
+                    outputService);
+                
+                ocrDataExtractorServices.Add(awsTextract);
+            }
             
             var pdfDataExtractor = new PdfDataExtractorService(
                 pdfPigNoOcr,
-                [
-                    tesseractOcrSparse,
-                    tesseractOcrDefault,
-                    azureAiServices
-                ],
+                ocrDataExtractorServices,
                 cacheService,
                 outputService,
                 pdfPigDocumentService,
                 docnetAlternativeDocumentService,
-                messageQueueService);
+                messageQueueService,
+                documentType: "AbstractionLicence");
 
             return pdfDataExtractor;
         });

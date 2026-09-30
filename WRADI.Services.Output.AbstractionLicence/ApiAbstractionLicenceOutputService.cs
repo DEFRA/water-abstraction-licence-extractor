@@ -397,7 +397,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         return licenceSectionVerifications;
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take)
     {
         throw new NotImplementedException();
     }

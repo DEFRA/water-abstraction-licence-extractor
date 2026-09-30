@@ -63,7 +63,7 @@ public class Licence
     public LinkedLicence[] LinkedLicences { get; set; } = [];
     
     public LicenceSetReference[] LicenceSets { get; set; } = [];
-    
+
     public Dictionary<string, object?> NoneSchemaData { get; set; } = [];
 
     public Licence CloneWithAbstractionLimits(AbstractionLimits abstractionLimits)

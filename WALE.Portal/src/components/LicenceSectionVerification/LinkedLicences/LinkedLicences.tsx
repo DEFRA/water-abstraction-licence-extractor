@@ -21,10 +21,11 @@ interface LinkedLicencesProps extends LicenceSectionBodyProps {
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
+    processRunId?: number;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history, processRunId}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [implicitLinkedLicences, setImplicitLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
@@ -73,17 +74,17 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         useEffect(() => {
             const fetchLinkedLicences = async () => {
-                const permitNumber = licence?.dmsPermitNumber;
-                if (!permitNumber) return;
+                const fileId = licence?.dmsFileId;
+                if (!fileId || processRunId === undefined) return;
 
                 setIsLoading(true);
                 setError(null);
                 try {
 
-                    const implicitResults = await waleApiClient.getIncoming(permitNumber);
+                    const implicitResults = await waleApiClient.incomingLinkedLicences(fileId, processRunId);
                     setImplicitLinkedLicences(implicitResults || []);
 
-                    const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
+                    const scrapeResults = await waleApiClient.outgoingLinkedLicences(fileId, processRunId);
                     setLinkedLicences(scrapeResults || []);
                     
                     
@@ -111,7 +112,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber, currentLicence]);
+        }, [licence?.dmsFileId, processRunId, currentLicence]);
 
         const addingLicenceNumber = isAddingNew && editingIndex !== null
             ? linkedLicences[editingIndex]?.licenceNumber?.trim()

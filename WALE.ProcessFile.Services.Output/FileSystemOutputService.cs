@@ -241,6 +241,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
         return Task.FromResult<MatchesResult?>(null);

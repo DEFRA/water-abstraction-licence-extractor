@@ -1629,9 +1629,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return data;
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync()
+    public async Task<IEnumerable<LicenceSectionVerification>>
+        GetExportVerificationsAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();
+
         const string sql = """
                            SELECT
                                licence_section_verification_id AS LicenceSectionVerificationId,
@@ -1652,12 +1654,19 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                licence_section_name,
                                created_date_time_utc DESC,
                                licence_section_verification_id DESC
+                           LIMIT @Take
+                           OFFSET @Skip
                            """;
 
         return await QueryAsync<LicenceSectionVerification>(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                Skip = skip,
+                Take = take
+            });
     }
 
     public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)

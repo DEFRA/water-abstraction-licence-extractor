@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
-using WALE.Api.Models;
 using WALE.Tools.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -16,22 +15,38 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
 public class VerificationController(
-    IAbstractionLicenceOutputService abstractionLicenceOutputService, IOptions<DbConfig> dbConfigOptions) : Controller
+    IAbstractionLicenceOutputService abstractionLicenceOutputService, IOptions<VerificationConfig> verificationConfig) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> ExtractHistoryAsync()
+    public async Task<IActionResult> ExtractHistory(
+        [FromQuery] int chunk = 0)
     {
-        var verifications = await abstractionLicenceOutputService.GetExportVerificationsAsync();
-        
-        var file = await ToolHelper.CreateCsvAsync(verifications);
+        var chunkSize = verificationConfig.Value.ChunkSize;
 
-        var fileName =
-            $"{dbConfigOptions.Value.PostgresqlHost}-verifications-{DateTime.Now:yyyyMMddHHmmssfff}.csv";
+        var skip = chunk * chunkSize;
+
+        // Grab one extra row so we know whether another chunk exists.
+        var verifications =
+            await abstractionLicenceOutputService.GetExportVerificationsAsync(
+                skip,
+                chunkSize + 1);
+
+        var licenceSectionVerifications = verifications.ToList();
+        var hasMore = licenceSectionVerifications.Count > chunkSize;
+
+        var verificationChunk = licenceSectionVerifications
+            .Take(chunkSize)
+            .ToList();
+
+        var file = await ToolHelper.CreateCsvAsync(verificationChunk);
+
+        Response.Headers.Append("X-Chunk", chunk.ToString());
+        Response.Headers.Append("X-Has-More", hasMore.ToString());
 
         return File(
             file,
             "text/csv",
-            fileName);
+            $"{verificationConfig.Value.PostgresqlHost}-verifications.csv");
     }
 
     [HttpGet]
@@ -56,50 +71,114 @@ public class VerificationController(
         return Ok(result);
     }
     
-    [HttpPut]
-    [Consumes("multipart/form-data")]
-    public async Task<IActionResult> ImportCsv(
-        [FromForm] IFormFile file,
-        [FromQuery] int processRunId,
-        CancellationToken cancellationToken)
+[HttpPut]
+[Consumes("multipart/form-data")]
+public async Task<IActionResult> ImportCsvChunk(
+    [FromForm] IFormFile file,
+    [FromQuery] int processRunId,
+    [FromQuery] string uploadId,
+    [FromQuery] int chunkIndex,
+    [FromQuery] int totalChunks,
+    [FromQuery] string fileName,
+    CancellationToken cancellationToken)
+{
+    if (file.Length == 0)
+        return BadRequest("CSV chunk is empty.");
+
+    if (!string.Equals(
+            Path.GetExtension(fileName),
+            ".csv",
+            StringComparison.OrdinalIgnoreCase))
     {
-        if (file.Length == 0)
-            return BadRequest("CSV file is empty.");
+        return BadRequest("Only CSV files are supported.");
+    }
 
-        if (!string.Equals(
-                Path.GetExtension(file.FileName),
-                ".csv",
-                StringComparison.OrdinalIgnoreCase))
+    var tempFolder = Path.Combine(
+        Path.GetTempPath(),
+        "verification-imports");
+
+    Directory.CreateDirectory(tempFolder);
+
+    var tempFilePath = Path.Combine(
+        tempFolder,
+        $"{uploadId}.csv");
+
+    await using (var outputStream = new FileStream(
+                     tempFilePath,
+                     chunkIndex == 0
+                         ? FileMode.Create
+                         : FileMode.Append,
+                     FileAccess.Write))
+    {
+        await file.CopyToAsync(
+            outputStream,
+            cancellationToken);
+    }
+
+    // More chunks still to come
+    if (chunkIndex < totalChunks - 1)
+    {
+        return Ok(new
         {
-            return BadRequest("Only CSV files are supported.");
-        }
+            chunkIndex,
+            completed = false
+        });
+    }
 
-        await using var stream = file.OpenReadStream();
-        using var reader = new StreamReader(stream);
-        using var csv = new CsvReader(reader, new CultureInfo("en-GB"));
+    // Last chunk - process complete CSV
+    try
+    {
+        await using var stream =
+            System.IO.File.OpenRead(tempFilePath);
 
-        var records = new List<LicenceSectionVerification>();
+        using var reader =
+            new StreamReader(stream);
 
-        await foreach (var record in csv.GetRecordsAsync<LicenceSectionVerification>(cancellationToken))
+        using var csv =
+            new CsvReader(
+                reader,
+                new CultureInfo("en-GB"));
+
+        var records =
+            new List<LicenceSectionVerification>();
+
+        await foreach (
+            var record in csv.GetRecordsAsync<LicenceSectionVerification>(
+                cancellationToken))
         {
             records.Add(record);
         }
 
-        var environment = dbConfigOptions.Value.PostgresqlHost;
-        
-        AssignProcessRun(file, processRunId, environment, records);
+        var environment =
+            verificationConfig.Value.PostgresqlHost;
 
-        await abstractionLicenceOutputService.ImportVerificationsAsync(records);
+        AssignProcessRun(
+            fileName,
+            processRunId,
+            environment,
+            records);
+
+        await abstractionLicenceOutputService
+            .ImportVerificationsAsync(records);
 
         return Ok(new
         {
-            imported = records.Count
+            imported = records.Count,
+            completed = true
         });
     }
-
-    private static void AssignProcessRun(IFormFile file, int processRunId, string? environment, List<LicenceSectionVerification> records)
+    finally
     {
-        if (string.IsNullOrEmpty(environment) || file.FileName.Contains(environment, StringComparison.OrdinalIgnoreCase))
+        if (System.IO.File.Exists(tempFilePath))
+        {
+            System.IO.File.Delete(tempFilePath);
+        }
+    }
+}
+
+    private static void AssignProcessRun(string fileName, int processRunId, string? environment, List<LicenceSectionVerification> records)
+    {
+        if (string.IsNullOrEmpty(environment) || fileName.Contains(environment, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }

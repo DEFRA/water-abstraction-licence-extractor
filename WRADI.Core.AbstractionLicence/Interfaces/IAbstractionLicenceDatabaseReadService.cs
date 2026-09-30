@@ -42,7 +42,7 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     
-    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take);
 
     Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
     

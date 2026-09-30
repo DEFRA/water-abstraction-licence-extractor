@@ -175,15 +175,20 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         
         foreach (var line in lines)
         {
+            // Sorting each chunk's own letters and relying on the chunks' insertion order isn't
+            // enough - GroupIntoLines only orders by Top (grouping into rows), so two chunks on
+            // the same row aren't guaranteed to already be left-to-right, and if they overlap in
+            // X a per-chunk sort can't fix that anyway. Flatten first, then sort every letter on
+            // the line globally by its own Left.
             var letters = line
-                .SelectMany(wordOrChunk => wordOrChunk.TextElements)
-                .OrderBy(letter => letter.Left)
+                .SelectMany(word => word.TextElements)
                 .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))
+                .OrderBy(letter => letter.Left)
                 .ToList();
-            
+
             TextElement? previousLetter = null;
             const double spaceGapTolerance = 0.5;
-        
+
             foreach (var letter in letters)
             {
                 if (previousLetter != null)

@@ -65,16 +65,10 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         RuleEmail()
     ];
     
-    // Real documents mark these checkbox-style fields with whatever the scanner/typist
-    // used - tick, cross, or a Unicode box glyph - not just the Y/N the field nominally
-    // asks for. Tried in this order; a genuinely-unticked box (☐) is itself a real answer
-    // ("not confirmed"), not a missing one, so it's listed alongside the others rather
-    // than treated as blank.
-    //
-    // ExceptWhenInsideWord on every entry - a stray lowercase "n" inside any ordinary English
-    // word ("condition", "manufacturer", "accordance", "necessary") would otherwise win the
-    // match before the algorithm ever reaches a real tick/cross that may also be present in the
-    // same text.
+    // Real documents mark checkboxes with whatever the scanner/typist used (tick, cross, or a
+    // box glyph), not just Y/N - an unticked box (☐) is itself a real answer, not a missing one.
+    // ExceptWhenInsideWord everywhere: a stray lowercase "n" inside an ordinary word
+    // ("condition", "necessary") would otherwise win before a real tick/cross is reached.
     private static readonly List<TextToMatch> CheckboxMarkPossibilities =
     [
         new("Y") { ExceptWhenInsideWord = true },
@@ -84,16 +78,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         new("☒") { ExceptWhenInsideWord = true },
         new("☐") { ExceptWhenInsideWord = true },
         new("X") { ExceptWhenInsideWord = true },
-        new("x") { ExceptWhenInsideWord = true }
+        new("x") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true } // Wingdings-style tick glyph (U+F0D6) - see InOrderPossibilities
     ];
 
-    // The "grid template" layout prints "Calibration: Conformance: Flow verification: Meter
-    // verification:" as one label row, with no dedicated value row for these four fields -
-    // the row directly below is consistently "Maintenance:"'s own row. IgnoreBlockIfContains
-    // rejects a match whose captured column contains a recognisable sibling label;
-    // SkipNextLineWhenStartsWith("Maintenance") (set per field below) rejects the whole
-    // next-line candidate before any column is picked from it. Either way the field ends up
-    // genuinely unmatched (blank) instead of silently showing another field's data.
+    // The grid template prints all four field labels as one row with no dedicated value row -
+    // the row below is "Maintenance:"'s own. IgnoreIfContains/SkipNextLineWhenStartsWith
+    // ("Maintenance") reject a captured value that's really a sibling label, leaving it blank.
     private static readonly List<string> VerificationGridSiblingLeakTerms =
     [
         "Calibration:",
@@ -106,20 +97,12 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         "General comments"
     ];
 
-    // The LicenceProvisions grid's shared "In Order / Not In Order / blank" answer shape -
-    // every InOrder-sourced field uses this identical list. Order is load-bearing: paired-
-    // checkbox alternates ("☑ ☐" etc.) must precede the single-glyph ones below them, or a bare
-    // "☒" possibility would win a .First() match against "☒ ☐" before the position-based
-    // paired check gets a chance. The four Private Use Area entries are Wingdings-style tick
-    // glyphs, written as \u escapes rather than literal glyphs so they survive editing/rendering
-    // intact - confirmed present in the real corpus by scanning all 789 real PDFs' extracted text
-    // directly (2026-09-08): U+F0FC (638 occurrences/81 docs), U+F061 (87/11), U+F050 (192/36),
-    // U+F072 (4/1). These four were previously present as `new("")` (a genuinely empty string,
-    // not the intended glyph - lost at some point before this comment's own claim about them was
-    // ever verified) - an empty TextToMatch.Text always matches (MatchesPossibility's
-    // text.Contains("") is trivially true), so every one of these four real answers, plus every
-    // plain "Y"/"N" answer sitting after them in this list, was silently resolving to Blank
-    // instead of a real InOrder/NotInOrder verdict. Fixed by restoring the actual codepoints.
+    // The LicenceProvisions grid's shared "In Order / Not In Order / blank" answer shape.
+    // Order is load-bearing: paired checkboxes ("☑ ☐" etc.) must precede the single-glyph
+    // entries, or a bare "☒" wins .First() before the paired check gets a chance. The PUA
+    // entries are Wingdings tick glyphs (\u escapes so they survive editing) - they'd previously
+    // decayed to `new("")`, which matches everything, silently resolving real ticks (and every
+    // Y/N after them) to Blank.
     private static readonly List<TextToMatch> InOrderPossibilities =
     [
         new("☑ ☐") { ExceptWhenInsideWord = true },
@@ -139,6 +122,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
         new("") { ExceptWhenInsideWord = true },
+        new("") { ExceptWhenInsideWord = true }, // U+F0D6 - a fifth Wingdings-style tick codepoint
         new("X") { ExceptWhenInsideWord = true },
         new("☒") { ExceptWhenInsideWord = true },
         new("×") { ExceptWhenInsideWord = true },
@@ -250,6 +234,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .InOrder("Special conditions", InOrderPossibilities, "Measurement details")
                 .Named(WrInspectionReportFieldNames.SpecialConditions)
+                .BoundByOtherLabels()
                 .FromText()
                 .Build()
         ]);
@@ -307,11 +292,19 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 
+    // "Met with" has no end bound, so a name wrapping onto the next physical line was
+    // structurally unreachable - NextLines(1) alone doesn't help, since the actual winning
+    // matcher here (ApplicableToMost's Text branch) ignores nextLines unless this flag is set.
     private static (string, List<LabelToMatch>) RuleMetWith() =>
         (WrInspectionReportFieldNames.MetWith, [
             WrFluentRule
                 .After("Met with")
                 .Named(WrInspectionReportFieldNames.MetWith)
+                .NextLines(1)
+                .AllowValueToWrapToNextLine()
+                // Guards a document where "Met with" is already complete but the next row's
+                // first column happens to be "Inspecting Officer: ..." at the same left margin.
+                .SkipNextLineWhenStartsWith("Inspecting Officer")
                 .FromText()
                 .Build()]);
 
@@ -357,6 +350,16 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .AlsoStartsWith(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
+                .FromText()
+                .Build(),
+            // Plain "Tel No" is a genuinely distinct label wording, not just an OCR-spaced
+            // variant of "Telephone No" (see AlsoStartsWith above), so it needs its own
+            // alternate. NextLines(0): the value always sits on the label's own row here -
+            // reaching further risks sweeping in "Site address"/"Met with" content instead.
+            WrFluentRule
+                .Between("Tel No", "Site address")
+                .Named(WrInspectionReportFieldNames.TelephoneNumber)
+                .NextLines(0)
                 .FromText()
                 .Build()
         ]);
@@ -413,14 +416,11 @@ public static class WrInspectionReportTextBasedLabelConfiguration
 
     // ---- Meter / measurement details ----
 
-    // Widened from 1 (single line) to fit a multi-meter table's full column of "Point N, <site>:
-    // <value>" lines - see WrInspectionReportSchemaConverter's Meters-splitting logic. Safe to
-    // widen: TextToFindIsBetweenLabels' same-line walk stops as soon as it hits its own end
-    // boundary regardless of how many lines are available, so a single-meter document (which
-    // already hits that boundary within 1 line) behaves identically; this only gives a
-    // multi-meter document's walk enough room to reach its real end boundary instead of running
-    // out of fetched lines first. Left at 1 on rules with no TextEnd bound at all (plain After()
-    // alternates) - widening those wouldn't be meaningful without a real boundary to stop at.
+    // Wide enough to fit a multi-meter table's full column of "Point N, <site>: <value>" lines
+    // (see WrInspectionReportSchemaConverter's Meters-splitting logic) - harmless for a
+    // single-meter document, since the same-line walk still stops at its own end boundary well
+    // before running out of lines. Not used on TextEnd-less (plain After()) rules, which have no
+    // boundary to stop at regardless of how many lines are available.
     private const int MeterTableNextLines = 10;
 
     private static (string, List<LabelToMatch>) RuleMeterName() =>
@@ -454,10 +454,14 @@ public static class WrInspectionReportTextBasedLabelConfiguration
 
     private static (string, List<LabelToMatch>) RuleSerialNumber() =>
         (WrInspectionReportFieldNames.SerialNumber, [
+            // AlsoStartsWithLoose: "Meter make: <value> Serial number: N/A" is one
+            // undifferentiated column on some real documents, so the column-start-only start
+            // text never matches - same shape as Time sharing a row with Inspection Date.
             WrFluentRule
                 .After("Serial number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .RequireTextToClaimGroup()
+                .AlsoStartsWithLoose("Serial number")
                 .FromText()
                 .Build(), // Existing template
             WrFluentRule
@@ -513,10 +517,9 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .FromText()
                 .Build(), // T6 template
-            // AlsoEndsAt markers added alongside the MeterTableNextLines widening - when the
-            // meter table's own "Units" header genuinely never reappears (a blank/N-A table),
-            // the wider window otherwise bled straight into the next form section instead of
-            // stopping (measured: HallucinationRate 11%->39% before these were added).
+            // Added alongside the MeterTableNextLines widening: when the meter table's own
+            // "Units" header genuinely never reappears (blank/N-A table), the wider window
+            // otherwise bleeds into the next form section.
             WrFluentRule
                 .Between("Reading:", "Units")
                 .Named(WrInspectionReportFieldNames.Reading)
@@ -544,10 +547,8 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.Units)
                 .FromText()
                 .Build(), // Existing template
-            // "Flow Rate" is T6-only and never appears on a T1 form at all, so on T1 documents
-            // this alternate's real end boundary never fires and the widened window otherwise
-            // bled into the next form section - same fix and same measured cause as Reading's
-            // AlsoEndsAt above.
+            // "Flow Rate" is T6-only, so on T1 documents this end boundary never fires and the
+            // widened window bleeds into the next section - same fix as Reading's AlsoEndsAt above.
             WrFluentRule
                 .Between("Units", "Flow Rate")
                 .Named(WrInspectionReportFieldNames.Units)
@@ -571,6 +572,10 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .After("Certificates or records available for")
                 .Named(WrInspectionReportFieldNames.CertificatesOfRecords)
+                // No end boundary previously - "Date of certificate or" (the NEXT field's own
+                // label, wrapped mid-phrase by the same-line column split) sits in the very next
+                // column and was being accepted as this field's own value.
+                .EndsAt("Date of certificate")
                 .FromText()
                 .Build()]);
 
@@ -784,11 +789,10 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 "General / relevant background", "General comments, background"
             ]));
 
-    // The baseline heading alone only covers 61% of the real corpus - "Actions"/"Summary" are
-    // deliberately kept as valid anchors (a different, longer-form report template) but
-    // excluded from Remove: they're common enough to legitimately recur as a genuine
-    // sub-heading later in the same captured block, and stripping them there silently corrupts
-    // real narrative content (confirmed via the ground-truth harness).
+    // The baseline heading alone only covers 61% of the real corpus, hence the "Actions"/
+    // "Summary" alternates. Deliberately excluded from Remove: they can legitimately recur as a
+    // genuine sub-heading later in the same captured block, and stripping them there corrupts
+    // real narrative content.
     private static (string, List<LabelToMatch>) RuleGeneralComments() =>
         (WrInspectionReportFieldNames.GeneralComments, [
             WrFluentRule
@@ -826,23 +830,34 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             MaintenanceLine("Readings taken:", "Where Kept",
                 WrInspectionReportFieldNames.ReadingsTakenLine));
 
-    // Tried and reverted (2026-09-09): adding a loose "Date:" alternate to catch the case where
-    // "Inspection Date:" wraps onto two lines ("Inspection" / "Date: ...") - confirmed on
-    // wr51__73417g0068__... and wr51__an0340003001r01__... (the golden set's own only
-    // InspectionDate Miss). Measured net regression against the golden set: recall 98%->40%
-    // (54 Hit->22 Hit, 32 newly Wrong) - bare "Date:" is too ambiguous against this document's
-    // other "Date:" occurrences (e.g. "Date of certificate or record:") and started winning over
-    // the correct match on documents where the primary rule already worked fine. Needs a
-    // genuinely two-line-aware match (the wrapped "Inspection" line immediately preceding the
-    // "Date:" line), not a same-line loose text search - AlsoStartsWithLoose only relaxes the
-    // column requirement, it doesn't span line boundaries. Not attempted further this session.
     private static (string, List<LabelToMatch>) RuleInspectionDate() =>
         (WrInspectionReportFieldNames.InspectionDate, [
+            // Both Require* calls let a blank/incomplete match fall through to the fallback
+            // below instead of permanently claiming the group.
             WrFluentRule
                 .Between("Inspection Date:", "Quantities")
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
+                .RequireTextToClaimGroup()
+                .RequireCompleteDateToClaimGroup()
+                .FromText()
+                .Build(),
+            // Fallback for a squeezed layout where "Inspection Date:" wraps onto its own row
+            // with "Inspecting Officer: ... Time: ..." landing between label and value. Anchors
+            // on "Inspecting Officer" (a bare "Inspection" anchor also matches "Inspection
+            // report"/"Inspection Class:") and walks WholeLine to "Licence provisions" to span
+            // the wrap. "Date:" is stripped, not anchored on - it collides with "Date of
+            // certificate or record:" elsewhere on the page, and was measured to regress recall
+            // 98%->40% when tried directly.
+            WrFluentRule
+                .Between("Inspecting Officer", "Licence provisions")
+                .Named(WrInspectionReportFieldNames.InspectionDate)
+                .PreviousLines(1)
+                .NextLines(3)
+                .WholeLine()
+                .Remove([new TextToMatch("Inspection Date:"), new TextToMatch("Inspection"), new TextToMatch("Date:")])
+                .RequireTextToClaimGroup()
                 .FromText()
                 .Build()
         ]);
@@ -887,11 +902,9 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         ];
     }
 
-    // A compound row (Maintenance:/Readings taken: plus Y/N-or-word answer, Frequency, By whom
-    // sub-fields) - kept outside the Rule fluent surface deliberately, since it's structurally
-    // more complex than an ordinary rule (five SubLabels sharing one parent row), not less.
-    // SubLabels themselves are still built via Rule, for the same construction consistency as
-    // every other field.
+    // A compound row (Maintenance:/Readings taken: plus Y/N, Frequency, By whom sub-fields) -
+    // kept outside the Rule fluent surface since it's structurally more complex, not less (five
+    // SubLabels sharing one parent row); the SubLabels themselves still use Rule.
     private static List<LabelToMatch> MaintenanceLine(string textStart, string textEnd, string name)
     {
         return
@@ -930,13 +943,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("Maintenance:", "N:")
                             .Named($"{name}MaintenanceYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("Readings taken:", "N:")
                             .Named($"{name}ReadingsTakenYes")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     (name == WrInspectionReportFieldNames.MaintenanceLine
@@ -944,13 +957,13 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                             .Between("N:", "Frequency:")
                             .Named($"{name}MaintenanceNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         : WrFluentRule
                             .Between("N:", "Frequency:")
                             .Named($"{name}ReadingsTakenNo")
                             .WholeLine()
-                            .Possibilities([new("✓"), new("X")])
+                            .Possibilities([new("✓"), new(""), new("X")])
                             .FromText()
                         ).Build(),
                     WrFluentRule

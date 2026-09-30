@@ -388,8 +388,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// <summary>
     /// Same harness, table-based LicenceProvisions grid extraction via TabulaTableExtractorService
     /// instead - reads the PDF's own drawn ruling lines through PdfPig, no cloud call, no cost,
-    /// no secrets needed, so this always runs (no skip guard). See the wr51_textract_tables_design
-    /// memory for the 4-document spot-check that motivated building this. Separate CSVs (suffix
+    /// no secrets needed, so this always runs (no skip guard) - motivated by a 4-document
+    /// spot-check showing it competitive with Azure DI. Separate CSVs (suffix
     /// "-tabula-table-based") so this never clobbers either the baseline or the Azure DI run.
     /// </summary>
     [Fact]
@@ -404,7 +404,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// The cost-optimised two-tier design actually wired into WrInspectionReportExtractionOrchestrator,
     /// at its default minimumFieldsToSkipFallback (10, tuned via
     /// WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve - see that
-    /// test and the wr51_textract_tables_design memory for the full curve behind this choice):
+    /// test for the full curve behind this choice):
     /// Tabula (free, local) tried first, Azure DI (paid, ~$0.01/page) only tried - and only billed -
     /// when Tabula resolved fewer than 10 of the 13 grid fields confidently. Reports the same
     /// per-field accuracy as the other runs PLUS how many T1 documents actually needed the paid

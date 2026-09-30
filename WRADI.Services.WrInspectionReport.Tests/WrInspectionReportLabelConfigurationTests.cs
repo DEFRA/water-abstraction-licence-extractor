@@ -6,8 +6,8 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// <summary>
 /// Regression coverage for the shape of GetT1Labels() vs GetLabels(), and for the
 /// ExceptWhenInsideWord guard on the checkbox-style possibility fields - both were found the
-/// hard way this session (a blanket prune attempt that measured as a real accuracy regression
-/// against the golden set and full corpus, and a stray lowercase "n" winning
+/// hard way (a blanket prune attempt that measured as a real accuracy regression against the
+/// golden set and full corpus, and a stray lowercase "n" winning
 /// checkbox-possibility matches inside unrelated words). These are cheap to assert directly and
 /// catch a silent reintroduction of either without needing to rerun the harness.
 /// </summary>

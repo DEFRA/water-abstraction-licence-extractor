@@ -53,7 +53,7 @@ public static class WrInspectionT1LabelConfiguration
             // StartsWith from the standalone "Actions" heading that IS a real boundary elsewhere)
             // and the footer marker cut a different document short of its true end. Net regression
             // (Hit+PartialHit 36->35), not an improvement - genuine per-document diversity here,
-            // not a bounded fix. See wr51_general_comments_gap memory before trying this again.
+            // not a bounded fix.
             WrFluentRule
                 .Between("General comments, details / dates of occupation changes, actions required etc.", "Form sent to")
                 .Named(WrInspectionReportFieldNames.GeneralComments)

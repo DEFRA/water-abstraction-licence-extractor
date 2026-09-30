@@ -176,7 +176,7 @@ public static class BaseMethod
                 break;
             case Text.Constant:
                 var result = RestrictToPossibility(request, lines);
-                
+
                 if (result.HasPossiblites)
                 {
                     if (result.LabelGroupResult?.Text != null)
@@ -185,8 +185,13 @@ public static class BaseMethod
                         returnList.Add(labelGroupResult);
                     }
                 }
-                else
+                else if (lines.Count > 0)
                 {
+                    // Only add a result when this candidate actually found something. An
+                    // empty-but-present result here previously made downstream single-value
+                    // selection stop trying the field's other alternates - e.g. Units's
+                    // same-line .After("Units") alternate finding nothing blocked its own
+                    // wrap-aware .Between("Units","Flow Rate") alternate from ever running.
                     labelGroupResult.Text = lines;
                     returnList.Add(labelGroupResult);
                 }
@@ -285,28 +290,13 @@ public static class BaseMethod
         return results;
     }
     
-    // Whether `possibility.Text` genuinely appears in `text` - a plain Contains check, unless
-    // the possibility opted into ExceptWhenInsideWord (an existing flag - DataHelper.
-    // RemoveExcludes already uses it for a related idea, but with whitespace-adjacency rather
-    // than the letter/digit-adjacency here; the two turned out not to be interchangeable, see
-    // below), in which case a match embedded inside a longer word doesn't count. Without this,
-    // a short possibility like "In" or "N" matches as a coincidental substring of unrelated
-    // text - e.g. "Point of abstraction:" (wrongly captured due to a separate next-line
-    // column-matching bug) contains "in" inside "Point", which was silently accepted as a
-    // genuine "In Order" answer.
-    //
-    // Boundary is letter/digit adjacency, not whitespace adjacency: several real WR51 fixtures
-    // render a field's own label and value glued with no space at all - e.g. "Source of
-    // supply:In Order" is one PDF word token "supply:In" - so treating any non-whitespace
-    // character (a label's own trailing colon included) as "inside a word" rejected genuine
-    // answers. Punctuation like ":" counts as a valid boundary; only being glued to another
-    // letter or digit (e.g. "in" inside "Point") counts as embedded.
-    //
-    // Checks every occurrence, not just the first, since a possibility can appear both
-    // embedded (invalid) and standalone (valid) in the same text.
-    // Public: reused by WrInspectionReportTableMatcher (WRADI.DocumentType.WrInspectionReport)
-    // to interpret raw table-cell text against the same tick/glyph Possibilities lists the
-    // heuristic column-walk path already uses, rather than reimplementing this matching logic.
+    // Contains check, but ExceptWhenInsideWord rejects a match embedded in a longer word (e.g.
+    // "in" inside "Point") - otherwise a short possibility like "In" or "N" matches as a
+    // coincidental substring. Boundary is letter/digit adjacency, not whitespace: some real WR51
+    // fixtures glue a label to its value with no space ("supply:In Order" is one word,
+    // "supply:In"), so a colon must count as a valid boundary too. Checks every occurrence, not
+    // just the first, since a possibility can appear both embedded and standalone in the same
+    // text. Public: also used by WrInspectionReportTableMatcher.
     public static bool MatchesPossibility(string? text, TextToMatch possibility)
     {
         if (text == null)
@@ -357,7 +347,7 @@ public static class BaseMethod
         foreach (var line in lines)
         {
             var possiblityFound = request.label.Possibilities.Any(possibility =>
-                line.Text.Contains(possibility.Text));
+                MatchesPossibility(line.Text, possibility));
 
             if (!possiblityFound)
             {
@@ -365,7 +355,7 @@ public static class BaseMethod
             }
 
             var possibility = request.label.Possibilities
-                .First(possibility => line.Text.Contains(possibility.Text));
+                .First(possibility => MatchesPossibility(line.Text, possibility));
 
             var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
@@ -382,13 +372,9 @@ public static class BaseMethod
         
         var firstLineText = lines.FirstOrDefault()?.Text;
         
-        // A field with no answer on the page produces zero captured lines, not one line with
-        // empty text - so the "" catch-all possibility (added so a genuinely blank tick field
-        // still survives as a match, e.g. WrInspectionReportLabelConfiguration.Rule.InOrder)
-        // never gets a chance to match via the Contains check above, since FirstOrDefault() on
-        // an empty list is null. Without this, the whole match silently vanishes and looks
-        // identical to "the label was never found at all" downstream, rather than "found, but
-        // genuinely blank".
+        // A field with no answer produces zero captured lines, not one empty-text line, so the
+        // "" catch-all possibility (a genuinely blank tick field) never reaches the Contains
+        // check above. Without this, that case looks identical to "label not found" downstream.
         if (string.IsNullOrEmpty(firstLineText)
             && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
         {

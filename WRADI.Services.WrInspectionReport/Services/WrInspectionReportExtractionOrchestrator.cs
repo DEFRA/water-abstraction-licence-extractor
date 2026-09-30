@@ -52,9 +52,9 @@ public static class WrInspectionReportExtractionOrchestrator
             // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
             // behaviour unchanged.
             ITableExtractorService? fallbackTableExtractorService = null,
-            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08, see
-            // wr51_textract_tables_design memory for the full curve) - it's a step function, not
-            // smooth: 1/4/7 are flat at the same recall as Tabula alone (fallback usage climbs from
+            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08) -
+            // it's a step function, not smooth: 1/4/7 are flat at the same recall as Tabula
+            // alone (fallback usage climbs from
             // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
             // DI's own accuracy (154 Hit vs Azure-DI-alone's 151, on the same 187-field T1 grid
             // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the
@@ -278,29 +278,4 @@ public static class WrInspectionReportExtractionOrchestrator
             return ([], null, null);
         }
     }
-    
-    // The 13 LicenceProvisions grid fields WrInspectionReportTableMatcher can resolve via real
-    // table cells (Azure AI Document Intelligence "prebuilt-layout") instead of the heuristic
-    // column-walk.
-    private static readonly string[] GridFieldNames =
-    [
-        WrInspectionReportFieldNames.SourceOfSupply, WrInspectionReportFieldNames.PointOfAbstraction,
-        WrInspectionReportFieldNames.MeansOfAbstraction, WrInspectionReportFieldNames.Purposes,
-        WrInspectionReportFieldNames.Period, WrInspectionReportFieldNames.Quantities,
-        WrInspectionReportFieldNames.MeansOfMeasurement, WrInspectionReportFieldNames.Records,
-        WrInspectionReportFieldNames.ProvisionOfInformation, WrInspectionReportFieldNames.SpecialConditions,
-        WrInspectionReportFieldNames.Land, WrInspectionReportFieldNames.ChargingFactors,
-        WrInspectionReportFieldNames.OtherProvisions
-    ];
-
-    // Free-text (not tick/cross) fields also confirmed sitting in the same table as the grid on
-    // real T1 documents (2026-09-08 spot check) - the same 3 fields identified as affected by the
-    // column-walk engine's own known leak bugs (see wr51_column_walk_bug memory). Resolved via
-    // WrInspectionReportTableMatcher.MatchFreeTextFields, which never counts towards
-    // minimumFieldsToSkipFallback below - see ApplyTableBasedGridMatchesAsync for why.
-    private static readonly string[] FreeTextFieldNames =
-    [
-        WrInspectionReportFieldNames.Time, WrInspectionReportFieldNames.SerialNumber,
-        WrInspectionReportFieldNames.TelephoneNumber
-    ];
 }

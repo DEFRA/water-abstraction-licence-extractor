@@ -26,31 +26,67 @@ export function ExportImportVerifications() {
         failed: { filename: string; error: string }[],
         targetProcessRunId: number
     ) => {
-        const data = new FormData();
-        data.append("file", file);
+        const chunkSize = 500 * 1024; // 500 KB
+        const totalChunks = Math.ceil(file.size / chunkSize);
+        const uploadId = crypto.randomUUID();
 
         try {
-            const response = await fetch(
-                `${waleApiBaseUrl}/BFF/Verification/ImportCsv?ProcessRunId=${targetProcessRunId}`,
-                {
-                    method: "PUT",
-                    body: data
-                }
-            );
+            for (
+                let chunkIndex = 0;
+                chunkIndex < totalChunks;
+                chunkIndex++
+            ) {
+                const start = chunkIndex * chunkSize;
 
-            if (!response.ok) {
-                throw new Error(await response.text());
+                const end = Math.min(
+                    start + chunkSize,
+                    file.size
+                );
+
+                const chunk = file.slice(
+                    start,
+                    end
+                );
+
+                const data = new FormData();
+
+                data.append(
+                    "file",
+                    chunk,
+                    file.name
+                );
+
+                const response = await fetch(
+                    `${waleApiBaseUrl}/BFF/Verification/ImportCsvChunk` +
+                    `?processRunId=${targetProcessRunId}` +
+                    `&uploadId=${uploadId}` +
+                    `&chunkIndex=${chunkIndex}` +
+                    `&totalChunks=${totalChunks}` +
+                    `&fileName=${encodeURIComponent(file.name)}`,
+                    {
+                        method: "PUT",
+                        body: data
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        await response.text()
+                    );
+                }
             }
         } catch (error) {
             failed.push({
                 filename: file.name,
-                error: error instanceof Error
-                    ? error.message
-                    : "Upload failed"
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Upload failed"
             });
         }
     };
-
+    
+    
     const dropHandler = useCallback(async (
         event: React.DragEvent<HTMLDivElement>
     ) => {
@@ -110,35 +146,71 @@ export function ExportImportVerifications() {
         setIsStarting(true);
 
         try {
-            const response = await fetch(
-                `${waleApiBaseUrl}/BFF/Verification/ExtractHistory`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'text/csv'
-                    }
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`Export failed: ${response.statusText}`);
-            }
-
-            const blob = await response.blob();
-
-            const contentDisposition =
-                response.headers.get('content-disposition');
+            let chunk = 0;
+            let hasMore = true;
 
             let fileName = 'verifications.csv';
+            const csvParts: string[] = [];
 
-            const fileNameMatch =
-                contentDisposition?.match(
-                    /fileName\*?=(?:UTF-8'')?"?([^";]+)"?/i
+            while (hasMore) {
+                const response = await fetch(
+                    `${waleApiBaseUrl}/BFF/Verification/ExtractHistory?chunk=${chunk}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            Accept: 'text/csv'
+                        }
+                    }
                 );
 
-            if (fileNameMatch?.[1]) {
-                fileName = decodeURIComponent(fileNameMatch[1]);
+                if (!response.ok) {
+                    throw new Error(
+                        `Export failed for chunk ${chunk}: ${response.statusText}`
+                    );
+                }
+
+                // Get filename from first response only
+                if (chunk === 0) {
+                    const contentDisposition =
+                        response.headers.get('content-disposition');
+
+                    const fileNameMatch =
+                        contentDisposition?.match(
+                            /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i
+                        );
+
+                    if (fileNameMatch?.[1]) {
+                        fileName = decodeURIComponent(fileNameMatch[1]);
+                    }
+                }
+
+                let csv = await response.text();
+
+                // Remove header from every chunk after the first
+                if (chunk > 0) {
+                    const firstNewLineIndex = csv.indexOf('\n');
+
+                    if (firstNewLineIndex >= 0) {
+                        csv = csv.substring(firstNewLineIndex + 1);
+                    }
+                }
+
+                csvParts.push(csv);
+
+                hasMore =
+                    response.headers
+                        .get('X-Has-More')
+                        ?.toLowerCase() === 'true';
+
+                chunk++;
             }
+
+            const blob = new Blob(
+                csvParts,
+                {
+                    type: 'text/csv;charset=utf-8'
+                }
+            );
 
             const url = window.URL.createObjectURL(blob);
 
@@ -147,6 +219,7 @@ export function ExportImportVerifications() {
             link.download = fileName;
 
             document.body.appendChild(link);
+
             link.click();
             link.remove();
 
@@ -166,7 +239,6 @@ export function ExportImportVerifications() {
             setIsStarting(false);
         }
     };
-
     const refreshVerificationData = async (forceRefresh: boolean) => {
         const verificationDataStatusResult = await getVerificationDataStatus(forceRefresh);
 

@@ -48,6 +48,26 @@ public class S3ImageService(
         }
     }
 
+    public async Task<bool> ExistsAsync(string key)
+    {
+        var client = GetS3Client();
+
+        try
+        {
+            await client.GetObjectMetadataAsync(new GetObjectMetadataRequest
+            {
+                BucketName = bucketName,
+                Key = key
+            });
+
+            return true;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+    }
+
     public Task<string> GetPresignedUrlAsync(string key)
     {
         var request = new GetPreSignedUrlRequest

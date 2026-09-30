@@ -119,6 +119,18 @@ switch (workflow)
     case "GenerateS3Thumbnails": // One-off
         await GenerateS3Thumbnails.RunAsync(processRunId);
         break;
+
+    case "BackfillPageScreenshotThumbnailsToS3": // ONE-OFF - WRADI-377, run this one first (smallest table)
+        await BackfillImagesToS3.BackfillPageScreenshotThumbnailsAsync();
+        break;
+
+    case "BackfillImageOnPageToS3": // ONE-OFF - WRADI-377, run second
+        await BackfillImagesToS3.BackfillImageOnPageAsync();
+        break;
+
+    case "BackfillPageScreenshotsToS3": // ONE-OFF - WRADI-377, run last (86k rows)
+        await BackfillImagesToS3.BackfillPageScreenshotsAsync();
+        break;
 }
 
 return 0;

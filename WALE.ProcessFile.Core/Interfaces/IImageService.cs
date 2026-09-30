@@ -6,6 +6,8 @@ public interface IImageService
 
     Task<byte[]?> DownloadAsync(string key);
 
+    Task<bool> ExistsAsync(string key);
+
     Task<string> GetPresignedUrlAsync(string key);
 
     Task DeleteAsync(string key);

@@ -4,6 +4,7 @@ import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {ScrapeDocuments} from '../components/ScrapeDocuments';
+import {ExportReport} from '../components/ExportReport';
 import {InspectionReportModal} from '../components/InspectionReportModal';
 
 interface SimpleMatchResult {
@@ -242,6 +243,7 @@ function InspectionReportPage() {
             {activeTab === 'actions' && (
                 <div id="actions">
                     <ScrapeDocuments documentType="WrInspectionReport"/>
+                    <ExportReport processRunId={processRunId}/>
                 </div>
             )}
 

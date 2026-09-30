@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
@@ -31,22 +32,34 @@ public class VerificationController(
                 skip,
                 chunkSize + 1);
 
-        var licenceSectionVerifications = verifications.ToList();
-        var hasMore = licenceSectionVerifications.Count > chunkSize;
+        var licenceSectionVerifications =
+            verifications.ToList();
 
-        var verificationChunk = licenceSectionVerifications
-            .Take(chunkSize)
-            .ToList();
+        var hasMore =
+            licenceSectionVerifications.Count > chunkSize;
 
-        var file = await ToolHelper.CreateCsvAsync(verificationChunk);
+        var verificationChunk =
+            licenceSectionVerifications
+                .Take(chunkSize)
+                .ToList();
 
-        Response.Headers.Append("X-Chunk", chunk.ToString());
-        Response.Headers.Append("X-Has-More", hasMore.ToString());
+        var file =
+            await ToolHelper.CreateCsvAsync(
+                verificationChunk);
 
-        return File(
-            file,
-            "text/csv",
-            $"{verificationConfig.Value.PostgresqlHost}-verifications.csv");
+        var csv =
+            Encoding.UTF8.GetString(file);
+
+        return Ok(
+            new VerificationExportChunkResponse
+            {
+                FileName =
+                    $"{verificationConfig.Value.PostgresqlHost}-verifications.csv",
+
+                Csv = csv,
+                Chunk = chunk,
+                HasMore = hasMore
+            });
     }
 
     [HttpGet]

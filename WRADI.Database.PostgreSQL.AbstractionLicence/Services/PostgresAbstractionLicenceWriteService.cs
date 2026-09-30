@@ -653,12 +653,46 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
        await DeleteAllVerifications(connection);
        
        // Import verifications
-       await ImportNewVerifications(connection, verifications);
-       
+       await BatchVerifications(verifications, connection);
+
        return true;
     }
 
-    private async Task ImportNewVerifications(NpgsqlConnection connection,
+    private async Task BatchVerifications(IEnumerable<LicenceSectionVerification> verifications, NpgsqlConnection connection)
+    {
+        const int batchSize = 100;
+        const int maxRetries = 3;
+        var licenceSectionVerifications = verifications.ToList();
+
+        foreach (var batch in licenceSectionVerifications.Chunk(batchSize))
+        {
+            var attempt = 0;
+
+            while (true)
+            {
+                try
+                {
+                    await ImportNewVerifications(connection, batch);
+
+                    break;
+                }
+                catch (HttpRequestException ex)
+                    when (attempt < maxRetries)
+                {
+                    attempt++;
+
+                    var delay = TimeSpan.FromSeconds(
+                        Math.Pow(2, attempt)
+                    );
+
+                    await Task.Delay(
+                        delay);
+                }
+            }
+        }
+    }
+
+    private static async Task ImportNewVerifications(NpgsqlConnection connection,
         IEnumerable<LicenceSectionVerification> verifications)
     {
         const string sql = """

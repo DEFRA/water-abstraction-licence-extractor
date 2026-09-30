@@ -83,11 +83,32 @@ public class UiProcessRunService(
             .ConvertToUpsertLicenceListItems(processRunRawDataList)
             .ToList();
 
+        const int maxRetries = 3;
+
         foreach (var batch in dbItems.Chunk(50))
         {
-            await licenceListRepository.UpsertLicenceListItemManyAsync(
-                batch,
-                CancellationToken.None);
+            var attempt = 0;
+
+            while (true)
+            {
+                try
+                {
+                    await licenceListRepository.UpsertLicenceListItemManyAsync(
+                        batch);
+
+                    break;
+                }
+                catch (Exception) when (attempt < maxRetries)
+                {
+                    attempt++;
+
+                    var delay = TimeSpan.FromSeconds(
+                        Math.Pow(2, attempt));
+
+                    await Task.Delay(
+                        delay);
+                }
+            }
         }
     }
 }

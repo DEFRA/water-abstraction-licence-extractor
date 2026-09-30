@@ -150,17 +150,12 @@ export function ExportImportVerifications() {
             let hasMore = true;
 
             let fileName = 'verifications.csv';
+
             const csvParts: string[] = [];
 
             while (hasMore) {
                 const response = await fetch(
-                    `${waleApiBaseUrl}/BFF/Verification/ExtractHistory?chunk=${chunk}`,
-                    {
-                        method: 'GET',
-                        headers: {
-                            Accept: 'text/csv'
-                        }
-                    }
+                    `${waleApiBaseUrl}/BFF/Verification/ExtractHistory?chunk=${chunk}`
                 );
 
                 if (!response.ok) {
@@ -169,38 +164,29 @@ export function ExportImportVerifications() {
                     );
                 }
 
-                // Get filename from first response only
+                const result = await response.json();
+
                 if (chunk === 0) {
-                    const contentDisposition =
-                        response.headers.get('content-disposition');
-
-                    const fileNameMatch =
-                        contentDisposition?.match(
-                            /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i
-                        );
-
-                    if (fileNameMatch?.[1]) {
-                        fileName = decodeURIComponent(fileNameMatch[1]);
-                    }
+                    fileName = result.fileName;
                 }
 
-                let csv = await response.text();
+                let csv = result.csv;
 
-                // Remove header from every chunk after the first
+                // Remove CSV header from subsequent chunks
                 if (chunk > 0) {
-                    const firstNewLineIndex = csv.indexOf('\n');
+                    const firstNewLineIndex =
+                        csv.indexOf('\n');
 
                     if (firstNewLineIndex >= 0) {
-                        csv = csv.substring(firstNewLineIndex + 1);
+                        csv =
+                            csv.substring(
+                                firstNewLineIndex + 1);
                     }
                 }
 
                 csvParts.push(csv);
 
-                hasMore =
-                    response.headers
-                        .get('X-Has-More')
-                        ?.toLowerCase() === 'true';
+                hasMore = result.hasMore;
 
                 chunk++;
             }

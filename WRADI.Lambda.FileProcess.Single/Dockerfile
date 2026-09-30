@@ -95,7 +95,7 @@ RUN dnf install -y \
 # Copy Tesseract/Leptonica built in the native-build stage
 COPY --from=native-build /opt/tesseract /opt/tesseract
 
-COPY --from=build WRADI.Lambda.FileProcess.Single/lambda-publish/ WRADI.Lambda.FileProcess.Single/lambda-publish/
+COPY --from=build WRADI.Lambda.FileProcess.Single/lambda-publish/ /var/task/
 
 # Copy your published Lambda app.
 # This assumes your deploy script publishes to:

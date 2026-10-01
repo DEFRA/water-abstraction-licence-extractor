@@ -746,5 +746,20 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
+
+        // A partially-complete run is the dangerous case: recall is computed over whatever
+        // documents survived extraction, so a wiring bug that kills most of the golden set still
+        // reports a plausible-looking percentage, just over a quietly smaller denominator. Only a
+        // total wipeout trips the assert above. Documents whose PDF isn't on this machine are
+        // environmental and excluded here; anything else means the measurement is incomplete and
+        // its numbers must not be trusted or compared against a previous run.
+        var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
+
+        Assert.True(
+            scoredDocumentCount == expectedDocumentCount,
+            $"Only {scoredDocumentCount} of {expectedDocumentCount} available golden-set documents were scored - "
+            + "the accuracy numbers above are computed over an incomplete set and are not comparable to other runs. "
+            + $"Failures:{Environment.NewLine}"
+            + string.Join(Environment.NewLine, extractionFailures.Select(f => $"  {f.SourceFile}: {f.Error}")));
     }
 }

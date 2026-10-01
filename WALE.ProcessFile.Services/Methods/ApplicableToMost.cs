@@ -607,11 +607,10 @@ public static class ApplicableToMost
                     return await ProcessSubLabelsAsync(request, labelGroupResult);
                 }
 
-                // A candidate whose trimmed text is itself just "SomeLabel:" is another field's
+                // WR51 - A candidate whose trimmed text is itself just "SomeLabel:" is another field's
                 // label, not this field's value (e.g. an empty "Reading:" cell picking up the
-                // neighbouring "Units:" column). Every label in this form ends with a colon and
-                // a genuine value never does, so this is a safe general signal.
-                if (outputText.TrimEnd().EndsWith(':'))
+                // neighbouring "Units:" column).
+                if (outputText.TrimEnd().EndsWith(':') && request.label.UseColonEndLogic)
                 {
                     continue;
                 }

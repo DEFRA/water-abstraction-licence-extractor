@@ -184,8 +184,6 @@ public class NoOcrDatabaseTests
 
     private async Task ProcessAsync(string filename, Guid fileId)
     {
-
-        
         // Act
         var resultFull = await GetMatchesAsync(filename, fileId);
         var resultList = resultFull.Matches!;

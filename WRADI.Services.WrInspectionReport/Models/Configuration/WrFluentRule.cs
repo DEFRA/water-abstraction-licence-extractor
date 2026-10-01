@@ -299,6 +299,7 @@ public sealed class WrFluentRule
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,
         LayoutExtractorTableShape = _layoutExtractorTableShape,
         AllowValueToWrapToNextLine = _allowValueToWrapToNextLine,
-        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag
+        AllowValueToWrapPastSameLineEndTag = _allowValueToWrapPastSameLineEndTag,
+        UseColonEndLogic = true
     };
 }

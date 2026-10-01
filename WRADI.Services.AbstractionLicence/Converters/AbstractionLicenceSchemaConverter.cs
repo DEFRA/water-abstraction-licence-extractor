@@ -396,11 +396,31 @@ public static class AbstractionLicenceSchemaConverter
                 found = true;
             }
 
-            if (linkedLicences.Any(linkedLicence2 => LicenceNumberContainsOther(
+            var licenceContainsOther = linkedLicences
+                .Where(linkedLicence2 => LicenceNumberContainsOther(
                     linkedLicence2.LicenceNumber,
                     anywhereInDocumentLinkedLicence.LicenceNumber,
-                    regionCode)))
+                    regionCode))
+                .ToList();
+            
+            if (licenceContainsOther.Count >= 1)
             {
+                var foundIsNaldOnly = licenceContainsOther
+                    .All(l => l.ContainedIn!
+                        .All(ci => ci.Source == InformationSource.Nald) != false);
+
+                if (foundIsNaldOnly)
+                {
+                    foreach (var l in licenceContainsOther)
+                    {
+                        var newContainedIn = new List<ContainedInInformation>();
+                        newContainedIn.AddRange(l.ContainedIn!);
+                        newContainedIn.Add(anywhereInDocumentLinkedLicence.ContainedIn![0]);
+
+                        l.ContainedIn = newContainedIn.ToArray();
+                    }
+                }
+                
                 found = true;
             }
 
@@ -1277,7 +1297,10 @@ public static class AbstractionLicenceSchemaConverter
         return text;
     }
 
-    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionId)
+    private static bool LicenceNumberContainsOther(
+        string? licenceNumber1,
+        string? licenceNumber2,
+        int regionId)
     {
         var licenceNumberStripped1 = FormattingHelper.StripForComparison(licenceNumber1, regionId);
 

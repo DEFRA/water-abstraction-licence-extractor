@@ -31,8 +31,4 @@
       <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
       <ProjectReference Include="..\WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Models\" />
-    </ItemGroup>
 </Project>

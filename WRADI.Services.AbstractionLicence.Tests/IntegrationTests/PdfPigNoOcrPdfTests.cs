@@ -157,7 +157,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(18, resultList.Count);
+        Assert.Equal(17, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         

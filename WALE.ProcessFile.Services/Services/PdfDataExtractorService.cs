@@ -1360,11 +1360,7 @@ public class PdfDataExtractorService(
     /// and stop trying further alternates. An empty result never claims. A non-empty result
     /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
     /// Text is blank, or opted into RequireCompleteDateToClaimGroup and the joined text of no
-    /// alternate looks like a complete date, or opted into IgnoreBlockIfContains and every
-    /// alternate's joined text contains one of those terms (a sibling field's own label
-    /// bleeding in, e.g. a loose "Calibration" alternate wrongly matching this document's
-    /// unrelated "Calibration Certificate" field and capturing "Certificate" - confirmed via
-    /// pdftotext on a real WR51 document, 2026-09-25).
+    /// alternate looks like a complete date.
     /// </summary>
     internal static bool ShouldClaimLabelGroup(
         IReadOnlyList<LabelGroupResult> labelGroupMatch,

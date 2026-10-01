@@ -210,14 +210,9 @@ public static class WrInspectionReportSchemaConverter
                 break;
             }
 
-            // Last resort, and deliberately gated on every candidate above having failed: this
-            // only ever runs for documents that currently resolve to no date at all, so it can't
-            // change one that already works.
-            //
-            // Two-column layouts leak the neighbouring column into this field - most often the
-            // inspecting officer's name, which the splitting above can't strip because the label
-            // text was consumed and only the bare name remains. That name is extracted correctly
-            // in its own right, so remove it by value and look for a date in what's left.
+            // Gated on everything above having failed, so it can't change a document that
+            // already resolves. Two-column layouts leak the neighbouring column in here, usually
+            // the inspecting officer's name - stripped by value since the label itself is gone.
             if (inspectionDateTime == null)
             {
                 var inspectingOfficer = TruncateAtKnownSiblingLabel(
@@ -486,10 +481,8 @@ public static class WrInspectionReportSchemaConverter
     }
 
     /// <summary>
-    /// The shared accept/reject rule for an inspection-date candidate: it must parse, must carry
-    /// its own year (a bare "24 March" would otherwise silently become the current year), and must
-    /// not be today (DateTime.TryParse falls back to today for a time-only string like "14:00").
-    /// Extracted so the salvage path below can't drift from the main candidate loop.
+    /// Must parse, must carry its own year (a bare "24 March" would otherwise become the current
+    /// year), and must not be today (TryParse falls back to today for a time-only string).
     /// </summary>
     private static bool IsUsableInspectionDate(string potentialDate, out DateTime parsed)
     {
@@ -516,10 +509,8 @@ public static class WrInspectionReportSchemaConverter
     }
 
     /// <summary>
-    /// Builds date candidates from a raw capture that the normal parsing couldn't resolve, by
-    /// stripping the known neighbouring-column leak (the inspecting officer's name) and then
-    /// pulling out anything date-shaped. Ordered most-specific first - a full numeric date beats a
-    /// day/month that needs a year found elsewhere in the text.
+    /// Date candidates from a raw capture the normal parsing couldn't resolve. Most-specific
+    /// first - a full numeric date beats a day/month needing a year from elsewhere in the text.
     /// </summary>
     private static IEnumerable<string> SalvageDateCandidates(string rawInspectionDate, string? inspectingOfficer)
     {
@@ -532,16 +523,15 @@ public static class WrInspectionReportSchemaConverter
 
         text = text.Replace('\n', ' ').Replace("  ", " ").Trim();
 
-        // "19/6/26", "04/06/2026", "10.02.26" - and the ':' variant, which is a real typo seen in
-        // the corpus ("27.02:26"), normalised toward '.' because "27:02:26" reads as a time.
+        // ':' is a real separator typo in the corpus ("27.02:26"), normalised toward '.'
+        // because "27:02:26" reads as a time.
         foreach (Match m in Regex.Matches(text, @"\b\d{1,2}[/.\-:]\d{1,2}[/.\-:]\d{2,4}\b"))
         {
             yield return m.Value.Replace(':', '.');
         }
 
-        // "24 February 2026" / "24th March" - the year is frequently on a different line of the
-        // capture (the cell wrapped), so pair a bare day/month with any year found anywhere in
-        // the remaining text.
+        // The year often wraps onto a different line of the capture, so pair a bare day/month
+        // with any year found anywhere in the remaining text.
         var dayMonth = Regex.Match(
             text,
             @"\b\d{1,2}\s*(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b",

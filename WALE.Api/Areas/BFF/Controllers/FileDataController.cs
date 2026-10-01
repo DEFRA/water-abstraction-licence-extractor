@@ -30,9 +30,6 @@ public class FileDataController(
     {
         var result = await outputService.GetSimpleMatchResults(processRunId);
 
-        // Same convention key/bucket as the list-thumbnail flow everywhere else
-        // (ImagesController.UploadAsync/GeneratePresignedUrlsAsync, ProcessRunsController's own
-        // licence-list equivalent) - batched, not one presigned-URL call per row.
         var thumbnailUrls = await GetThumbnailUrlsAsync(
             result.Select(r => r.FileId).Where(id => id != Guid.Empty).Distinct().ToList());
 

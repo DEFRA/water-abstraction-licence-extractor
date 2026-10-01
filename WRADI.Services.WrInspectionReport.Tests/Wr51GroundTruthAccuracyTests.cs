@@ -506,20 +506,11 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
 
-        // Same extractor for both roles - PdfDataExtractorService's own Structured/Unstructured
-        // split (LayoutExtractorTableShape) predates and is independent of this harness's
-        // table-overlay work; nothing here needs two different extractor instances. Needed as
-        // soon as any label uses LetterBasedAndTableBased + Unstructured (Phase B's retag of
-        // WrInspectionReportTextBasedLabelConfiguration's header-block/measurement fields is the
-        // first time this file's rules do) - PdfDataExtractorService throws if this is null and
-        // any active label requires it.
-        //
-        // The baseline run passes tableExtractorService: null to mean "no table overlay", which
-        // these two properties can't express - so they get an empty stub instead, exactly as the
-        // heuristic-only regression tests do (EmptyTableExtractorService in Wr51PdfPigNoOcrPdfTests).
-        // The parameter itself stays null-as-passed: it separately drives whether the orchestrator
-        // runs the overlay at all (see pdfBytesForTableExtraction below), so coalescing it there
-        // would silently turn the no-table baseline into a table-based run.
+        // Same extractor for both roles; PdfDataExtractorService throws if either is null and any
+        // active label needs it. The baseline passes null to mean "no table overlay", which these
+        // properties can't express, so they get an empty stub. The parameter itself stays null -
+        // it separately drives whether the orchestrator runs the overlay at all, so coalescing it
+        // there would silently turn the no-table baseline into a table-based run.
         var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
         lookupConfiguration.StructuredTableExtractorService = lookupTableExtractorService;
         lookupConfiguration.UnstructuredTableExtractorService = lookupTableExtractorService;
@@ -747,12 +738,10 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
 
-        // A partially-complete run is the dangerous case: recall is computed over whatever
-        // documents survived extraction, so a wiring bug that kills most of the golden set still
-        // reports a plausible-looking percentage, just over a quietly smaller denominator. Only a
-        // total wipeout trips the assert above. Documents whose PDF isn't on this machine are
-        // environmental and excluded here; anything else means the measurement is incomplete and
-        // its numbers must not be trusted or compared against a previous run.
+        // A partial run is the dangerous case: recall is computed over whatever survived, so a
+        // bug that kills most of the golden set still reports a plausible percentage over a
+        // quietly smaller denominator, and only a total wipeout trips the assert above. Missing
+        // PDFs are environmental and excluded; anything else means the numbers aren't comparable.
         var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
 
         Assert.True(

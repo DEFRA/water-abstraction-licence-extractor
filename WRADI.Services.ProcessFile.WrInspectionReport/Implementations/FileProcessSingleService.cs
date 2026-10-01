@@ -146,6 +146,16 @@ public class FileProcessSingleService(
             var pdfBytesForTableExtraction = await ReadPdfBytesAsync(pdfFilename);
             var tableExtractorService = new PdfClownGridTableExtractorService(cacheService);
 
+            // WR51's own fluent rule builder (FromTableGrid/FromLetterAndTableGrid/etc. -
+            // WrFluentRule.cs) marks every table-based label LayoutExtractorTableShape.Unstructured,
+            // so PdfDataExtractorService.GetMatchesInternalAsync's needsToParseUnstructuredTables
+            // check is always true here and throws NoNullAllowedException if this isn't set (added
+            // 2026-09-23, see git blame - lookupConfig was never updated to supply it, so every
+            // WR51 document failed at this point). Same ITableExtractorService instance/interface
+            // as the orchestrator's own overlay below, so this is just wiring, not new extraction.
+            lookupConfig.StructuredTableExtractorService = tableExtractorService;
+            lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
+
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     pdfFilename,

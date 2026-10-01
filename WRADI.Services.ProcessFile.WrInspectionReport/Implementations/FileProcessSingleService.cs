@@ -133,15 +133,6 @@ public class FileProcessSingleService(
 
         try
         {
-            // WR51's own fluent rule builder (FromTableGrid/FromLetterAndTableGrid/etc. -
-            // WrFluentRule.cs) marks every table-based label LayoutExtractorTableShape.Unstructured,
-            // so PdfDataExtractorService.GetMatchesInternalAsync's needsToParseUnstructuredTables
-            // check is always true here and throws NoNullAllowedException if this isn't set (added
-            // 2026-09-23, see git blame on PdfDataExtractorService.cs - lookupConfig was never
-            // updated to supply it, so every WR51 document failed at this point). No real table
-            // extractor is wired into this project (unlike the PdfClown-review branch) - a no-op
-            // is enough to unblock the rest of extraction, matching how PdfClownGridTableExtractorService
-            // itself degrades (empty tables, no crash) when its own native deps are unavailable.
             lookupConfig.StructuredTableExtractorService = NoOpTableExtractorService.Instance;
             lookupConfig.UnstructuredTableExtractorService = NoOpTableExtractorService.Instance;
 
@@ -202,8 +193,6 @@ public class FileProcessSingleService(
         }
     }
 
-    // See the comment above where this is assigned - no real table extractor is wired into this
-    // project, this exists purely to satisfy PdfDataExtractorService's null check.
     private class NoOpTableExtractorService : ITableExtractorService
     {
         public static readonly NoOpTableExtractorService Instance = new();

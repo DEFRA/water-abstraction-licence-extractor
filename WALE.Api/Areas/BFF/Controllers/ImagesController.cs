@@ -23,8 +23,7 @@ public class ImagesController(
         [FromQuery] int pageNumber,
         [FromQuery] string serviceName)
     {
-        // Redirect to S3 directly when this row has been migrated (see WRADI-377); the browser
-        // follows the redirect transparently for an <img src>, no frontend change needed. Falls
+        // Redirect to S3 directly when this row has been migrated. Falls
         // back to proxying Postgres bytes for rows not yet backfilled to S3.
         var s3Key = ImageReferenceHelper.GetPageScreenshotS3Key(fileId, serviceName, pageNumber);
 

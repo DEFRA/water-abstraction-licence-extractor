@@ -31,9 +31,6 @@ public class DatabaseOutputService(
 
     public async Task<byte[]?> GetPageScreenshotThumbnailAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
-        // S3 first (all new writes land there - see SavePageScreenshotThumbnailAsync below),
-        // falling back to Postgres for rows written before this table moved to S3 and not yet
-        // migrated by the Tools backfill.
         var s3Key = ImageReferenceHelper.GetPageScreenshotThumbnailS3Key(fileId, pdfServiceName, pageNumber);
 
         return await imageService.DownloadAsync(s3Key)
@@ -54,7 +51,6 @@ public class DatabaseOutputService(
 
     private async Task<byte[]?> GetPageScreenshotAsync(int pageNumber, Guid fileId, string noOcrServiceName)
     {
-        // Same S3-first, Postgres-fallback shape as GetPageScreenshotThumbnailAsync above.
         var s3Key = ImageReferenceHelper.GetPageScreenshotS3Key(fileId, noOcrServiceName, pageNumber);
 
         return await imageService.DownloadAsync(s3Key)

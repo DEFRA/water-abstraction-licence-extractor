@@ -125,14 +125,7 @@ public class PdfDataExtractorServiceAlternateSelectionTests
 
         Assert.False(result);
     }
-
-    // IgnoreBlockIfContains: the WR51 "Calibration Certificate" bug (2026-09-25) - a loose
-    // "Calibration" alternate matched a genuinely unrelated "Calibration Certificate" field on
-    // a document with that different template, capturing "Certificate" as if it were the
-    // real grid answer. LabelToMatch.IgnoreBlockIfContains already existed as a fluent option
-    // (.IgnoreIfContains(...)) but nothing ever read it - confirmed via a repo-wide search
-    // finding zero consumers outside the fluent builder itself.
-
+    
     [Fact]
     public void ReturnsFalse_WhenIgnoreBlockIfContainsMatches_AndEveryAlternateContainsTheTerm()
     {

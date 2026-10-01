@@ -23,10 +23,8 @@ using WRADI.Services.ProcessFile.WrInspectionReport;
 //                only ever processes files confirmed to actually exist, at the cost of skipping
 //                anything the finder knows about but nobody's uploaded yet.
 //
-// An extra integer arg (e.g. "s3 51") resumes an existing ProcessRun instead of starting a new
-// one - candidates already recorded (a MatchesResult exists for that fileId+processRunId) are
-// filtered out up front, so a killed/interrupted run can continue where it left off rather than
-// reprocessing everything from scratch under a new run.
+// An extra integer arg (e.g. "s3 51") resumes that ProcessRun instead of starting a new one,
+// filtering out candidates that already have a MatchesResult for it.
 
 var configuration = new ConfigurationBuilder()
     .AddUserSecrets<Program>(optional: true)

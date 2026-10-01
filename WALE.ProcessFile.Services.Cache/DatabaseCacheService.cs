@@ -53,8 +53,6 @@ public class DatabaseCacheService(
         var deflatedBytes = ImageHelper.Deflate(bytAry);
         var pix = Pix.LoadFromMemory(deflatedBytes);
 
-        // Real bytes go to S3; the Postgres row carries only the metadata GetImagesAsync needs
-        // (width/height/page/image/extension) - see SaveImageOnPageAsync below for why.
         var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, serviceName, pageNumber, imageNumber, "jpg");
         await imageService.UploadAsync(s3Key, new MemoryStream(deflatedBytes), "image/jpeg");
 
@@ -91,9 +89,6 @@ public class DatabaseCacheService(
 
     public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        // S3 first (all new writes land there - see SaveImageOnPageAsync below), falling back to
-        // Postgres for rows written before this table moved to S3 and not yet migrated by the
-        // Tools backfill.
         var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(
             request.FileId,
             request.NoOcrServiceName!,
@@ -248,12 +243,6 @@ public class DatabaseCacheService(
     
     public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, Guid fileId, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        // Real bytes go to S3 only (image_on_page.data is NotNullable, so the Postgres row still
-        // exists - GetImagesAsync's metadata listing needs page/image/width/height/extension - but
-        // carries an empty placeholder instead of the real bytes; GetImageBytesAsync above checks
-        // S3 first so that placeholder is never actually served for a row written this way).
-        // Upload before the metadata insert so a failed upload doesn't leave a phantom row with no
-        // recoverable bytes anywhere.
         var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, noOcrServiceName, pageNumber, imageNumber, extension);
         var contentType = extension.Equals("png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
         await imageService.UploadAsync(s3Key, new MemoryStream(bytes), contentType);

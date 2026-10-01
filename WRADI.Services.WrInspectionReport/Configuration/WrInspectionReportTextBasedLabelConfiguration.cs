@@ -618,7 +618,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
-                .AlsoEndsAt("Conformance")
+                // "Conforma", not "Conformance": this grid column is narrow enough that real
+                // documents wrap the next cell's label mid-word, rendering it as
+                // "Conforma"/"Conforman"/"Conformanc" on the label row with the remainder on the
+                // row below (confirmed via pdftotext, 2026-10-01). The full word is therefore
+                // never present to bound on, and the walk ran to the end of the row and into the
+                // wrapped remainder. The shortest observed fragment is also a prefix of the
+                // unwrapped word, so one marker bounds both renderings.
+                .AlsoEndsAt("Conforma")
+                // The other half of the same wrap: the row below carries Conformance's tail
+                // ("nce:"/"ce:"/"e:" depending on where the cell broke) alongside Calibration's
+                // own real answer, which is genuinely on that row - several documents have the
+                // tick there - so the line can't just be skipped. Stripped longest-first, or
+                // removing "e:" would leave "nc" behind from "nce:".
+                .Remove([new("nce:"), new("ce:"), new("e:")])
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms, "Certificate"])
                 .SkipNextLineWhenStartsWith("Maintenance")
                 .FromText()

@@ -24,6 +24,29 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
         Pix? pix;
         const string deflateNeededErrorText = "Failed to load image from memory.";
 
+        // Pix is only ever read for Width/Height below - by the time it's loaded the image bytes
+        // have already been extracted successfully. A failure to read those dimensions used to
+        // propagate to the catch below, which discards the bytes and writes an "error" row, so an
+        // unrelated problem (an incompatible native Leptonica, say) silently cost every embedded
+        // image in the corpus. Dimensions are optional; the image isn't. The deflate-needed
+        // signal is deliberately still thrown, because that retry repairs the bytes themselves.
+        Pix? TryLoadPix(byte[] imageBytes)
+        {
+            try
+            {
+                return Pix.LoadFromMemory(imageBytes);
+            }
+            catch (Exception ex) when (!ex.Message.Contains(deflateNeededErrorText))
+            {
+                ConsoleHelper.TryRemoveLastLine();
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(PdfPigNoOcrImageService)} - could not read image dimensions, " +
+                    $"saving without them - P{pageNumber} I{imageNumber} {fileId} - {ex.Message}");
+
+                return null;
+            }
+        }
+
         try
         {
             if (imageData.TryGetPng(out bytes))
@@ -33,7 +56,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 try
                 {
                     ConsoleHelper.WriteToBuffer = true;
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes!);
                 }
                 catch (Exception ex)
                 {
@@ -48,7 +71,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                     returnExtension = jpgExtension;
                     bytes = ImageHelper.Deflate(bytes!);
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes);
                 }
                 finally
                 {
@@ -63,7 +86,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 try
                 {
                     ConsoleHelper.WriteToBuffer = true;
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes);
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +101,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                     returnExtension = jpgExtension;
                     bytes = ImageHelper.Deflate(bytes);
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes);
                 }
                 finally
                 {
@@ -99,7 +122,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 try
                 {
                     ConsoleHelper.WriteToBuffer = true;
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes);
                 }
                 catch (Exception ex)
                 {
@@ -113,7 +136,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                     ConsoleHelper.WriteLine($"INFO - {nameof(PdfPigNoOcrImageService)} - Trying deflate");
 
                     bytes = ImageHelper.Deflate(bytes);
-                    pix = Pix.LoadFromMemory(bytes);
+                    pix = TryLoadPix(bytes);
                 }
                 finally
                 {
@@ -168,8 +191,8 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
         
         var size = await cacheService.SaveImageOnPageAsync(
             bytes!,
-            pix.Width,
-            pix.Height,
+            pix?.Width ?? -1,
+            pix?.Height ?? -1,
             fileId,
             GeneralConstants.PdfPigDataExtractorServiceName,
             imageNumber,

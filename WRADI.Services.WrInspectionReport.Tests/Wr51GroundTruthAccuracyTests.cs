@@ -6,6 +6,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
@@ -490,6 +491,20 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
     }
 
+    /// <summary>
+    /// Satisfies PdfDataExtractorService's non-null requirement on the baseline run without
+    /// enabling any actual table matching. Mirrors the stub of the same name in
+    /// Wr51PdfPigNoOcrPdfTests, which exists for the same reason.
+    /// </summary>
+    private class EmptyTableExtractorService : ITableExtractorService
+    {
+        public string Name => "Empty";
+
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+            PdfDocument pdfDocument, Guid fileId, int processRunId) =>
+            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
+    }
+
     private async Task RunHarnessAsync(
         ITableExtractorService? tableExtractorService,
         string outputSuffix,
@@ -511,7 +526,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
-        lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
+
         // Same extractor for both roles - PdfDataExtractorService's own Structured/Unstructured
         // split (LayoutExtractorTableShape) predates and is independent of this harness's
         // table-overlay work; nothing here needs two different extractor instances. Needed as
@@ -519,7 +534,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         // WrInspectionReportTextBasedLabelConfiguration's header-block/measurement fields is the
         // first time this file's rules do) - PdfDataExtractorService throws if this is null and
         // any active label requires it.
-        lookupConfiguration.UnstructuredTableExtractorService = tableExtractorService!;
+        //
+        // The baseline run passes tableExtractorService: null to mean "no table overlay", which
+        // these two properties can't express - so they get an empty stub instead, exactly as the
+        // heuristic-only regression tests do (EmptyTableExtractorService in Wr51PdfPigNoOcrPdfTests).
+        // The parameter itself stays null-as-passed: it separately drives whether the orchestrator
+        // runs the overlay at all (see pdfBytesForTableExtraction below), so coalescing it there
+        // would silently turn the no-table baseline into a table-based run.
+        var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
+        lookupConfiguration.StructuredTableExtractorService = lookupTableExtractorService;
+        lookupConfiguration.UnstructuredTableExtractorService = lookupTableExtractorService;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();

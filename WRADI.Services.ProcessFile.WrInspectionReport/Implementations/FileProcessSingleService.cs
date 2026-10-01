@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tabula;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -133,8 +134,16 @@ public class FileProcessSingleService(
 
         try
         {
-            lookupConfig.StructuredTableExtractorService = NoOpTableExtractorService.Instance;
-            lookupConfig.UnstructuredTableExtractorService = NoOpTableExtractorService.Instance;
+            // WrInspectionReportLabelConfiguration is built entirely from the fluent builders, so
+            // every label is table-based and PdfDataExtractorService requires an extractor here.
+            // A no-op satisfies that check but makes every table-based label match nothing, which
+            // silently costs template classification - measured as 0 T1/T4/T6/T7/Impounding across
+            // a 17,622 document run against 7,494 T1 on the letter-based ruleset.
+            // Tabula is the free local option; the paid Document Intelligence one stays behind the
+            // orchestrator's own cost-optimised fallback rather than running on every document.
+            var tableExtractorService = new TabulaTableExtractorService(cacheService);
+            lookupConfig.StructuredTableExtractorService = tableExtractorService;
+            lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
 
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
@@ -191,15 +200,5 @@ public class FileProcessSingleService(
         {
             pdfDataExtractor.InUse = false;
         }
-    }
-
-    private class NoOpTableExtractorService : ITableExtractorService
-    {
-        public static readonly NoOpTableExtractorService Instance = new();
-
-        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(PdfDocument pdfDocument, Guid fileId, int processRunId) =>
-            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
-
-        public string Name => nameof(NoOpTableExtractorService);
     }
 }

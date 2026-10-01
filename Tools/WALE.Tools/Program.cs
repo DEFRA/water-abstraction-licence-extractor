@@ -120,6 +120,10 @@ switch (workflow)
         await GenerateS3Thumbnails.RunAsync(processRunId);
         break;
 
+    case "GenerateS3ThumbnailsWrInspectionReport": // Backfill - WR51 equivalent of the above
+        await GenerateS3ThumbnailsWrInspectionReport.RunAsync(processRunId);
+        break;
+
     case "BackfillPageScreenshotThumbnailsToS3": // ONE-OFF - WRADI-377, run this one first (smallest table)
         await BackfillImagesToS3.BackfillPageScreenshotThumbnailsAsync();
         break;

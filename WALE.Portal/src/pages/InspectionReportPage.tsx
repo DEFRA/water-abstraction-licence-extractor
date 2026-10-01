@@ -11,6 +11,7 @@ interface SimpleMatchResult {
     fileId: string;
     filename: string | null;
     status: string;
+    thumbnailUrl: string | null;
 }
 
 interface FileDetails {
@@ -254,6 +255,7 @@ function InspectionReportPage() {
             <table>
                 <thead>
                 <tr>
+                    <td></td>
                     <td>
                         <input
                             type="text"
@@ -290,6 +292,7 @@ function InspectionReportPage() {
                     <td></td>
                 </tr>
                 <tr>
+                    <th style={{textAlign: 'left'}}>Thumbnail</th>
                     <th style={{textAlign: 'left'}}>
                         Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
                     </th>
@@ -319,6 +322,18 @@ function InspectionReportPage() {
                     return (
                     <Fragment key={file.fileId}>
                         <tr style={lowConfidence ? {backgroundColor: '#fff8e1'} : undefined}>
+                            <td>
+                                {file.thumbnailUrl && (
+                                    <img
+                                        src={file.thumbnailUrl}
+                                        width={80}
+                                        alt=""
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                        }}
+                                    />
+                                )}
+                            </td>
                             <td>
                                 <a href="#" onClick={(e) => {
                                     e.preventDefault();
@@ -353,7 +368,7 @@ function InspectionReportPage() {
                         </tr>
                         {inlineFileId === file.fileId && (
                             <tr>
-                                <td colSpan={7} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
+                                <td colSpan={8} style={{padding: '10px', backgroundColor: '#FAFAFA'}}>
                                     {inlineLoading
                                         ? <p>Loading...</p>
                                         : <JsonView src={inlineJson} collapsed={1} theme="default"/>}

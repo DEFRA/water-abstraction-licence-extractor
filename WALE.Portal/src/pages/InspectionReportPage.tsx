@@ -1,5 +1,5 @@
 import {useSearchParams} from 'react-router-dom';
-import {Fragment, useState, useEffect, useMemo} from 'react';
+import {Fragment, useState, useEffect, useMemo, useRef} from 'react';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
@@ -11,8 +11,10 @@ interface SimpleMatchResult {
     fileId: string;
     filename: string | null;
     status: string;
-    thumbnailUrl: string | null;
 }
+
+// Matching the licence list's own page-size options
+const PAGE_SIZES = [10, 100, 500, 1000];
 
 interface FileDetails {
     template?: string;
@@ -24,33 +26,6 @@ interface FileDetails {
 // Unknown means classification failed outright; NonStandardNarrative means the document didn't
 // match the client's expected format and fell back to generic rules
 const LOW_CONFIDENCE_TEMPLATES = new Set(['unknown', 'nonStandardNarrative']);
-
-function hasContent(value: unknown): boolean {
-    if (value === null || value === undefined) return false;
-    if (typeof value === 'string') return value.trim().length > 0;
-    if (Array.isArray(value)) return value.some(hasContent);
-    if (typeof value === 'object') return Object.values(value as Record<string, unknown>).some(hasContent);
-    return true;
-}
-
-// Rough completeness proxy: percentage of the report's top-level sections that have at least
-// some content
-function computeCompleteness(report: Record<string, any>): number {
-    const sections = [
-        report.licenceNumber,
-        report.licenceNumberCleaned,
-        report.inspectionClass,
-        report.address,
-        report.metWith,
-        report.inspectingOfficer,
-        report.inspectionDate,
-        report.licenceProvisions,
-        report.measurementDetails,
-        report.generalComments
-    ];
-
-    return Math.round((sections.filter(hasContent).length / sections.length) * 100);
-}
 
 function InspectionReportPage() {
     const [searchParams] = useSearchParams();
@@ -79,6 +54,13 @@ function InspectionReportPage() {
     const [sortField, setSortField] = useState<SortField | ''>('');
     const [sortAscending, setSortAscending] = useState(true);
 
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(100);
+
+    // Fetched per visible page rather than with the file list: a presigned URL is ~1.5kb, so
+    // returning one per row made the list response 29mb against 2.4mb for the rows alone.
+    const [thumbnailUrls, setThumbnailUrls] = useState<Record<string, string>>({});
+
     const handleSort = (field: SortField) => {
         setSortAscending(previous => (sortField === field ? !previous : true));
         setSortField(field);
@@ -98,45 +80,29 @@ function InspectionReportPage() {
             .finally(() => setLoading(false));
     }, [processRunId]);
 
+    // One request for the whole run. This used to call WrInspectionReportString once per file,
+    // which is 17,000+ requests on a full process run - the columns these populate are also what
+    // the template/scan filters and date/completeness sorts work from, so they have to cover
+    // every row, not just the visible page.
     useEffect(() => {
-        if (files.length === 0) return;
+        if (!processRunId) return;
 
         let cancelled = false;
-        const concurrency = 10;
-        const queue = [...files];
 
-        const worker = async () => {
-            while (!cancelled) {
-                const file = queue.shift();
-                if (!file) return;
+        fetch(`${waleApiBaseUrl}/BFF/FileData/GetWrInspectionReportSummaries?processRunId=${processRunId}`)
+            .then(response => response.ok ? response.json() : [])
+            .then((summaries: (FileDetails & {fileId: string})[]) => {
+                if (cancelled) return;
 
-                try {
-                    const response = await fetch(`${waleApiBaseUrl}/BFF/FileData/WrInspectionReportString?fileId=${file.fileId}&processRunId=${processRunId}`);
-                    const text = await response.text();
-                    const wrInspectionReport = text ? JSON.parse(text) : null;
-
-                    setDetailsByFileId(previous => ({
-                        ...previous,
-                        [file.fileId]: {
-                            template: wrInspectionReport?.metadata?.template,
-                            date: wrInspectionReport?.inspectionDate?.dateTime?.split('T')[0]
-                                ?? wrInspectionReport?.metadata?.date?.date,
-                            completeness: wrInspectionReport ? computeCompleteness(wrInspectionReport) : undefined,
-                            isScan: wrInspectionReport?.metadata?.isScan
-                        }
-                    }));
-                } catch (err) {
-                    console.error(`Error fetching WrInspectionReport for ${file.fileId}:`, err);
-                }
-            }
-        };
-
-        Array.from({length: concurrency}, worker);
+                setDetailsByFileId(Object.fromEntries(
+                    summaries.map(({fileId, ...details}) => [fileId, details])));
+            })
+            .catch(err => console.error('Error fetching inspection report summaries:', err));
 
         return () => {
             cancelled = true;
         };
-    }, [files, processRunId]);
+    }, [processRunId]);
 
     const statuses = useMemo(
         () => Array.from(new Set(files.map(f => f.status))).sort(),
@@ -191,6 +157,59 @@ function InspectionReportPage() {
             return sortAscending ? comparison : -comparison;
         });
     }, [files, filterText, statusFilter, templateFilter, scanFilter, detailsByFileId, sortField, sortAscending]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredFiles.length / pageSize));
+
+    const pagedFiles = useMemo(
+        () => filteredFiles.slice((pageNumber - 1) * pageSize, pageNumber * pageSize),
+        [filteredFiles, pageNumber, pageSize]);
+
+    // Filtering can shrink the list below the current page.
+    useEffect(() => {
+        if (pageNumber > totalPages) setPageNumber(1);
+    }, [pageNumber, totalPages]);
+
+    // First and last page, plus a couple either side of the current one; null is a gap.
+    const pageWindow = useMemo(() => {
+        const pages = new Set<number>([1, totalPages]);
+
+        for (let page = pageNumber - 2; page <= pageNumber + 2; page++) {
+            if (page >= 1 && page <= totalPages) pages.add(page);
+        }
+
+        const ordered = [...pages].sort((a, b) => a - b);
+
+        return ordered.flatMap((page, index) =>
+            index > 0 && page - ordered[index - 1] > 1 ? [null, page] : [page]);
+    }, [pageNumber, totalPages]);
+
+    // Keyed on the ids themselves, not the array: detailsByFileId streams in per file, so
+    // pagedFiles gets a fresh identity thousands of times and an effect depending on it would
+    // re-fire (and cancel its own in-flight fetch) on every one of them. The ref tracks what has
+    // already been asked for, so a page is only ever fetched once.
+    const requestedThumbnails = useRef<Set<string>>(new Set());
+    const pagedFileIds = pagedFiles.map(file => file.fileId).join(',');
+
+    useEffect(() => {
+        const missing = (pagedFileIds === '' ? [] : pagedFileIds.split(','))
+            .filter(fileId => !requestedThumbnails.current.has(fileId));
+
+        if (missing.length === 0) return;
+
+        missing.forEach(fileId => requestedThumbnails.current.add(fileId));
+
+        fetch(`${waleApiBaseUrl}/Extractor/Images/GeneratePresignedUrls`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({fileIds: missing, templateUrl: 'thumbnail_{0}.jpg'})
+        })
+            .then(response => response.ok ? response.json() : {})
+            .then((urls: Record<string, string>) => setThumbnailUrls(previous => ({...previous, ...urls})))
+            .catch(() => {
+                // Decorative - let a failure retry on the next visit to this page.
+                missing.forEach(fileId => requestedThumbnails.current.delete(fileId));
+            });
+    }, [pagedFileIds]);
 
     const toggleInline = (fileId: string) => {
         if (inlineFileId === fileId) {
@@ -250,7 +269,51 @@ function InspectionReportPage() {
 
             {activeTab === 'files' && (
             <>
-            <p>{filteredFiles.length} of {files.length} files</p>
+            <div style={{clear: 'both', display: 'block', width: '100%', marginTop: '10px', marginBottom: '10px'}}>
+                {filteredFiles.length} of {files.length} file(s) : Page {pageNumber} of {totalPages}&nbsp;&nbsp;&nbsp;
+
+                <label>
+                    Page size:{' '}
+                    <select
+                        value={pageSize}
+                        onChange={(e) => {
+                            setPageSize(Number(e.target.value));
+                            setPageNumber(1);
+                        }}
+                        style={{width: '60px'}}>
+                        {PAGE_SIZES.map(size => <option key={size} value={size}>{size}</option>)}
+                    </select>
+                </label>
+
+                &nbsp;&nbsp;&nbsp;
+
+                {pageNumber > 1 && (
+                    <>
+                        <a href="#" onClick={(e) => { e.preventDefault(); setPageNumber(pageNumber - 1); }}>Prev</a>
+                        {' | '}
+                    </>
+                )}
+
+                {/* Windowed, unlike the licence list's full page list - a process run is tens of
+                    thousands of files, so every page number would be thousands of links. */}
+                {pageWindow.map((page, index) => (
+                    <span key={`${page}-${index}`}>
+                        {page === null
+                            ? <>&hellip; </>
+                            : page === pageNumber
+                                ? <strong>{page}</strong>
+                                : <a href="#" onClick={(e) => { e.preventDefault(); setPageNumber(page); }}>{page}</a>}
+                        {' '}
+                    </span>
+                ))}
+
+                {totalPages > pageNumber && (
+                    <>
+                        {' | '}
+                        <a href="#" onClick={(e) => { e.preventDefault(); setPageNumber(pageNumber + 1); }}>Next</a>
+                    </>
+                )}
+            </div>
 
             <table>
                 <thead>
@@ -315,7 +378,7 @@ function InspectionReportPage() {
                 </tr>
                 </thead>
                 <tbody>
-                {filteredFiles.map(file => {
+                {pagedFiles.map(file => {
                     const details = detailsByFileId[file.fileId];
                     const lowConfidence = !!details?.template && LOW_CONFIDENCE_TEMPLATES.has(details.template);
 
@@ -323,11 +386,12 @@ function InspectionReportPage() {
                     <Fragment key={file.fileId}>
                         <tr style={lowConfidence ? {backgroundColor: '#fff8e1'} : undefined}>
                             <td>
-                                {file.thumbnailUrl && (
+                                {thumbnailUrls[file.fileId] && (
                                     <img
-                                        src={file.thumbnailUrl}
+                                        src={thumbnailUrls[file.fileId]}
                                         width={80}
                                         alt=""
+                                        loading="lazy"
                                         onError={(e) => {
                                             e.currentTarget.style.display = 'none';
                                         }}

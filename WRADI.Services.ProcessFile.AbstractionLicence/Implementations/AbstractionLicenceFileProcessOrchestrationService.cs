@@ -6,7 +6,7 @@ using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
-public class FileProcessOrchestrationService(
+public class AbstractionLicenceFileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IAbstractionLicenceCacheService abstractionLicenceCacheService,
@@ -15,9 +15,9 @@ public class FileProcessOrchestrationService(
     IMessageQueueService messageQueueService)
     : IFileProcessOrchestrator
 {
-    public async Task<bool> RunAsync(CancellationToken cancellationToken)
+    public async Task<bool> RunAsync(FileProcessOrchestrationRequest request, CancellationToken cancellationToken)
     {
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Started");
 
         if (settings.RefreshCache)
         {
@@ -33,10 +33,28 @@ public class FileProcessOrchestrationService(
                 string.Empty,
                 false,
                 abstractionLicenceCacheService);
-
+        
+        if (request.RegionId != null)
+        {
+            dmsFilesToProcess = dmsFilesToProcess
+                .Where(kvp => kvp.Value.Item2.RegionCode == request.RegionId.Value)
+                .Take(request.MaxLicencesToTake)                
+                .ToDictionary(
+                    filePath => filePath.Key,
+                    filePath => filePath.Value);
+        }
+        else
+        {
+            dmsFilesToProcess = dmsFilesToProcess
+                .Take(request.MaxLicencesToTake)
+                .ToDictionary(
+                    filePath => filePath.Key,
+                    filePath => filePath.Value);            
+        }
+        
         if (dmsFilesToProcess.Count == 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - No DMS files to process");
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - No DMS files to process");
             return true;
         }
         
@@ -68,18 +86,18 @@ public class FileProcessOrchestrationService(
                         DocumentType = "AbstractionLicence"
                     });
                 
-                ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {filePath} sent to single process file queue");
+                ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - {filePath} sent to single process file queue");
             }
         }
         catch (Exception exception)
         {
-            ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error during sending to single " +
+            ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Error during sending to single " +
                 $"file processing queue: {exception}");
             
             throw;
         }
         
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Finished processing " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Finished processing " +
             $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         return true;

@@ -8,7 +8,7 @@ using WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
 namespace WRADI.Services.AbstractionLicence.Tests;
 
-public class FileProcessOrchestrationServiceTests
+public class AbstractionLicenceFileProcessOrchestrationServiceTests
 {
     [Fact]
     public async Task WhenFilesToProcessExist_ThenEnqueuedRequestsAreStampedWithAbstractionLicenceDocumentType()
@@ -50,7 +50,7 @@ public class FileProcessOrchestrationServiceTests
         A.CallTo(() => messageQueueService.AddToFileProcessQueue(A<FileProcessSingleRequest>._))
             .Invokes(call => enqueuedRequests.Add(call.GetArgument<FileProcessSingleRequest>(0)!));
 
-        var service = new FileProcessOrchestrationService(
+        var service = new AbstractionLicenceFileProcessOrchestrationService(
             settings,
             cacheService,
             abstractionLicenceCacheService,
@@ -59,7 +59,12 @@ public class FileProcessOrchestrationServiceTests
             messageQueueService);
 
         // Act
-        var result = await service.RunAsync(CancellationToken.None);
+        var result = await service.RunAsync(
+            new FileProcessOrchestrationRequest
+            {
+                MaxLicencesToTake = 100_000
+            },
+            CancellationToken.None);
 
         // Assert
         Assert.True(result);

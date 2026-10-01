@@ -242,7 +242,7 @@ public static class FileProcessServiceRegistration
             return pdfDataExtractor;
         });
 
-        services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();
+        services.AddSingleton<IFileProcessOrchestrator, AbstractionLicenceFileProcessOrchestrationService>();
         services.AddSingleton<INaldDataLookupService, NaldDataLookupService>();
         
         services.AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>

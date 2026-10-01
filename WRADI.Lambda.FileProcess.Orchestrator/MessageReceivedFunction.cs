@@ -64,7 +64,7 @@ public class MessageReceivedFunction
                     ?? new FileProcessOrchestrationRequest();
 
                 if (!_serviceProvidersByDocumentType.TryGetValue(
-                        orchestrationRequest.DocumentType, out var serviceProvider))
+                        orchestrationRequest.DocumentType!, out var serviceProvider))
                 {
                     context.Logger.LogWarning(
                         $"Unrecognised DocumentType '{orchestrationRequest.DocumentType}' - " +
@@ -76,7 +76,7 @@ public class MessageReceivedFunction
                 using var scope = serviceProvider.CreateScope();
                 var orchestrator = scope.ServiceProvider.GetRequiredService<IFileProcessOrchestrator>();
 
-                var result = await orchestrator.RunAsync(CancellationToken.None);
+                var result = await orchestrator.RunAsync(orchestrationRequest, CancellationToken.None);
 
                 context.Logger.LogInformation($"Completed Orchestration service with result : {result}");
 

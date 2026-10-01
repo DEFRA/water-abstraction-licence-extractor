@@ -218,6 +218,15 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             .map(ll => ll.licenceNumber)
             .filter((n): n is string => !!n);
 
+        // Aggregate points/purposes carry only ids; descriptions live on the licence's top-level lists.
+        const sourceLicence = scrapedView ? licence : currentLicence;
+        const pointDescriptions = new Map((sourceLicence?.points ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+        const purposeDescriptions = new Map((sourceLicence?.purposes ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+
         return (
             <div className="aggregates-container" style={{padding: '8px'}}>
                 <div className="aggregates-list">
@@ -272,6 +281,8 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     aggregate={aggregate}
                                     itemId={itemId}
                                     linkedLicenceOptions={linkedLicenceOptions}
+                                    pointDescriptions={pointDescriptions}
+                                    purposeDescriptions={purposeDescriptions}
                                     isEditing={editingIndex === index && !isWaitingForVerification}
                                     isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                     onUpdate={(updated) => handleUpdateAggregate(index, updated)}

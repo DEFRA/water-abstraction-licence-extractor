@@ -607,7 +607,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                     MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
-                NextLinesToFetch = 60,
+                NextLinesToFetch = 100,
                 SubLabels = 
                 [
                     new()

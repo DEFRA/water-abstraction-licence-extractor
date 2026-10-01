@@ -323,6 +323,24 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var inspectionDateFound = formsList.Count(f => f.InspectionDate.DateTime != null);
         var inspectingOfficerFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.InspectingOfficer));
 
+        // "Not found" conflates two very different things: a genuinely blank field, and text that
+        // was captured but couldn't be parsed - the latter means extraction grabbed the wrong
+        // thing, which is a real defect rather than an absent value. Counted separately so it
+        // can't hide inside the overall found-rate.
+        var inspectionDateUnparsed = formsList.Count(f =>
+            f.InspectionDate.DateTime == null && !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate));
+
+        // The dominant known cause: two-column layouts put the left column's "Inspecting Officer"
+        // row physically between the date label and the wrapped remainder of its own value, and
+        // the WholeLine fallback then scoops both columns. Text-only bounding can't separate the
+        // two layouts (the same row is a boundary in one and an intruder in the other - measured
+        // 774 -> 685 when tried, 2026-10-01); it needs x-position-aware column bounding.
+        var inspectionDateLeaksOfficer = formsList.Count(f =>
+            f.InspectionDate.DateTime == null
+            && !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
+            && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
+            && f.InspectionDate.RawDate.Contains(f.InspectingOfficer, StringComparison.OrdinalIgnoreCase));
+
         var sourceOfSupplyResolved = formsList.Count(f =>
             f.LicenceProvisions.SourceOfSupply is InOrderStatus.InOrder or InOrderStatus.NotInOrder or InOrderStatus.NotApplicable);
         var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
@@ -487,6 +505,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"Failures:                 {failures.Count}");
         testOutputHelper.WriteLine($"LicenceNumber found:      {licenceNumberFound} ({Percent(licenceNumberFound, total)})");
         testOutputHelper.WriteLine($"InspectionDate found:     {inspectionDateFound} ({Percent(inspectionDateFound, total)})");
+        testOutputHelper.WriteLine($"InspectionDate unparsed:  {inspectionDateUnparsed} ({Percent(inspectionDateUnparsed, total)}) - captured text that wouldn't parse");
+        testOutputHelper.WriteLine($"  of which officer leak:  {inspectionDateLeaksOfficer}");
         testOutputHelper.WriteLine($"InspectingOfficer found:  {inspectingOfficerFound} ({Percent(inspectingOfficerFound, total)})");
         testOutputHelper.WriteLine($"SourceOfSupply resolved:  {sourceOfSupplyResolved} ({Percent(sourceOfSupplyResolved, total)})");
         testOutputHelper.WriteLine($"SpotCheckResult found:    {spotCheckResultFound} ({Percent(spotCheckResultFound, total)})");
@@ -542,6 +562,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             calibrationLeaksSiblingLabel == 0,
             $"{calibrationLeaksSiblingLabel} Calibration values contain a leaked sibling-field label " +
             "or the 'Calibration Certificate' collision - the IgnoreBlockIfContains fix regressed");
+
+        // A ratchet, not a target. Was 21 (13 of them leaking the neighbouring column's inspecting
+        // officer) until the converter's gated salvage pass recovered 20 of them; the one that
+        // remains is a document whose date field is genuinely blank. Pinned at the measured figure
+        // rather than 0 so that one doesn't fail the build, while any growth does - this field has
+        // produced two measured regressions (a loose "Date:" anchor at 98%->40%, and skipping the
+        // officer row at 774->685), both of which this assert would have caught immediately.
+        // Lower the constant further whenever the gap is genuinely reduced.
+        const int knownUnparsedInspectionDates = 1;
+
+        Assert.True(
+            inspectionDateUnparsed <= knownUnparsedInspectionDates,
+            $"{inspectionDateUnparsed} InspectionDate values captured text that wouldn't parse, up from the "
+            + $"known {knownUnparsedInspectionDates} ({inspectionDateLeaksOfficer} leak the InspectingOfficer "
+            + "value). Extraction is claiming the wrong text, not just missing a value - see test output.");
 
         Assert.True(
             meterVerificationLeaksSiblingLabel == 0,

@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Configuration;
 using WRADI.Services.AbstractionLicence.Tests.IntegrationTests;
 
-namespace WRADI.Services.AbstractionLicence.Tests;
+namespace WRADI.Services.AbstractionLicence.Tests.Config;
 
 public static class TestConfig
 {

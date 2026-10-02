@@ -119,6 +119,10 @@ switch (workflow)
     case "GenerateS3Thumbnails": // One-off
         await GenerateS3Thumbnails.RunAsync(processRunId);
         break;
+
+    case "GenerateS3ThumbnailsWrInspectionReport": // Backfill - WR51 equivalent of the above
+        await GenerateS3ThumbnailsWrInspectionReport.RunAsync(processRunId);
+        break;
 }
 
 return 0;

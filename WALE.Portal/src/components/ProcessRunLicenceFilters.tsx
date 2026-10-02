@@ -63,6 +63,7 @@ export function ProcessRunLicenceFilters({
             issueYear: undefined,
             issuer: undefined,
             meansFound: undefined,
+            isLicenceNumberFlagged: undefined,
             linkedLicencesType: undefined,
             ShortLicenceSetId: undefined,
             verificationType: undefined
@@ -113,7 +114,25 @@ export function ProcessRunLicenceFilters({
             </td>
 
             <td>
-               
+                <select
+                    className={pendingQuery.isLicenceNumberFlagged === undefined ? "" : "filter-active"}
+                    value={
+                        pendingQuery.isLicenceNumberFlagged === undefined
+                            ? ""
+                            : String(pendingQuery.isLicenceNumberFlagged)
+                    }
+                    onChange={e =>
+                        updatePendingQuery(
+                            "isLicenceNumberFlagged",
+                            e.target.value === ""
+                                ? undefined
+                                : e.target.value === "true"
+                        )
+                    }
+                >
+                    <option value="">All</option>
+                    <option value="true">Flagged</option>
+                </select>
 
                 <button
                     type="button"

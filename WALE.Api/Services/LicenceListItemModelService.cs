@@ -74,6 +74,8 @@ public class LicenceListItemModelService
             Issuer = source.issuer,
             MeansFound = source.meansFound,
             Status = source.status,
+            IsLicenceNumberFlagged = source.isLicenceNumberFlagged,
+            LicenceNumberFlagReason = source.licenceNumberFlagReason,
 
             LinkedLicences = source.linkedLicences?
                 .Select(ToUpsertLinkedLicence)
@@ -117,6 +119,8 @@ public class LicenceListItemModelService
             issuer = licence.Issuer,
             meansFound = licence.MeansFound,
             status = licence.Status,
+            isLicenceNumberFlagged = licence.IsLicenceNumberFlagged,
+            licenceNumberFlagReason = licence.LicenceNumberFlagReason,
 
             linkedLicences = source.LinkedLicences
                 .Select(ToOutputLinkedLicence)

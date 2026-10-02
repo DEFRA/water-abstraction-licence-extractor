@@ -29,6 +29,8 @@ public class ProcessRunQuery
 
     public bool? MeansFound { get; init; }
 
+    public bool? IsLicenceNumberFlagged { get; init; }
+
     public string? ShortLicenceSetId { get; init; }
 
     public string? LinkedLicencesType { get; init; }

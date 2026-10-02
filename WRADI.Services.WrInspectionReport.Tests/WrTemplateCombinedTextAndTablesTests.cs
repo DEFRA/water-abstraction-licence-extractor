@@ -96,11 +96,6 @@ public class WrTemplateCombinedTextAndTablesTests
         
         var resultList = resultFull.Matches!;
 
-        // Assert
-        // 43, not 42: TemplateMarkerBaselineComments now matches. It was declared TableBased, so
-        // it only resolved when the table extractor happened to find it - which is what made
-        // template classification unreliable. Confirmed by diffing the matched label names either
-        // side of that change: this marker is the only addition.
         Assert.Equal(43, resultList.Count);
         
         var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);

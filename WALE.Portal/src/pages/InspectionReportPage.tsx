@@ -80,9 +80,7 @@ function InspectionReportPage() {
             .finally(() => setLoading(false));
     }, [processRunId]);
 
-    // One request for the whole run. This used to call WrInspectionReportString once per file,
-    // which is 17,000+ requests on a full process run - the columns these populate are also what
-    // the template/scan filters and date/completeness sorts work from, so they have to cover
+    // One request for the whole run, they have to cover
     // every row, not just the visible page.
     useEffect(() => {
         if (!processRunId) return;

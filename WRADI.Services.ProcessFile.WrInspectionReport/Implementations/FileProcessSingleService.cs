@@ -134,6 +134,10 @@ public class FileProcessSingleService(
 
         try
         {
+            // Every label in this ruleset is table-based, so an extractor is required here. A
+            // no-op satisfies the check but makes every table-based label match nothing. Tabula is
+            // the free local option; the paid Document Intelligence one stays behind the
+            // orchestrator's own cost-optimised fallback.
             var tableExtractorService = new TabulaTableExtractorService(cacheService);
             lookupConfig.StructuredTableExtractorService = tableExtractorService;
             lookupConfig.UnstructuredTableExtractorService = tableExtractorService;

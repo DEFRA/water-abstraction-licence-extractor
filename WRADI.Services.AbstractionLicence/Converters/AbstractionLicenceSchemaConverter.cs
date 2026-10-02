@@ -1532,7 +1532,7 @@ public static class AbstractionLicenceSchemaConverter
         foreach (var licence in allLicences)
         {
             var tStart = DateTime.Now;
-            double duration = -1;
+            double duration;
             
             if (licence.AbstractionLimits.Aggregates != null)
             {
@@ -1594,12 +1594,126 @@ public static class AbstractionLicenceSchemaConverter
             licence.LicenceSets = newLicenceSetIds.ToArray();
         }
         
+        AddVersionsToAggregates(allLicences);
+        
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return returnList;
     }
 
+    private static void AddVersionsToAggregates(List<Licence> allLicences)
+    {
+        foreach (var sourceLicence in allLicences)
+        {
+            var sourceAggregates = sourceLicence.AbstractionLimits.Aggregates;
+            if (sourceAggregates == null || sourceAggregates.Length == 0)
+            {
+                continue;
+            }
+
+            var otherLicences = allLicences.Except([sourceLicence]).ToList();
+
+            foreach (var otherLicence in otherLicences)
+            {
+                var otherAggregates = otherLicence.AbstractionLimits.Aggregates;
+                if (otherAggregates == null || otherAggregates.Length == 0)
+                {
+                    continue;
+                }
+
+                foreach (var otherAggregate in otherAggregates)
+                {
+                    var matchingSourceAggregate = sourceAggregates
+                        .FirstOrDefault(sourceAggregate => AreAggregatesFundamentallyEqual(
+                            sourceAggregate,
+                            otherAggregate));
+
+                    if (matchingSourceAggregate == null)
+                    {
+                        continue;
+                    }
+                    
+                    if (matchingSourceAggregate.Versions?.Any(v => v.Id == otherAggregate.Id) == true)
+                    {
+                        continue;
+                    }
+
+                    var versions = new List<AggregateVersion>();
+
+                    if (matchingSourceAggregate.Versions != null)
+                    {
+                        versions.AddRange(matchingSourceAggregate.Versions);
+                    }
+                    
+                    versions.Add(AggregateVersion.FromAggregate(otherAggregate, "Different order"));
+                    matchingSourceAggregate.Versions = versions.ToArray();
+                }
+            }
+        }
+    }
+
+    private static bool AreAggregatesFundamentallyEqual(
+        Aggregate sourceAggregate,
+        Aggregate otherAggregate) 
+    {
+        if (sourceAggregate.LinkedLicences?.Length != otherAggregate.LinkedLicences?.Length)
+        {
+            return false;
+        }
+        
+        if (sourceAggregate.Limits.Count != otherAggregate.Limits.Count)
+        {
+            return false;
+        }
+
+        if (sourceAggregate.LinkedLicences != null && otherAggregate.LinkedLicences != null)
+        {
+            // Source contains a linked licence not in other
+            foreach (var sourceLinkedLicence in sourceAggregate.LinkedLicences!)
+            {
+                if (sourceLinkedLicence != otherAggregate.SourceLicenceNumber
+                    && !otherAggregate.LinkedLicences.Contains(sourceLinkedLicence))
+                {
+                    return false;
+                }
+            }
+
+            // Other contains a linked licence not in source
+            foreach (var otherLinkedLicence in otherAggregate.LinkedLicences!)
+            {
+                if (otherLinkedLicence != sourceAggregate.SourceLicenceNumber
+                    && !sourceAggregate.LinkedLicences.Contains(otherLinkedLicence))
+                {
+                    return false;
+                }
+            }
+        }
+
+        foreach (var sourceLimit in sourceAggregate.Limits)
+        {
+            if (otherAggregate.Limits.All(otherLimit => !otherLimit.Value.FloatingEqualTo(sourceLimit.Value)))
+            {
+                return false;
+            }
+        }
+        
+        foreach (var otherLimit in otherAggregate.Limits)
+        {
+            if (sourceAggregate.Limits.All(sourceLimit => !sourceLimit.Value.FloatingEqualTo(otherLimit.Value)))
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private static bool FloatingEqualTo(this double? value1, double? value2)
+    {
+        return Math.Abs((value1 ?? 0) - (value2 ?? 0)) < 0.0000001; 
+    }
+    
     private static async Task<DmsFileIdInformation?> RecordFileIdAsync(
         DmsFileData? dmsDataForFile,
         LookupConfiguration? lookupConfig,
@@ -1880,7 +1994,7 @@ public static class AbstractionLicenceSchemaConverter
     {
         licenceAggregates
             .Where(aggregate => aggregate.AggregateSetId == PositionConstants.ReplacementMarker)
-            .ToList()
+            .ToList() // Foreach only available on lists weirdly
             .ForEach(aggregate =>
             {
                 var aggregateSet = new AggregateSet

@@ -75,7 +75,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string[]? LinkedLicences { get; init; } = [];
     
-    public PreviousVersionAggregate[]? PreviousVersions { get; set; }
+    public AggregateVersion[]? Versions { get; set; }
 
     public new static Aggregate Template => new()
     {

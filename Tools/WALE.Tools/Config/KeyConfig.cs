@@ -402,6 +402,42 @@ public static class KeyConfig
         }
     }
     
+    private static string? _awsS3RegionName;
+
+    public static string AwsS3RegionName
+    {
+        get
+        {
+            if (_awsS3RegionName != null)
+            {
+                return _awsS3RegionName;
+            }
+
+            _awsS3RegionName = Config["AwsS3RegionName"]!;
+            return _awsS3RegionName;
+        }
+    }
+
+    private static string? _awsS3AssetsBucketName;
+
+    public static string AwsS3AssetsBucketName
+    {
+        get
+        {
+            if (_awsS3AssetsBucketName != null)
+            {
+                return _awsS3AssetsBucketName;
+            }
+
+            _awsS3AssetsBucketName = Config["AwsS3AssetsBucketName"]!;
+            return _awsS3AssetsBucketName;
+        }
+    }
+
+    // Optional - only needed when AwsS3AccessKey/AwsS3SecretKey are a temporary STS session
+    // rather than a long-lived IAM user's credentials.
+    public static string? AwsS3SessionToken => Config["AwsS3SessionToken"];
+
     private static string? _awsS3ZipPassword;
     
     public static string AwsS3ZipPassword

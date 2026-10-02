@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tabula;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -133,6 +134,14 @@ public class FileProcessSingleService(
 
         try
         {
+            // Every label in this ruleset is table-based, so an extractor is required here. A
+            // no-op satisfies the check but makes every table-based label match nothing. Tabula is
+            // the free local option; the paid Document Intelligence one stays behind the
+            // orchestrator's own cost-optimised fallback.
+            var tableExtractorService = new TabulaTableExtractorService(cacheService);
+            lookupConfig.StructuredTableExtractorService = tableExtractorService;
+            lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
+
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     pdfFilename,

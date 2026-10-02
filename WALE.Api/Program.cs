@@ -116,6 +116,12 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsAccessKey,
             awsSecretKey,
             awsSessionToken)
+        .AddTransient<IImageService>(_ => new S3ImageService(
+            awsRegionName,
+            s3AssetsBucketName,
+            awsAccessKey,
+            awsSecretKey,
+            awsSessionToken))
         .AddAwsSqsServices(
             awsRegionName,
             awsAccessKey,

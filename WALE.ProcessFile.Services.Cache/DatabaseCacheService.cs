@@ -12,7 +12,8 @@ namespace WALE.ProcessFile.Services.Cache;
 
 public class DatabaseCacheService(
     IDatabaseReadService databaseReadService,
-    IDatabaseWriteService databaseWriteService) : ICacheService
+    IDatabaseWriteService databaseWriteService,
+    IImageService imageService) : ICacheService
 {
     public string? CacheFolderOrUrl { get; set; } = null;
 
@@ -51,18 +52,20 @@ public class DatabaseCacheService(
         
         var deflatedBytes = ImageHelper.Deflate(bytAry);
         var pix = Pix.LoadFromMemory(deflatedBytes);
-        
-        await databaseWriteService.SaveImageOnPageAsync(
-            deflatedBytes,
+
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, serviceName, pageNumber, imageNumber, "jpg");
+        await imageService.UploadAsync(s3Key, new MemoryStream(deflatedBytes), "image/jpeg");
+
+        await databaseWriteService.SaveImageOnPageMetadataAsync(
             pix.Width,
             pix.Height,
-            fileId, 
+            fileId,
             serviceName,
             imageNumber,
             pageNumber,
             "jpg",
             processRunId);
-        
+
         return deflatedBytes;
     }
     
@@ -84,9 +87,17 @@ public class DatabaseCacheService(
         return databaseReadService.GetImagesAsync(request);
     }
 
-    public Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
+    public async Task<byte[]?> GetImageBytesAsync(OcrServiceImageDataCacheRequest request)
     {
-        return databaseReadService.GetImageBytesAsync(request);
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(
+            request.FileId,
+            request.NoOcrServiceName!,
+            request.PageNumber!.Value,
+            request.ImageNumber!.Value,
+            request.Extension!);
+
+        return await imageService.DownloadAsync(s3Key)
+            ?? await databaseReadService.GetImageBytesAsync(request);
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)
@@ -232,7 +243,12 @@ public class DatabaseCacheService(
     
     public async Task<int> SaveImageOnPageAsync(byte[] bytes, int width, int height, Guid fileId, string noOcrServiceName, int imageNumber, int pageNumber, string extension, int processRunId)
     {
-        await databaseWriteService.SaveImageOnPageAsync(bytes, width, height, fileId, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(fileId, noOcrServiceName, pageNumber, imageNumber, extension);
+        var contentType = extension.Equals("png", StringComparison.OrdinalIgnoreCase) ? "image/png" : "image/jpeg";
+        await imageService.UploadAsync(s3Key, new MemoryStream(bytes), contentType);
+
+        await databaseWriteService.SaveImageOnPageMetadataAsync(
+            width, height, fileId, noOcrServiceName, imageNumber, pageNumber, extension, processRunId);
 
         return bytes.Length;
     }

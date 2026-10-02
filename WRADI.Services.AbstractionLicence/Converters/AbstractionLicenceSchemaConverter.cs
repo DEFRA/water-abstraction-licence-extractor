@@ -1430,7 +1430,7 @@ public static class AbstractionLicenceSchemaConverter
         {
             LicenceSetTypes = [LicenceSetType.SingleLicenceOnly],
             Licences = [primaryLicence],
-            AggregateSets = GetAggregateSets([primaryLicence], allLicences)
+            AggregateSets = GetAggregateSets([primaryLicence], [primaryLicence], true)
         };
 
         returnList.Add(singleLicenceOnlySet);

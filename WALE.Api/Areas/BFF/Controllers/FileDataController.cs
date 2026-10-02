@@ -21,7 +21,6 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
-    IImageService imageService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -30,25 +29,6 @@ public class FileDataController(
     {
         var result = await outputService.GetSimpleMatchResults(processRunId);
         return Ok(result);
-    }
-
-    private async Task<Dictionary<Guid, string>> GetThumbnailUrlsAsync(List<Guid> fileIds)
-    {
-        var returnDict = new Dictionary<Guid, string>();
-
-        foreach (var fileIdChunk in fileIds.Chunk(20))
-        {
-            var kvps = fileIdChunk
-                .Select(fileId => (fileId, task: imageService.GetPresignedUrlAsync($"thumbnail_{fileId}.jpg")))
-                .ToList();
-
-            foreach (var (fileId, task) in kvps)
-            {
-                returnDict[fileId] = await task;
-            }
-        }
-
-        return returnDict;
     }
     
     [HttpGet]

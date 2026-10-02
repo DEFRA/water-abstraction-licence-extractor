@@ -328,13 +328,13 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var inspectionDateUnparsed = formsList.Count(f =>
             f.InspectionDate.DateTime == null && !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate));
 
-        // The dominant known cause - two-column layouts put the officer row between the date
-        // label and its own wrapped value, and the WholeLine fallback scoops both columns. Not
-        // fixable by text bounding: that row is a boundary in one layout and an intruder in the
-        // other (measured 774 -> 685 when tried). Needs x-position-aware column bounding.
+        // Not gated on the date failing to parse: the converter's salvage can usually dig a date
+        // back out of polluted text, so gating here reports zero while the capture stays wrong.
+        // Cause is two-column layouts, where the officer row sits between the date label and its
+        // wrapped value and the WholeLine fallback scoops both columns. Text bounding can't fix it
+        // - that row is a boundary in one layout and an intruder in the other (774 -> 685 tried).
         var inspectionDateLeaksOfficer = formsList.Count(f =>
-            f.InspectionDate.DateTime == null
-            && !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
+            !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
             && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
             && f.InspectionDate.RawDate.Contains(f.InspectingOfficer, StringComparison.OrdinalIgnoreCase));
 
@@ -503,7 +503,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"LicenceNumber found:      {licenceNumberFound} ({Percent(licenceNumberFound, total)})");
         testOutputHelper.WriteLine($"InspectionDate found:     {inspectionDateFound} ({Percent(inspectionDateFound, total)})");
         testOutputHelper.WriteLine($"InspectionDate unparsed:  {inspectionDateUnparsed} ({Percent(inspectionDateUnparsed, total)}) - captured text that wouldn't parse");
-        testOutputHelper.WriteLine($"  of which officer leak:  {inspectionDateLeaksOfficer}");
+        testOutputHelper.WriteLine($"InspectionDate col leak:  {inspectionDateLeaksOfficer} ({Percent(inspectionDateLeaksOfficer, total)}) - capture contains the InspectingOfficer value");
         testOutputHelper.WriteLine($"InspectingOfficer found:  {inspectingOfficerFound} ({Percent(inspectingOfficerFound, total)})");
         testOutputHelper.WriteLine($"SourceOfSupply resolved:  {sourceOfSupplyResolved} ({Percent(sourceOfSupplyResolved, total)})");
         testOutputHelper.WriteLine($"SpotCheckResult found:    {spotCheckResultFound} ({Percent(spotCheckResultFound, total)})");
@@ -568,8 +568,18 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         Assert.True(
             inspectionDateUnparsed <= knownUnparsedInspectionDates,
             $"{inspectionDateUnparsed} InspectionDate values captured text that wouldn't parse, up from the "
-            + $"known {knownUnparsedInspectionDates} ({inspectionDateLeaksOfficer} leak the InspectingOfficer "
-            + "value). Extraction is claiming the wrong text, not just missing a value - see test output.");
+            + $"known {knownUnparsedInspectionDates}. Extraction is claiming the wrong text, not just missing "
+            + "a value - see test output.");
+
+        // Separate from the parse ratchet above: these documents do resolve a date, so a capture
+        // regression would otherwise hide behind the salvage that rescues it.
+        const int knownInspectionDateColumnLeaks = 52;
+
+        Assert.True(
+            inspectionDateLeaksOfficer <= knownInspectionDateColumnLeaks,
+            $"{inspectionDateLeaksOfficer} InspectionDate captures contain the InspectingOfficer value, up "
+            + $"from the known {knownInspectionDateColumnLeaks} - the two-column walk is taking more of the "
+            + "neighbouring column than it was.");
 
         Assert.True(
             meterVerificationLeaksSiblingLabel == 0,

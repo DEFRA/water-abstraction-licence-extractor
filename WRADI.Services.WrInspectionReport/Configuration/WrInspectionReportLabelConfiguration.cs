@@ -853,12 +853,9 @@ public static class WrInspectionReportLabelConfiguration
                 PreviousLinesToFetch = 0,
                 NextLinesToFetch = 0,
                 Name = labelName,
-                // Letter-based deliberately, unlike the rest of this ruleset. These markers look
-                // for a literal heading string to decide which template a document is - that's a
-                // text decision, not a grid cell, and routing it through table extraction made
-                // classification depend on whatever the table extractor happened to resolve.
-                // Measured across a 17,622 document run: table-based gave 0 T1/T4/T6/T7/Impounding
-                // against 7,494 T1 on the otherwise identical letter-based definition.
+                // Letter-based deliberately, unlike the rest of this ruleset: these markers match
+                // a literal heading to decide the template, which is a text decision rather than a
+                // grid cell. Table-based made classification depend on what the extractor resolved.
                 LayoutExtractor = LayoutExtractor.LetterBased
             }
         ];

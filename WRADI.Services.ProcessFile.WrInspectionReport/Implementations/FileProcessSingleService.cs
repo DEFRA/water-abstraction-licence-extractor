@@ -134,13 +134,10 @@ public class FileProcessSingleService(
 
         try
         {
-            // WrInspectionReportLabelConfiguration is built entirely from the fluent builders, so
-            // every label is table-based and PdfDataExtractorService requires an extractor here.
-            // A no-op satisfies that check but makes every table-based label match nothing, which
-            // silently costs template classification - measured as 0 T1/T4/T6/T7/Impounding across
-            // a 17,622 document run against 7,494 T1 on the letter-based ruleset.
-            // Tabula is the free local option; the paid Document Intelligence one stays behind the
-            // orchestrator's own cost-optimised fallback rather than running on every document.
+            // Every label in this ruleset is table-based, so an extractor is required here. A
+            // no-op satisfies the check but makes every table-based label match nothing. Tabula is
+            // the free local option; the paid Document Intelligence one stays behind the
+            // orchestrator's own cost-optimised fallback.
             var tableExtractorService = new TabulaTableExtractorService(cacheService);
             lookupConfig.StructuredTableExtractorService = tableExtractorService;
             lookupConfig.UnstructuredTableExtractorService = tableExtractorService;

@@ -24,12 +24,10 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
         Pix? pix;
         const string deflateNeededErrorText = "Failed to load image from memory.";
 
-        // Pix is only ever read for Width/Height below - by the time it's loaded the image bytes
-        // have already been extracted successfully. A failure to read those dimensions used to
-        // propagate to the catch below, which discards the bytes and writes an "error" row, so an
-        // unrelated problem (an incompatible native Leptonica, say) silently cost every embedded
-        // image in the corpus. Dimensions are optional; the image isn't. The deflate-needed
-        // signal is deliberately still thrown, because that retry repairs the bytes themselves.
+        // Pix is only read for Width/Height; the bytes are already extracted by then. A failure
+        // here used to reach the catch below, which discards them and writes an "error" row.
+        // Dimensions are optional, the image isn't. Deflate-needed still throws - that retry
+        // repairs the bytes themselves.
         Pix? TryLoadPix(byte[] imageBytes)
         {
             try

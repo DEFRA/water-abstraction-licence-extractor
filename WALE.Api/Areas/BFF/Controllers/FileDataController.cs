@@ -61,12 +61,6 @@ public class FileDataController(
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
 
-    /// <summary>
-    /// The handful of per-file fields the inspection report list shows as columns. The list used
-    /// to get these by calling WrInspectionReportString once per file, which is one request per
-    /// row - 17,000+ on a full process run. Cached, because the work is the same conversion the
-    /// CSV export does and the underlying results don't change within a run.
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult> GetWrInspectionReportSummariesAsync(
         [FromQuery] int processRunId)
@@ -140,8 +134,6 @@ public class FileDataController(
             ? property.GetString()
             : null;
 
-    // The inspection date proper, falling back to the form's own printed date - the same order of
-    // preference the list applied client-side.
     private static string? GetInspectionDate(JsonElement report, JsonElement metadata)
     {
         if (report.TryGetProperty("inspectionDate", out var inspectionDate))

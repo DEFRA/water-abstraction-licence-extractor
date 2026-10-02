@@ -1634,20 +1634,20 @@ public static class AbstractionLicenceSchemaConverter
                         continue;
                     }
                     
-                    if (matchingSourceAggregate.Versions?.Any(v => v.Id == otherAggregate.Id) == true)
+                    if (matchingSourceAggregate.OtherVersions?.Any(v => v.Id == otherAggregate.Id) == true)
                     {
                         continue;
                     }
 
                     var versions = new List<AggregateVersion>();
 
-                    if (matchingSourceAggregate.Versions != null)
+                    if (matchingSourceAggregate.OtherVersions != null)
                     {
-                        versions.AddRange(matchingSourceAggregate.Versions);
+                        versions.AddRange(matchingSourceAggregate.OtherVersions);
                     }
                     
                     versions.Add(AggregateVersion.FromAggregate(otherAggregate, "Different order"));
-                    matchingSourceAggregate.Versions = versions.ToArray();
+                    matchingSourceAggregate.OtherVersions = versions.ToArray();
                 }
             }
         }

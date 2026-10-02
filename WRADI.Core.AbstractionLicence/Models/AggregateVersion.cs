@@ -24,7 +24,7 @@ public class AggregateVersion : Aggregate
             SubType = aggregate.SubType,
             TimePeriod = aggregate.TimePeriod,
             TimeCutoff = aggregate.TimeCutoff,
-            Versions = aggregate.Versions
+            OtherVersions = aggregate.OtherVersions
         };
     }
 }

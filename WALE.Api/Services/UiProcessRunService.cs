@@ -50,6 +50,8 @@ public class UiProcessRunService(
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
+        var licenceNumberFlagReasonsTask =
+            abstractionLicenceOutputService.GetLicenceNumberFlagReasonsAsync(processRunId);
         
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
@@ -57,6 +59,7 @@ public class UiProcessRunService(
         
         var verificationsBySection = await verificationsBySectionTask;
         var fileIdToLicenceNumberMapping = await fileIdTask;
+        var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == ScrapeStatus.Ok)
@@ -73,6 +76,15 @@ public class UiProcessRunService(
             processRunId,
             verificationsBySection,
             fileIdToLicenceNumberMapping);
+
+        foreach (var listDataItem in paginationListData)
+        {
+            if (licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
+            {
+                listDataItem.isLicenceNumberFlagged = true;
+                listDataItem.licenceNumberFlagReason = flagReason;
+            }
+        }
 
         return paginationListData;
     }

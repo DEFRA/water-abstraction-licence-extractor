@@ -226,4 +226,9 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
     {
         throw new NotImplementedException();
     }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
 }

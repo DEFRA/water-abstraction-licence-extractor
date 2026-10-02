@@ -142,6 +142,11 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
                                     Licence Number {reportData2.licenceNumber.value}
                                 </span>
+                                {outputListDataItem?.isLicenceNumberFlagged && (
+                                    <span>
+                                        {' '}🚩{outputListDataItem.licenceNumberFlagReason && ` ${outputListDataItem.licenceNumberFlagReason}`}
+                                    </span>
+                                )}
                             </div>
                         )}
                         {/* Tab Navigation */}

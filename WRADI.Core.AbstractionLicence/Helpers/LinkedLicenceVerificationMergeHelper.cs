@@ -138,6 +138,9 @@ public static class LinkedLicenceVerificationMergeHelper
                     {
                         FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
                     }
+
+                    // Some properties must reflect the current run, not the run the verification was made against
+                    ApplyCurrentRunValues(verificationLicence, scrapedLinkedLicence);
                 }
 
                 var existingLinkedLicence =
@@ -407,6 +410,12 @@ public static class LinkedLicenceVerificationMergeHelper
     private static bool IsAutoOrRequestBusinessReview(string? verificationType)
         => verificationType is "AutoWarn" or "AutoFail"
            or "RequestBusinessReview";
+
+    // Properties that a verification from an earlier run must not overwrite
+    private static void ApplyCurrentRunValues(LinkedLicence verificationLicence, LinkedLicence? currentRunLinkedLicence)
+    {
+        verificationLicence.NaldStatus = currentRunLinkedLicence?.NaldStatus ?? NaldLicenceStatus.Unknown;
+    }
 
     private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
         => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;

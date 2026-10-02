@@ -3391,7 +3391,9 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            verification_item.is_flagged
+            -- WRADI-400: Aggregates flags suppressed; revert to `verification_item.is_flagged` to restore
+            (verification_item.is_flagged
+                AND verification_section.licence_section_name <> 'Aggregates')
                 AS IsFlagged,
 
             verification_item.flag_reason

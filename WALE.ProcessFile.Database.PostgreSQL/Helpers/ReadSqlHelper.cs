@@ -352,6 +352,8 @@ public static class ReadSqlHelper
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
                         AND item.is_flagged = true
+                        -- WRADI-400: Aggregates flags suppressed; remove this line to restore
+                        AND section.licence_section_name <> 'Aggregates'
                   )
                 """);
 

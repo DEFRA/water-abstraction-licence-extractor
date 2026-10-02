@@ -851,6 +851,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
+                .SkipColumnWhenStartsWith("Time:", "Inspecting Officer")
                 .RequireTextToClaimGroup()
                 .RequireCompleteDateToClaimGroup()
                 .FromText()

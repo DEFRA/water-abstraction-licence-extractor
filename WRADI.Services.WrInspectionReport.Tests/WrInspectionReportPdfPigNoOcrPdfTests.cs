@@ -331,8 +331,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         // Not gated on the date failing to parse: the converter's salvage can usually dig a date
         // back out of polluted text, so gating here reports zero while the capture stays wrong.
         // Cause is two-column layouts, where the officer row sits between the date label and its
-        // wrapped value and the WholeLine fallback scoops both columns. Text bounding can't fix it
-        // - that row is a boundary in one layout and an intruder in the other (774 -> 685 tried).
+        // wrapped value and the WholeLine fallback scoops both columns. Bounded per column by
+        // SkipColumnWhenStartsWith - text bounding can't fix it (that row is a boundary in one
+        // layout and an intruder in the other, 774 -> 685 tried), nor can rejecting the whole row,
+        // which loses the date it often carries in a further column (794 -> 758 tried). What's
+        // left is cells with no leading label, plus InspectingOfficer itself capturing junk.
         var inspectionDateLeaksOfficer = formsList.Count(f =>
             !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
             && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
@@ -573,7 +576,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         // Separate from the parse ratchet above: these documents do resolve a date, so a capture
         // regression would otherwise hide behind the salvage that rescues it.
-        const int knownInspectionDateColumnLeaks = 52;
+        const int knownInspectionDateColumnLeaks = 38;
 
         Assert.True(
             inspectionDateLeaksOfficer <= knownInspectionDateColumnLeaks,

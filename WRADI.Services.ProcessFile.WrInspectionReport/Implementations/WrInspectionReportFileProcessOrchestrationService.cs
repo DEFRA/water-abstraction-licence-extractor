@@ -6,7 +6,7 @@ using WRADI.Services.Cache.WrInspectionReport.Interfaces;
 
 namespace WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
-public class FileProcessOrchestrationService(
+public class WrInspectionReportFileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IInspectionReportFinderCacheService inspectionReportFinderCacheService,
@@ -14,9 +14,9 @@ public class FileProcessOrchestrationService(
     IMessageQueueService messageQueueService)
     : IFileProcessOrchestrator
 {
-    public async Task<bool> RunAsync(CancellationToken cancellationToken)
+    public async Task<bool> RunAsync(FileProcessOrchestrationRequest request, CancellationToken cancellationToken)
     {
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
+        ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Started");
 
         if (settings.RefreshCache)
         {
@@ -26,11 +26,16 @@ public class FileProcessOrchestrationService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
-        var candidates = await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue);
+        var candidates =
+            await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue);
 
+        candidates = candidates
+            .Take(request.MaxLicencesToTake)
+            .ToList();
+        
         if (candidates.Count == 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - No inspection report files to process");
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - No inspection report files to process");
             return true;
         }
 
@@ -71,18 +76,18 @@ public class FileProcessOrchestrationService(
                         DocumentType = "WrInspectionReport"
                     });
 
-                ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {destinationFileName} sent to single process file queue");
+                ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - {destinationFileName} sent to single process file queue");
             }
         }
         catch (Exception exception)
         {
-            ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error during sending to single " +
+            ConsoleHelper.WriteLine($"ERROR - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Error during sending to single " +
                 $"file processing queue: {exception}");
 
             throw;
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Finished processing " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Finished processing " +
             $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return true;

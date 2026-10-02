@@ -181,7 +181,7 @@ public static class FileProcessServiceRegistration
             return pdfDataExtractor;
         });
 
-        services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();
+        services.AddSingleton<IFileProcessOrchestrator, WrInspectionReportFileProcessOrchestrationService>();
         services.AddSingleton<IFileProcessSingleService, FileProcessSingleService>();
 
         return services;

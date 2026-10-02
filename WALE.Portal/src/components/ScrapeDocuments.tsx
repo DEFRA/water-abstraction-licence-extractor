@@ -10,6 +10,8 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isStarting, setIsStarting] = useState(false);
+    const [regionId, setRegionId] = useState<number | undefined>(3);
+    const [maxLicences, setMaxLicences] = useState<number | undefined>(100_000);
 
     const client = new Client(waleApiBaseUrl);
     const startScrapingProcess = async () => {
@@ -18,7 +20,11 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
         setIsStarting(true);
 
         try {
-            await client.sendFileProcessOrchestrationMessage(undefined, documentType);
+            await client.sendFileProcessOrchestrationMessage(
+                undefined,
+                regionId,
+                maxLicences,
+                documentType);
 
             setSuccessMessage('Scraping orchestration process started successfully.');
         } catch (err) {
@@ -51,6 +57,53 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
                     position: 'relative'
                 }}
             >
+                <div>
+                    <label
+                        htmlFor="region"
+                        style={{
+                            display: "block",
+                            marginBottom: "4px",
+                            fontWeight: 600
+                        }}
+                    >
+                        Region
+                    </label>
+    
+                    <select style={{
+                        width: '200px'
+                    }}
+                            id="region"
+                            value={regionId ?? ""}
+                            onChange={e =>
+                                setRegionId(
+                                    e.target.value === ""
+                                        ? undefined
+                                        : Number(e.target.value)
+                                )}>
+                        <option value="0">All regions</option>
+                        <option value="3">North East</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label
+                        htmlFor="maxLicences"
+                        style={{
+                            display: "block",
+                            marginBottom: "4px",
+                            fontWeight: 600
+                        }}
+                    >
+                        Max licences to take
+                    </label>
+                    
+                    <input value={maxLicences} id="maxLicences" onChange={e =>
+                        setMaxLicences(e.target.value === ""
+                            ? undefined
+                            : Number(e.target.value)
+                        )} />
+                </div>
+                
                 <button
                     onClick={startScrapingProcess}
                     disabled={isStarting}
@@ -64,7 +117,7 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
                         marginTop: '10px'
                     }}
                 >
-                    {isStarting ? 'Starting...' : 'Start Orchestration Process'}
+                    {isStarting ? 'Starting...' : 'Scrape licences'}
                 </button>
             </div>
 

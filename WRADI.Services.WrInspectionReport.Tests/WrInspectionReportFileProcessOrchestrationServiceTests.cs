@@ -8,7 +8,7 @@ using WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-public class FileProcessOrchestrationServiceTests
+public class WrInspectionReportFileProcessOrchestrationServiceTests
 {
     [Fact]
     public async Task WhenCandidatesExist_ThenEnqueuedRequestsAreStampedWithWrInspectionReportDocumentType()
@@ -38,7 +38,7 @@ public class FileProcessOrchestrationServiceTests
         A.CallTo(() => messageQueueService.AddToFileProcessQueue(A<FileProcessSingleRequest>._))
             .Invokes(call => enqueuedRequests.Add(call.GetArgument<FileProcessSingleRequest>(0)!));
 
-        var service = new FileProcessOrchestrationService(
+        var service = new WrInspectionReportFileProcessOrchestrationService(
             settings,
             cacheService,
             inspectionReportFinderCacheService,
@@ -46,7 +46,12 @@ public class FileProcessOrchestrationServiceTests
             messageQueueService);
 
         // Act
-        var result = await service.RunAsync(CancellationToken.None);
+        var result = await service.RunAsync(
+            new FileProcessOrchestrationRequest
+            {
+                MaxLicencesToTake = 100_000
+            },
+            CancellationToken.None);
 
         // Assert
         Assert.True(result);

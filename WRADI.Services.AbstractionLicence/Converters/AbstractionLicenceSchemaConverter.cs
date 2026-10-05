@@ -1397,7 +1397,7 @@ public static class AbstractionLicenceSchemaConverter
         DmsFileData? dmsDataForFile = null,
         string? naldLicenceNumber = null)
     {
-        var returnList = new List<LicenceSet>();
+        var returnLicenceSets = new List<LicenceSet>();
 
         var primaryLicence = await ToLicenceAsync(
             matchesResult,
@@ -1426,6 +1426,9 @@ public static class AbstractionLicenceSchemaConverter
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
 
+        // Add any that were linked from a linked licence
+        allLicences.AddRange(GetLicenceLinkedFromLinkedLicence(allLicences, lookupConfiguration.RegionId));
+        
         var singleLicenceOnlySet = new LicenceSet
         {
             LicenceSetTypes = [LicenceSetType.SingleLicenceOnly],
@@ -1436,7 +1439,7 @@ public static class AbstractionLicenceSchemaConverter
                 true)
         };
 
-        returnList.Add(singleLicenceOnlySet);
+        returnLicenceSets.Add(singleLicenceOnlySet);
 
         var hasExplicitlyReferencedLicenceSet = allLicences.Count > 1
             || allLicences[0].LicenceNumber?.Value != primaryLicence.LicenceNumber?.Value;
@@ -1455,7 +1458,7 @@ public static class AbstractionLicenceSchemaConverter
 
         if (explicitlyReferencedLicenceSet != null)
         {
-            returnList.Add(explicitlyReferencedLicenceSet);
+            returnLicenceSets.Add(explicitlyReferencedLicenceSet);
         }
 
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
@@ -1530,7 +1533,7 @@ public static class AbstractionLicenceSchemaConverter
             }
             else
             {
-                returnList.Add(explicitlyReferencedLimitsLicenceSet);
+                returnLicenceSets.Add(explicitlyReferencedLimitsLicenceSet);
             }
         }
 
@@ -1604,12 +1607,42 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         AddVersionsToLicenceAggregates(allLicences);
-        EnrichAndGroupAggregates(returnList);
-        returnList = EnrichAndGroupAggregateSets(returnList);
+        EnrichAndGroupAggregates(returnLicenceSets); 
+        /*returnList = EnrichAndGroupAggregateSets(returnList);*/
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+        return returnLicenceSets;
+    }
+
+    private static List<Licence> GetLicenceLinkedFromLinkedLicence(List<Licence> allLicences, int regionId)
+    {
+        var returnList = new List<Licence>();
+
+        foreach (var licence in allLicences)
+        {
+            foreach (var linkedLicence in licence.LinkedLicences)
+            {
+                var alreadyHave = allLicences.Any(l => l.LicenceNumber?.Value == linkedLicence.LicenceNumber);
+
+                if (!alreadyHave)
+                {
+                    var newLicence = new Licence // TODO use the other method
+                    {
+                        Status = ScrapeStatus.FileIdMissing,
+                        LicenceNumber = new ValueWithConfidence<string>
+                        {
+                            Value = linkedLicence.LicenceNumber
+                        },
+                        RegionId = regionId
+                    };
+                    
+                    returnList.Add(newLicence);
+                }
+            }
+        }
+        
         return returnList;
     }
 
@@ -2408,6 +2441,140 @@ public static class AbstractionLicenceSchemaConverter
             .ToList();
         
         return returnLicences;
+    }
+    
+    private static async Task<Licence?> GetLinkedLicenceAsync(
+        Licence primaryLicence,
+        LinkedLicence linkedLicence,
+        IPdfDataExtractorService pdfDataExtractorService,
+        List<string> previouslyParsedFiles,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        IAbstractionLicenceCacheService cacheService,
+        INaldDataLookupService naldDataLookupService,
+        List<Licence> allLicences)
+    {
+        var strippedLlNumbers = FormattingHelper.StripForComparisonMultipleOptions(
+            linkedLicence.LicenceNumber,
+            linkedLicence.RegionId!.Value);
+
+        if (strippedLlNumbers.Count == 0)
+        {
+            return null;
+        }
+        
+        var continueOuter = false;
+        
+        foreach (var strippedLlNumber in strippedLlNumbers)
+        {
+            // Already found it
+            if (allLicences.Any(returnLicence =>
+                FormattingHelper.StripForComparison(
+                    returnLicence.LicenceNumber?.Value, returnLicence.RegionId!.Value) == strippedLlNumber))
+            {
+                continueOuter = true;
+                break;
+            }
+        }
+
+        if (continueOuter)
+        {
+            return null;
+        }
+
+        var dmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
+            linkedLicence.LicenceNumber,
+            lookupConfiguration.CacheService);
+
+        var foundDmsData = dmsFileData != null;
+
+        var destinationFileId = dmsFileData?.FileId;
+        var destinationFileName = dmsFileData?.DestinationFileName;
+        
+        var missingDmsData = !foundDmsData;
+        var missingFileId = destinationFileId == Guid.Empty || destinationFileId == null;
+        var missingFilename = string.IsNullOrEmpty(destinationFileName);
+                    
+        if (missingDmsData || missingFileId || missingFilename)
+        {
+            var status = ScrapeStatus.NotFound;
+            
+            if (missingDmsData) {}
+            else if (missingFilename) status = ScrapeStatus.PathMissing;
+            else if (missingFileId) status = ScrapeStatus.FileIdMissing;
+            
+            return new Licence
+            {
+                LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
+                Status = status,
+                RegionId = primaryLicence.RegionId!.Value,
+            };
+        }
+        
+        var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
+            linkedLicence.LicenceNumber,
+            primaryLicence.RegionId!.Value);
+
+        var clonedConfig = lookupConfiguration.Clone();
+        clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
+
+        (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
+
+        try
+        {
+            relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
+                destinationFileName!,
+                dmsFileData!,
+                clonedConfig,
+                previouslyParsedFiles,
+                processRunId);
+
+            if (relatedFileMatches.StopExecution)
+            {
+                return null;
+            }
+            
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
+
+            if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
+            {
+                await pdfDataExtractorService.SaveMatchResultAsync(
+                    relatedFileMatches.Item!,
+                    dmsFileData.FileId,
+                    processRunId,
+                    lookupConfiguration.UseLockExclusivity);
+            }
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+            
+            await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
+                destinationFileName!,
+                dmsFileData.FileId,
+                processRunId,
+                ex.ToString(),
+                lookupConfiguration.UseLockExclusivity);
+            
+            throw;
+        }
+
+        if (relatedFileMatches.StopExecution)
+        {
+            return null;
+        }
+        
+        var licence = await ToLicenceAsync(
+            relatedFileMatches.Item!,
+            dmsFileData,
+            naldDataLine?.LicenceNumber,
+            (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+            lookupConfiguration,
+            cacheService,
+            naldDataLookupService,
+            processRunId);
+        
+        return licence;
     }
 
     private static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)

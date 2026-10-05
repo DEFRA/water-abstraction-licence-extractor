@@ -590,7 +590,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
+        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111-C6138", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates!);
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates![0].Limits);
@@ -2605,7 +2605,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates!.Single());
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates!.Single();
-        Assert.Equal("2568001249-LV20190619-LL-2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249-LV20190619-LL-2568001247-2568001248-C173928", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Count);
         

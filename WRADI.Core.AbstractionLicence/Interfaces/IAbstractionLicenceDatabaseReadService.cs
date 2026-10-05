@@ -108,9 +108,11 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
     
-    Task<int> GetCurrentVerificationsBackupVersionAsync();
+    Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync();
     Task<int> GetCurrentVerificationsCount();
     Task<int> GetCurrentBackupVerificationsCount();
     
     Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
+    
+    Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync();
 }

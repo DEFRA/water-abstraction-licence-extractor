@@ -50,22 +50,25 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return purposeMapping.ToList();
     }
 
-    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public async Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         await using var connection = GetPostgresConnection();
 
         var sql = new StringBuilder(
             """
-            SELECT backup_version
+            SELECT backup_version,
+                   backup_date_time_utc
             FROM public.licence_section_verification_backup_version
             ORDER BY backup_version DESC
             LIMIT 1;
             """);
         
-        return await QuerySingleOrDefaultAsync<int>(
+        var results = await QueryAsync<VerificationBackupVersion>(
             connection,
             sql.ToString(),
             0);
+
+        return results?.FirstOrDefault() ?? new VerificationBackupVersion();
     }
 
     public async Task<int> GetCurrentVerificationsCount()
@@ -147,6 +150,28 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             })
             .Where(l => l != null)
             .ToList()!;
+    }
+
+    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT distinct 
+                               licence_number,
+                               file_id
+                           FROM licence
+                           WHERE
+                                 licence_number IS NOT NULL
+                                AND file_id IS NOT NULL;
+                           """;
+
+        var results = await QueryAsync<LicenceNumberFileIdMapEntry>(
+            connection,
+            sql,
+            0);
+        
+        return results;
     }
 
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)

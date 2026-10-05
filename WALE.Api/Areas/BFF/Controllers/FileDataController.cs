@@ -62,6 +62,123 @@ public class FileDataController(
     }
 
     [HttpGet]
+    public async Task<ActionResult> GetWrInspectionReportSummariesAsync(
+        [FromQuery] int processRunId)
+    {
+        var cacheKey = $"wr-inspection-report-summaries:{processRunId}";
+
+        var summaries = await memoryCache.GetOrCreateAsync(
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return await BuildWrInspectionReportSummariesAsync(processRunId);
+            });
+
+        return Ok(summaries);
+    }
+
+    private async Task<List<object>> BuildWrInspectionReportSummariesAsync(int processRunId)
+    {
+        var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
+
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = simpleResults.Select(async simpleResult =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+
+                if (matchesResult == null)
+                {
+                    return null;
+                }
+
+                var form = WrInspectionReportSchemaConverter.ToForm(
+                    matchesResult, null, GetKnownTemplate(matchesResult));
+
+                // Every field is read back off the serialized JSON rather than the typed model, so
+                // this returns exactly what the list used to compute for itself from this same
+                // payload - notably Template, which JsonHelper writes as its name ("unknown")
+                // where the default options would write the enum's ordinal.
+                using var document = JsonDocument.Parse(
+                    JsonSerializer.Serialize(form, JsonHelper.GetSerializerOptions()));
+
+                var root = document.RootElement;
+                var metadata = root.GetProperty("metadata");
+
+                return (object)new
+                {
+                    fileId = simpleResult.FileId,
+                    template = GetStringOrNull(metadata, "template"),
+                    date = GetInspectionDate(root, metadata),
+                    completeness = ComputeCompleteness(root),
+                    isScan = metadata.TryGetProperty("isScan", out var isScan)
+                             && isScan.ValueKind == JsonValueKind.True
+                };
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        return (await Task.WhenAll(tasks)).Where(summary => summary != null).ToList()!;
+    }
+
+    private static string? GetStringOrNull(JsonElement element, string propertyName) =>
+        element.TryGetProperty(propertyName, out var property) && property.ValueKind == JsonValueKind.String
+            ? property.GetString()
+            : null;
+
+    private static string? GetInspectionDate(JsonElement report, JsonElement metadata)
+    {
+        if (report.TryGetProperty("inspectionDate", out var inspectionDate))
+        {
+            var dateTime = GetStringOrNull(inspectionDate, "dateTime");
+
+            if (dateTime != null)
+            {
+                return dateTime.Split('T')[0];
+            }
+        }
+
+        return metadata.TryGetProperty("date", out var date)
+            ? GetStringOrNull(date, "date")
+            : null;
+    }
+
+    // Rough completeness proxy - the percentage of the report's top-level sections carrying any
+    // content at all.
+    private static int ComputeCompleteness(JsonElement report)
+    {
+        string[] sectionNames =
+        [
+            "licenceNumber", "licenceNumberCleaned", "inspectionClass", "address", "metWith",
+            "inspectingOfficer", "inspectionDate", "licenceProvisions", "measurementDetails",
+            "generalComments"
+        ];
+
+        var withContent = sectionNames.Count(sectionName =>
+            report.TryGetProperty(sectionName, out var section) && HasContent(section));
+
+        return (int)Math.Round(withContent / (double)sectionNames.Length * 100);
+    }
+
+    private static bool HasContent(JsonElement element) =>
+        element.ValueKind switch
+        {
+            JsonValueKind.Null or JsonValueKind.Undefined => false,
+            JsonValueKind.String => !string.IsNullOrWhiteSpace(element.GetString()),
+            JsonValueKind.Array => element.EnumerateArray().Any(HasContent),
+            JsonValueKind.Object => element.EnumerateObject().Any(property => HasContent(property.Value)),
+            _ => true
+        };
+
+    [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdAsync(
         [FromQuery] int matchesResultId)
     {

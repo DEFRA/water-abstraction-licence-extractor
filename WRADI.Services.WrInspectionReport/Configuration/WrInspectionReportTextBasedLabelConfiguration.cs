@@ -600,6 +600,11 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .NextLines(1)
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Conformance")
+                // "Calibration" is a column-start-only text prefix of this document's own
+                // genuinely different "Calibration Certificate" field (a flat free-text list
+                // template, not the grid this rule targets) - without this guard, "Certificate"
+                // gets captured as if it were a real Yes/No answer.
+                .IgnoreIfContains(["Certificate"])
                 .FromText()
                 .Build(), // New template
             WrFluentRule
@@ -610,7 +615,14 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
-                .AlsoEndsAt("Conformance")
+                // "Conforma", not "Conformance": the column is narrow enough that real documents
+                // wrap the next cell's label mid-word, so the full word is never there to bound
+                // on. The shortest observed fragment is a prefix of it, so one marker does both.
+                .AlsoEndsAt("Conforma")
+                // The other half of that wrap: the row below carries Conformance's tail alongside
+                // Calibration's own answer, so it can't just be skipped. Longest-first, or
+                // removing "e:" would leave "nc" behind from "nce:".
+                .Remove([new("nce:"), new("ce:"), new("e:")])
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms, "Certificate"])
                 .SkipNextLineWhenStartsWith("Maintenance")
                 .FromText()
@@ -839,6 +851,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
+                .SkipColumnWhenStartsWith("Time:", "Inspecting Officer")
                 .RequireTextToClaimGroup()
                 .RequireCompleteDateToClaimGroup()
                 .FromText()

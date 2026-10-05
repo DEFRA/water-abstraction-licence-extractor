@@ -221,6 +221,27 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(int processRunId)
+    {
+        var path = "/Extractor/Images/GeneratePresignedUrls";
+        var fileIds = await GetFileIdsAsync(processRunId);
+
+        ConsoleHelper.WriteLine($"{fileIds.Count} need setting");
+
+        var requestBodyJson = JsonSerializer.Serialize(new
+        {
+            fileIds,
+            templateUrl = "thumbnail_{0}.jpg"
+        }, JsonHelper.GetSerializerOptions());
+        
+        var httpContent = new StringContent(requestBodyJson, Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        
+        var responseContent = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<Dictionary<Guid, string>>(responseContent)!;
+    }
+
     public async Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         var path = $"/Extractor/Licence/GetAll?processRunId={processRunId}&skip={skip}&take={take}";
@@ -376,6 +397,41 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         return licenceSectionVerifications;
     }
 
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentBackupVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        throw new NotImplementedException();
+    }
+
     public
         Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId)
     {
@@ -421,5 +477,40 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private async Task<List<Guid>> GetFileIdsAsync(int processRunId)
+    {
+        var fileIds = new List<Guid>();
+        var loopLicences = new List<Licence>();
+        
+        const int licencesToTake = 10;
+        var first = true;
+        var loopIdx = 0;
+        
+        while (first || loopLicences.Count == licencesToTake)
+        {
+            first = false;
+            var startAt = loopIdx++ * licencesToTake;
+            
+            loopLicences = await GetLicencesAsync(processRunId, startAt, licencesToTake);
+            var loopFileIds = loopLicences
+                .Select(l => l.DmsFileId)
+                .Where(fid => fid != null)
+                .Select(fid => fid!.Value);
+            
+            fileIds.AddRange(loopFileIds);
+        }
+        
+        var uniqueFileIds = fileIds
+            .Distinct()
+            .ToList();
+
+        return uniqueFileIds;
     }
 }

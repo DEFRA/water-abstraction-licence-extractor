@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
@@ -177,7 +178,7 @@ public static class AbstractionLicenceSchemaConverter
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
         
-        var (naldStatus, licenceType) = GetLicenceStatusAndType(naldAbstractionDataLine);
+        var (naldStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldAbstractionDataLine);
 
         var sectionDataDict = new Dictionary<
             string,
@@ -395,11 +396,31 @@ public static class AbstractionLicenceSchemaConverter
                 found = true;
             }
 
-            if (linkedLicences.Any(linkedLicence2 => LicenceNumberContainsOther(
+            var licenceContainsOther = linkedLicences
+                .Where(linkedLicence2 => LicenceNumberContainsOther(
                     linkedLicence2.LicenceNumber,
                     anywhereInDocumentLinkedLicence.LicenceNumber,
-                    regionCode)))
+                    regionCode))
+                .ToList();
+            
+            if (licenceContainsOther.Count >= 1)
             {
+                var foundIsNaldOnly = licenceContainsOther
+                    .All(l => l.ContainedIn!
+                        .All(ci => ci.Source == InformationSource.Nald) != false);
+
+                if (foundIsNaldOnly)
+                {
+                    foreach (var l in licenceContainsOther)
+                    {
+                        var newContainedIn = new List<ContainedInInformation>();
+                        newContainedIn.AddRange(l.ContainedIn!);
+                        newContainedIn.Add(anywhereInDocumentLinkedLicence.ContainedIn![0]);
+
+                        l.ContainedIn = newContainedIn.ToArray();
+                    }
+                }
+                
                 found = true;
             }
 
@@ -1276,57 +1297,10 @@ public static class AbstractionLicenceSchemaConverter
         return text;
     }
 
-    private static (NaldLicenceStatus status, LicenceType licenceType) GetLicenceStatusAndType(
-        NaldAbstractionData? naldData)
-    {
-        if (naldData == null)
-        {
-            return (NaldLicenceStatus.Unknown, LicenceType.Unknown);
-        }
-        
-        NaldLicenceStatus status;
-
-        if (naldData.RevocationDate != null && naldData.RevocationDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Revoked;
-        }
-        else if (naldData.ExpiryDate != null && naldData.ExpiryDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Expired;
-        }
-        else if (naldData.LapsedDate != null && naldData.LapsedDate.Value < DateTime.Now)
-        {
-            status = NaldLicenceStatus.Lapsed;
-        }
-        else if ((naldData.EffEndDate == null || naldData.EffEndDate.Value > DateTime.Now)
-            && (naldData.EffStDate == null || DateTime.Now > naldData.EffStDate.Value))
-        {
-            status = NaldLicenceStatus.Live;
-        }
-        else
-        {
-            status = NaldLicenceStatus.Unknown;
-        }
-        
-        var isImpoundmentLicence = false;
-        LicenceType type;
-        
-        if (isImpoundmentLicence)
-        {
-            type = LicenceType.Impoundment;
-        }
-        else
-            type = naldData.AsrcCode switch
-            {
-                "G" => LicenceType.GroundWaterAbstraction,
-                "S" => LicenceType.SurfaceWaterAbstraction,
-                _ => LicenceType.Abstraction
-            };
-
-        return (status, type);
-    }
-
-    private static bool LicenceNumberContainsOther(string? licenceNumber1, string? licenceNumber2, int regionId)
+    private static bool LicenceNumberContainsOther(
+        string? licenceNumber1,
+        string? licenceNumber2,
+        int regionId)
     {
         var licenceNumberStripped1 = FormattingHelper.StripForComparison(licenceNumber1, regionId);
 
@@ -2530,9 +2504,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
                 
             licenceType = LicenceType.Impoundment;
-            licenceStatus = naldDataLine?.RevocationDate == null ?
-                NaldLicenceStatus.Live
-                : NaldLicenceStatus.Revoked;
+            licenceStatus = NaldHelper.GetImpoundmentLicenceStatus(naldDataLine);
         }
         else
         {
@@ -2542,7 +2514,7 @@ public static class AbstractionLicenceSchemaConverter
 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
             licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
-            (licenceStatus, licenceType) = GetLicenceStatusAndType(naldDataLine);
+            (licenceStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldDataLine);
         }
         
         return (regionId, licenceNumber, licenceType, licenceStatus);

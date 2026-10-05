@@ -56,6 +56,10 @@ public sealed class LicenceListItem
 
     public bool HasVerifications { get; set; }
 
+    public bool IsLicenceNumberFlagged { get; set; }
+
+    public string? LicenceNumberFlagReason { get; set; }
+
     public string? SearchText { get; set; }
 
     /// <summary>

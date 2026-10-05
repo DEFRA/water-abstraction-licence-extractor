@@ -342,14 +342,17 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[2].PeriodType);
         
         Assert.Null(licence.AbstractionLimits.Individual[1].TimeCutoff);
-        Assert.Single(licence.AbstractionLimits.Individual[1].Limits);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
         Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
+        Assert.Equal(InformationSource.MixedSourcesOrMixedReasons, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
+        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
         Assert.Equal(30, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal("megalitres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
+        Assert.Equal(0.347, licence.AbstractionLimits.Individual[1].Limits[1].Value);
+        Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[1].Units);
+        Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[1].Limits[1].PeriodType);
         // TOOD these have exta conditions applied + theres tons I dont check in these tests
         
         Assert.Single(licence.AbstractionLimits.Individual[2].Limits);

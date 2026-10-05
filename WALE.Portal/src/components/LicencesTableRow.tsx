@@ -17,7 +17,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
-                .
+                <img src={item.thumbnailUrl} width={80} />
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
                 <a href="#"
@@ -26,6 +26,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                        onOpenReport(item.fileId!, item.licenceId!, item.matchesResultId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
+                {item.isLicenceNumberFlagged && <span title={item.licenceNumberFlagReason || undefined}> 🚩</span>}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
@@ -83,7 +84,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                             {getVerificationTypeInitials(getVerificationWithNotesFirstPart(vt))}
                                                         </span>
                                                     ))}
-                                                    {v.scrapedDataIsDifferent && '🚩'}
+                                                    {v.isFlagged && <span title={v.flagReason || undefined}>🚩</span>}
                                                 </span>
                                             );
                                         })

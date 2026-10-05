@@ -29,7 +29,7 @@ public class BaseMethodPossibilityTests
     {
         label = new LabelToMatch
         {
-            Possibilities = possibilities.Select(p => new TextToMatch(p)).ToList()
+            Possibilities = possibilities.Select(p => new TextToMatch(p) { ExceptWhenInsideWord = true}).ToList()
         }
     };
 

@@ -50,6 +50,8 @@ public class UiProcessRunService(
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
+        var licenceNumberFlagReasonsTask =
+            abstractionLicenceOutputService.GetLicenceNumberFlagReasonsAsync(processRunId);
         
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
@@ -57,6 +59,7 @@ public class UiProcessRunService(
         
         var verificationsBySection = await verificationsBySectionTask;
         var fileIdToLicenceNumberMapping = await fileIdTask;
+        var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == ScrapeStatus.Ok)
@@ -74,6 +77,15 @@ public class UiProcessRunService(
             verificationsBySection,
             fileIdToLicenceNumberMapping);
 
+        foreach (var listDataItem in paginationListData)
+        {
+            if (licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
+            {
+                listDataItem.isLicenceNumberFlagged = true;
+                listDataItem.licenceNumberFlagReason = flagReason;
+            }
+        }
+
         return paginationListData;
     }
     
@@ -83,11 +95,32 @@ public class UiProcessRunService(
             .ConvertToUpsertLicenceListItems(processRunRawDataList)
             .ToList();
 
+        const int maxRetries = 3;
+
         foreach (var batch in dbItems.Chunk(50))
         {
-            await licenceListRepository.UpsertLicenceListItemManyAsync(
-                batch,
-                CancellationToken.None);
+            var attempt = 0;
+
+            while (true)
+            {
+                try
+                {
+                    await licenceListRepository.UpsertLicenceListItemManyAsync(
+                        batch);
+
+                    break;
+                }
+                catch (Exception) when (attempt < maxRetries)
+                {
+                    attempt++;
+
+                    var delay = TimeSpan.FromSeconds(
+                        Math.Pow(2, attempt));
+
+                    await Task.Delay(
+                        delay);
+                }
+            }
         }
     }
 }

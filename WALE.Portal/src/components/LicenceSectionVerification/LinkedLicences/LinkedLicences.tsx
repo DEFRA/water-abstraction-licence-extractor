@@ -1,4 +1,4 @@
-import {useState, useImperativeHandle, forwardRef, useEffect} from 'react';
+import {useState, useImperativeHandle, forwardRef, useEffect, useRef} from 'react';
 import {
     type Licence,
     LinkedLicence,
@@ -13,16 +13,19 @@ import {LinkedLicenceItem} from "./LinkedLicenceItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {hasAnyOutgoingSections, getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
+import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
+import NaldStatusTag from "../../NaldStatusTag.tsx";
 interface LinkedLicencesProps extends LicenceSectionBodyProps {
     licence?: Licence;
     currentLicence?: Licence | null;
     onJumpToPage?: (pageNumber: number) => void;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
+    processRunId?: number;
 }
 
 export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProps>(
-    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history, processRunId}, ref) => {
         const [linkedLicences, setLinkedLicences] = useState<LinkedLicence[]>([]);
         const [implicitLinkedLicences, setImplicitLinkedLicences] = useState<LinkedLicence[]>([]);
         const [scrapedData, setScrapedData] = useState<LinkedLicence[] | null>(null);
@@ -35,13 +38,14 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
                 return dateB - dateA;
             })[0];
-
+    
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
         const [originalItem, setOriginalItem] = useState<LinkedLicence | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
+        const naldLookupRequestRef = useRef(0);
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
@@ -70,17 +74,17 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
 
         useEffect(() => {
             const fetchLinkedLicences = async () => {
-                const permitNumber = licence?.dmsPermitNumber;
-                if (!permitNumber) return;
+                const fileId = licence?.dmsFileId;
+                if (!fileId || processRunId === undefined) return;
 
                 setIsLoading(true);
                 setError(null);
                 try {
 
-                    const implicitResults = await waleApiClient.getIncoming(permitNumber);
+                    const implicitResults = await waleApiClient.incomingLinkedLicences(fileId, processRunId);
                     setImplicitLinkedLicences(implicitResults || []);
 
-                    const scrapeResults = await waleApiClient.getOutgoing(permitNumber, true);
+                    const scrapeResults = await waleApiClient.outgoingLinkedLicences(fileId, processRunId);
                     setLinkedLicences(scrapeResults || []);
                     
                     
@@ -108,7 +112,44 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
             };
 
             fetchLinkedLicences();
-        }, [licence?.dmsPermitNumber, currentLicence]);
+        }, [licence?.dmsFileId, processRunId, currentLicence]);
+
+        const addingLicenceNumber = isAddingNew && editingIndex !== null
+            ? linkedLicences[editingIndex]?.licenceNumber?.trim()
+            : undefined;
+
+        const lookupNaldData = async (index: number, licenceNumber: string) => {
+            const requestId = ++naldLookupRequestRef.current;
+            try {
+                const naldData = await waleApiClient.getLicenceNaldData(licenceNumber);
+                if (requestId !== naldLookupRequestRef.current) return;
+
+                setLinkedLicences(prev => {
+                    const ll = prev[index];
+                    if (!ll || ll.licenceNumber?.trim() !== licenceNumber) return prev;
+
+                    const newList = [...prev];
+                    newList[index] = new LinkedLicence({
+                        ...ll,
+                        naldStatus: naldData.naldStatus,
+                        licenceType: naldData.licenceType,
+                        regionId: naldData.regionId
+                    });
+                    return newList;
+                });
+            } catch (err) {
+                console.error('Error looking up NALD data:', err);
+            }
+        };
+
+        // Debounced so typing a licence number doesn't fire a request per keystroke
+        useEffect(() => {
+            if (!addingLicenceNumber || editingIndex === null) return;
+
+            const handle = setTimeout(() => lookupNaldData(editingIndex, addingLicenceNumber), 500);
+
+            return () => clearTimeout(handle);
+        }, [addingLicenceNumber, editingIndex]);
 
         const handleAddLicence = () => {
             const newLicence = new LinkedLicence({
@@ -267,8 +308,13 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     onReject={() => onItemVerificationRequested?.('Remove', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                                     onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
                                     onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', (ll.licenceNumber || ll.permitNumber || `item-${index}`))}
-                                    onOverride={() => {
+                                    onOverride={async () => {
                                         if (editingIndex === index) {
+                                            // Added before the debounced lookup resolved, so resolve now to save the LL with its NALD data
+                                            const licenceNumber = ll.licenceNumber?.trim();
+                                            if (isAddingNew && licenceNumber && !ll.naldStatus) {
+                                                await lookupNaldData(index, licenceNumber);
+                                            }
                                             setIsWaitingForVerification(true);
                                             onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
                                         } else {
@@ -295,27 +341,53 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             textAlign: 'center'
                         }}>
                             <p style={{color: '#888', marginBottom: '16px'}}>Incoming links found.</p>
-                            <ul>
-                                {implicitLinkedLicences
-                                    .map((_, i) => i)
-                                    .sort((a, b) => compareAlphanumeric(
-                                        implicitLinkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
-                                        implicitLinkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
-                                    ))
-                                    .map((index) => {
-                                        const ll = implicitLinkedLicences[index];
+                            <ul style={{
+                                listStyle: "none"
+                            }}    >
+                                {implicitLinkedLicences.map((ll, index) => {
+                                    const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
+                                    const licenceNumber = ll.licenceNumber;
+
+                                    const linkedLicenceId = getLicenceId(licenceNumber);
+                                    const linkedMatchesResultId = getMatchesResultId(licenceNumber);
+                                    const linkedFileId = getFileId(licenceNumber);
+
+                                    const styledLicenceNumber = licenceNumber ?? '';
+                                    
+                                    if (linkedFileId) {
                                         return (
-                                            <LinkedLicenceItem
-                                                key={index}
-                                                linkedLicence={ll}
-                                                onJumpToPage={onJumpToPage}
-                                                onOpenReport={onOpenReport}
-                                                outputListDataItem={outputListDataItem}
-                                                scrapedView={scrapedView}
-                                                history={history}
-                                            />
+                                            <li key={index} title={styledLicenceNumber} >
+                                                <a  style={{
+                                                    color: '#888',
+                                                    textAlign: 'center'
+                                                }}                                               
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+
+                                                        onOpenReport?.(
+                                                            linkedFileId,
+                                                            linkedLicenceId!,
+                                                            linkedMatchesResultId!
+                                                        );
+                                                    }}
+                                                >
+                                                    {styledLicenceNumber}
+                                                    <NaldStatusTag status={ll.naldStatus} />
+                                                </a>                                                 
+                                            </li>
                                         );
-                                    })}
+                                    }
+
+                                    return (
+                                        <li key={index} title={styledLicenceNumber}>
+                                            {styledLicenceNumber}
+
+                                            <NaldStatusTag status={ll.naldStatus} />
+                                            
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         </div>
                     )}

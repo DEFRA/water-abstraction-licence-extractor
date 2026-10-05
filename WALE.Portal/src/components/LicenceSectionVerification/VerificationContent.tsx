@@ -116,6 +116,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     >
                         <LinkedLicences
                             licence={licence}
+                            processRunId={processRunId}
                             currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
@@ -157,6 +158,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     >
                         <LinkedLicences
                             licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

@@ -45,7 +45,6 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
     const loadAllData = async () => {
         try {
             setLoading(true);
-            debugger;
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult, licenceVerificationStringResult] = await Promise.allSettled([
@@ -143,6 +142,11 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
                                     Licence Number {reportData2.licenceNumber.value}
                                 </span>
+                                {outputListDataItem?.isLicenceNumberFlagged && (
+                                    <span>
+                                        {' '}🚩{outputListDataItem.licenceNumberFlagReason && ` ${outputListDataItem.licenceNumberFlagReason}`}
+                                    </span>
+                                )}
                             </div>
                         )}
                         {/* Tab Navigation */}

@@ -1,15 +1,15 @@
-import {LicenceFileMapEntry, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {LicenceFileMapEntry, LicenceSectionItemSummary, OutputListDataItem} from "../api/generated/apiClient.ts";
 
-export const isScrapedDataDifferent = (
+export const getFlaggedItem = (
     outputListDataItem: OutputListDataItem | undefined,
     licenceSectionName: string,
     licenceSectionItemId: string | undefined,
-): boolean => {
-    if (!outputListDataItem || !licenceSectionItemId) return false;
+): LicenceSectionItemSummary | undefined => {
+    if (!outputListDataItem || !licenceSectionItemId) return undefined;
     return (outputListDataItem.licenceSectionVerifications ?? [])
         .filter(s => s.licenceSectionName === licenceSectionName)
         .flatMap(s => s.licenceSectionItems ?? [])
-        .some(i => i.licenceSectionItemId === licenceSectionItemId && !!i.scrapedDataIsDifferent);
+        .find(i => i.licenceSectionItemId === licenceSectionItemId && !!i.isFlagged);
 };
 
 export const getVerificationTypeColor = (type: string): string =>

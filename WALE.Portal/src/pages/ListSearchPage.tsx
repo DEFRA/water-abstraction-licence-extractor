@@ -16,6 +16,7 @@ import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
+import ExportImportVerifications from "../components/ExportImportVerifications.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
@@ -52,6 +53,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         ocrScan: undefined,
         issueYear: undefined,
         meansFound: undefined,
+        isLicenceNumberFlagged: undefined,
         ShortLicenceSetId: '',
         linkedLicencesType: '',
         verificationType: undefined,
@@ -98,6 +100,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty +
                 currentQuery.issueYear +
                 currentQuery.meansFound +
+                currentQuery.isLicenceNumberFlagged +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
                 currentQuery.verificationType +
@@ -128,6 +131,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty,
                 currentQuery.issueYear,
                 currentQuery.meansFound,
+                currentQuery.isLicenceNumberFlagged,
                 currentQuery.ShortLicenceSetId,
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
@@ -179,6 +183,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     'N/A',
                     '',
                     0,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,
@@ -368,6 +373,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             {activeTab === 'actions' && (
                 <div id="actions">
                     <ScrapeDocuments documentType="AbstractionLicence"/>
+                    <ExportImportVerifications />
                 </div>
             )}
 

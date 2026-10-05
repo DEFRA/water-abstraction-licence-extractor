@@ -1,4 +1,19 @@
 # ============================================================
+# Dotnet build stage
+# ============================================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+COPY . .
+
+RUN dotnet restore WRADI.Lambda.FileProcess.Single/WRADI.Lambda.FileProcess.Single.csproj
+
+RUN dotnet publish WRADI.Lambda.FileProcess.Single/WRADI.Lambda.FileProcess.Single.csproj \
+    --configuration Release \
+    --runtime linux-x64 \
+    --self-contained false \
+    --output WRADI.Lambda.FileProcess.Single/lambda-publish/
+
+# ============================================================
 # Native build stage: build Leptonica 1.82.0 + Tesseract 5.3.0
 # ============================================================
 FROM public.ecr.aws/lambda/dotnet:10 AS native-build
@@ -73,7 +88,6 @@ RUN git clone --branch 6.1 --depth 1 https://github.com/mono/libgdiplus.git \
     && make -j$(nproc) \
     && make install
 
-
 # ============================================================
 # Final Lambda runtime image
 # ============================================================
@@ -110,6 +124,8 @@ RUN dnf install -y \
 # Copy Tesseract/Leptonica/libgdiplus built in the native-build stage
 COPY --from=native-build /opt/tesseract /opt/tesseract
 COPY --from=native-build /opt/libgdiplus /opt/libgdiplus
+
+COPY --from=build WRADI.Lambda.FileProcess.Single/lambda-publish/ /var/task/
 
 # Copy your published Lambda app.
 # This assumes your deploy script publishes to:

@@ -19,8 +19,6 @@ public static class GenerateLinkedLicencesCsv
     {
         BaseAddress = new Uri(KeyConfig.ApiBaseUrl)
     };
-
-    private static readonly IOutputService OutputService = new ApiOutputService(HttpClient);
     
     private static readonly IAbstractionLicenceOutputService AbsLicenceOutputService =
         new ApiAbstractionLicenceOutputService(HttpClient);

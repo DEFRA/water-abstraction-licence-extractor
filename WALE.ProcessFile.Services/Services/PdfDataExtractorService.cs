@@ -410,7 +410,10 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = documentLines?.Count >= configuration.MinimumRowsForDigital;
+        const int minimumWordsPerPage = 18;
+        var wordsPerPage = (int)Math.Ceiling(pdfDocument.DocumentLines.Count / (double)pdfDocument.Pages.Count);
+
+        var isLikelyTextFile = wordsPerPage >= minimumWordsPerPage;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -432,7 +435,7 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = false;
 
-            const int maxPagesToDetermineIfScan = 4;
+            const int maxPagesToDetermineIfScan = 3;
 
             var maxPagesToLookAt = totalPagesToProcess;
             if (maxPagesToLookAt > maxPagesToDetermineIfScan)
@@ -544,6 +547,14 @@ public class PdfDataExtractorService(
                 if (imageReference.Contains("-error-", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Skipping missing image {imageReference}");
+                    continue;
+                }
+                
+                var image = allImagesInDocument
+                    .FirstOrDefault(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
+                
+                if (image != null && !IsPageScan(image.width, image.height))
+                {
                     continue;
                 }
                 
@@ -777,7 +788,7 @@ public class PdfDataExtractorService(
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;
-        const int minHeightWhenWidthEnough = 130;
+        const int minHeightWhenWidthEnough = 150;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -787,7 +798,7 @@ public class PdfDataExtractorService(
         }
 
         const int minHeight = 1800;
-        const int minWidthWhenHeightEnough = 130;
+        const int minWidthWhenHeightEnough = 150;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;

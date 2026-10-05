@@ -161,6 +161,8 @@ public class LabelToMatch
     // further down. Left off by default: a blanket version of this broke most other fields, for
     // which stopping at the first line is the common, correct shape.
     public bool AllowValueToWrapPastSameLineEndTag { get; init; }
+    
+    public bool UseColonEndLogic { get; set; }
 
     public LabelToMatch Clone()
     {
@@ -215,7 +217,8 @@ public class LabelToMatch
             LayoutExtractorTableLookupType = LayoutExtractorTableLookupType,
             LayoutExtractorTableShape = LayoutExtractorTableShape,
             AllowValueToWrapToNextLine = AllowValueToWrapToNextLine,
-            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag
+            AllowValueToWrapPastSameLineEndTag = AllowValueToWrapPastSameLineEndTag,
+            UseColonEndLogic = UseColonEndLogic
         };
     }
 }

@@ -60,14 +60,10 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             return cachedTables!;
         }
         
-        // Deliberately reads pdfDocument.Bytes directly rather than going through
-        // OpenInternalDocumentAsync() - that path calls out to NoOcrPdfDocumentService/
-        // IFileService to fetch bytes by filename, machinery this extractor doesn't need since
-        // the bytes are already in hand. It also isn't populated on the ad-hoc PdfDocument
-        // WrInspectionReportExtractionOrchestrator.GetTableMatchesAsync constructs for this
-        // overlay - confirmed calling OpenInternalDocumentAsync() there throws a
-        // NullReferenceException, silently zeroing out this extractor's contribution through
-        // that path (see PdfClownGridTableExtractorService for the same fix, found first).
+        // Reads pdfDocument.Bytes directly, not via OpenInternalDocumentAsync(): that fetches
+        // bytes by filename through machinery not populated on the ad-hoc PdfDocument
+        // GetTableMatchesAsync builds for this overlay, where it throws a NullReferenceException
+        // and silently zeroes out this extractor. Same fix as PdfClownGridTableExtractorService.
         var bytes = pdfDocument.Bytes;
 
         if (bytes == null)

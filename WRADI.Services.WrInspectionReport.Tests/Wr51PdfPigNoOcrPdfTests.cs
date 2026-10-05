@@ -49,13 +49,11 @@ public class Wr51PdfPigNoOcrPdfTests
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
-    // Some fields in the shared ruleset are LetterBasedAndTableBased+Unstructured
-    // (LicenceNumber, NameAndAddress, TelephoneNumber etc, wired in 2026-09-25) -
-    // PdfDataExtractorService throws if UnstructuredTableExtractorService is null whenever
-    // any active label needs it. These tests are exact-value regression tests against the
-    // pure letter-based/heuristic path specifically (see class doc comment) - an empty stub
-    // satisfies the null-check without genuinely enabling table-based matching, so the
-    // original heuristic-only scope of every assertion here stays unchanged.
+    // Some shared-ruleset fields are LetterBasedAndTableBased+Unstructured (wired 2026-09-25),
+    // and PdfDataExtractorService throws if UnstructuredTableExtractorService is null while any
+    // active label needs it. These are exact-value regression tests against the letter-based path,
+    // so an empty stub satisfies the null check without enabling table matching, leaving every
+    // assertion's heuristic-only scope unchanged.
     private class EmptyTableExtractorService : ITableExtractorService
     {
         public string Name => "Empty";

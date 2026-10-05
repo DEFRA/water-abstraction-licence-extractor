@@ -14,28 +14,21 @@ using PdfDocument = WALE.ProcessFile.Core.Models.PdfDocument;
 namespace WALE.ProcessFile.Services.PdfClown;
 
 /// <summary>
-/// Reads the LicenceProvisions/MeasurementDetails grid's real drawn table borders directly off
-/// a native WR51 PDF's content stream - independent of, and structurally more precise than, the
-/// whitespace-gap column-walk heuristic (FindLabelGroupMatchesHelper) the rest of the pipeline
-/// relies on. See WALE.ProcessFile.Services.PdfClown.Tests for the full derivation: WR51 PDFs
-/// draw table borders as thin filled rectangles (`re` ... `f*`), invisible to pdftotext -layout
-/// (drops all graphics) and so never used before this. GridCellReconstructor turns those
-/// rectangles into real cells (including colspan/rowspan merges); WordToCellAssigner places
-/// each PdfPig word by which cell's bounds contain its center. TableExtractorHelper (already
-/// used by TabulaTableExtractorService/AzureAiServicesDocumentIntelligenceTableExtractorService)
-/// does the label-to-cell matching from there, reusing the label configuration's own possibility
-/// lists unchanged.
+/// Reads the LicenceProvisions/MeasurementDetails grid's drawn table borders straight off a
+/// native WR51 PDF's content stream - structurally more precise than the whitespace-gap
+/// column-walk heuristic (FindLabelGroupMatchesHelper) the rest of the pipeline uses. WR51 PDFs
+/// draw borders as thin filled rectangles (`re` ... `f*`), which pdftotext -layout drops with all
+/// other graphics, so they were never used before. GridCellReconstructor turns them into cells
+/// (including colspan/rowspan merges), WordToCellAssigner places each PdfPig word by which cell
+/// contains its centre, and TableExtractorHelper does the label-to-cell matching from there.
 ///
-/// A 796-document real-corpus structural sweep found 3 narrow, PdfClown-level failure classes
-/// this extractor treats as "found nothing" rather than crashing the whole extraction:
-/// encrypted PDFs (PdfClown doesn't support them at all), a NullReferenceException inside
-/// PdfClown's own ShowText.Scan (unrelated to the border-rectangle logic here), and ~7% of
-/// documents with no drawn border grid at all (a different PDF generator, presumably).
+/// A 796-document sweep found 3 PdfClown-level failure classes this treats as "found nothing"
+/// rather than failing extraction: encrypted PDFs (unsupported), a NullReferenceException in
+/// PdfClown's ShowText.Scan, and ~7% of documents with no drawn border grid at all.
 ///
-/// Needs System.Drawing.Common (pinned to 6.0.0 - see this project's own csproj comment) and
-/// libgdiplus at runtime for PdfClown's ContentScanner to resolve each rectangle's real
-/// page-space coordinates - bundle it into the Lambda deployment alongside this pipeline's
-/// existing Tesseract/Leptonica native dependencies before enabling this in production.
+/// Needs System.Drawing.Common (pinned to 6.0.0, see the csproj) and libgdiplus at runtime for
+/// ContentScanner to resolve page-space coordinates - bundle it into the Lambda image alongside
+/// the existing Tesseract/Leptonica natives before enabling in production.
 /// </summary>
 public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITableExtractorService
 {
@@ -63,15 +56,10 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
             return JsonSerializer.Deserialize<List<DocumentTable>>(cacheText, JsonHelper.GetSerializerOptions())!;
         }
 
-        // Deliberately reads pdfDocument.Bytes directly rather than going through
-        // OpenInternalDocumentAsync() - that path calls out to NoOcrPdfDocumentService/
-        // IFileService to fetch bytes by filename, machinery this extractor doesn't need since
-        // the bytes are already in hand, and which isn't populated on the ad-hoc PdfDocument
-        // WrInspectionReportExtractionOrchestrator.GetTableMatchesAsync constructs for this
-        // overlay (confirmed: calling OpenInternalDocumentAsync() there throws a
-        // NullReferenceException, silently zeroing out every table-extractor overlay through
-        // that path - not specific to this service, TabulaTableExtractorService hits the same
-        // failure there).
+        // Reads pdfDocument.Bytes directly, not via OpenInternalDocumentAsync(): that fetches
+        // bytes by filename through machinery not populated on the ad-hoc PdfDocument
+        // GetTableMatchesAsync builds for this overlay, where it throws a NullReferenceException
+        // and silently zeroes out every table overlay. Tabula hits the same failure there.
         var bytes = pdfDocument.Bytes;
 
         if (bytes == null)
@@ -94,12 +82,10 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
             return [];
         }
 
-        // One DocumentTable per page that actually has a reconstructed grid - cells are built
-        // per page, never across pages, since each page's own coordinate space starts fresh
-        // (a page 2 cell at the same (X, Y) as a page 1 cell is pure coincidence, not the same
-        // table). Every WR51 document is several pages (sampled: 2-9, mode 4), so restricting to
-        // page 1 alone (this service's original scope) missed genuine content - multi-meter
-        // detail and later General Comments/footer content in particular often spill past it.
+        // One DocumentTable per page with a reconstructed grid, never across pages - each page's
+        // coordinate space starts fresh, so matching (X, Y) on two pages is coincidence. WR51
+        // documents run 2-9 pages (mode 4), so the original page-1-only scope missed real content,
+        // multi-meter detail and later General Comments especially.
         var tables = new List<DocumentTable>();
 
         foreach (var (pageNumber, segments) in segmentsByPage)
@@ -128,9 +114,8 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
             tables.Add(BuildDocumentTable(populated, pageNumber));
         }
 
-        // Cached as one entry under the shared page-1 key regardless of how many real pages
-        // contributed a table - same convention TabulaTableExtractorService already uses for
-        // its own multi-page result.
+        // One cache entry under the shared page-1 key however many pages contributed, matching
+        // TabulaTableExtractorService's convention.
         await cacheService.SaveOcrImageTextAsync(
             request,
             JsonSerializer.Serialize(tables, JsonHelper.GetSerializerOptions()));
@@ -138,12 +123,9 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
         return tables;
     }
 
-    // Row/column index only needs to correctly order cells within their own row/column - it
-    // doesn't need to describe one globally uniform grid shape (different row-bands on the same
-    // page genuinely have different column counts). Clustering each axis's distinct cell
-    // positions gives every cell a stable ordinal that TableExtractorHelper's
-    // RowIndex/ColumnIndex+1 adjacency check (for a value sitting in a cell separate from its
-    // label - a checkbox tick, say) can use correctly.
+    // These indices only need to order cells within their own row/column, not describe one
+    // uniform grid - row-bands on a page genuinely differ in column count. Clustering each axis's
+    // distinct positions gives a stable ordinal for TableExtractorHelper's +1 adjacency check.
     private static DocumentTable BuildDocumentTable(
         List<KeyValuePair<Cell, List<WordBox>>> populated, int pageNumber)
     {
@@ -192,9 +174,8 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
         return closest;
     }
 
-    // Same clustering approach as GridCellReconstructor's own line-snapping (a separate,
-    // simpler pass here - this is grouping whole CELL positions, already several points apart
-    // by construction, not raw hairline segments needing the tighter crossing-gap distinction).
+    // Same clustering idea as GridCellReconstructor's line-snapping, but simpler: whole cell
+    // positions are already points apart, unlike raw hairline segments.
     private static List<double> ClusterPositions(IEnumerable<double> positions, double tolerance)
     {
         var sorted = positions.Distinct().OrderBy(p => p).ToList();
@@ -216,9 +197,8 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
         public bool IsHorizontal => Width >= Height;
     }
 
-    // org.pdfclown.Version.Get caches into a plain, unlocked static Dictionary - opening two
-    // Files concurrently can corrupt it and throw. Confirmed via this project's own POC test
-    // suite running documents in parallel this session.
+    // org.pdfclown.Version.Get caches into an unlocked static Dictionary, so opening two Files
+    // concurrently can corrupt it and throw. Confirmed by running the POC suite in parallel.
     private static readonly Lock PdfClownFileOpenLock = new();
 
     // Keyed 1-based to match PdfPig's own page numbering (pdfPigDocument.GetPage(n)), since
@@ -278,10 +258,9 @@ public class PdfClownGridTableExtractorService(ICacheService cacheService) : ITa
         }
     }
 
-    // A Path's own child level holds its construction operators (DrawRectangle etc.) followed
-    // by its terminal paint operator. Only a Filled PaintPath means this rectangle was actually
-    // drawn on the page - a ModifyClipPath/no-op terminator (the "W* n" shape Word emits for
-    // every per-run text clip box) means it never painted anything and isn't a real border.
+    // A Path's child level holds its construction operators then its terminal paint operator.
+    // Only a Filled PaintPath was actually drawn - a ModifyClipPath/no-op terminator (Word's
+    // "W* n" per-run text clip box) painted nothing and isn't a border.
     private static void CollectPathRectangles(ContentScanner? pathLevel, List<Segment> segments)
     {
         if (pathLevel == null)

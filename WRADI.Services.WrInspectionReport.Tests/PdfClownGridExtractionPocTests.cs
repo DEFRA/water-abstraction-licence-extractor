@@ -10,11 +10,10 @@ using PdfClownPath = org.pdfclown.documents.contents.objects.Path;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// POC: can PdfClown recover the real drawn table grid (row/column border coordinates) from a
-/// WR51 PDF's content stream, independent of PdfPig/pdftotext's text-only view? Confirmed via
-/// manual content-stream inspection this session that these documents draw table borders as
-/// thin filled rectangles (`re` ... `f*`), not strokes - visible when rendered, invisible to
-/// pdftotext -layout (which drops all graphics), and previously never looked at.
+/// POC: can PdfClown recover the drawn table grid's border coordinates from a WR51 PDF's content
+/// stream, independent of PdfPig/pdftotext's text-only view? These documents draw borders as thin
+/// filled rectangles (`re` ... `f*`) rather than strokes - visible when rendered, invisible to
+/// pdftotext -layout, and never looked at before.
 /// </summary>
 public class PdfClownGridExtractionPocTests(ITestOutputHelper output)
 {
@@ -109,9 +108,8 @@ public class PdfClownGridExtractionPocTests(ITestOutputHelper output)
         AssertMatchesPattern(populated, ExpectedGridPatterns.T6_121013s32);
     }
 
-    // Checks that every group's full joined phrase lands in exactly one cell, and that cell
-    // contains no other group's phrase - i.e. the reconstruction neither splits a real merged
-    // cell apart nor merges two real, separate cells together.
+    // Every group's joined phrase must land in exactly one cell holding no other group's phrase,
+    // i.e. the reconstruction neither splits a merged cell nor merges two separate ones.
     private static void AssertMatchesPattern(
         List<KeyValuePair<Cell, List<WordBox>>> populated, string[][] pattern)
     {
@@ -164,10 +162,9 @@ public class PdfClownGridExtractionPocTests(ITestOutputHelper output)
         return (cells, populated);
     }
 
-    // org.pdfclown.Version.Get caches into a plain, unlocked static Dictionary - opening two
-    // Files concurrently (this project runs tests in parallel by default) can corrupt it and
-    // throw. Confirmed: serializing File construction alone (nothing else in PdfClown showed
-    // the same symptom) is enough to make this reliable.
+    // org.pdfclown.Version.Get caches into an unlocked static Dictionary, so opening two Files
+    // concurrently - which this project does by default - can corrupt it and throw. Serialising
+    // File construction alone is enough; nothing else in PdfClown showed the symptom.
     private static readonly Lock PdfClownFileOpenLock = new();
 
     private List<Segment> ExtractSegments(string filename)
@@ -191,9 +188,8 @@ public class PdfClownGridExtractionPocTests(ITestOutputHelper output)
         }
     }
 
-    // Hairline rectangles for the same visual line rarely land on the exact same coordinate
-    // (sub-point rendering differences per segment) - group positions within `tolerance` of
-    // each other into one logical grid line before counting/reporting them.
+    // Hairline rectangles for one visual line rarely share an exact coordinate, so group
+    // positions within tolerance into one logical grid line before counting them.
     private static List<double> ClusterPositions(IEnumerable<double> positions, double tolerance)
     {
         var sorted = positions.OrderBy(p => p).ToList();
@@ -234,10 +230,9 @@ public class PdfClownGridExtractionPocTests(ITestOutputHelper output)
         }
     }
 
-    // A Path's own child level holds its construction operators (DrawRectangle etc.) followed
-    // by its terminal paint operator. Only a Filled PaintPath means this rectangle was actually
-    // drawn on the page - a ModifyClipPath/no-op terminator (the "W* n" shape Word emits for
-    // every per-run text clip box) means it never painted anything and isn't a real border.
+    // A Path's child level holds its construction operators then its terminal paint operator.
+    // Only a Filled PaintPath was actually drawn - a ModifyClipPath/no-op terminator (Word's
+    // "W* n" per-run text clip box) painted nothing and isn't a border.
     private static void CollectPathRectangles(ContentScanner? pathLevel, List<Segment> segments)
     {
         if (pathLevel == null)

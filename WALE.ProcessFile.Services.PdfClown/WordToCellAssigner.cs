@@ -3,13 +3,12 @@ using static WALE.ProcessFile.Services.PdfClown.GridCellReconstructor;
 namespace WALE.ProcessFile.Services.PdfClown;
 
 /// <summary>
-/// Pure geometry: assign each word's bounding box to whichever reconstructed grid cell
-/// contains its center point. Independent of PdfPig/PdfClown types (a WordBox is just 4
-/// numbers) so it can be tested with synthetic data, same as GridCellReconstructor.
+/// Pure geometry: assigns each word's bounding box to whichever reconstructed cell contains its
+/// centre point. Independent of PdfPig/PdfClown types so it can be tested with synthetic data.
 ///
-/// Center-point containment, not overlap area: a word's box can legitimately straddle a cell
-/// boundary by a point or two (font metrics vs. drawn border position never align exactly),
-/// but its center is a stable, unambiguous single point to test.
+/// Centre-point containment rather than overlap area: a word's box can straddle a cell boundary by
+/// a point or two, since font metrics and drawn border positions never align exactly, but its
+/// centre is a single unambiguous point.
 /// </summary>
 public static class WordToCellAssigner
 {
@@ -51,11 +50,9 @@ public static class WordToCellAssigner
         return null;
     }
 
-    // Reading order within a cell: bucket words into visual lines first (by Y-center, within
-    // tolerance), top line first (largest Y, PdfPig's Y-up convention), then left to right
-    // within each line - a pure per-word Y sort breaks as soon as two words on the same line
-    // have slightly different baselines (sub-point font/kerning noise), which real PdfPig
-    // output does have.
+    // Reading order: bucket words into visual lines by Y-centre within tolerance, top line first
+    // (largest Y, PdfPig is Y-up), then left to right. A plain per-word Y sort breaks as soon as
+    // two words on a line have slightly different baselines, which real PdfPig output does.
     public static string CellText(IEnumerable<WordBox> words, double lineTolerance = 3.0)
     {
         var remaining = words

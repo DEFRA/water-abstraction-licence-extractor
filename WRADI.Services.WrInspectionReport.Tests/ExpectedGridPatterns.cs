@@ -1,13 +1,10 @@
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Ground truth grid structure per document, read directly off the rendered page rather than
-/// inferred - lets a cell-reconstruction bug be asserted against directly ("these two phrases
-/// must never land in the same cell", "these phrases must land in the SAME cell together")
-/// instead of eyeballing printed cell dumps. Each inner group is phrases that belong in one
-/// cell together (a plain field's own label+value, or - where the document draws a genuine
-/// colspan/rowspan - everything that merged cell should contain); every group must land in a
-/// cell containing none of any other group's phrases.
+/// Ground truth grid structure per document, read off the rendered page rather than inferred, so a
+/// cell-reconstruction bug can be asserted directly instead of eyeballing cell dumps. Each inner
+/// group is the phrases belonging in one cell - a label+value pair, or everything a genuine
+/// colspan/rowspan should contain - and must land in a cell holding no other group's phrases.
 /// </summary>
 public static class ExpectedGridPatterns
 {
@@ -44,11 +41,10 @@ public static class ExpectedGridPatterns
         ["Where", "kept:"]
     ];
 
-    // Same document, the header block above the grid - deliberately includes the 3-line
-    // "Name and address" wrap and the 2-line "Telephone No"/"Email" wraps, exactly the shape
-    // that needed AllowValueToWrapToNextLine/AllowValueToWrapPastSameLineEndTag special-cased
-    // rule flags this session to reach at all. A real cell naturally contains every wrapped
-    // line with no special-casing needed - this pattern is the evidence for that claim.
+    // Same document's header block, deliberately including the 3-line "Name and address" and
+    // 2-line "Telephone No"/"Email" wraps - the shape that needed the AllowValueToWrapToNextLine
+    // and AllowValueToWrapPastSameLineEndTag flags to reach at all. A real cell contains every
+    // wrapped line with no special-casing; this pattern is the evidence for that.
     public static readonly string[][] T1_2671321040_HeaderBlock =
     [
         ["Form", "WR", "-", "51"],
@@ -64,13 +60,11 @@ public static class ExpectedGridPatterns
         ["Position:", "Catchment", "Coordinator"]
     ];
 
-    // wr51__940030021sr (T4) - a structurally different template from T1: LicenceProvisions
-    // cells hold real multi-line narrative content instead of a bare tick (Source of
-    // supply/Quantities/Point of abstraction etc.), "Other provisions" spans 3 row-slots (not
-    // T1's 2), Site address has no Email column, and Measurement details has two full meter
-    // rows. Text copied verbatim from actual output, including this document's own PdfPig
-    // tokenisation quirks (letter-spaced "A l l", split ordinal suffixes "1 st") - matching a
-    // fixed field's exact rendering isn't the point here, matching cell BOUNDARIES is.
+    // wr51__940030021sr (T4) - structurally unlike T1: LicenceProvisions cells hold multi-line
+    // narrative instead of a bare tick, "Other provisions" spans 3 row-slots not 2, Site address
+    // has no Email column, and Measurement details has two meter rows. Text is verbatim from real
+    // output, PdfPig tokenisation quirks included ("A l l", "1 st") - cell BOUNDARIES are the
+    // point here, not exact rendering.
     public static readonly string[][] T4_940030021sr =
     [
         ["Form", "WR", "-", "51"],
@@ -121,9 +115,8 @@ public static class ExpectedGridPatterns
         ["Where", "kept:"]
     ];
 
-    // wr51__121013s32 (T6) - includes the big free-text "General comments" narrative block
-    // (a completely different field shape from every tick/cross/label+value cell around it)
-    // and the "Form sent to"/"Date" footer row below the main grid.
+    // wr51__121013s32 (T6) - includes the big free-text "General comments" block, a different
+    // field shape from every cell around it, and the "Form sent to"/"Date" footer row.
     public static readonly string[][] T6_121013s32 =
     [
         ["Form", "WR", "-", "51"],
@@ -162,9 +155,8 @@ public static class ExpectedGridPatterns
         ["Calibration:"],
         ["Conformance:"],
         ["Flow", "verification:"],
-        // "Meter verification:" deliberately not asserted here - it's a genuine text collision
-        // in the source document itself (also appears as a sub-heading inside the General
-        // comments narrative below), not ambiguous in the reconstruction.
+        // "Meter verification:" not asserted: it genuinely appears twice in the source document
+        // (also a sub-heading in General comments), not ambiguous in the reconstruction.
         ["Date", "of", "certificate", "or", "record:", "08/04/2025"], // rowspan
         ["Maintenance:"],
         ["Readings", "taken:"],

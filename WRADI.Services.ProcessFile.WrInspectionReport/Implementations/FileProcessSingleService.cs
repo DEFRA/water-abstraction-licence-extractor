@@ -134,25 +134,20 @@ public class FileProcessSingleService(
 
         try
         {
-            // KNOWN ISSUE (see git history / session notes): PdfClownGridTableExtractorService
-            // depends on System.Drawing.Common/libgdiplus, and PDFClown.NET's own ContentScanner
-            // was found to have at least two distinct memory-corruption bugs on Linux - a native
-            // Matrix handle leak in GraphicsState.Clone()/CopyTo() that reliably segfaults after a
-            // document-dependent number of table-border rectangles, and a separate
-            // AccessViolationException in CompositeFont.LoadEncoding() on documents using
-            // composite/CID-keyed fonts. Both crash the whole process rather than degrading
-            // gracefully - this was deliberately reverted to Tabula for that reason. Wired back in
-            // here on request for review, not because the underlying risk has changed.
+            // KNOWN ISSUE: PDFClown.NET's ContentScanner has two memory-corruption bugs on Linux -
+            // a native Matrix handle leak in GraphicsState.Clone()/CopyTo() that segfaults after a
+            // document-dependent number of border rectangles, and an AccessViolationException in
+            // CompositeFont.LoadEncoding() on composite/CID-keyed fonts. Both kill the process
+            // rather than degrade, which is why this was reverted to Tabula. Wired back in for
+            // review only; the risk hasn't changed.
             var pdfBytesForTableExtraction = await ReadPdfBytesAsync(pdfFilename);
             var tableExtractorService = new PdfClownGridTableExtractorService(cacheService);
 
-            // WR51's own fluent rule builder (FromTableGrid/FromLetterAndTableGrid/etc. -
-            // WrFluentRule.cs) marks every table-based label LayoutExtractorTableShape.Unstructured,
-            // so PdfDataExtractorService.GetMatchesInternalAsync's needsToParseUnstructuredTables
-            // check is always true here and throws NoNullAllowedException if this isn't set (added
-            // 2026-09-23, see git blame - lookupConfig was never updated to supply it, so every
-            // WR51 document failed at this point). Same ITableExtractorService instance/interface
-            // as the orchestrator's own overlay below, so this is just wiring, not new extraction.
+            // WrFluentRule marks every table-based label LayoutExtractorTableShape.Unstructured, so
+            // PdfDataExtractorService's needsToParseUnstructuredTables is always true here and
+            // throws NoNullAllowedException without this. Added 2026-09-23 without updating
+            // lookupConfig, so every WR51 document failed at this point. Same instance as the
+            // orchestrator's overlay below - wiring, not new extraction.
             lookupConfig.StructuredTableExtractorService = tableExtractorService;
             lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
 

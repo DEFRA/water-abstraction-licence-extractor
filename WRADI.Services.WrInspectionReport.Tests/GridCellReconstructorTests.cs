@@ -28,9 +28,8 @@ public class GridCellReconstructorTests
     [Fact]
     public void MissingInternalVerticalDivider_MergesTopRowIntoOneCell()
     {
-        // Same shape as "Land (only if specified): n/a" - one cell spans the width that would
-        // otherwise be its own column plus the neighbour's, because the divider between them
-        // simply isn't drawn for that row.
+        // Same shape as "Land (only if specified): n/a" - one cell spans its own column plus the
+        // neighbour's, because the divider between them isn't drawn for that row.
         BorderSegment[] segments =
         [
             H(0, 0, 200), H(50, 0, 200), H(100, 0, 200),
@@ -49,8 +48,8 @@ public class GridCellReconstructorTests
     [Fact]
     public void MissingInternalHorizontalDivider_MergesLeftColumnIntoOneCell()
     {
-        // Same shape as "Other provisions (specify below): n/a" - one cell spans 2 row-slots
-        // because the divider between them isn't drawn for that column.
+        // Same shape as "Other provisions (specify below): n/a" - one cell spans 2 row-slots, the
+        // divider between them undrawn for that column.
         BorderSegment[] segments =
         [
             H(0, 0, 200), H(100, 0, 200),
@@ -69,9 +68,9 @@ public class GridCellReconstructorTests
     [Fact]
     public void ABorderLineDrawnAsTwoAbuttingSegments_IsTreatedAsOneContinuousLine()
     {
-        // Word draws a single visual border as several separate rectangles - two touching
-        // (not overlapping) segments at the same Y must still count as one continuous line,
-        // or every cell touching the join would wrongly fail its edge-coverage check.
+        // Word draws one visual border as several rectangles, so two touching (not overlapping)
+        // segments at the same Y must count as one line, or every cell at the join fails its
+        // edge-coverage check.
         BorderSegment[] segments =
         [
             H(0, 0, 100), H(0, 100, 200), // one line, drawn in two pieces

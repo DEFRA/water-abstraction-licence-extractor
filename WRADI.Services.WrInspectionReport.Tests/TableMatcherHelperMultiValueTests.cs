@@ -6,14 +6,11 @@ using WRADI.DocumentType.WrInspectionReport.Constants;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Unit coverage for TableMatcherHelper.MatchMultiValueTextFields - the real WR51 multi-meter
-/// bug this exists to fix: MatchTextFields only ever returns the FIRST matching cell for a
-/// field, so a document with several meters (each its own row) silently picks one meter's value
-/// at random and discards the rest, and the schema converter's own BuildMeters (which expects
-/// one LabelGroupResult.Text line per meter) never gets the shape it needs. Fixtures mirror the
-/// real cell shape confirmed on wr51__940030021sr: two separate rows, each with a label+value
-/// pair merged into one cell, "Meter make:" appearing mid-cell (not a leading prefix) on one of
-/// them.
+/// Unit coverage for TableMatcherHelper.MatchMultiValueTextFields. The bug it fixes:
+/// MatchTextFields returns only the FIRST matching cell, so a multi-meter document keeps one
+/// meter's value at random and discards the rest, and BuildMeters never gets the one-line-per-meter
+/// shape it expects. Fixtures mirror wr51__940030021sr: two rows, each a label+value pair merged
+/// into one cell, with "Meter make:" mid-cell rather than leading on one of them.
 /// </summary>
 public class TableMatcherHelperMultiValueTests
 {
@@ -59,8 +56,8 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenLabelAppearsMidCell_ThenItIsStillFound_NotOnlyAsALeadingPrefix()
     {
-        // "Meter make:" here is NOT a prefix of the cell - it follows an unrelated sentence.
-        // FindTextValueInTable's own StartsWith-only check would miss this entirely.
+        // "Meter make:" follows an unrelated sentence rather than leading the cell, which
+        // FindTextValueInTable's StartsWith-only check misses entirely.
         var table = new DocumentTable
         {
             RowCount = 1,
@@ -128,9 +125,8 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenMetersSpanMultipleTables_ThenValuesAreStillOrderedByRowAcrossThem()
     {
-        // Multi-page documents (see PdfClownGridTableExtractorService's own multi-page support)
-        // return one DocumentTable per page - a meter's row on a later page must not jump ahead
-        // of an earlier page's meter just because it's a lower RowIndex on its own page.
+        // One DocumentTable per page, so a later page's meter must not jump ahead of an earlier
+        // page's just because it has a lower RowIndex within its own table.
         var tablePage2 = new DocumentTable
         {
             PageNumber = 2,
@@ -146,10 +142,8 @@ public class TableMatcherHelperMultiValueTests
             Cells = [Cell(0, 0, "Meter make: FirstPageMeter")]
         };
 
-        // Deliberately passed page 2 before page 1 - both rows tie on RowIndex 0 (one row per
-        // table), so a naive RowIndex-only sort would fall back to list/table order and put
-        // SecondPageMeter first. Ordering by PageNumber first is what makes this deterministic
-        // regardless of the tables list's own order.
+        // Page 2 passed before page 1, and both rows tie on RowIndex 0, so a RowIndex-only sort
+        // falls back to table order and puts SecondPageMeter first.
         var results = TableMatcherHelper.MatchMultiValueTextFields(
             [tablePage2, tablePage1], Labels, "TestTableService", MeterFieldBoundaryLabels);
 
@@ -160,11 +154,9 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenAnEarlierPagesMeterHasAHigherRowIndexThanALaterPagesMeter_ThenPageOrderStillWins()
     {
-        // The actual bug this guards, not just a RowIndex tie: BuildDocumentTable resets
-        // RowIndex to 0 at the top of every page's own grid, so a real multi-page document's
-        // page 2 meter can easily land on a LOWER RowIndex than a page 1 meter that has several
-        // other rows above it - sorting by RowIndex alone (ignoring PageNumber) would put the
-        // page 2 meter first, scrambling which meter's fields get zipped together downstream.
+        // The bug behind the tie in the test above: BuildDocumentTable restarts RowIndex at 0 per
+        // page, so a page 2 meter can genuinely hold a LOWER RowIndex than a page 1 meter with rows
+        // above it, scrambling which meter's fields get zipped together downstream.
         var tablePage1 = new DocumentTable
         {
             PageNumber = 1,
@@ -212,11 +204,9 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenTheLabelWordIsEmbeddedInsideAnUnrelatedLongerWord_ThenItIsNotMatched()
     {
-        // The real bug this guards: a photo-caption cell reading "Abstraction meter showing
-        // asset and serial numbers" (plural) case-insensitively contains "serial number" as a
-        // literal substring - stripping that 13-char match left just the stray trailing "s"
-        // from "numbers". Confirmed via the golden set (three real WR51 documents, all
-        // producing the literal value "s").
+        // The real bug: a photo caption "Abstraction meter showing asset and serial numbers"
+        // contains "serial number" as a substring, and stripping that match left the stray "s".
+        // Three golden-set documents all produced the literal value "s".
         var table = new DocumentTable
         {
             RowCount = 1,
@@ -233,8 +223,8 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenLabelAndValueAreSplitAcrossAdjacentCells_ThenTheNextCellIsUsed()
     {
-        // The other real WR51 cell shape (wr51__1041260103): a bare label with nothing else in
-        // its own cell, value in a separate, later column of the same row.
+        // The other real cell shape (wr51__1041260103): a bare label alone in its cell, value in
+        // a later column of the same row.
         var table = new DocumentTable
         {
             RowCount = 1,
@@ -278,10 +268,8 @@ public class TableMatcherHelperMultiValueTests
     [Fact]
     public void WhenNoBoundaryTermStopsAnImplausiblyLongRemainder_ThenItIsNotTrusted()
     {
-        // The other real bug this guards: "serial number" (or similar) appearing as a genuine,
-        // word-bounded standalone occurrence inside a long licence-condition paragraph, with no
-        // sibling field label anywhere in it to bound the value - the whole rest of that
-        // paragraph would otherwise be captured as if it were the serial number.
+        // The other real bug: a word-bounded "serial number" inside a long licence-condition
+        // paragraph with no sibling label to bound it would capture the rest of the paragraph.
         var table = new DocumentTable
         {
             RowCount = 1,

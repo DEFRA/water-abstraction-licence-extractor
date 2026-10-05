@@ -89,9 +89,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             MessageQueueService);
     }
 
-    // Internal (not private): lets PdfClownGoldenSetComparisonTests score against the exact
-    // same ground truth and classification rules, rather than a second, possibly-diverging
-    // implementation that would make the two harnesses' numbers not actually comparable.
+    // Internal, not private: lets PdfClownGoldenSetComparisonTests score against the same truth
+    // and classification rules, so the two harnesses' numbers stay comparable.
     internal class TruthFile
     {
         public string? SourceFile { get; set; }
@@ -406,13 +405,11 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>
-    /// Same harness, table-based grid extraction via PdfClownGridTableExtractorService instead -
-    /// reads the PDF's own drawn hairline table borders through PdfClown's content-stream
-    /// scanner (no cloud call, no cost). Unlike TabulaTableExtractorService this reuses the SAME
-    /// TableExtractorHelper matching (RowIndex/ColumnIndex adjacency, the label configuration's
-    /// own possibility lists) via a real DocumentTable, so this is a genuine apples-to-apples
-    /// run through the production matching pipeline - not the standalone PdfClownGoldenSetComparisonTests
-    /// script's own simplified extraction/scoring. Separate CSV (suffix "-pdfclown-table-based").
+    /// Same harness, grid extraction via PdfClownGridTableExtractorService: the PDF's own drawn
+    /// hairline borders read through PdfClown's content-stream scanner, no cloud call or cost. Goes
+    /// through the production TableExtractorHelper matching via a real DocumentTable, so unlike
+    /// PdfClownGoldenSetComparisonTests' simplified scoring this is apples-to-apples. Separate CSV
+    /// (suffix "-pdfclown-table-based").
     /// </summary>
     [Fact]
     public async Task WhenScoringWithPdfClownTableExtractionEnabled_ThenReportsPerFieldAccuracy()
@@ -493,8 +490,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
     /// <summary>
     /// Satisfies PdfDataExtractorService's non-null requirement on the baseline run without
-    /// enabling any actual table matching. Mirrors the stub of the same name in
-    /// Wr51PdfPigNoOcrPdfTests, which exists for the same reason.
+    /// enabling any table matching. Mirrors the stub of the same name in Wr51PdfPigNoOcrPdfTests.
     /// </summary>
     private class EmptyTableExtractorService : ITableExtractorService
     {
@@ -527,20 +523,12 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
 
-        // Same extractor for both roles - PdfDataExtractorService's own Structured/Unstructured
-        // split (LayoutExtractorTableShape) predates and is independent of this harness's
-        // table-overlay work; nothing here needs two different extractor instances. Needed as
-        // soon as any label uses LetterBasedAndTableBased + Unstructured (Phase B's retag of
-        // WrInspectionReportTextBasedLabelConfiguration's header-block/measurement fields is the
-        // first time this file's rules do) - PdfDataExtractorService throws if this is null and
-        // any active label requires it.
-        //
-        // The baseline run passes tableExtractorService: null to mean "no table overlay", which
-        // these two properties can't express - so they get an empty stub instead, exactly as the
-        // heuristic-only regression tests do (EmptyTableExtractorService in Wr51PdfPigNoOcrPdfTests).
-        // The parameter itself stays null-as-passed: it separately drives whether the orchestrator
-        // runs the overlay at all (see pdfBytesForTableExtraction below), so coalescing it there
-        // would silently turn the no-table baseline into a table-based run.
+        // Same extractor for both roles: PdfDataExtractorService's Structured/Unstructured split is
+        // independent of this harness's overlay work, and it throws if either is null while any
+        // active label needs it. The baseline passes tableExtractorService: null to mean "no
+        // overlay", which these properties can't express, so they get an empty stub. The parameter
+        // itself stays null - it separately drives whether the orchestrator runs the overlay at all,
+        // so coalescing it there would turn the no-table baseline into a table-based run.
         var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
         lookupConfiguration.StructuredTableExtractorService = lookupTableExtractorService;
         lookupConfiguration.UnstructuredTableExtractorService = lookupTableExtractorService;
@@ -768,12 +756,11 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
 
-        // A partially-complete run is the dangerous case: recall is computed over whatever
-        // documents survived extraction, so a wiring bug that kills most of the golden set still
-        // reports a plausible-looking percentage, just over a quietly smaller denominator. Only a
-        // total wipeout trips the assert above. Documents whose PDF isn't on this machine are
-        // environmental and excluded here; anything else means the measurement is incomplete and
-        // its numbers must not be trusted or compared against a previous run.
+        // A partial run is the dangerous case: recall is computed over whatever survived
+        // extraction, so a wiring bug that kills most of the golden set still reports a plausible
+        // percentage over a quietly smaller denominator, and only a total wipeout trips the assert
+        // above. Missing PDFs are environmental and excluded; anything else means the numbers are
+        // incomplete and not comparable to another run.
         var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
 
         Assert.True(

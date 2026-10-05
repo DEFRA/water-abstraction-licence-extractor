@@ -127,11 +127,9 @@ public class PdfDataExtractorServiceAlternateSelectionTests
     }
 
     // IgnoreBlockIfContains: the WR51 "Calibration Certificate" bug (2026-09-25) - a loose
-    // "Calibration" alternate matched a genuinely unrelated "Calibration Certificate" field on
-    // a document with that different template, capturing "Certificate" as if it were the
-    // real grid answer. LabelToMatch.IgnoreBlockIfContains already existed as a fluent option
-    // (.IgnoreIfContains(...)) but nothing ever read it - confirmed via a repo-wide search
-    // finding zero consumers outside the fluent builder itself.
+    // "Calibration" alternate matched an unrelated "Calibration Certificate" field on another
+    // template, capturing "Certificate" as the grid answer. IgnoreBlockIfContains already existed
+    // as .IgnoreIfContains(...) but nothing read it: zero consumers outside the fluent builder.
 
     [Fact]
     public void ReturnsFalse_WhenIgnoreBlockIfContainsMatches_AndEveryAlternateContainsTheTerm()
@@ -158,8 +156,8 @@ public class PdfDataExtractorServiceAlternateSelectionTests
     [Fact]
     public void ReturnsTrue_WhenIgnoreBlockIfContainsIsSet_AndAtLeastOneAlternateDoesNotContainAnyTerm()
     {
-        // Any() across alternates, same shape as RequireTextToClaimGroup above - one clean
-        // alternate is enough to let the group claim even if a sibling alternate is dirty.
+        // Any() across alternates, as with RequireTextToClaimGroup above: one clean alternate lets
+        // the group claim even if a sibling is dirty.
         var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("Certificate"), ResultWithText("Yes") };
 
         var result = PdfDataExtractorService.ShouldClaimLabelGroup(

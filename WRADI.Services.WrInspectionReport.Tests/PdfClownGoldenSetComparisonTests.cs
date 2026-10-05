@@ -12,21 +12,16 @@ using PdfClownPath = org.pdfclown.documents.contents.objects.Path;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Scores the PdfClown grid-extraction approach against the same hand-labelled golden set and
-/// the same Classify()/Outcome rules as Wr51GroundTruthAccuracyTests, for a direct,
-/// apples-to-apples comparison against the existing pipeline's own numbers - not a second,
-/// differently-normalized measurement.
+/// Scores the PdfClown grid-extraction approach against the same golden set and the same
+/// Classify()/Outcome rules as Wr51GroundTruthAccuracyTests, so the numbers compare directly.
 ///
-/// Deliberately NOT full field coverage - this is a feasibility measurement, not a competing
-/// production extractor. Covers every field reachable by "find the cell whose text starts
-/// with this label, strip it" on page 1: the whole header block, the 13 LicenceProvisions
-/// grid fields, and the straightforward MeasurementDetails label+value fields. Excluded:
-/// GeneralComments and Metadata.FormSentTo/Date (routinely on page 2+, and GeneralComments'
-/// own heading has many known variants this pass doesn't attempt to enumerate),
-/// Calibration/Conformance/FlowVerification/MeterVerification/Verification and the
-/// Maintenance/ReadingsTaken sub-fields (their value sits in a separate adjacent tick cell,
-/// not inline with the label - geometrically reachable but not attempted this pass), and the
-/// already-Unmodeled CalibrationCertificate/VerificationCertificate.
+/// A feasibility measurement, not a competing production extractor, so field coverage is partial:
+/// everything reachable by "find the cell whose text starts with this label, strip it" on page 1 -
+/// the header block, the 13 LicenceProvisions grid fields, and the simple MeasurementDetails
+/// label+value fields. Excluded: GeneralComments and FormSentTo/Date (usually page 2+, and
+/// GeneralComments has many heading variants), the Calibration/Conformance/FlowVerification/
+/// MeterVerification/Verification and Maintenance/ReadingsTaken fields (value sits in a separate
+/// adjacent tick cell - reachable, not attempted), and the already-Unmodeled certificate fields.
 /// </summary>
 public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
 {
@@ -174,8 +169,8 @@ public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
         Assert.NotEmpty(summary);
     }
 
-    // Anchor label -> extracted value. Tries each label variant in order (different templates
-    // word the same field differently); the first cell whose text starts with one wins.
+    // Anchor label -> extracted value. Tries each variant in order, since templates word the same
+    // field differently; the first cell starting with one wins.
     private static readonly Dictionary<string, Func<List<string>, string?>> FieldExtractors = new()
     {
         ["LicenceNumber"] = cells => FindValue(cells,
@@ -234,8 +229,8 @@ public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
         return null;
     }
 
-    // 🗸 (U+1F5F8) deliberately excluded - a surrogate-pair character, not a
-    // single UTF-16 char, same reason FormattingHelper's own trim guard excludes it.
+    // 🗸 (U+1F5F8) excluded: a surrogate pair, not a single UTF-16 char, same reason
+    // FormattingHelper's trim guard excludes it.
     private static readonly char[] TickGlyphs = ['✓', '✔', '√', '', '', '', '', ''];
 
     private static string? InOrder(string? value)
@@ -268,8 +263,7 @@ public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
             return "NotInspected";
         }
 
-        // T6 template uses Y/N instead of a tick/cross - see WrInspectionReportTextBasedLabelConfiguration's
-        // own comment on InOrderPossibilities for this same convention.
+        // T6 uses Y/N rather than a tick/cross - same convention as InOrderPossibilities.
         if (trimmed.Equals("Y", StringComparison.Ordinal))
         {
             return "InOrder";
@@ -280,12 +274,10 @@ public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
             return "NotInOrder";
         }
 
-        // Anything else is narrative text (several real documents describe provisions in
-        // prose - see the golden set's own notes) - InOrderStatus genuinely has no
-        // representation for this either (a documented, real ceiling, not specific to this
-        // extraction method), but returning the raw text rather than null lets Classify's own
-        // string comparison score it fairly against a narrative truth value, instead of
-        // silently discarding a correct extraction just because it doesn't fit the enum.
+        // Anything else is narrative prose, which InOrderStatus has no representation for either -
+        // a real documented ceiling, not specific to this method. Returning the raw text rather
+        // than null lets Classify score it against a narrative truth value instead of discarding a
+        // correct extraction for not fitting the enum.
         return trimmed;
     }
 
@@ -303,8 +295,8 @@ public class PdfClownGoldenSetComparisonTests(ITestOutputHelper output)
         return DateTime.TryParse(cleaned, out var parsed) ? parsed.ToString("yyyy-MM-dd") : value;
     }
 
-    // org.pdfclown.Version.Get caches into a plain, unlocked static Dictionary - opening two
-    // Files concurrently can corrupt it and throw (see the same lock elsewhere in this project).
+    // org.pdfclown.Version.Get caches into an unlocked static Dictionary, so opening two Files
+    // concurrently can corrupt it and throw. Same lock as in PdfClownGridTableExtractorService.
     private static readonly Lock PdfClownFileOpenLock = new();
 
     private static List<Segment> ExtractSegments(string path)

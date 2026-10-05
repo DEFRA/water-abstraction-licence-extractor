@@ -11,13 +11,10 @@ using PdfClownPath = org.pdfclown.documents.contents.objects.Path;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Does the PdfClown grid-extraction approach (see PdfClownGridExtractionPocTests,
-/// GridCellReconstructor, WordToCellAssigner) hold up across the real 789-document WR51
-/// corpus, not just the 3 hand-picked documents it was built and debugged against? No
-/// hand-labelled ground truth exists for the whole corpus (unlike the golden set the existing
-/// harness uses), so this measures structural signals instead: does it run without exceptions,
-/// does every document draw a real border grid at all, and what fraction of each page's text
-/// lands inside some reconstructed cell versus falling outside every one.
+/// Does the PdfClown grid-extraction approach hold up across the real 789-document corpus, not
+/// just the 3 documents it was built against? No hand-labelled truth exists corpus-wide, so this
+/// measures structural signals instead: does it run without exceptions, does every document draw a
+/// border grid at all, and how much of each page's text lands inside a reconstructed cell.
 /// </summary>
 public class PdfClownCorpusScaleTests(ITestOutputHelper output)
 {
@@ -52,9 +49,8 @@ public class PdfClownCorpusScaleTests(ITestOutputHelper output)
 
         var results = new ConcurrentBag<DocResult>();
 
-        // PdfClown's own File construction isn't thread-safe (see the lock in
-        // PdfClownGridExtractionPocTests) - segment extraction runs serially; word extraction
-        // and assignment (pure PdfPig + our own geometry code) still parallelise fine.
+        // PdfClown's File construction isn't thread-safe, so segment extraction runs serially;
+        // word extraction and assignment are pure PdfPig plus our geometry and still parallelise.
         foreach (var file in files)
         {
             var path = System.IO.Path.Combine(pdfFolder, file);
@@ -132,13 +128,10 @@ public class PdfClownCorpusScaleTests(ITestOutputHelper output)
             }
         }
 
-        // Known, PdfClown-level limitations, not bugs in this project's own code - confirmed
-        // by stack trace: 2 "Encrypted files are currently not supported" (needs the
-        // decrypt-with-iTextSharp-first workaround the old task/wradi-208-pdfclown branch
-        // already used) and 3 NullReferenceException inside PdfClown's own
-        // ShowText.Scan (its font/text handling, unrelated to border-rectangle extraction).
-        // A regression here - either a new exception shape or the known 5 growing - is worth
-        // failing on; these specific 5 documents aren't.
+        // Known PdfClown-level limitations, confirmed by stack trace: 2 encrypted files
+        // (unsupported; task/wradi-208-pdfclown used a decrypt-with-iTextSharp-first workaround)
+        // and 3 NullReferenceException in PdfClown's ShowText.Scan, unrelated to border
+        // extraction. A new exception shape, or these 5 growing, is worth failing on.
         Assert.True(errored.Count <= 5,
             $"Expected at most the 5 known PdfClown-level failures, got {errored.Count}");
 
@@ -158,10 +151,9 @@ public class PdfClownCorpusScaleTests(ITestOutputHelper output)
             $"Expected median word coverage of at least 90% across documents with a real grid, got {medianCoverage:P0}");
     }
 
-    // org.pdfclown.Version.Get caches into a plain, unlocked static Dictionary - opening two
-    // Files concurrently can corrupt it and throw (see the same lock in
-    // PdfClownGridExtractionPocTests). Kept as a distinct copy here rather than shared, since
-    // this corpus test is deliberately not using the same test class/fixture.
+    // org.pdfclown.Version.Get caches into an unlocked static Dictionary, so opening two Files
+    // concurrently can corrupt it and throw. A separate copy from the one in
+    // PdfClownGridExtractionPocTests, since this test deliberately shares no fixture with it.
     private static readonly Lock PdfClownFileOpenLock = new();
 
     private static List<Segment> ExtractSegments(string path)

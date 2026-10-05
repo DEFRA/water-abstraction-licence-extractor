@@ -5,13 +5,10 @@ using WALE.ProcessFile.Services.Methods;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
-// Overlay on top of the heuristic column-walk matching (WALE.ProcessFile.Services/Helpers/
-// FindLabelGroupMatchesHelper.cs) for the LicenceProvisions grid fields. Given real table cells
-// from Azure AI Document Intelligence's "prebuilt-layout" model, looks up each grid field's
-// answer by RowIndex/ColumnIndex adjacency instead of position-heuristic guessing. Only returns
-// a result for fields it can confidently resolve - the caller (
-// WrInspectionReportExtractionOrchestrator) keeps the existing heuristic result for anything not
-// present in the returned dictionary.
+// Overlay on FindLabelGroupMatchesHelper's heuristic column-walk for the LicenceProvisions grid
+// fields: given real table cells, resolves each field by RowIndex/ColumnIndex adjacency instead
+// of position guessing. Only returns fields it can resolve confidently - the caller
+// (WrInspectionReportExtractionOrchestrator) keeps the heuristic result for anything absent.
 public static class TableMatcherHelper
 {
     public static Dictionary<string, LabelGroupResult> MatchToPossibilities(
@@ -19,10 +16,8 @@ public static class TableMatcherHelper
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         string serviceName,
         Func<string?, string?>? transformContentFunction,
-        // Optional - see FindTextValueInTable's own doc comment. Guards the same failure mode
-        // MatchTextFields already guards: a grid field with a genuinely blank answer otherwise
-        // risking a neighbouring field's own label as its "value" (only actually wrong here if
-        // that label text happens to also satisfy one of this field's own Possibilities).
+        // Optional - see FindTextValueInTable. Stops a blank field taking a neighbouring
+        // field's label as its value.
         IReadOnlyList<string>? siblingLabels = null)
     {
         var results = new Dictionary<string, LabelGroupResult>();
@@ -86,8 +81,8 @@ public static class TableMatcherHelper
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         string serviceName,
-        // Optional - see FindTextValueInTable's own doc comment. Only meaningful for fields
-        // whose adjacent-cell fallback can otherwise land on a sibling field's own label.
+        // Optional - see FindTextValueInTable. Only matters where the adjacent-cell fallback
+        // can land on a sibling field's label.
         IReadOnlyList<string>? siblingLabels = null)
     {
         var results = new Dictionary<string, LabelGroupResult>();
@@ -152,18 +147,12 @@ public static class TableMatcherHelper
     }
 
     /// <summary>
-    /// For fields that can genuinely repeat per row in the same table (a document with several
-    /// meters, each its own row/cell) - MatchTextFields/FindTextValueInTable only ever return the
-    /// FIRST matching cell, which silently picks one meter's value at random (whichever cell
-    /// happened to be first in DocumentTable.Cells) and discards the rest; the schema converter's
-    /// own BuildMeters expects one LabelGroupResult.Text line per meter (see
-    /// WrInspectionReportSchemaConverter.GetMultilineTextLines), a shape this never produced
-    /// because MatchTextFields always returns exactly one line. Finds every cell containing the
-    /// label (not just a leading match - a real WR51 document has "Meter make:" appear mid-cell,
-    /// e.g. "Meter at previous site visit 25th March 2025 Meter make: ARAD Serial number:
-    /// ..."), bounds each value at the nearest sibling field's own label (boundaryLabels) so one
-    /// merged cell's several label+value pairs don't bleed into each other, and returns one line
-    /// per cell in row order (top to bottom matches the document's own meter ordering).
+    /// For fields that genuinely repeat per row (a document with several meters).
+    /// MatchTextFields returns only the FIRST matching cell, silently keeping one meter at random
+    /// and discarding the rest, while the converter's BuildMeters expects one Text line per meter.
+    /// Matches the label anywhere in a cell, not just leading - real documents have "Meter make:"
+    /// mid-cell - bounds each value at the nearest boundaryLabels term so merged cells don't bleed
+    /// into each other, and returns one line per cell in row order (which is meter order).
     /// </summary>
     public static Dictionary<string, LabelGroupResult> MatchMultiValueTextFields(
         IReadOnlyList<DocumentTable> tables,
@@ -190,12 +179,9 @@ public static class TableMatcherHelper
                     continue;
                 }
 
-                // PageNumber first, then RowIndex within that page: RowIndex is a per-table
-                // ordinal (BuildDocumentTable clusters each page's own rows starting from 0), so
-                // sorting by RowIndex alone across tables mis-orders a document whose meters span
-                // multiple pages - a page 2 meter can land on a lower RowIndex than a page 1
-                // meter that should sort before it, scrambling which meter's make/serial/reading
-                // end up zipped together downstream (WrInspectionReportSchemaConverter.BuildMeters).
+                // PageNumber before RowIndex: RowIndex restarts at 0 per table, so ordering by it
+                // alone lets a page 2 meter sort above a page 1 one, scrambling which meter's
+                // make/serial/reading get zipped together in BuildMeters.
                 values = tables
                     .SelectMany(table => FindAllTextValuesInTable(table, label.TextStart, boundaryLabels)
                         .Select(v => (table.PageNumber, v.RowIndex, v.Value)))
@@ -233,26 +219,17 @@ public static class TableMatcherHelper
         return results;
     }
 
-    // A real meter-detail value (make, serial number, reading, asset number, units) is never
-    // this long - a match this size means the "label" occurrence was coincidental, inside an
-    // unrelated long-form paragraph (a licence condition or narrative sentence) with no real
-    // boundary term to stop it. Generous headroom above the longest genuine value seen in the
-    // golden set ("Not available during site visit", ~35 chars) without coming close to a real
-    // sentence's length.
+    // A match longer than this means the label occurrence was coincidental, inside an unrelated
+    // paragraph with no boundary term to stop it. Headroom over the longest genuine golden-set
+    // value ("Not available during site visit", ~35 chars), well short of a real sentence.
     private const int MaxPlausibleValueLength = 60;
 
-    // Every occurrence of any of textToMatch in the table, not just the first - see
-    // MatchMultiValueTextFields. A value stops at the nearest occurrence of any boundaryLabels
-    // term after it in the same cell (a sibling field's own label bleeding in from the same
-    // merged cell), or at the cell's own end when no boundary term appears. Two real-document
-    // failure modes found via the golden set drove the two guards here: a label word embedded
-    // inside a longer, unrelated word ("serial numbers" in an unrelated photo caption
-    // wrongly matching "serial number", leaving just the stray trailing "s" once the match is
-    // stripped) - rejected via a word-boundary check on both sides of the match, same approach
-    // as BaseMethod.MatchesPossibility's own ExceptWhenInsideWord guard; and a label with no
-    // value in the SAME cell at all - the value sits in a separate, adjacent cell instead (the
-    // other real WR51 cell shape, already handled by FindTextValueInTable for the single-value
-    // case) - same nearest-populated-cell-to-the-right fallback applied here too.
+    // Every occurrence of textToMatch, not just the first - see MatchMultiValueTextFields. A value
+    // ends at the nearest boundaryLabels term in the same cell, or the cell's end. Two golden-set
+    // failure modes drove the guards: a label inside a longer word ("serial numbers" in a caption
+    // matching "serial number", leaving a stray "s"), rejected by a word-boundary check either side
+    // as in BaseMethod.MatchesPossibility's ExceptWhenInsideWord; and a label whose value sits in
+    // the adjacent cell instead, handled by the same fallback FindTextValueInTable uses.
     private static List<(int RowIndex, string Value)> FindAllTextValuesInTable(
         DocumentTable table, IReadOnlyList<TextToMatch> textToMatch, IReadOnlyList<string> boundaryLabels)
     {
@@ -284,14 +261,10 @@ public static class TableMatcherHelper
                         .OrderBy(c => c.ColumnIndex)
                         .FirstOrDefault();
 
-                    // A genuinely blank field (e.g. "Meter make:" with nothing filled in) sits
-                    // next to a sibling field's own label cell (e.g. "Serial number:" or "Serial
-                    // number: 96280940") more often than it sits next to a real value for THIS
-                    // field - without this guard that sibling cell (bare label, or the sibling's
-                    // own label+value merged together) gets taken as this field's value. Reject
-                    // whenever the next cell itself STARTS with one of the known field labels -
-                    // not just an exact bare-label match - since a populated sibling cell reads
-                    // just as plausible as a real value at a glance.
+                    // A blank field sits next to a sibling's label cell more often than next to a
+                    // real value for itself, so without this the sibling gets taken as the value.
+                    // Rejects any next cell STARTING with a known label, not just a bare one - a
+                    // populated sibling cell reads just as plausibly as a value.
                     var nextCellIsASiblingLabel = nextCell?.Content != null &&
                         boundaryLabels.Any(b => FindWordBoundedIndex(nextCell.Content, b) == 0);
 
@@ -311,11 +284,8 @@ public static class TableMatcherHelper
                     .DefaultIfEmpty(-1)
                     .Min();
 
-                // No boundary term found (boundaryIndex == -1) and the remainder still runs
-                // long is the tell that this cell's "label" occurrence was a coincidental match
-                // inside an unrelated long-form sentence (a licence-condition or narrative
-                // paragraph, not a real meter-detail cell) - a genuine value never needs this
-                // much text, so it's dropped rather than trusted.
+                // No boundary term and a long remainder is the tell that the label match was
+                // coincidental, inside a narrative paragraph - dropped below rather than trusted.
                 var value = (boundaryIndex >= 0 ? afterLabel[..boundaryIndex] : afterLabel).Trim();
 
                 if (value.Length > 0 && value.Length <= MaxPlausibleValueLength)

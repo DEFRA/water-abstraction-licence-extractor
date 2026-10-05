@@ -2,12 +2,9 @@ namespace WRADI.DocumentType.WrInspectionReport.Helpers;
 
 public static class TickHelper
 {
-    // A real tick/status answer ("✓", "N/A", "NI", "☑ ☐", etc. - see GetInOrderField's
-    // Possibilities list) is always a handful of characters once Azure's own ":selected:"/
-    // ":unselected:" annotation is stripped back out. Some templates put a full narrative
-    // sentence in the same cell instead (e.g. "Source of supply: Lower Greensand at Warwick
-    // Wold / Brewer St :selected:") - generous headroom above the longest real Possibility
-    // ("☑ ☐", 3 chars) while still excluding any real sentence.
+    // A real tick/status answer is a handful of characters once Azure's ":selected:" annotation
+    // is stripped. Some templates put a full narrative sentence in the same cell instead, so this
+    // leaves headroom over the longest real Possibility ("☑ ☐", 3 chars) but excludes sentences.
     private const int MaxTickAnswerLength = 8;
 
     public static string? GetTickedOrAcceptedStatus(string? rawRemainder)
@@ -27,23 +24,19 @@ public static class TickHelper
             return NormaliseSelectionMarks(rawRemainder);
         }
 
-        // T4/T6 (and some T1) templates draw the tick and a narrative elaboration in the SAME
-        // cell, tick first (e.g. "✓ River Beult & River Medway in the parish of Yalding Kent") -
-        // PdfClownGridTableExtractorService reads these merged, unlike Azure DI's own cell shape
-        // this method was originally tuned against (where the equivalent narrative case trails a
-        // ":selected:" annotation at the END, not the start - still correctly excluded below).
-        // Deliberately narrow to a short, letter-free leading token (covers every ordinary tick
-        // glyph plus the Wingdings-style Private Use Area codepoints real WR51 exports also use -
-        // see WrInspectionReportTextBasedLabelConfiguration's InOrderPossibilities - without hardcoding a
-        // third copy of that glyph list to keep in sync), not the letter-based Y/N/X/In/Not/NI/
-        // N-A possibilities: those collide both with ordinary short English/numeric answers a
-        // genuinely narrative-only cell can start with, AND - the sharper risk, found via the
-        // golden-set harness - with those same words appearing naturally *later* in the
-        // narrative itself (e.g. "...in the parish of Yalding Kent" contains the standalone word
-        // "in", which would otherwise satisfy the "In" possibility before TableMatcherHelper ever
-        // reaches the real "✓"). Returning only the leading token - never the full remainder -
-        // keeps that downstream Contains-based possibility scan from ever seeing the narrative
-        // tail at all, which is what actually closes that hole.
+        // T4/T6 and some T1 templates draw the tick and a narrative elaboration in the same cell,
+        // tick first ("✓ River Beult & River Medway in the parish of Yalding Kent"), which PdfClown
+        // reads merged - unlike the Azure DI cell shape this was tuned against, where the narrative
+        // trails a ":selected:" at the end instead.
+        //
+        // Matches only a short letter-free leading token, which covers ordinary tick glyphs and the
+        // Wingdings PUA codepoints WR51 exports use without keeping a third copy of that glyph
+        // list in sync. Deliberately not the letter-based Y/N/X/In/Not possibilities: those collide
+        // with short answers a narrative-only cell can start with, and - the sharper risk, found
+        // via the golden set - with the same words appearing later in the narrative ("the parish of
+        // Yalding" contains "in", satisfying the "In" possibility before the real "✓" is reached).
+        // Returning only the leading token stops the downstream Contains scan ever seeing the
+        // narrative tail, which is what closes that hole.
         var leadingToken = withoutSelectionMarks.Split(' ', 2)[0];
 
         var isUnambiguousTickGlyph =

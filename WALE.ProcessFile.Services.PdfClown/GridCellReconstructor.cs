@@ -1,13 +1,10 @@
 namespace WALE.ProcessFile.Services.PdfClown;
 
 /// <summary>
-/// Pure geometry: given the raw filled hairline rectangles PdfClown recovers from a page's
-/// content stream (see PdfClownGridTableExtractorService), reconstruct the actual table cells -
-/// including merged cells (a "Land (only if specified): n/a" cell spanning what would
-/// otherwise be 2 columns, or "Other provisions" spanning 2 rows) - without assuming a
-/// uniform grid. Kept independent of PdfClown/PDF types so it can be tested with plain
-/// synthetic rectangles, in milliseconds, same discipline as this project's other geometry
-/// helpers (FindLabelGroupMatchesHelper.WalkSameLineColumns etc.).
+/// Pure geometry: turns the filled hairline rectangles PdfClown recovers from a page's content
+/// stream into real table cells, including merges spanning columns or rows, without assuming a
+/// uniform grid. Independent of PdfClown/PDF types so it can be tested with synthetic rectangles
+/// in milliseconds.
 /// </summary>
 public static class GridCellReconstructor
 {
@@ -37,12 +34,10 @@ public static class GridCellReconstructor
         var xs = verticalLines.Keys.OrderBy(x => x).ToList();
         var ys = horizontalLines.Keys.OrderBy(y => y).ToList();
 
-        // The boundary tolerance here is crossingGapTolerance, not the tighter snapTolerance -
-        // a divider's own drawn piece is routinely inset ~1-1.5pt from the true outer boundary
-        // (the corner is rendered via the OTHER axis's own hairline, not this one), which is
-        // the same physical phenomenon as a mid-line crossing gap. Confirmed on a real T1
-        // document: a boundary tolerance of 1.0 was juuust too tight for a 1.5pt inset, so a
-        // real internal divider silently failed its coverage check and never blocked a merge.
+        // crossingGapTolerance, not the tighter snapTolerance: a divider's drawn piece is often
+        // inset ~1-1.5pt from the true boundary because the corner comes from the other axis's
+        // hairline. On a real T1 document a tolerance of 1.0 was too tight for a 1.5pt inset, so a
+        // real divider failed its coverage check and never blocked a merge.
         bool HasVerticalCoverage(double x, double y1, double y2) =>
             verticalLines.TryGetValue(x, out var intervals)
             && Covers(intervals, y1, y2, crossingGapTolerance, crossingGapTolerance);
@@ -75,9 +70,8 @@ public static class GridCellReconstructor
                             continue;
                         }
 
-                        // A real internal divider anywhere in this span means (i,j)/(k,l) is
-                        // not itself a real cell - it's several real cells sitting next to each
-                        // other that happen to share matching outer borders.
+                        // A real divider anywhere in this span means (i,j)/(k,l) isn't one cell,
+                        // just several that happen to share outer borders.
                         var hasInternalRowDivider = false;
 
                         for (var m = k + 1; m < l; m++)
@@ -119,14 +113,12 @@ public static class GridCellReconstructor
         return cells;
     }
 
-    // Groups segments whose Key (Y for a horizontal segment, X for a vertical one) falls
-    // within `snapTolerance` of each other into one logical line. Deliberately does NOT merge
-    // that line's [Start,End] pieces here beyond exact/near-zero-gap touching (see the 0.15
-    // below) - a border line crossed by a perpendicular divider is drawn as several pieces with
-    // a small real gap at the crossing (observed ~0.5-1.4pt on real documents), and merging
-    // that gap away here would silently erase the crossing divider. Bridging genuine crossing
-    // gaps happens later, at coverage-check time in Covers(), where it can't be confused with a
-    // real missing divider (which leaves a gap of a whole cell width, not a hairline's worth).
+    // Groups segments whose Key (Y for horizontal, X for vertical) falls within snapTolerance into
+    // one logical line. Deliberately does NOT merge that line's pieces beyond near-zero-gap
+    // touching (the 0.15 below): a line crossed by a perpendicular divider is drawn as pieces with
+    // a real ~0.5-1.4pt gap at the crossing, and closing it here would erase the divider. Covers()
+    // bridges genuine crossing gaps later, where a hairline's gap can't be mistaken for a missing
+    // divider's whole-cell one.
     private static Dictionary<double, List<Interval>> BuildLines(
         IEnumerable<(double Key, double Start, double End)> raw,
         double snapTolerance)
@@ -167,10 +159,9 @@ public static class GridCellReconstructor
         return result;
     }
 
-    // Whether this line's pieces, bridging gaps up to `crossingGapTolerance` (a perpendicular
-    // divider's own thickness - not a real break), together cover [start,end] within
-    // `boundaryTolerance` (corner/cap rendering means a divider's own extent rarely lines up
-    // with the requested boundary to the sub-point).
+    // Whether this line's pieces cover [start,end] within boundaryTolerance, bridging gaps up to
+    // crossingGapTolerance (a perpendicular divider's thickness, not a real break). Corner and cap
+    // rendering means a divider rarely lines up with the boundary to the sub-point.
     private static bool Covers(
         IReadOnlyList<Interval> intervals,
         double start,

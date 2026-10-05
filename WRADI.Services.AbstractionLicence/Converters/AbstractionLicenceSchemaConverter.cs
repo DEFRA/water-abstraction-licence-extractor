@@ -1605,6 +1605,7 @@ public static class AbstractionLicenceSchemaConverter
         
         AddVersionsToLicenceAggregates(allLicences);
         EnrichAndGroupAggregates(returnList);
+        returnList = EnrichAndGroupAggregateSets(returnList);
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -1612,6 +1613,82 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
+    private static List<LicenceSet> EnrichAndGroupAggregateSets(List<LicenceSet> licenceSets)
+    {
+        var returnList = new List<LicenceSet>();
+
+        var orderedLicenceSets = licenceSets
+            .OrderByDescending(aggregateSet => aggregateSet.Licences.Length)
+            .ToList();
+
+        foreach (var licenceSet in orderedLicenceSets)
+        {
+            if (licenceSet.Licences.Length == 1)
+            {
+                returnList.Add(licenceSet);
+                continue;
+            }
+            
+            var otherLicenceSets = licenceSets
+                .Where(x => x != licenceSet)
+                .Where(x => x.Licences.Length > 1)
+                .ToList();
+
+            if (otherLicenceSets.Count == 0)
+            {
+                returnList.Add(licenceSet);
+                continue;
+            }
+            
+            var supersets = GetSupersets(licenceSet, otherLicenceSets);
+
+            if (supersets.Count > 0)
+            {
+                continue;
+            }
+
+            returnList.Add(licenceSet);
+        }
+
+        returnList = returnList
+            .OrderBy(aggregateSet => aggregateSet.Licences.Length)
+            .ToList();
+        
+        return returnList;
+    }
+
+    private static List<LicenceSet> GetSupersets(LicenceSet licenceSet, List<LicenceSet> otherLicenceSets)
+    {
+        var returnList = new List<LicenceSet>();
+        
+        foreach (var otherLicenceSet in otherLicenceSets)
+        {
+            var otherLicenceSetLicenceIds = otherLicenceSet.Licences
+                .Select(l => l.LicenceNumber?.Value)
+                .ToList();
+            
+            var notFound = false;
+            
+            foreach (var licence in licenceSet.Licences)
+            {
+                if (otherLicenceSetLicenceIds.Contains(licence.LicenceNumber?.Value))
+                {
+                    continue;
+                }
+                
+                notFound = true;
+                break;
+            }
+
+            if (!notFound && otherLicenceSet.Licences.Length > licenceSet.Licences.Length)
+            {
+                returnList.Add(otherLicenceSet);
+            }
+        }
+
+        return returnList;
+    }
+    
     private static void EnrichAndGroupAggregates(List<LicenceSet> returnList)
     {
         if (returnList.Count < 1)
@@ -1729,7 +1806,7 @@ public static class AbstractionLicenceSchemaConverter
                         versions.AddRange(matchingSourceAggregate.OtherVersions);
                     }
                     
-                    versions.Add(AggregateVersion.FromAggregate(otherAggregate, "Different order"));
+                    versions.Add(AggregateVersion.FromAggregate(otherAggregate, "Different source licence / different order"));
                     matchingSourceAggregate.OtherVersions = versions.ToArray();
                 }
             }

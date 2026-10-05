@@ -1430,7 +1430,10 @@ public static class AbstractionLicenceSchemaConverter
         {
             LicenceSetTypes = [LicenceSetType.SingleLicenceOnly],
             Licences = [primaryLicence],
-            AggregateSets = GetAggregateSets([primaryLicence], [primaryLicence], true)
+            AggregateSets = GetAggregateSets(
+                [primaryLicence],
+                [primaryLicence],
+                true)
         };
 
         returnList.Add(singleLicenceOnlySet);
@@ -1443,7 +1446,10 @@ public static class AbstractionLicenceSchemaConverter
             {
                 LicenceSetTypes = [LicenceSetType.AllLicencesExplicitlyReferencedAnywhere],
                 Licences = allLicences.ToArray(),
-                AggregateSets = GetAggregateSets(allLicences, allLicences, true)
+                AggregateSets = GetAggregateSets(
+                    allLicences,
+                    allLicences,
+                    true)
             }
             : null;
 
@@ -1475,7 +1481,10 @@ public static class AbstractionLicenceSchemaConverter
             {
                 LicenceSetTypes = [LicenceSetType.AllLicencesExplicitlyReferencedInLimits],
                 Licences = licencesReferencedInLimits.ToArray(),
-                AggregateSets = GetAggregateSets(licencesReferencedInLimits, allLicences)
+                AggregateSets = GetAggregateSets(
+                    licencesReferencedInLimits,
+                    allLicences,
+                    false)
             }
             : null;
 
@@ -1594,7 +1603,8 @@ public static class AbstractionLicenceSchemaConverter
             licence.LicenceSets = newLicenceSetIds.ToArray();
         }
         
-        AddVersionsToAggregates(allLicences);
+        AddVersionsToLicenceAggregates(allLicences);
+        EnrichAndGroupAggregates(returnList);
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -1602,7 +1612,80 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static void AddVersionsToAggregates(List<Licence> allLicences)
+    private static void EnrichAndGroupAggregates(List<LicenceSet> returnList)
+    {
+        if (returnList.Count < 1)
+        {
+            return;
+        }
+        
+        foreach (var licenceSet in returnList)
+        {
+            if (licenceSet.Licences.Length == 1 || licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregateSet in licenceSet.AggregateSets)
+            {
+                var newAggregates = new List<AggregateWithContext>();
+                    
+                foreach (var aggregate in aggregateSet.Aggregates)
+                {
+                    var alreadyHaveInOutputList = ContainedInAggregatesOrOtherVersion(aggregate.Id, newAggregates);
+
+                    if (alreadyHaveInOutputList)
+                    {
+                        continue;
+                    }
+                        
+                    var licenceVersionOfAggregate = licenceSet.Licences
+                        .SelectMany(licence => licence.AbstractionLimits.Aggregates ?? [])
+                        .FirstOrDefault(aggregateLoop => aggregateLoop.Id == aggregate.Id);
+
+                    if (licenceVersionOfAggregate != null)
+                    {
+                        newAggregates.Add(AggregateWithContext.FromAggregate(licenceVersionOfAggregate));
+                        continue;
+                    }
+                        
+                    newAggregates.Add(aggregate);
+                }
+
+                aggregateSet.Aggregates = newAggregates.ToArray();
+            }
+        }
+    }
+
+    private static bool ContainedInAggregatesOrOtherVersion(
+        string aggregateId,
+        List<AggregateWithContext> aggregates)
+    {
+        foreach (var aggregate in aggregates)
+        {
+            if (aggregate.Id == aggregateId)
+            {
+                return true;
+            }
+
+            if (aggregate.OtherVersions == null)
+            {
+                continue;
+            }
+
+            foreach (var otherVersions in aggregate.OtherVersions)
+            {
+                if (otherVersions.Id == aggregateId)
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    private static void AddVersionsToLicenceAggregates(List<Licence> allLicences)
     {
         foreach (var sourceLicence in allLicences)
         {
@@ -1886,7 +1969,10 @@ public static class AbstractionLicenceSchemaConverter
                         {
                             LicenceSetTypes = [LicenceSetType.AllLicencesIncludingImplicitlyReferenced],
                             Licences = implicitLicences.ToArray(),
-                            AggregateSets = GetAggregateSets(implicitLicences, allLicencesInSets)
+                            AggregateSets = GetAggregateSets(
+                                implicitLicences,
+                                allLicencesInSets,
+                                false)
                         };
 
                         returnList.Add(implicitLicenceSet);
@@ -2010,7 +2096,7 @@ public static class AbstractionLicenceSchemaConverter
     private static AggregateSet[]? GetAggregateSets(
         IReadOnlyList<Licence> licences,
         IReadOnlyList<Licence> allLicences,
-        bool excludeAnyLinksNotInSet = false)
+        bool excludeAnyLinksNotInSet)
     {
         var aggregates = new List<Aggregate>();
 
@@ -2066,7 +2152,7 @@ public static class AbstractionLicenceSchemaConverter
             
             aggregateSets.Add(aggregateSet);
         }
-
+        
         return aggregateSets.Count == 0 ? null : aggregateSets.ToArray();
     }
 

@@ -13,33 +13,37 @@ public class AggregateSet
                 var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
                 allLicenceNumbers.AddRange(aggregate.LinkedLicences ?? []);
                 
-                return string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
+                var licenceNumbersStr = string.Join(',', allLicenceNumbers.OrderBy(lln => lln));
+                return $"{licenceNumbersStr}-{aggregate.GetCombinedLimitValue()}";
             })
             .Select(group => group.First());
 
+        var combinedValue = 0.0;
         var licencesDict = new Dictionary<string, string>();
         
-        foreach (var licence in groupedAggregates)
+        foreach (var aggregate in groupedAggregates)
         {
-            if (licence.SourceLicenceNumber == null)
+            combinedValue += aggregate.GetCombinedLimitValue();
+            
+            if (aggregate.SourceLicenceNumber == null)
             {
                 // Shouldn't get here ideally
                 Console.WriteLine("WARNING - AggregateSet - LicenceNumber is null");
                 continue;
             }
             
-            var sourceLicenceNumber = FormattingHelper.RemoveSeperators(licence.SourceLicenceNumber)!;
+            var sourceLicenceNumber = FormattingHelper.RemoveSeperators(aggregate.SourceLicenceNumber)!;
             
             if (licencesDict.ContainsKey(sourceLicenceNumber))
             {
                 continue;
             }
             
-            licencesDict.Add(sourceLicenceNumber, licence.SourceLicenceVersionId!);
+            licencesDict.Add(sourceLicenceNumber, aggregate.SourceLicenceVersionId!);
 
-            if (licence.LinkedLicences != null)
+            if (aggregate.LinkedLicences != null)
             {
-                foreach (var linkedLicence in licence.LinkedLicences
+                foreach (var linkedLicence in aggregate.LinkedLicences
                     .Select(ll => FormattingHelper.RemoveSeperators(ll)!))
                 {
                     if (licencesDict.ContainsKey(linkedLicence))
@@ -72,26 +76,26 @@ public class AggregateSet
             outputSb.Append($"{licenceNumberOutput}-{licenceVersionId}");
         }
 
+        outputSb.Append($"-C{combinedValue}");
         AggregateSetId = outputSb.ToString();
+
         return AggregateSetId;
     }
 
-    private string? _aggregateSetId;
-    
     public string? AggregateSetId
     {
-        get => _aggregateSetId;
+        get;
         // ReSharper disable once MemberCanBePrivate.Global - can't make private as used in serialisation
         set
         {
-            _aggregateSetId = value;
-            
+            field = value;
+
             foreach (var aggregate in Aggregates)
             {
                 aggregate.AggregateSetId = value;
             }
         }
     }
-    
-    public AggregateWithContext[] Aggregates { get; init; } = [];
+
+    public AggregateWithContext[] Aggregates { get; set; } = [];
 }

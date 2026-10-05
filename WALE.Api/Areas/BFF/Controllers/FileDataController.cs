@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Interfaces;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -21,6 +22,7 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
+    IFileService fileService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -350,16 +352,21 @@ public class FileDataController(
                 var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
                 var line = WrInspectionReportCsvLine.FromForm(form);
 
-                // A raw s3:// URI isn't clickable and needs direct bucket credentials nobody
-                // reading this export has - link through FilesController's own presigned-URL
-                // redirect instead, so it resolves to a real, working HTTPS download on click.
-                // Deliberately not embedding a presigned URL directly here: AwsS3FileService.
-                // GetPresignedUrlAsync expires in 2 minutes, which suits that redirect's
-                // generate-then-immediately-follow flow but would already have expired by the
-                // time anyone opens this CSV.
-                line.Metadata__FileUrl = matchesResult.Filename == null
-                    ? null
-                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/GetAsync?filename={Uri.EscapeDataString(matchesResult.Filename)}";
+                // The file's own S3 address, not a link back through this API: durable, where a
+                // presigned URL lapses after an hour and a BFF link dies with API reachability.
+                // Needs the reader's own AWS credentials, which this export's pipeline consumer has.
+                if (matchesResult.Filename == null)
+                {
+                    line.Metadata__FileUrl = null;
+                }
+                else
+                {
+                    var fileUrl = fileService.GetHttpsUrl(matchesResult.Filename, StorageFolder.Ingress);
+
+                    line.Metadata__FileUrl = fileUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? fileUrl
+                        : $"{Request.Scheme}://{Request.Host}{fileUrl}";
+                }
 
                 return line;
             }

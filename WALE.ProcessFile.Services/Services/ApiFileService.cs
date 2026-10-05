@@ -216,6 +216,14 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         throw new NotImplementedException();
     }
     
+    // This implementation talks to the API rather than to storage, so it has no bucket or region
+    // of its own to build an S3 address from - the BFF path is the correct answer here, and the API
+    // side resolves it against whatever IFileService it was configured with.
+    public string GetHttpsUrl(string filename, StorageFolder folder)
+    {
+        return $"/BFF/Files/GetRaw?filename={Uri.EscapeDataString(filename)}";
+    }
+
     public async Task<string> GetPresignedUrlAsync(string filename, StorageFolder folder)
     {
         var path = $"/BFF/Files/Get?filename={filename}&folder={folder.ToString().ToLower()}";

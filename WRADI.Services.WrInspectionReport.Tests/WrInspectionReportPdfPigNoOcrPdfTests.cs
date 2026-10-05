@@ -575,9 +575,10 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             + $"known {knownUnparsedInspectionDates}. Extraction is claiming the wrong text, not just missing "
             + "a value - see test output.");
 
-        // Separate from the parse ratchet above: these documents do resolve a date, so a capture
-        // regression would otherwise hide behind the salvage that rescues it.
-        const int knownInspectionDateColumnLeaks = 38;
+        // Separate from the parse ratchet above: these documents still resolve a date, so a capture
+        // regression would otherwise hide behind whatever rescues it. 35 is this branch's baseline
+        // run; the table-overlay run measures 32, so the looser of the two is what's pinned.
+        const int knownInspectionDateColumnLeaks = 35;
 
         Assert.True(
             inspectionDateLeaksOfficer <= knownInspectionDateColumnLeaks,

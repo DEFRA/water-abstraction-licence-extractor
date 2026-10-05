@@ -13,22 +13,48 @@ using WRADI.DocumentType.WrInspectionReport.Helpers;
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
 /// <summary>
-/// Two-pass extraction: a cheap first pass with only the classification label groups
-/// (WrInspectionReportLabelConfiguration.GetClassificationLabels - 7 groups) decides
-/// Metadata.Template, then a second pass runs GetT1Labels() or GetLabels() depending on that
-/// result. Exists so a T1-specific rule change (once it has real evidence behind it) can be made
-/// in GetT1Labels() alone, with no way to affect any other template's documents, rather than
-/// needing a shared field's behaviour to be correct for every template simultaneously - that's
-/// exactly the constraint that made two earlier WalkSameLineColumns fix attempts unsafe.
+/// Two-pass extraction: a cheap first pass over the 7 classification label groups decides
+/// Metadata.Template, then a second runs GetT1Labels() or GetLabels() accordingly. Exists so a
+/// T1-specific rule change can live in GetT1Labels() alone with no way to affect other templates -
+/// needing one shared field to be correct for every template at once is what made two earlier
+/// WalkSameLineColumns fixes unsafe.
 ///
-/// The classification pass always runs with UseLockExclusivity forced off - it's a throwaway
-/// probe, not the result callers actually want, and mustn't take a real DMS lock or write a
-/// stub matches-result row for it. The second, real pass keeps whatever locking behaviour the
-/// caller's own configuration asked for, exactly matching what a single-pass call would have
-/// done.
+/// The classification pass forces UseLockExclusivity off: it's a throwaway probe and mustn't take
+/// a DMS lock or write a stub matches-result row. The real pass keeps the caller's own setting.
 /// </summary>
 public static class WrInspectionReportExtractionOrchestrator
 {
+    // The fields a multi-meter document repeats per meter, one cell each - see
+    // TableMatcherHelper.MatchMultiValueTextFields.
+    private static readonly string[] MeterFieldNames =
+    [
+        WrInspectionReportFieldNames.MeterName, WrInspectionReportFieldNames.MeterMake,
+        WrInspectionReportFieldNames.SerialNumber, WrInspectionReportFieldNames.MeterAssetNumber,
+        WrInspectionReportFieldNames.Reading, WrInspectionReportFieldNames.FlowRate,
+        WrInspectionReportFieldNames.Units
+    ];
+
+    // A value stops where a sibling meter field's label follows it in the same merged cell, so
+    // MeterMake in "Meter make: VuAqua Serial number 25 061010" doesn't swallow the serial too.
+    // The field labels themselves, not each rule's full TextStart list: these are substring
+    // searches within matched cell text, so the short recognisable form is what's needed.
+    private static readonly string[] MeterFieldBoundaryLabels =
+    [
+        "Meter Name", "Meter make", "Meter Make", "Serial number", "Serial Number",
+        "Meter Serial Number", "Meter Asset Number", "Asset no", "Asset number",
+        "Reading", "Flow Rate", "Units"
+    ];
+
+    // Same guard as MeterFieldBoundaryLabels for the 13 LicenceProvisions grid fields - the short
+    // form of each row label; the RuleXxx() definitions hold the exact TextStart.
+    private static readonly string[] GridFieldBoundaryLabels =
+    [
+        "Source of supply", "Point of abstraction", "Means of abstraction", "Purpose",
+        "Period", "Quantities", "Means of measurement", "Records",
+        "Provision of information", "Special conditions", "Land", "Charging factors",
+        "Other provisions"
+    ];
+
     public static async Task<(bool StopExecution, bool? AlreadySaved, MatchesResult? Item, WrTemplateType Template)>
         ExtractAsync(
             string pdfFileName,
@@ -38,33 +64,25 @@ public static class WrInspectionReportExtractionOrchestrator
             List<string> previouslyParsedFiles,
             int processRunId,
             IPdfDataExtractorService pdfDataExtractor,
-            // Opt-in overlay, off by default (both null) - see WrInspectionReportTableMatcher.
-            // Passing a non-null tableExtractorService AND pdfBytesForTableExtraction attempts the
-            // table-based lookup for the LicenceProvisions grid fields; any field it can't
-            // confidently resolve keeps its existing heuristic result unchanged. Not yet wired into
-            // any production caller.
+            // Opt-in overlay, off when either is null. Both non-null attempts the table-based
+            // lookup for the LicenceProvisions grid fields; anything it can't resolve confidently
+            // keeps its heuristic result. Wired in by FileProcessSingleService.
             ITableExtractorService? tableExtractorService = null,
             byte[]? pdfBytesForTableExtraction = null,
-            // Cost-optimised two-tier design: pass a free/local extractor (e.g. TabulaTableExtractorService)
-            // as tableExtractorService and a paid/cloud one (e.g. AzureAiServicesDocumentIntelligenceTableExtractorService)
-            // here - the fallback is only ever tried, and only ever billed, when the primary resolved
-            // fewer than minimumFieldsToSkipFallback of the 13 grid fields confidently (see
-            // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
-            // behaviour unchanged.
+            // Two-tier: a free/local primary (Tabula) and a paid/cloud fallback (Azure DI) here.
+            // The fallback is only tried, and only billed, when the primary resolved fewer than
+            // minimumFieldsToSkipFallback of the 13 grid fields. Null keeps single-extractor
+            // behaviour.
             ITableExtractorService? fallbackTableExtractorService = null,
-            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08) -
-            // it's a step function, not smooth: 1/4/7 are flat at the same recall as Tabula
-            // alone (fallback usage climbs from
-            // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
-            // DI's own accuracy (154 Hit vs Azure-DI-alone's 151, on the same 187-field T1 grid
-            // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the
-            // measured sweet spot and the default here - raise towards GridFieldNames.Length for more
-            // accuracy at more cost, lower towards 1 to spend as little as possible, but neither
-            // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
+            // The cost/accuracy dial, a step function not a smooth one. Swept 1/4/7/10/13 against
+            // the golden set (2026-09-08): 1/4/7 all match Tabula-alone recall while fallback usage
+            // climbs 6%->22% of T1 docs for nothing; 10 matches or beats Azure DI alone (154 vs 151
+            // hits on the same 187-field T1 sample) at 28% usage; 13 gives 153 at 39%. 10 is the
+            // measured sweet spot. Moving either way needs a fresh corpus-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
         configuration1 = configuration1.Clone();
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
 
         var originalLabels = configuration1.Labels.ToList();
         
@@ -110,10 +128,14 @@ public static class WrInspectionReportExtractionOrchestrator
             return (stopExecution, alreadySaved, scrapeResult, template);
         }
         
-        // Gating on T1 here (rather than relying solely on WrInspectionReportTableMatcher's own
-        // content-based guards) avoids spending a real Document Intelligence call/cost on
-        // templates with no tick/cross grid for this mechanism to find
-        if (template == WrTemplateType.T1
+        // Gating on template avoids spending a paid call on templates with no tick/cross grid.
+        // T1 is what this was tuned against; T4/T6 followed once PdfClownGridExtractionPocTests
+        // confirmed they draw a real border grid, and NonStandardNarrative (25% of the corpus)
+        // 2026-09-25 since it's classified on GeneralComments wording, not grid structure.
+        // Safe to broaden: ApplyTableBasedGridMatchesAsync only replaces keys it resolves
+        // confidently, so a template with no matching content costs one free local attempt.
+        if (template is WrTemplateType.T1 or WrTemplateType.T4 or WrTemplateType.T6
+                or WrTemplateType.NonStandardNarrative
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {
@@ -144,10 +166,8 @@ public static class WrInspectionReportExtractionOrchestrator
         return (stopExecution, alreadySaved, scrapeResult, template);
     }
 
-    // Internal (not private): lets WRADI.Services.WrInspectionReport.Tests exercise the merge
-    // logic directly with a faked ITableExtractorService, without needing a real PDF and the
-    // full two-pass GetMatchesAsync pipeline - same pattern this project already uses for
-    // other internal helpers (see the csproj's InternalsVisibleTo).
+    // Internal, not private: lets the tests exercise the merge logic with a faked
+    // ITableExtractorService, no real PDF or full two-pass pipeline needed.
     internal static async Task ApplyTableBasedGridMatchesAsync(
         MatchesResult item,
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
@@ -166,12 +186,9 @@ public static class WrInspectionReportExtractionOrchestrator
                 fileId,
                 processRunId);
 
-        // Only reached - and only billed, for a paid fallback - when the primary extractor
-        // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
-        // the grid confidently. At the default (1), a primary that resolved even one field never
-        // triggers this, however much of the rest of the grid it missed - that's the cheapest,
-        // most conservative setting. A caller wanting more of a paid fallback's accuracy back, at
-        // the cost of more paid calls, raises this towards GridFieldNames.Length.
+        // Only reached, and for a paid fallback only billed, when the primary resolved fewer than
+        // minimumFieldsToSkipFallback of the grid confidently. See that parameter's own comment for
+        // the measured sweep behind the default of 10.
         if (allMatches.Count < minimumFieldsToSkipFallback
             && fallbackTableExtractorService != null)
         {
@@ -183,20 +200,37 @@ public static class WrInspectionReportExtractionOrchestrator
                 processRunId);
         }
 
-        // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
-        // table/service the grid-field logic above ended up using - deliberately AFTER the
-        // fallback-escalation decision, and never folded into tableMatches.Count before that
-        // decision is made. minimumFieldsToSkipFallback was tuned against the golden set purely
-        // against the 13 tick/cross grid fields; letting free-text hits count towards it would
-        // silently change what "confident enough, skip the paid fallback" means without
-        // re-measuring it.
+        // Free-text fields resolve from whichever table/service the grid logic above settled on,
+        // deliberately after the escalation decision and never counted towards it:
+        // minimumFieldsToSkipFallback was tuned on the 13 grid fields alone, so letting free-text
+        // hits count would redefine "confident enough to skip the paid fallback" unmeasured.
         if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
+            // Meter fields first, scoped to their own subset: only MatchMultiValueTextFields
+            // returns every meter's value in row order rather than keeping whichever cell matched
+            // first. Deliberately not run over all labelLookups - its Contains-based search and
+            // boundary-bounded extraction are untested outside this field set.
+            var meterFieldLookups = labelLookups
+                .Where(l => MeterFieldNames.Contains(l.LabelGroupName))
+                .ToList();
+
+            var multiValueMatches = TableMatcherHelper.MatchMultiValueTextFields(
+                tables,
+                meterFieldLookups,
+                usedServiceName,
+                MeterFieldBoundaryLabels);
+
+            foreach (var (key, value) in multiValueMatches)
+            {
+                allMatches.TryAdd(key, value);
+            }
+
             var matches = TableMatcherHelper.MatchTextFields(
                 tables,
                 labelLookups,
-                usedServiceName);
-            
+                usedServiceName,
+                MeterFieldBoundaryLabels);
+
             foreach (var (key, value) in matches)
             {
                 allMatches.TryAdd(key, value);
@@ -214,13 +248,10 @@ public static class WrInspectionReportExtractionOrchestrator
             .ToList();
     }
 
-    // Failure here is treated identically to "found nothing confident" (empty dictionary, null
-    // tables), not propagated - so a primary extractor that throws (a local parser tripping on a
-    // malformed PDF, say) still gives a fallback extractor its own chance, rather than the whole
-    // overlay being abandoned on the primary's failure alone. Tables/serviceName are returned
-    // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
-    // tables afterward, without a second (and for a paid fallback, separately billed)
-    // GetTablesAsync call.
+    // Failure is treated as "found nothing confident" rather than propagated, so a primary that
+    // throws on a malformed PDF still leaves the fallback its chance. Tables/serviceName come back
+    // with the matches so free-text fields resolve from the same fetch, with no second (for a paid
+    // fallback, separately billed) GetTablesAsync call.
     private static async Task<(
         Dictionary<string, LabelGroupResult> Matches,
         IReadOnlyList<DocumentTable>? Tables,
@@ -268,7 +299,8 @@ public static class WrInspectionReportExtractionOrchestrator
                 tables,
                 labels,
                 tableExtractorService.Name,
-                TickHelper.GetTickedOrAcceptedStatus);
+                TickHelper.GetTickedOrAcceptedStatus,
+                GridFieldBoundaryLabels);
 
             return (matches, tables, tableExtractorService.Name);
         }

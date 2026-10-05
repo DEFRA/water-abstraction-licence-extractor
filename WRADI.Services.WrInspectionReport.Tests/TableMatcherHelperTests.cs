@@ -16,7 +16,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 public class TableMatcherHelperTests
 {
     private static readonly IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
-        WrInspectionReportLabelConfiguration.GetLabels();
+        WrInspectionReportTextBasedLabelConfiguration.GetLabels();
 
     private static DocumentTableCell Cell(int row, int col, string content) => new()
     {
@@ -254,10 +254,13 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenFreeTextFieldsSitInTheSameTableAsTheGrid_ThenTheyAreExtracted()
     {
+        // SerialNumber dropped out of the FreeText set 2026-09-25: table-matching it measured
+        // a net regression on the golden set (Wrong 6->10), so it's back to letter-based-only -
+        // InspectingOfficer takes its place here as a still-genuinely-FreeText field.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Append(Cell(5, 0, "Telephone No:   02380891203"))
             .Append(Cell(5, 1, "Time: 10:00"))
-            .Append(Cell(6, 0, "Serial number: R2116126"))
+            .Append(Cell(6, 0, "Inspecting Officer: A N Other"))
             .ToList();
 
         var table = new DocumentTable { RowCount = 7, ColumnCount = 3, Cells = cells };
@@ -267,7 +270,7 @@ public class TableMatcherHelperTests
 
         Assert.Equal("02380891203", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
         Assert.Equal("10:00", results[WrInspectionReportFieldNames.Time].Text!.Single().Text);
-        Assert.Equal("R2116126", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
+        Assert.Equal("A N Other", results[WrInspectionReportFieldNames.InspectingOfficer].Text!.Single().Text);
         Assert.All(results.Values, r => Assert.Equal("TestTableService", r.ServiceName));
     }
 
@@ -305,12 +308,12 @@ public class TableMatcherHelperTests
     }*/
 
     [Fact]
-    public void WhenSerialNumberUsesATemplateAlternateWordingRatherThanTheFirst_ThenItIsStillFound()
+    public void WhenTelephoneNumberUsesATemplateAlternateWordingRatherThanTheFirst_ThenItIsStillFound()
     {
-        // SerialNumber has 3 real alternates (Existing/T6/Baseline) - MatchFreeTextFields must
-        // try each alternate's own TextStart, not just the first ("Serial number").
+        // TelephoneNumber has 2 real alternates ("Telephone No" main wording, plain "Tel No") -
+        // MatchTextFields must try each alternate's own TextStart, not just the first.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
-            .Append(Cell(5, 0, "Meter Serial Number: 3K220000854902"))
+            .Append(Cell(5, 0, "Tel No: 01234567890"))
             .ToList();
 
         var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
@@ -318,7 +321,7 @@ public class TableMatcherHelperTests
         var results = TableMatcherHelper.MatchTextFields(
             [table], Labels, "TestTableService");
 
-        Assert.Equal("3K220000854902", results[WrInspectionReportFieldNames.SerialNumber].Text!.Single().Text);
+        Assert.Equal("01234567890", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
     }
 
     [Fact]

@@ -67,7 +67,7 @@ public class WrTemplateCombinedTextAndTablesTests
             CacheService);
         
         var config = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
@@ -80,7 +80,7 @@ public class WrTemplateCombinedTextAndTablesTests
             DateTime.Now,
             useLockExclusivity: false);
         
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
     
@@ -97,7 +97,10 @@ public class WrTemplateCombinedTextAndTablesTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(42, resultList.Count);
+        // 43, not 42: InspectionDate now resolves on this document too - the TextBased config
+        // (the sole surviving ruleset as of 2026-09-25) fixed misses/misparses in that field
+        // (WRADI-338/342/344) that the deleted production-only config never had.
+        Assert.Equal(43, resultList.Count);
         
         var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);
@@ -112,7 +115,7 @@ public class WrTemplateCombinedTextAndTablesTests
         var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
         Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
-        Assert.Equal("Not", meansOfAbstraction.Text[0].Text); // TODO this is wrong as Azure AI combines it with the row above
+        Assert.Equal("In", meansOfAbstraction.Text[0].Text); // TODO still unverified against ground truth - was "Not" before the 2026-09-25 ruleset consolidation, changed with the rules, not independently confirmed correct
         
         var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);
         Assert.NotNull(purposes);
@@ -369,7 +372,7 @@ public class WrTemplateCombinedTextAndTablesTests
         Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.SpecialConditions);
         Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.ChargingFactors);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Land);
-        Assert.Equal(InOrderStatus.NotInOrder, converted.LicenceProvisions.MeansOfAbstraction); // TODO wrong
+        Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfAbstraction); // TODO still unverified against ground truth - see the raw-match assertion above
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.MeansOfMeasurement);
         Assert.Equal(InOrderStatus.NotApplicable, converted.LicenceProvisions.OtherProvisions);
         Assert.Equal(InOrderStatus.InOrder, converted.LicenceProvisions.Period);

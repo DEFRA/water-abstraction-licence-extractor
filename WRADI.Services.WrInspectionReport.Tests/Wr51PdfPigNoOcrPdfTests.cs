@@ -33,7 +33,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 ///
 /// Assertions here were translated from the original branch's raw MatchesResult.Matches
 /// list (positional index into an implementation-specific ordering) to lookups by
-/// LabelGroupName, and re-verified against the current WrInspectionReportLabelConfiguration
+/// LabelGroupName, and re-verified against the current WrInspectionReportTextBasedLabelConfiguration
 /// rule set (a full rewrite) rather than carried over blind. Where current output still
 /// matches the original hand-verified ground truth, the
 /// assertion is kept as-is. Where it doesn't, the assertion still reflects the correct
@@ -49,8 +49,24 @@ public class Wr51PdfPigNoOcrPdfTests
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
+    // Some shared-ruleset fields are LetterBasedAndTableBased+Unstructured (wired 2026-09-25),
+    // and PdfDataExtractorService throws if UnstructuredTableExtractorService is null while any
+    // active label needs it. These are exact-value regression tests against the letter-based path,
+    // so an empty stub satisfies the null check without enabling table matching, leaving every
+    // assertion's heuristic-only scope unchanged.
+    private class EmptyTableExtractorService : ITableExtractorService
+    {
+        public string Name => "Empty";
+
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+            PdfDocument pdfDocument, Guid fileId, int processRunId) =>
+            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
+    }
+
     private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
     {
+        var emptyTableExtractorService = new EmptyTableExtractorService();
+
         var config = new LookupConfiguration(
             WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
@@ -58,13 +74,13 @@ public class Wr51PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
-            null,
-            null,
+            emptyTableExtractorService,
+            emptyTableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
 
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
 

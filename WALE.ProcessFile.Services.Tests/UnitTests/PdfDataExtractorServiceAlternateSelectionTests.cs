@@ -125,4 +125,66 @@ public class PdfDataExtractorServiceAlternateSelectionTests
 
         Assert.False(result);
     }
+
+    // IgnoreBlockIfContains: the WR51 "Calibration Certificate" bug (2026-09-25) - a loose
+    // "Calibration" alternate matched an unrelated "Calibration Certificate" field on another
+    // template, capturing "Certificate" as the grid answer. IgnoreBlockIfContains already existed
+    // as .IgnoreIfContains(...) but nothing read it: zero consumers outside the fluent builder.
+
+    [Fact]
+    public void ReturnsFalse_WhenIgnoreBlockIfContainsMatches_AndEveryAlternateContainsTheTerm()
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("Certificate") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: ["Certificate"]);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void ReturnsTrue_WhenIgnoreBlockIfContainsIsSet_ButNoAlternateContainsAnyTerm()
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("Yes") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: ["Certificate"]);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ReturnsTrue_WhenIgnoreBlockIfContainsIsSet_AndAtLeastOneAlternateDoesNotContainAnyTerm()
+    {
+        // Any() across alternates, as with RequireTextToClaimGroup above: one clean alternate lets
+        // the group claim even if a sibling is dirty.
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("Certificate"), ResultWithText("Yes") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: ["Certificate"]);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void ReturnsTrue_WhenIgnoreBlockIfContainsIsNullOrEmpty()
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("Certificate") };
+
+        Assert.True(PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: null));
+        Assert.True(PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: []));
+    }
+
+    [Fact]
+    public void IgnoreBlockIfContains_IsCaseInsensitive()
+    {
+        var labelGroupMatch = new List<LabelGroupResult> { ResultWithText("certificate") };
+
+        var result = PdfDataExtractorService.ShouldClaimLabelGroup(
+            labelGroupMatch, requireTextToClaimGroup: false, ignoreBlockIfContains: ["Certificate"]);
+
+        Assert.False(result);
+    }
 }

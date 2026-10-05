@@ -16,7 +16,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 public class WrInspectionReportExtractionOrchestratorTableMergeTests
 {
     private static readonly List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
-        WrInspectionReportLabelConfiguration.GetLabels();
+        WrInspectionReportTextBasedLabelConfiguration.GetLabels();
 
     private class FakeTableExtractorService(IReadOnlyList<DocumentTable> tables) : ITableExtractorService
     {
@@ -138,7 +138,10 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         {
             RowCount = 1,
             ColumnCount = 1,
-            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+            // Deliberately not "Meter make: ABB" - MeterMake became a genuinely wired
+            // FreeText field this session (Phase B), so that content is no longer unrelated
+            // to any known label. This text must match no rule's TextStart at all.
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Xyzzy unrelated content" }]
         };
 
         var tableExtractorService = new FakeTableExtractorService([unrelatedTable]);
@@ -242,7 +245,9 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         {
             RowCount = 1,
             ColumnCount = 1,
-            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Meter make: ABB" }]
+            // Deliberately not "Meter make: ABB" - see the identical comment on
+            // WhenNoTableResemblesTheGrid_ThenAllHeuristicResultsSurviveUnchanged above.
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Xyzzy unrelated content" }]
         };
 
         var primary = new FakeTableExtractorService([unrelatedTable]);

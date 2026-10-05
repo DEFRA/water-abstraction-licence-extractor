@@ -561,7 +561,8 @@ public static class FindLabelGroupMatchesHelper
                     nextLine,
                     label.LimitTo,
                     columnIndex,
-                    firstLineColumnLeftPosition);
+                    firstLineColumnLeftPosition,
+                    label.LimitToExcludeColumnStartingWith);
 
                 if (columnToKeep == null)
                 {
@@ -854,7 +855,7 @@ public static class FindLabelGroupMatchesHelper
     /// identifiable field (that field's own label starting the row) rather than being a blank
     /// or genuine continuation row for the label being matched. See
     /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
-    /// WrInspectionReportLabelConfiguration's Calibration/Conformance/FlowVerification/
+    /// WrInspectionReportTextBasedLabelConfiguration's Calibration/Conformance/FlowVerification/
     /// MeterVerification for the real case this exists for: on several real WR51 templates the
     /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
     /// row, with no dedicated value row for these fields in between at all.
@@ -893,15 +894,24 @@ public static class FindLabelGroupMatchesHelper
         DocumentLine nextLine,
         LimitTo limitTo,
         int columnIndex,
-        double? anchorLeftPosition)
+        double? anchorLeftPosition,
+        IReadOnlyList<string>? excludeColumnStartingWith = null)
     {
         if (limitTo == LimitTo.SpecifiedColumn)
         {
             return nextLine.Columns.Count > columnIndex ? nextLine.Columns[columnIndex] : null;
         }
 
-        var columnToKeep = nextLine.Columns
+        // Filtered before the nearest-column search, not after: otherwise an excluded column wins
+        // on proximity and shuts out a valid one further along the row.
+        var candidateColumns = nextLine.Columns
             .Where(c => c.Words.FirstOrDefault() != null)
+            .Where(c => excludeColumnStartingWith == null
+                || !excludeColumnStartingWith.Any(term =>
+                    c.Text.TrimStart().StartsWith(term, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+
+        var columnToKeep = candidateColumns
             .OrderBy(c => Math.Abs(c.Words[0].Coordinates.Left - (anchorLeftPosition ?? 0)))
             .FirstOrDefault();
 
@@ -930,7 +940,7 @@ public static class FindLabelGroupMatchesHelper
         // of the anchor would be picked up as if it were this field's value.
         const double minimumNearMissGap = 10;
 
-        var nearestWord = nextLine.Columns
+        var nearestWord = candidateColumns
             .SelectMany(column => column.Words
                 .Select((word, index) => (column, word, index)))
             .Where(cw => cw.index > 0

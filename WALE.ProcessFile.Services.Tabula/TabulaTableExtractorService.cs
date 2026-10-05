@@ -60,13 +60,19 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             return cachedTables!;
         }
         
-        var internalDocument = await pdfDocument.OpenInternalDocumentAsync();
+        // Reads pdfDocument.Bytes directly, not via OpenInternalDocumentAsync(): that fetches
+        // bytes by filename through machinery not populated on the ad-hoc PdfDocument
+        // GetTableMatchesAsync builds for this overlay, where it throws a NullReferenceException
+        // and silently zeroes out this extractor. Same fix as PdfClownGridTableExtractorService.
+        var bytes = pdfDocument.Bytes;
 
-        if (internalDocument?.UnderlyingDocument is not UglyToad.PdfPig.PdfDocument document)
+        if (bytes == null)
         {
-            throw new Exception("Tabula can only be used when provider is PdfPig");
+            return [];
         }
-        
+
+        using var document = UglyToad.PdfPig.PdfDocument.Open(bytes);
+
         var tables = new List<DocumentTable>();
         var latticeAlgorithm = new SpreadsheetExtractionAlgorithm();
         var streamDetector = new SimpleNurminenDetectionAlgorithm();

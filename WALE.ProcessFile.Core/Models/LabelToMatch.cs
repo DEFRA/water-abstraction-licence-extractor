@@ -123,6 +123,14 @@ public class LabelToMatch
     // own leading label first avoids that ambiguity
     public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
 
+    // Rejects a single column on a following line whose text starts with one of these - that
+    // column is a different field's cell. Column-level where
+    // LimitToExcludeNextLineIfFirstColumnStartsWith is row-level: a row can carry both an
+    // intruding field and this one's value in different columns ("Inspecting Officer: X |
+    // 11/03/2026 | Time: 11:00"), so rejecting the row loses the value. Needed because the
+    // nearest-column search's 100-unit tolerance is wide enough to admit a neighbouring cell.
+    public IReadOnlyList<string>? LimitToExcludeColumnStartingWith { get; init; }
+
     // Bounds WalkSameLineColumns' same-line walk by the X-position of the nearest other known
     // field's own column, built once per document (see PdfDataExtractorService.
     // BuildLabelPositionIndex) - stops the walk wandering into a sibling field's column when
@@ -210,6 +218,7 @@ public class LabelToMatch
             LimitTo = LimitTo,
             LimitToColumnIndex = LimitToColumnIndex,
             LimitToExcludeNextLineIfFirstColumnStartsWith = LimitToExcludeNextLineIfFirstColumnStartsWith?.ToList(),
+            LimitToExcludeColumnStartingWith = LimitToExcludeColumnStartingWith?.ToList(),
             BoundSameLineWalkByOtherLabelPositions = BoundSameLineWalkByOtherLabelPositions,
             RequireTextToBePresent = RequireTextToBePresent,
             RequireCompleteDateToClaimGroup = RequireCompleteDateToClaimGroup,

@@ -16,7 +16,7 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenOnlyTheSixTemplateMarkerGroupsAreExcluded()
     {
-        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        var allLabels = WrInspectionReportTextBasedLabelConfiguration.GetLabels();
         
         // GetT1Labels() is built additively from GetLabels() with the 6 classification-only
         // marker groups removed - see that method's own comment for the evidence that every
@@ -45,7 +45,7 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenNameAndAddressDropsOnlyThePermitHolderAlternate()
     {
-        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        var allLabels = WrInspectionReportTextBasedLabelConfiguration.GetLabels();
         
         var generalAlternateCount = allLabels
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.NameAndAddress).Labels.Count;
@@ -58,7 +58,7 @@ public class WrInspectionReportLabelConfigurationTests
     [Fact]
     public void WhenBuildingT1Labels_ThenGeneralCommentsHasOnlyTheBaselineHeading()
     {
-        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        var allLabels = WrInspectionReportTextBasedLabelConfiguration.GetLabels();
         
         // The T1 GeneralComments variant should have exactly one TextStart entry (the literal
         // baseline heading) - none of the NonStandardNarrative-family alternates
@@ -93,7 +93,7 @@ public class WrInspectionReportLabelConfigurationTests
             WrInspectionReportFieldNames.SpotCheckResult
         ];
 
-        var allLabels = WrInspectionReportLabelConfiguration.GetLabels();
+        var allLabels = WrInspectionReportTextBasedLabelConfiguration.GetLabels();
         
         var general = allLabels.ToDictionary(l => l.LabelGroupName);
         var t1 = WrInspectionT1LabelConfiguration.FilterFrom(allLabels).ToDictionary(l => l.LabelGroupName);
@@ -113,7 +113,7 @@ public class WrInspectionReportLabelConfigurationTests
         // ExcludeNextLineIfFirstColumnStartsWith usage), the literal next line the algorithm
         // sees can be "Other:"'s own row - traced with gated instrumentation on a real document
         // (wr51__83617s0016__...) before this guard was added, not assumed.
-        var readingBaselineTwoColumnAlternate = WrInspectionReportLabelConfiguration.GetLabels()
+        var readingBaselineTwoColumnAlternate = WrInspectionReportTextBasedLabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Reading).Labels
             .Single(l => l.TextEnd?.Any(t => t.Text == "Units") == true);
 
@@ -129,7 +129,7 @@ public class WrInspectionReportLabelConfigurationTests
         // elsewhere in the same merged line. Confirmed on two independent real documents this
         // session. Calibration's "Existing template" alternate is the one that actually uses
         // this shared list with LimitTo.WholeLine, the shape that exposed the bug.
-        var calibration = WrInspectionReportLabelConfiguration.GetLabels()
+        var calibration = WrInspectionReportTextBasedLabelConfiguration.GetLabels()
             .First(l => l.LabelGroupName == WrInspectionReportFieldNames.Calibration).Labels
             .Single(l => l.Possibilities?.Any() == true && l.LimitTo == WALE.ProcessFile.Core.Enums.LimitTo.WholeLine);
 

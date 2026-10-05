@@ -45,22 +45,16 @@ public static class WrInspectionReportExtractionOrchestrator
             // any production caller.
             ITableExtractorService? tableExtractorService = null,
             byte[]? pdfBytesForTableExtraction = null,
-            // Cost-optimised two-tier design: pass a free/local extractor (e.g. TabulaTableExtractorService)
-            // as tableExtractorService and a paid/cloud one (e.g. AzureAiServicesDocumentIntelligenceTableExtractorService)
-            // here - the fallback is only ever tried, and only ever billed, when the primary resolved
-            // fewer than minimumFieldsToSkipFallback of the 13 grid fields confidently (see
-            // TryGetTableMatchesAsync). Passing null here (the default) keeps today's single-extractor
-            // behaviour unchanged.
+            // Two-tier: a free/local primary (Tabula) and a paid/cloud fallback (Azure DI) here.
+            // The fallback is only tried, and only billed, when the primary resolved fewer than
+            // minimumFieldsToSkipFallback of the 13 grid fields. Null keeps single-extractor
+            // behaviour.
             ITableExtractorService? fallbackTableExtractorService = null,
-            // The cost/accuracy dial. Swept 1/4/7/10/13 against the golden set (2026-09-08) -
-            // it's a step function, not smooth: 1/4/7 are flat at the same recall as Tabula
-            // alone (fallback usage climbs from
-            // 6%->22% of T1 docs for no accuracy gain), then 10 jumps to matching-or-beating Azure
-            // DI's own accuracy (154 Hit vs Azure-DI-alone's 151, on the same 187-field T1 grid
-            // sample) at only 28% fallback usage; 13 gives slightly less (153) at 39% usage. 10 is the
-            // measured sweet spot and the default here - raise towards GridFieldNames.Length for more
-            // accuracy at more cost, lower towards 1 to spend as little as possible, but neither
-            // direction is evidenced to help past this curve without a fresh corpus-scale measurement.
+            // The cost/accuracy dial, a step function not a smooth one. Swept 1/4/7/10/13 against
+            // the golden set (2026-09-08): 1/4/7 all match Tabula-alone recall while fallback usage
+            // climbs 6%->22% of T1 docs for nothing; 10 matches or beats Azure DI alone (154 vs 151
+            // hits on the same 187-field T1 sample) at 28% usage; 13 gives 153 at 39%. 10 is the
+            // measured sweet spot. Moving either way needs a fresh corpus-scale measurement.
             int minimumFieldsToSkipFallback = 10)
     {
         configuration1 = configuration1.Clone();
@@ -144,10 +138,8 @@ public static class WrInspectionReportExtractionOrchestrator
         return (stopExecution, alreadySaved, scrapeResult, template);
     }
 
-    // Internal (not private): lets WRADI.Services.WrInspectionReport.Tests exercise the merge
-    // logic directly with a faked ITableExtractorService, without needing a real PDF and the
-    // full two-pass GetMatchesAsync pipeline - same pattern this project already uses for
-    // other internal helpers (see the csproj's InternalsVisibleTo).
+    // Internal, not private: lets the tests exercise the merge logic with a faked
+    // ITableExtractorService, no real PDF or full two-pass pipeline needed.
     internal static async Task ApplyTableBasedGridMatchesAsync(
         MatchesResult item,
         List<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
@@ -166,12 +158,9 @@ public static class WrInspectionReportExtractionOrchestrator
                 fileId,
                 processRunId);
 
-        // Only reached - and only billed, for a paid fallback - when the primary extractor
-        // (expected to be the free/local one) resolved fewer than minimumFieldsToSkipFallback of
-        // the grid confidently. At the default (1), a primary that resolved even one field never
-        // triggers this, however much of the rest of the grid it missed - that's the cheapest,
-        // most conservative setting. A caller wanting more of a paid fallback's accuracy back, at
-        // the cost of more paid calls, raises this towards GridFieldNames.Length.
+        // Only reached, and for a paid fallback only billed, when the primary resolved fewer than
+        // minimumFieldsToSkipFallback of the grid confidently. See that parameter's own comment for
+        // the measured sweep behind the default of 10.
         if (allMatches.Count < minimumFieldsToSkipFallback
             && fallbackTableExtractorService != null)
         {
@@ -183,13 +172,10 @@ public static class WrInspectionReportExtractionOrchestrator
                 processRunId);
         }
 
-        // Free-text fields (Time/SerialNumber/TelephoneNumber) are resolved from whichever
-        // table/service the grid-field logic above ended up using - deliberately AFTER the
-        // fallback-escalation decision, and never folded into tableMatches.Count before that
-        // decision is made. minimumFieldsToSkipFallback was tuned against the golden set purely
-        // against the 13 tick/cross grid fields; letting free-text hits count towards it would
-        // silently change what "confident enough, skip the paid fallback" means without
-        // re-measuring it.
+        // Free-text fields resolve from whichever table/service the grid logic above settled on,
+        // deliberately after the escalation decision and never counted towards it:
+        // minimumFieldsToSkipFallback was tuned on the 13 grid fields alone, so letting free-text
+        // hits count would redefine "confident enough to skip the paid fallback" unmeasured.
         if (tables != null && !string.IsNullOrEmpty(usedServiceName))
         {
             var matches = TableMatcherHelper.MatchTextFields(
@@ -214,13 +200,10 @@ public static class WrInspectionReportExtractionOrchestrator
             .ToList();
     }
 
-    // Failure here is treated identically to "found nothing confident" (empty dictionary, null
-    // tables), not propagated - so a primary extractor that throws (a local parser tripping on a
-    // malformed PDF, say) still gives a fallback extractor its own chance, rather than the whole
-    // overlay being abandoned on the primary's failure alone. Tables/serviceName are returned
-    // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
-    // tables afterward, without a second (and for a paid fallback, separately billed)
-    // GetTablesAsync call.
+    // Failure is treated as "found nothing confident" rather than propagated, so a primary that
+    // throws on a malformed PDF still leaves the fallback its chance. Tables/serviceName come back
+    // with the matches so free-text fields resolve from the same fetch, with no second (for a paid
+    // fallback, separately billed) GetTablesAsync call.
     private static async Task<(
         Dictionary<string, LabelGroupResult> Matches,
         IReadOnlyList<DocumentTable>? Tables,

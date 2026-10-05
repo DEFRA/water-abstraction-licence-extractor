@@ -199,6 +199,9 @@ export const AggregateItem = ({
         }
         // Sub Type is optional — not validated.
 
+        if (aggregate.primaryType === PrimaryType.LicenceToLicence && linkedLicences.length === 0) {
+            newErrors.linkedLicences = 'At least one Linked Licence is required when Primary Type is LicenceToLicence';
+        }
         linkedLicences.forEach((ll, idx) => {
             if (!ll || !ll.trim()) newErrors[`linkedLicence_${idx}`] = 'Linked Licence cannot be empty';
         });
@@ -318,6 +321,7 @@ export const AggregateItem = ({
                         <button onClick={handleAddLinkedLicence} style={addButtonStyle}>+ Add Linked Licence</button>
                     </div>
                     {linkedLicences.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
+                    <ValidationError message={errors.linkedLicences}/>
                     {linkedLicences.map((ll, idx) => {
                         const unrecognised = isLinkedLicenceUnrecognised(ll);
                         return (

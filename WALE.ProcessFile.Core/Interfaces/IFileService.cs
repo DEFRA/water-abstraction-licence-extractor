@@ -30,4 +30,6 @@ public interface IFileService
     public Task CopyAsync(string filename, string destinationBucketName);
     
     public Task<string> GetPresignedUrlAsync(string filename, StorageFolder folder);
+
+    public string GetHttpsUrl(string filename, StorageFolder folder);
 }

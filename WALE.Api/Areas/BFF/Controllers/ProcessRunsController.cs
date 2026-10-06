@@ -169,8 +169,38 @@ public class ProcessRunsController(
 
         return Ok(processRun);
     }
+    
+    [HttpPost("{processRunId:int}")]
+    public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
+        [FromRoute] int processRunId,
+        [FromBody] string[] licenceNumbers)
+    {
+        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
+            processRunId,
+            licenceNumbers);
+        
+        return Ok(result);
+    }
 
-    private static CumulativeFilterCounts GetCumulativeFilterCounts(
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
+        [FromRoute] int processRunId)
+    {
+        var result = await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);  
+        return Ok(result);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
+    {
+        var total = await abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+            processRunId,
+            new ProcessRunQuery());
+
+        return Ok(total);
+    }
+    
+     private static CumulativeFilterCounts GetCumulativeFilterCounts(
         IReadOnlyList<OutputListDataItem> filteredData,
         string? sectionVerification)
     {
@@ -336,36 +366,6 @@ public class ProcessRunsController(
             .ToList();
 
         return uniqueFileIds;
-    }
-    
-    [HttpPost("{processRunId:int}")]
-    public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
-        [FromRoute] int processRunId,
-        [FromBody] string[] licenceNumbers)
-    {
-        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
-            processRunId,
-            licenceNumbers);
-        
-        return Ok(result);
-    }
-
-    [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
-        [FromRoute] int processRunId)
-    {
-        var result = await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);  
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
-    {
-        var total = await abstractionLicenceOutputService.GetTotalLicenceCountAsync(
-            processRunId,
-            new ProcessRunQuery());
-
-        return Ok(total);
     }
 
     private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)

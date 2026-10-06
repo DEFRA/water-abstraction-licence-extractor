@@ -1606,9 +1606,9 @@ public static class AbstractionLicenceSchemaConverter
             licence.LicenceSets = newLicenceSetIds.ToArray();
         }
         
-        AddVersionsToLicenceAggregates(allLicences);
-        EnrichAndGroupAggregates(returnLicenceSets); 
-        /*returnList = EnrichAndGroupAggregateSets(returnList);*/
+        AddVariationsToLicenceAggregates(allLicences);
+        EnrichAndGroupAggregates(returnLicenceSets);
+        returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -1646,8 +1646,10 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static List<LicenceSet> EnrichAndGroupAggregateSets(List<LicenceSet> licenceSets)
+    private static List<LicenceSet> EnrichAndGroupLicenceSets(List<LicenceSet> licenceSets)
     {
+        // TODO debug into if we should always do this
+        
         var returnList = new List<LicenceSet>();
 
         var orderedLicenceSets = licenceSets
@@ -1677,6 +1679,11 @@ public static class AbstractionLicenceSchemaConverter
 
             if (supersets.Count > 0)
             {
+                foreach (var superset in supersets)
+                {
+                    // TODO something to do with variations
+                }
+                
                 continue;
             }
 
@@ -1687,6 +1694,69 @@ public static class AbstractionLicenceSchemaConverter
             .OrderBy(aggregateSet => aggregateSet.Licences.Length)
             .ToList();
         
+        return returnList;
+    }
+
+    private static List<AggregateSet> GetSupersets(
+        AggregateSet aggregateSet,
+        List<AggregateSet> otherAggregateSets)
+    {
+        var returnList = new List<AggregateSet>();
+        
+        var aggregateSetLinkedLicenceIds = aggregateSet.Aggregates
+            .SelectMany(a => a.LinkedLicences ?? [])
+            .ToList();
+        aggregateSetLinkedLicenceIds.AddRange(
+            aggregateSet.Aggregates.Select(a => a.SourceLicenceNumber!));
+        aggregateSetLinkedLicenceIds = aggregateSetLinkedLicenceIds
+            .Distinct()
+            .ToList();
+        
+        foreach (var otherAggregateSet in otherAggregateSets)
+        {
+            var otherAggregateSetLicenceIds = otherAggregateSet.Aggregates
+                .SelectMany(a => a.LinkedLicences ?? [])
+                .ToList();
+            
+            otherAggregateSetLicenceIds.AddRange(
+                otherAggregateSet.Aggregates.Select(a => a.SourceLicenceNumber!));
+            
+            otherAggregateSetLicenceIds = otherAggregateSetLicenceIds
+                .Distinct()
+                .ToList();
+
+            if (otherAggregateSetLicenceIds.Count == 0)
+            {
+                continue;
+            }
+            
+            var notFound = false;
+
+            foreach (var licenceId in aggregateSetLinkedLicenceIds)
+            {
+                if (otherAggregateSetLicenceIds.Contains(licenceId))
+                {
+                    continue;
+                }
+                
+                notFound = true;
+                break;
+            }
+            
+            var hasMoreLicences = otherAggregateSetLicenceIds.Count > aggregateSetLinkedLicenceIds.Count;
+            
+            var sameCombinedValue = FloatingEqualTo(
+                otherAggregateSet.Aggregates.Sum(a => a.GetCombinedLimitValue()),
+                aggregateSet.Aggregates.Sum(a => a.GetCombinedLimitValue()));
+            
+            if (!notFound
+                && hasMoreLicences
+                && sameCombinedValue)
+            {
+                returnList.Add(otherAggregateSet);
+            }
+        }
+
         return returnList;
     }
 
@@ -1713,7 +1783,22 @@ public static class AbstractionLicenceSchemaConverter
                 break;
             }
 
-            if (!notFound && otherLicenceSet.Licences.Length > licenceSet.Licences.Length)
+            var hasMoreLicences = otherLicenceSet.Licences.Length > licenceSet.Licences.Length;
+            var sameAggregateCount = otherLicenceSet.AggregateSets?.Sum(ags => ags.Aggregates.Length)
+                == licenceSet.AggregateSets?.Sum(ags => ags.Aggregates.Length);
+            
+            var otherLicenceSetCombinedValue = otherLicenceSet.AggregateSets?.Sum(
+                ags => ags.Aggregates.Sum(a => a.GetCombinedLimitValue()));
+            
+            var licenceSetCombinedValue = licenceSet.AggregateSets?.Sum(
+                ags => ags.Aggregates.Sum(a => a.GetCombinedLimitValue()));
+
+            var sameCombinedValue = FloatingEqualTo(otherLicenceSetCombinedValue, licenceSetCombinedValue);
+            
+            if (!notFound
+                && hasMoreLicences
+                && sameAggregateCount
+                && sameCombinedValue)
             {
                 returnList.Add(otherLicenceSet);
             }
@@ -1738,11 +1823,11 @@ public static class AbstractionLicenceSchemaConverter
 
             foreach (var aggregateSet in licenceSet.AggregateSets)
             {
-                var newAggregates = new List<AggregateWithContext>();
+                var enrichedUniqueAggregates = new List<AggregateWithContext>();
                     
                 foreach (var aggregate in aggregateSet.Aggregates)
                 {
-                    var alreadyHaveInOutputList = ContainedInAggregatesOrOtherVersion(aggregate.Id, newAggregates);
+                    var alreadyHaveInOutputList = ContainedInAggregatesOrOtherVersion(aggregate.Id, enrichedUniqueAggregates);
 
                     if (alreadyHaveInOutputList)
                     {
@@ -1755,15 +1840,73 @@ public static class AbstractionLicenceSchemaConverter
 
                     if (licenceVersionOfAggregate != null)
                     {
-                        newAggregates.Add(AggregateWithContext.FromAggregate(licenceVersionOfAggregate));
+                        enrichedUniqueAggregates.Add(AggregateWithContext.FromAggregate(licenceVersionOfAggregate));
                         continue;
                     }
                         
-                    newAggregates.Add(aggregate);
+                    enrichedUniqueAggregates.Add(aggregate);
                 }
 
-                aggregateSet.Aggregates = newAggregates.ToArray();
+                aggregateSet.Aggregates = enrichedUniqueAggregates.ToArray();
             }
+            
+            var outputAggregateSets = new List<AggregateSet>();
+
+            foreach (var aggregateSet in licenceSet.AggregateSets)
+            {
+                var otherAggregateSets = licenceSet.AggregateSets
+                    .Where(x => x != aggregateSet)
+                    .ToList();
+
+                if (otherAggregateSets.Count == 0)
+                {
+                    outputAggregateSets.Add(aggregateSet);
+                    continue;
+                }
+
+                var supersets = GetSupersets(aggregateSet, otherAggregateSets);
+
+                if (supersets.Count > 0)
+                {
+                    foreach (var superset in supersets)
+                    {
+                        foreach (var supersetAggregate in superset.Aggregates)
+                        {
+                            if (supersetAggregate.LinkedLicences?.Length <= 1)
+                            {
+                                continue;
+                            }
+                            
+                            var variations = new List<AggregateVariation>();
+
+                            if (supersetAggregate.Variations != null)
+                            {
+                                variations.AddRange(supersetAggregate.Variations);
+                            }
+
+                            foreach (var aggregate in aggregateSet.Aggregates)
+                            {
+                                var isSupersetOf = GetSupersets(
+                                    new AggregateSet { Aggregates = [aggregate] },
+                                    [new AggregateSet { Aggregates = [supersetAggregate] }]).Count > 0;
+
+                                if (isSupersetOf)
+                                {
+                                    variations.Add(AggregateVariation.FromAggregate(aggregate, "Licence doesn't mention one of the linked licences (subset)"));
+                                }
+                            }
+                            
+                            supersetAggregate.Variations = variations.ToArray();
+                        }
+                    }
+                    
+                    continue;
+                }
+
+                outputAggregateSets.Add(aggregateSet);
+            }
+            
+            licenceSet.AggregateSets = outputAggregateSets.ToArray();
         }
     }
 
@@ -1778,12 +1921,12 @@ public static class AbstractionLicenceSchemaConverter
                 return true;
             }
 
-            if (aggregate.OtherVersions == null)
+            if (aggregate.Variations == null)
             {
                 continue;
             }
 
-            foreach (var otherVersions in aggregate.OtherVersions)
+            foreach (var otherVersions in aggregate.Variations)
             {
                 if (otherVersions.Id == aggregateId)
                 {
@@ -1795,7 +1938,7 @@ public static class AbstractionLicenceSchemaConverter
         return false;
     }
     
-    private static void AddVersionsToLicenceAggregates(List<Licence> allLicences)
+    private static void AddVariationsToLicenceAggregates(List<Licence> allLicences)
     {
         foreach (var sourceLicence in allLicences)
         {
@@ -1827,20 +1970,20 @@ public static class AbstractionLicenceSchemaConverter
                         continue;
                     }
                     
-                    if (matchingSourceAggregate.OtherVersions?.Any(v => v.Id == otherAggregate.Id) == true)
+                    if (matchingSourceAggregate.Variations?.Any(v => v.Id == otherAggregate.Id) == true)
                     {
                         continue;
                     }
 
-                    var versions = new List<AggregateVersion>();
+                    var variations = new List<AggregateVariation>();
 
-                    if (matchingSourceAggregate.OtherVersions != null)
+                    if (matchingSourceAggregate.Variations != null)
                     {
-                        versions.AddRange(matchingSourceAggregate.OtherVersions);
+                        variations.AddRange(matchingSourceAggregate.Variations);
                     }
                     
-                    versions.Add(AggregateVersion.FromAggregate(otherAggregate, "Different source licence / different order"));
-                    matchingSourceAggregate.OtherVersions = versions.ToArray();
+                    variations.Add(AggregateVariation.FromAggregate(otherAggregate, "Different source licence / different order"));
+                    matchingSourceAggregate.Variations = variations.ToArray();
                 }
             }
         }

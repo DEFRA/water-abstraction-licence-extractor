@@ -93,7 +93,7 @@ public class Aggregate : AbstractionLimitGroup
     
     public string[]? LinkedLicences { get; set; } = [];
     
-    public AggregateVersion[]? OtherVersions { get; set; }
+    public AggregateVariation[]? Variations { get; set; } // TODO variations instead
     
     public bool? ContainsLegalText { get; set; } // TODO set it at correct times
 
@@ -117,7 +117,7 @@ public class Aggregate : AbstractionLimitGroup
         destinationAggregate.SubType = sourceAggregate.SubType;
         destinationAggregate.NaldType = sourceAggregate.NaldType;
         destinationAggregate.LinkedLicences = sourceAggregate.LinkedLicences;
-        destinationAggregate.OtherVersions = sourceAggregate.OtherVersions;
+        destinationAggregate.Variations = sourceAggregate.Variations;
         destinationAggregate.ContainsLegalText = sourceAggregate.ContainsLegalText;
         
         AbstractionLimitGroup.CloneProperties(

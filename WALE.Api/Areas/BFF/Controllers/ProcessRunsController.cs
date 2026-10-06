@@ -8,6 +8,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
@@ -121,6 +122,12 @@ public class ProcessRunsController(
             processRunId,
             query);
 
+        var queryTake = query.Take;
+        var skip = query.Skip;
+
+        query.Skip = 0;
+        query.Take = int.MaxValue;
+        
         var licenceListItemsTask = licenceListRepository.GetLicencesListSearchAsync(
             processRunId,
             query);
@@ -128,17 +135,18 @@ public class ProcessRunsController(
         var issuersTask = GetDistinctListIssuers(processRunId);
         var licenceSetIdsTask = GetDistinctListLicenceSetIds(processRunId);
         var issueDatesTask = GetDistinctListDates(processRunId);
-
+        
         var outputList = licenceListItemModelService.ConvertToOutputListDataItems(
             await licenceListItemsTask);
 
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await countTask,
-            Records = outputList.ToList(),
+            Records = outputList.Take(queryTake).Skip(skip).ToList(),
             Issuers = await issuersTask,
             LicenceSetIds = await licenceSetIdsTask,
-            IssueDates = await issueDatesTask
+            IssueDates = await issueDatesTask,
+            CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType)
         };
         
         var thumbnailPaths = await GetThumbnailPathsAsync(
@@ -162,6 +170,106 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
 
+    public CumulativeFilterCounts GetCumulativeFilterCounts(
+        IReadOnlyList<OutputListDataItem> filteredData,
+        string? sectionVerification)
+    {
+        var data = filteredData.ToList();
+
+        return new CumulativeFilterCounts
+        {
+            LicenceNumbers = data.Count(x =>
+                !string.IsNullOrEmpty(x.licenceNumber)),
+
+            Purposes = data.Sum(x =>
+                x.purposes?.Length ?? 0),
+
+            Points = data.Sum(x =>
+                x.points?.Length ?? 0),
+
+            AbsLimits = data.Count(x =>
+                x.limitsCount != 0),
+
+            Aggregates = data.Count(x =>
+                x.aggregatesCount != 0),
+
+            Scans = data.Count(x =>
+                x.ocr),
+
+            IssueDates = data.Count(x =>
+                !string.IsNullOrEmpty(x.issueDate)),
+
+            Issuers = data.Count(x =>
+                !string.IsNullOrEmpty(x.issuer)),
+
+            MeansOfAbs = data.Count(x =>
+                x.meansFound),
+
+            LinkedLicences = data.Sum(x =>
+                x.linkedLicences?.Length ?? 0),
+
+            Verified = CountNonEmptyVerificationTypes(
+                data,
+                sectionVerification),
+            
+            LicenceSets = CountNonEmptyLicenceSets(
+                data),
+            
+            Status = data.Count
+        };
+    }
+    
+    
+    private static int CountNonEmptyLicenceSets(
+        IEnumerable<OutputListDataItem> data)
+    {
+        return data.Count(item =>
+            item.licenceSets != null &&
+            item.licenceSets.Length > 1);
+    }
+    
+    private static int CountNonEmptyVerificationTypes(
+        IEnumerable<OutputListDataItem> data,
+        string? verificationType)
+    {
+        var count = 0;
+
+        foreach (var item in data)
+        {
+            if (item.licenceSectionVerifications == null ||
+                item.licenceSectionVerifications.Length == 0)
+            {
+                continue;
+            }
+
+            foreach (var section in item.licenceSectionVerifications)
+            {
+                var sectionItems = section.LicenceSectionItems
+                                   ?? [];
+
+                if (string.IsNullOrEmpty(verificationType))
+                {
+                    count += sectionItems.Length;
+                }
+                else if (verificationType.Equals(
+                             "Flagged",
+                             StringComparison.OrdinalIgnoreCase))
+                {
+                    count += sectionItems.Count(x => x.IsFlagged);
+                }
+                else
+                {
+                    count += sectionItems.Count(x =>
+                        x.VerificationTypes.Contains(
+                            verificationType,
+                            StringComparer.OrdinalIgnoreCase));
+                }
+            }
+        }
+
+        return count;
+    }
+    
     private async Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(List<Guid> fileIds)
     {
         var templateUrl = "thumbnail_{0}.jpg";

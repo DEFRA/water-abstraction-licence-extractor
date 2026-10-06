@@ -12,4 +12,7 @@ public record ProcessRunResponse
     public string[]? IssueDates { get; init; }
 
     public string[]? LicenceSetIds { get; init; }
+
+    public CumulativeFilterCounts? CumulativeFilterCounts { get; set; } = new();
+
 }

@@ -1610,7 +1610,7 @@ public static class AbstractionLicenceSchemaConverter
         EnrichAndGroupAggregates(returnLicenceSets);
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         FlattenSubVariations(returnLicenceSets);
-        UpdateLicenceAggregates(returnLicenceSets);
+        UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -1618,7 +1618,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnLicenceSets;
     }
 
-    private static void UpdateLicenceAggregates(List<LicenceSet> licenceSets)
+    private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
     {
         foreach (var licenceSet in licenceSets)
         {
@@ -1774,8 +1774,6 @@ public static class AbstractionLicenceSchemaConverter
 
     private static List<LicenceSet> EnrichAndGroupLicenceSets(List<LicenceSet> licenceSets)
     {
-        // TODO debug into if we should always do this
-        
         var returnList = new List<LicenceSet>();
 
         var orderedLicenceSets = licenceSets
@@ -1920,11 +1918,16 @@ public static class AbstractionLicenceSchemaConverter
                 ags => ags.Aggregates.Sum(a => a.GetCombinedLimitValue()));
 
             var sameCombinedValue = FloatingEqualTo(otherLicenceSetCombinedValue, licenceSetCombinedValue);
+
+            var sameType = licenceSet.LicenceSetTypes.Length == otherLicenceSet.LicenceSetTypes.Length
+                && string.Join(string.Empty, licenceSet.LicenceSetTypes.OrderBy(type => type))
+                    == string.Join(string.Empty, otherLicenceSet.LicenceSetTypes.OrderBy(type => type));
             
             if (!notFound
                 && hasMoreLicences
                 && sameAggregateCount
-                && sameCombinedValue)
+                && sameCombinedValue
+                && sameType)
             {
                 returnList.Add(otherLicenceSet);
             }

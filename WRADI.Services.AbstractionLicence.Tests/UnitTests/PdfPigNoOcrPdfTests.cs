@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
@@ -387,11 +388,17 @@ public class PdfPigNoOcrPdfTests
             dmsDataForFile: new DmsFileData());
         
         Assert.NotNull(licenceSets);
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(3, licenceSets.Count);
 
-        Assert.Single(licenceSets[0].Licences); // Single licence set group
-        Assert.Equal(4, licenceSets[1].Licences.Length); // Aggregate licence set group
-
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetTypes[0]);
+        Assert.Single(licenceSets[0].Licences);
+        
+        Assert.Equal(LicenceSetType.AllLicencesExplicitlyReferencedInLimits, licenceSets[1].LicenceSetTypes[0]);
+        Assert.Equal(4, licenceSets[1].Licences.Length);
+        
+        Assert.Equal(LicenceSetType.AllLicencesExplicitlyReferencedAnywhere, licenceSets[2].LicenceSetTypes[0]);
+        Assert.Equal(4, licenceSets[2].Licences.Length);
+        
         var licence1 = licenceSets[1].Licences[0];
         Assert.Equal("1/01/01/001", licence1.LicenceNumber!.Value);            
         

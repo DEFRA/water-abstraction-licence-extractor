@@ -202,7 +202,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -210,10 +210,16 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(3, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(3, licenceSets.Count); // TODO its being too heavy handed combining at the moment
+        Assert.Single(licenceSets.First().Licences);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        // Quick check of the linked ones
+        Assert.Equal(3, licenceSets.Last().Licences.Length);
+        Assert.Equal("SW/047/0051/003", licenceSets.Last().Licences[0].LicenceNumber!.Value);
+        Assert.Equal("15/47/013/S/020", licenceSets.Last().Licences[1].LicenceNumber!.Value);
+        Assert.Equal("15/47/052/I/001", licenceSets.Last().Licences[2].LicenceNumber!.Value); // TODO suspect this is wrong and it should be another licence set or something
+        
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("SW/047/0051/003", licence.LicenceNumber!.Value);
         
         Assert.NotNull(licence.Points);

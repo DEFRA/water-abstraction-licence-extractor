@@ -13,6 +13,6 @@ public record ProcessRunResponse
 
     public string[]? LicenceSetIds { get; init; }
 
-    public CumulativeFilterCounts? CumulativeFilterCounts { get; set; } = new();
+    public CumulativeFilterCounts? CumulativeFilterCounts { get; init; } = new();
 
 }

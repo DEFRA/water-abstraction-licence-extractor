@@ -123,7 +123,7 @@ public class ProcessRunsController(
             query);
 
         var queryTake = query.Take;
-        var skip = query.Skip;
+        var querySkip = query.Skip;
 
         query.Skip = 0;
         query.Take = int.MaxValue;
@@ -142,7 +142,7 @@ public class ProcessRunsController(
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await countTask,
-            Records = outputList.Take(queryTake).Skip(skip).ToList(),
+            Records = outputList.Skip(querySkip).Take(queryTake).ToList(),
             Issuers = await issuersTask,
             LicenceSetIds = await licenceSetIdsTask,
             IssueDates = await issueDatesTask,
@@ -170,7 +170,7 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
 
-    public CumulativeFilterCounts GetCumulativeFilterCounts(
+    private static CumulativeFilterCounts GetCumulativeFilterCounts(
         IReadOnlyList<OutputListDataItem> filteredData,
         string? sectionVerification)
     {
@@ -191,7 +191,7 @@ public class ProcessRunsController(
                 x.limitsCount != 0),
 
             Aggregates = data.Count(x =>
-                x.aggregatesCount != 0),
+                x.aggregatesCount > 0),
 
             Scans = data.Count(x =>
                 x.ocr),
@@ -208,14 +208,17 @@ public class ProcessRunsController(
             LinkedLicences = data.Sum(x =>
                 x.linkedLicences?.Length ?? 0),
 
-            Verified = CountNonEmptyVerificationTypes(
+            LicenceSectionVerifications = CountNonEmptyVerificationTypes(
                 data,
                 sectionVerification),
             
             LicenceSets = CountNonEmptyLicenceSets(
                 data),
             
-            Status = data.Count
+            Status = data.Count,
+            
+            Ocr =  data.Count(x =>
+                 x.ocr)
         };
     }
     

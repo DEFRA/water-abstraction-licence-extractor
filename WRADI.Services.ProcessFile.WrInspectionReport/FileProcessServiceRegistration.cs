@@ -57,6 +57,9 @@ public static class FileProcessServiceRegistration
             options.SqsWaitTimeSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsWaitTimeSeconds") ?? 20;
             options.SqsMaxNumberOfMessages = ConfigHelper.GetOptionalInt(configuration, "SqsMaxNumberOfMessages") ?? 10;
             options.SqsVisibilityTimeoutSeconds = ConfigHelper.GetOptionalInt(configuration, "SqsVisibilityTimeoutSeconds");
+
+            // Local/dev cap on files per orchestration; unset in deployed environments.
+            options.MaxFilesPerRun = ConfigHelper.GetOptionalInt(configuration, "MaxFilesPerRun");
         });
 
         services.AddSingleton(sp =>

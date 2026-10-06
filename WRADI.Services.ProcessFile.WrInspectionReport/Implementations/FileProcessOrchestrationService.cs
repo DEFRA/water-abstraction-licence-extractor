@@ -53,6 +53,15 @@ public class FileProcessOrchestrationService(
                 + "permit number or an unparseable file id");
         }
 
+        // Applied after filtering, before the run is created, so NumberOfFiles matches what is sent.
+        if (settings.MaxFilesPerRun is > 0 && sendable.Count > settings.MaxFilesPerRun)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - capping this run at "
+                + $"{settings.MaxFilesPerRun} of {sendable.Count} files (MaxFilesPerRun)");
+
+            sendable = sendable.Take(settings.MaxFilesPerRun.Value).ToList();
+        }
+
         var processRun = await outputService.StartProcessRunAsync(
             new ProcessRun
             {

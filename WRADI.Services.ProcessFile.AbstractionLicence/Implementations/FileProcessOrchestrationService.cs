@@ -43,6 +43,17 @@ public class FileProcessOrchestrationService(
         // SQS's own batch limit, mirrored here so the orchestrator sends whole batches.
         const int QueueBatchSize = 10;
 
+        // Before the run is created, so NumberOfFiles matches what is actually sent.
+        if (settings.MaxFilesPerRun is > 0 && dmsFilesToProcess.Count > settings.MaxFilesPerRun)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - capping this run at "
+                + $"{settings.MaxFilesPerRun} of {dmsFilesToProcess.Count} files (MaxFilesPerRun)");
+
+            dmsFilesToProcess = dmsFilesToProcess
+                .Take(settings.MaxFilesPerRun.Value)
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
+        }
+
         var processRun = await outputService.StartProcessRunAsync(
             new ProcessRun
             {

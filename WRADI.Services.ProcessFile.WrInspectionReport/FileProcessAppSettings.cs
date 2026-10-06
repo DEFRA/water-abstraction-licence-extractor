@@ -6,6 +6,7 @@ public class FileProcessAppSettings
     public string DotnetPath { get; set; } = string.Empty;
     public string ApiBaseUrl { get; set; } = string.Empty;
     public string PdfFolderPath { get; set; } = string.Empty;
+    public int? MaxFilesPerRun { get; set; }
 
     // Tesseract settings
     public string TesseractExeName { get; set; } = string.Empty;

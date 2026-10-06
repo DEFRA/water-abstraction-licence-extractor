@@ -1447,7 +1447,7 @@ public static class AbstractionLicenceSchemaConverter
         var explicitlyReferencedLicenceSet = hasExplicitlyReferencedLicenceSet
             ? new LicenceSet
             {
-                LicenceSetTypes = [LicenceSetType.AllLicencesExplicitlyReferencedAnywhere],
+                LicenceSetTypes = [LicenceSetType.LicencesReferencedAnywhere],
                 Licences = allLicences.ToArray(),
                 AggregateSets = GetAggregateSets(
                     allLicences,
@@ -2375,7 +2375,7 @@ public static class AbstractionLicenceSchemaConverter
                             incomingLinkedLicence 
                         }.ToArray();
 
-                        if (!addImplicitLicenceSet)
+                        /*if (!addImplicitLicenceSet)
                         {
                             continue;
                         }
@@ -2417,7 +2417,7 @@ public static class AbstractionLicenceSchemaConverter
                             }
                         };
 
-                        licence.LicenceSets = newLicenceSetIds.ToArray();
+                        licence.LicenceSets = newLicenceSetIds.ToArray();*/
                     }
                     
                     licence.LinkedLicences = (await ConsolidateLinkedLicencesAsync(
@@ -6185,33 +6185,11 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
             
-            var licenceSetsForLicence = GetAllLicenceSetsForLicence(
-                licence.LicenceNumber!.Value!,
-                distinctLicenceSets);
-
-            var updatedLicenceSetIds = AddImplicitAndExplicitLicenceSets(licence, licenceSetsForLicence);
+            var updatedLicenceSetIds = licence.LicenceSets.ToList();
             updatedLicenceSetIds = AddEncompassingLicenceSets(licence, distinctLicenceSets, updatedLicenceSetIds);
 
             licence.LicenceSets = updatedLicenceSetIds.ToArray();
         }
-    }
-
-    private static List<LicenceSet> GetAllLicenceSetsForLicence(string licenceNumber,
-        IReadOnlyList<LicenceSet> licenceSets)
-    {
-        var returnList = new List<LicenceSet>();
-
-        foreach (var licenceSet in licenceSets)
-        {
-            if (licenceSet.Licences.All(l => l.LicenceNumber?.Value != licenceNumber))
-            {
-                continue;
-            }
-
-            returnList.Add(licenceSet);
-        }
-
-        return returnList;
     }
 
     private static List<LicenceSet> AsDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
@@ -6345,26 +6323,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (!licenceContainsSet)
                 {
-                    var fullyEncompassedIn = licence1.LinkedLicences
-                        .All(ll => distinctLicenceSet.Licences.Any(l => ll.LicenceNumber == l.LicenceNumber?.Value));
-
-                    var type = fullyEncompassedIn
-                        ? LicenceSetType.FullyEncompassedIn
-                        : LicenceSetType.PartiallyEncompassedIn;
-
-                    var toAdd = new LicenceSetReference
-                    {
-                        LicenceSetId = distinctLicenceSet.LicenceSetId,
-                        LicenceSetType = type
-                    };
-
-                    returnList.Add(toAdd);
-
-                    if (!distinctLicenceSet.LicenceSetTypes.Contains(type))
-                    {
-                        var dls = new List<LicenceSetType>(distinctLicenceSet.LicenceSetTypes) { type };
-                        distinctLicenceSet.LicenceSetTypes = dls.ToArray();
-                    }
+                    throw new Exception("Licence set not found");
                 }
 
                 var licencesLicenceSet =
@@ -6392,56 +6351,6 @@ public static class AbstractionLicenceSchemaConverter
         List<LicenceSet> allLicenceSetsForLicence)
     {
         var returnList = new List<LicenceSetReference>(licence1.LicenceSets);
-
-        foreach (var licenceSetForLicence in allLicenceSetsForLicence)
-        {
-            if (returnList.Any(lsi => lsi.LicenceSetId == licenceSetForLicence.LicenceSetId))
-            {
-                continue;
-            }
-
-            var allLinkedLicenceOfLicence = licenceSetForLicence.Licences
-                .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
-                    || licence1.LinkedLicences.Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
-
-            if (!allLinkedLicenceOfLicence)
-            {
-                continue;
-            }
-
-            var allLinkedLicenceOfLicenceExplicit = licenceSetForLicence.Licences
-                .All(l => licence1.LicenceNumber?.Value == l.LicenceNumber?.Value
-                  || licence1.LinkedLicences.Where(ll => ll.ContainedIn?.Any(ci =>
-                          ci.Direction == InformationDirection.Incoming) != true)
-                      .Select(ll => ll.LicenceNumber).Contains(l.LicenceNumber?.Value));
-
-            var type = licenceSetForLicence.LicenceSetTypes[0];
-
-            if (!allLinkedLicenceOfLicenceExplicit)
-            {
-                if (type == LicenceSetType.LicencesGroupedByAbstractionLimits)
-                {
-                    // Do nothing - TODO maybe remove
-                }
-                else if (type == LicenceSetType.AllLicencesExplicitlyReferencedAnywhere)
-                {
-                    type = LicenceSetType.AllLicencesIncludingImplicitlyReferenced;
-
-                    if (!licenceSetForLicence.LicenceSetTypes.Contains(type))
-                    {
-                        var newLTypes = new List<LicenceSetType>(licenceSetForLicence.LicenceSetTypes) { type };
-                        licenceSetForLicence.LicenceSetTypes = newLTypes.ToArray();
-                    }
-                }
-            }
-
-            returnList.Add(new()
-            {
-                LicenceSetId = licenceSetForLicence.LicenceSetId,
-                LicenceSetType = type
-            });
-        }
-
         return returnList;
     }
 

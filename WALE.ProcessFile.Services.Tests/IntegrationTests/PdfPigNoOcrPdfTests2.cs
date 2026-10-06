@@ -2129,7 +2129,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         var expectedLicenceSetId =
             "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN-NE0270028059-LVUNKNOWN";
         Assert.Equal(expectedLicenceSetId, licenceSets[1].LicenceSetId);
-        Assert.Equal([LicenceSetType.AllLicencesExplicitlyReferencedAnywhere], licenceSets[1].LicenceSetTypes);
+        Assert.Equal([LicenceSetType.LicencesReferencedAnywhere], licenceSets[1].LicenceSetTypes);
 
         var agreedSchemaLicenceGroup = licenceSets[1];
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);

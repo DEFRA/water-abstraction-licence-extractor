@@ -266,46 +266,31 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={!pendingQuery.issueYear ? "" : "filter-active"}
+                    className={!pendingQuery.issueYear && pendingQuery.isIssueDateFlagged === undefined ? "" : "filter-active"}
                     value={
-                        pendingQuery.issueYear === undefined
-                            ? ""
-                            : String(pendingQuery.issueYear)
+                        pendingQuery.isIssueDateFlagged
+                            ? "flagged"
+                            : pendingQuery.issueYear === undefined
+                                ? ""
+                                : String(pendingQuery.issueYear)
                     }
-                    onChange={e =>
-                        updatePendingQuery(
-                            "issueYear",
-                            e.target.value === "" ? undefined : Number(e.target.value)
-                        )
-                    }
+                    onChange={e => {
+                        const value = e.target.value;
+                        setPendingQuery(prev => ({
+                            ...prev,
+                            issueYear: value === "" || value === "flagged" ? undefined : Number(value),
+                            isIssueDateFlagged: value === "flagged" ? true : undefined
+                        }));
+                    }}
                 >
-                    <option value="">All years</option>
+                    <option value="">All</option>
+                    <option value="flagged">Flagged</option>
 
                     {issueDates?.map(year => (
                         <option key={year} value={year}>
                             {year}
                         </option>
                     ))}
-                </select>
-
-                <select
-                    className={pendingQuery.isIssueDateFlagged === undefined ? "" : "filter-active"}
-                    value={
-                        pendingQuery.isIssueDateFlagged === undefined
-                            ? ""
-                            : String(pendingQuery.isIssueDateFlagged)
-                    }
-                    onChange={e =>
-                        updatePendingQuery(
-                            "isIssueDateFlagged",
-                            e.target.value === ""
-                                ? undefined
-                                : e.target.value === "true"
-                        )
-                    }
-                >
-                    <option value="">All</option>
-                    <option value="true">Flagged</option>
                 </select>
             </td>
 

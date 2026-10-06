@@ -393,7 +393,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetTypes[0]);
         Assert.Single(licenceSets[0].Licences);
         
-        Assert.Equal(LicenceSetType.AllLicencesExplicitlyReferencedInLimits, licenceSets[1].LicenceSetTypes[0]);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetTypes[0]);
         Assert.Equal(4, licenceSets[1].Licences.Length);
         
         Assert.Equal(LicenceSetType.AllLicencesExplicitlyReferencedAnywhere, licenceSets[2].LicenceSetTypes[0]);

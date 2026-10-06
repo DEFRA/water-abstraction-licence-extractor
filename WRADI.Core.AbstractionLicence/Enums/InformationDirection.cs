@@ -4,5 +4,6 @@ public enum InformationDirection
 {
     Unknown,
     Incoming,
-    Outgoing
+    Outgoing,
+    PointingElsewhere
 }

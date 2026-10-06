@@ -47,8 +47,18 @@ public class FileProcessOrchestrationServiceTests
 
         var enqueuedRequests = new List<FileProcessSingleRequest>();
 
-        A.CallTo(() => messageQueueService.AddToFileProcessQueue(A<FileProcessSingleRequest>._))
-            .Invokes(call => enqueuedRequests.Add(call.GetArgument<FileProcessSingleRequest>(0)!));
+        A.CallTo(() => messageQueueService.AddToFileProcessQueueBatch(A<IReadOnlyList<FileProcessSingleRequest>>._))
+            .ReturnsLazily(call =>
+            {
+                var batch = call.GetArgument<IReadOnlyList<FileProcessSingleRequest>>(0)!;
+                enqueuedRequests.AddRange(batch);
+
+                return Task.FromResult(new FileProcessQueueBatchResult
+                {
+                    Requested = batch.Count,
+                    Enqueued = batch.Count
+                });
+            });
 
         var service = new FileProcessOrchestrationService(
             settings,

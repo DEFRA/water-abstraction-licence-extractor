@@ -105,6 +105,19 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsAccessKey = config.GetValue<string>("AwsAccessKey");
     var awsSecretKey = config.GetValue<string>("AwsSecretKey");
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
+
+    // SQS and S3 are not necessarily in the same AWS account, so SQS takes its own credentials when
+    // supplied. Resolved as a whole set rather than key by key: an override access key paired with
+    // the shared session token is a credential for neither account, and long-term keys (AKIA) have
+    // no session token at all, so an absent one must mean absent rather than "inherit".
+    var awsSqsRegionName = config.GetValue<string>("AwsSqsRegionName") ?? awsRegionName;
+    var awsSqsAccessKey = config.GetValue<string>("AwsSqsAccessKey");
+
+    var (awsSqsSecretKey, awsSqsSessionToken) = string.IsNullOrEmpty(awsSqsAccessKey)
+        ? (awsSecretKey, awsSessionToken)
+        : (config.GetValue<string>("AwsSqsSecretKey"), config.GetValue<string>("AwsSqsSessionToken"));
+
+    awsSqsAccessKey = string.IsNullOrEmpty(awsSqsAccessKey) ? awsAccessKey : awsSqsAccessKey;
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
@@ -117,10 +130,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsSecretKey,
             awsSessionToken)
         .AddAwsSqsServices(
-            awsRegionName,
-            awsAccessKey,
-            awsSecretKey,
-            awsSessionToken)
+            awsSqsRegionName,
+            awsSqsAccessKey,
+            awsSqsSecretKey,
+            awsSqsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<IAbstractionLicenceOutputService, DatabaseAbstractionLicenceOutputService>()
         .AddTransient<ICacheService, DatabaseCacheService>()

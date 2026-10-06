@@ -2665,7 +2665,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
 
         // Need to update these for comparison
         agreedSchemaLicenceGroup.Licences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);

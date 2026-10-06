@@ -153,7 +153,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services.AddSingleton<PdfPigNoOcrPdfDocumentService>();
         services.AddSingleton<DocnetNoOcrAlternativePdfDocumentService>();

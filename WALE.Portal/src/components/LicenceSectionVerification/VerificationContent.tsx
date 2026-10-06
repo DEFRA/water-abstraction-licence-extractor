@@ -54,12 +54,20 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
-            <div id="simpleOverview" style={{ textAlign: 'right' }}>
-                <strong>Licence contains Aggregates (NALD):</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
-                <br/>
-                <strong>NALD Original Signature Date:</strong> {licence.licenceVersion?.naldOrigSignatureDate ? new Date(licence.licenceVersion.naldOrigSignatureDate).toLocaleDateString() : 'N/A'}
-                <br/>
-                <strong>Issue Date:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
+            <div id="simpleOverview" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', columnGap: '1.5em' }}>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                    <strong>Licence has NALD Aggs:</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
+                </span>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                    <strong>Doc Issue:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
+                    {outputListDataItem?.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
+                </span>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                    <strong>NALD Sig:</strong> {licence.licenceVersion?.naldSignatureDate ? new Date(licence.licenceVersion.naldSignatureDate).toLocaleDateString() : 'N/A'}
+                </span>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                    <strong>NALD OG Sig:</strong> {licence.licenceVersion?.naldOrigSignatureDate ? new Date(licence.licenceVersion.naldOrigSignatureDate).toLocaleDateString() : 'N/A'}
+                </span>
             </div>
                 
             <ul className="ul-links">

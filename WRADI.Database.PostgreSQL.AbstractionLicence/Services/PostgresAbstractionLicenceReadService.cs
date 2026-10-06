@@ -3719,6 +3719,9 @@ private async Task<
             ocr AS Ocr,
             issue_date AS IssueDate,
             issue_year AS IssueYear,
+            nald_orig_signature_date AS NaldOrigSignatureDate,
+            nald_signature_date AS NaldSignatureDate,
+            is_issue_date_flagged AS IsIssueDateFlagged,
             issuer AS Issuer,
             means_found AS MeansFound,
             status AS Status,
@@ -3855,6 +3858,13 @@ private static void AddLicenceListItemFilters(
         "is_licence_number_flagged",
         "IsLicenceNumberFlagged",
         query.IsLicenceNumberFlagged);
+
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "is_issue_date_flagged",
+        "IsIssueDateFlagged",
+        query.IsIssueDateFlagged);
 
     ReadSqlHelper.AddCountEmptyFilter(
         sql,

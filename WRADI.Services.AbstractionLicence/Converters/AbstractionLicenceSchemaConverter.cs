@@ -1663,8 +1663,6 @@ public static class AbstractionLicenceSchemaConverter
                                 continue;
                             }
                             
-                            newAggregates.Add(aggregate);
-
                             var missingLinkedLicences = aggregate.LinkedLicences
                                 .Where(ll => licenceSetLicence.LinkedLicences.All(ll2 => ll2.LicenceNumber != ll)
                                     && ll != licenceSetLicence.LicenceNumber?.Value)
@@ -1672,8 +1670,11 @@ public static class AbstractionLicenceSchemaConverter
 
                             if (missingLinkedLicences.Count == 0)
                             {
+                                newAggregates.Add(licenceAggregate);
                                 continue;
                             }
+                            
+                            newAggregates.Add(aggregate);
                             
                             var newLinkedLicences = new List<LinkedLicence>();
                             newLinkedLicences.AddRange(licenceSetLicence.LinkedLicences);

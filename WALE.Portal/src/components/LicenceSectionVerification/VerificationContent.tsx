@@ -6,6 +6,7 @@ import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {Aggregates} from "./Aggregates/Aggregates.tsx";
+import {DocumentInfo} from "./DocumentInfo.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -54,22 +55,8 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
-            <div id="simpleOverview" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', columnGap: '1.5em' }}>
-                <span style={{ whiteSpace: 'nowrap' }}>
-                    <strong>Licence has NALD Aggs:</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
-                </span>
-                <span style={{ whiteSpace: 'nowrap' }}>
-                    <strong>Doc Issue:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
-                    {outputListDataItem?.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
-                </span>
-                <span style={{ whiteSpace: 'nowrap' }}>
-                    <strong>NALD Sig:</strong> {licence.licenceVersion?.naldSignatureDate ? new Date(licence.licenceVersion.naldSignatureDate).toLocaleDateString() : 'N/A'}
-                </span>
-                <span style={{ whiteSpace: 'nowrap' }}>
-                    <strong>NALD OG Sig:</strong> {licence.licenceVersion?.naldOrigSignatureDate ? new Date(licence.licenceVersion.naldOrigSignatureDate).toLocaleDateString() : 'N/A'}
-                </span>
-            </div>
-                
+            <DocumentInfo licence={licence} outputListDataItem={outputListDataItem} />
+
             <ul className="ul-links">
                 <li>
                     <a

@@ -37,10 +37,10 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
             <td>{(item.ocr ? "True" : "False")}</td>
             <td>
-                <strong>Doc:</strong> {dashesIfNullOrEmpty(item.issueDate)}
+                <strong>Doc:</strong><br /> {dashesIfNullOrEmpty(item.issueDate)}
                 {item.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
-                <br /><strong>NALD:</strong> {dashesIfNullOrEmpty(item.naldSignatureDate)}
-                <br /><strong>NALD OG:</strong> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
+                <br /><strong>Nald:</strong><br /> {dashesIfNullOrEmpty(item.naldSignatureDate)}
+                <br /><strong>Nald OG:</strong><br /> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
             </td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>

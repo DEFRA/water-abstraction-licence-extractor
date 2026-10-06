@@ -2523,8 +2523,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2535,7 +2535,10 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
             {
                 FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
                 DmsPath = "main path"
-            })).Last();
+            });
+        
+        Assert.Equal(2, licenceSets.Count);
+        var agreedSchemaLicenceGroup = licenceSets.Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);

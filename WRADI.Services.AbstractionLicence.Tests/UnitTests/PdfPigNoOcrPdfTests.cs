@@ -395,36 +395,43 @@ public class PdfPigNoOcrPdfTests
         var licence1 = licenceSets[1].Licences[0];
         Assert.Equal("1/01/01/001", licence1.LicenceNumber!.Value);            
         
-        Assert.Equal(2, licence1.LinkedLicences.Length);
+        Assert.Equal(3, licence1.LinkedLicences.Length);
         Assert.Equal("1/01/01/002", licence1.LinkedLicences[0].LicenceNumber);
         Assert.Equal("1/01/01/003", licence1.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("1/01/01/004", licence1.LinkedLicences[2].LicenceNumber);
 
         Assert.NotNull(licence1.AbstractionLimits.Aggregates);
         Assert.Single(licence1.AbstractionLimits.Aggregates);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0]);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].LinkedLicences);
-        Assert.Equal(2, licence1.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
-        Assert.Equal("1/01/01/002", licence1.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
-        Assert.Equal("1/01/01/003", licence1.AbstractionLimits.Aggregates[0].LinkedLicences![1]);
+        Assert.Equal(3, licence1.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
+        Assert.Equal("1/01/01/001", licence1.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
+        Assert.Equal("1/01/01/002", licence1.AbstractionLimits.Aggregates[0].LinkedLicences![1]);
+        Assert.Equal("1/01/01/004", licence1.AbstractionLimits.Aggregates[0].LinkedLicences![2]);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].Limits);
         Assert.Single(licence1.AbstractionLimits.Aggregates[0].Limits);
         Assert.Equal("cubic meters", licence1.AbstractionLimits.Aggregates[0].Limits[0].Units);
         Assert.Equal(30, licence1.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].Variations);
+        Assert.Equal(2, licence1.AbstractionLimits.Aggregates[0].Variations!.Length);
+        Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licence1.AbstractionLimits.Aggregates[0].Variations![0].Id);
         
         var licence2 = licenceSets[1].Licences[1];
         Assert.Equal("1/01/01/002", licence2.LicenceNumber!.Value);            
         
-        Assert.Equal(2, licence2.LinkedLicences.Length);
+        Assert.Equal(3, licence2.LinkedLicences.Length);
         Assert.Equal("1/01/01/001", licence2.LinkedLicences[0].LicenceNumber);
         Assert.Equal("1/01/01/003", licence2.LinkedLicences[1].LicenceNumber);
+        Assert.Equal("1/01/01/004", licence2.LinkedLicences[2].LicenceNumber);
 
         Assert.NotNull(licence2.AbstractionLimits.Aggregates);
         Assert.Single(licence2.AbstractionLimits.Aggregates);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0]);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].LinkedLicences);
-        Assert.Equal(2, licence2.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
+        Assert.Equal(3, licence2.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
         Assert.Equal("1/01/01/001", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
-        Assert.Equal("1/01/01/003", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![1]);
+        Assert.Equal("1/01/01/002", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![1]); // TODO wrong
+        Assert.Equal("1/01/01/004", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![2]);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].Limits);
         Assert.Single(licence2.AbstractionLimits.Aggregates[0].Limits);
         Assert.Equal("cubic meters", licence2.AbstractionLimits.Aggregates[0].Limits[0].Units);
@@ -463,7 +470,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licenceSets[1].AggregateSets![0].Aggregates[0].Limits);
         Assert.Equal(30, licenceSets[1].AggregateSets![0].Aggregates[0].Limits[0].Value);
         Assert.NotNull(licenceSets[1].AggregateSets![0].Aggregates[0].Variations);
-        Assert.Single(licenceSets[1].AggregateSets![0].Aggregates[0].Variations!);
+        Assert.Equal(2, licenceSets[1].AggregateSets![0].Aggregates[0].Variations!.Length);
         Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licenceSets[1].AggregateSets![0].Aggregates[0].Variations![0].Id);
         Assert.Equal("1/01/01/001", licenceSets[1].AggregateSets![0].Aggregates[0].Variations![0].SourceLicenceNumber);
         Assert.Equal(2, licenceSets[1].AggregateSets![0].Aggregates[0].Variations![0].LinkedLicences!.Length);

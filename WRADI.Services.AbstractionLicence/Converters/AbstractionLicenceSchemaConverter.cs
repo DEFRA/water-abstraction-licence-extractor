@@ -1609,11 +1609,136 @@ public static class AbstractionLicenceSchemaConverter
         AddVariationsToLicenceAggregates(allLicences);
         EnrichAndGroupAggregates(returnLicenceSets);
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
+        FlattenSubVariations(returnLicenceSets);
+        UpdateLicenceAggregates(returnLicenceSets);
         
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return returnLicenceSets;
+    }
+
+    private static void UpdateLicenceAggregates(List<LicenceSet> licenceSets)
+    {
+        foreach (var licenceSet in licenceSets)
+        {
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregateSet in licenceSet.AggregateSets!)
+            {
+                foreach (var aggregate in aggregateSet.Aggregates)
+                {
+                    if (aggregate.LinkedLicences == null)
+                    {
+                        continue;
+                    }
+
+                    var aggregateLicences = aggregate.LinkedLicences!.ToList();
+                    aggregateLicences.Add(aggregate.SourceLicenceNumber!);
+                    
+                    foreach (var linkedLicence in aggregateLicences)
+                    {
+                        var licenceSetLicence = licenceSet.Licences
+                            .FirstOrDefault(l => l.LicenceNumber?.Value == linkedLicence);
+
+                        if (licenceSetLicence?.AbstractionLimits.Aggregates == null)
+                        {
+                            continue;
+                        }
+
+                        var newAggregates = new List<Aggregate>();
+
+                        foreach (var licenceAggregate in licenceSetLicence.AbstractionLimits.Aggregates!)
+                        {
+                            var matchingVariations = aggregate.Variations?
+                                .Where(v => v.Id == licenceAggregate.Id)
+                                .ToList() ?? [];
+
+                            if (matchingVariations.Count == 0)
+                            {
+                                newAggregates.Add(licenceAggregate);
+                                continue;
+                            }
+                            
+                            newAggregates.Add(aggregate);
+
+                            var missingLinkedLicences = aggregate.LinkedLicences
+                                .Where(ll => licenceSetLicence.LinkedLicences.All(ll2 => ll2.LicenceNumber != ll)
+                                    && ll != licenceSetLicence.LicenceNumber?.Value)
+                                .ToList();
+
+                            if (missingLinkedLicences.Count == 0)
+                            {
+                                continue;
+                            }
+                            
+                            var newLinkedLicences = new List<LinkedLicence>();
+                            newLinkedLicences.AddRange(licenceSetLicence.LinkedLicences);
+                            newLinkedLicences.AddRange(missingLinkedLicences
+                                .Select(missingLinkedLicenceNumber => new LinkedLicence
+                                {
+                                    LicenceNumber = missingLinkedLicenceNumber,
+                                    IsBecauseOfAggregate = true,
+                                    ContainedIn = [
+                                        new ContainedInInformation
+                                        {
+                                            Source = InformationSource.OtherDocument
+                                        }
+                                    ]
+                                }));
+                            
+                            licenceSetLicence.LinkedLicences = newLinkedLicences.ToArray();
+                        }
+
+                        licenceSetLicence.AbstractionLimits.Aggregates = newAggregates.Count > 0
+                            ? newAggregates.ToArray()
+                            : null;
+                    }
+                }
+            }
+        }
+    }
+    
+    private static void FlattenSubVariations(List<LicenceSet> licenceSets)
+    {
+        foreach (var licenceSet in licenceSets)
+        {
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregateSet in licenceSet.AggregateSets!)
+            {
+                foreach (var aggregate in aggregateSet.Aggregates)
+                {
+                    if (aggregate.Variations == null)
+                    {
+                        continue;
+                    }
+
+                    var newVariations = new List<AggregateVariation>();
+                    
+                    foreach (var variation in aggregate.Variations)
+                    {
+                        newVariations.Add(variation);
+                        
+                        if (variation.Variations == null)
+                        {
+                            continue;
+                        }
+                        
+                        newVariations.AddRange(variation.Variations);
+                        variation.Variations = null;
+                    }
+
+                    aggregate.Variations = newVariations.Count >= 1 ? newVariations.ToArray() : null;
+                }
+            }
+        }
     }
 
     private static List<Licence> GetLicenceLinkedFromLinkedLicence(List<Licence> allLicences, int regionId)

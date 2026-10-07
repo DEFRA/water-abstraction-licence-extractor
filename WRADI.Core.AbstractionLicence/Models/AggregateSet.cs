@@ -18,7 +18,7 @@ public class AggregateSet
             })
             .Select(group => group.First());
 
-        var combinedValue = 0.0;
+        var combinedValue = 0;
         var licencesDict = new Dictionary<string, string>();
         
         foreach (var aggregate in groupedAggregates)

@@ -1564,7 +1564,6 @@ public static class AbstractionLicenceSchemaConverter
             
             await AddIncomingLinksAsync(
                 [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
-                false,
                 lookupConfiguration,
                 naldDataLookupService);
 
@@ -1612,48 +1611,65 @@ public static class AbstractionLicenceSchemaConverter
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         FlattenSubVariations(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
-
-        var licenceSetInLimits = returnLicenceSets.FirstOrDefault(ls =>
-            ls.LicenceSetTypes.First() == LicenceSetType.LicencesGroupedByAbstractionLimits);
         
-        // TODO pull out this below into another function
-        if (explicitlyReferencedLimitsLicenceSet != null && licenceSetInLimits != null)
-        {
-            var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
-                .Where(linkedLicence =>
-                    linkedLicence.ContainedIn?.Any(ci =>
-                        ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
-                .Select(ll => ll.LicenceNumber)
-                .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
-                .Where(ln => ln != null)
-                .Select(ln => ln!)
-                .ToList();
-            
-            var licencesExplicitlyMentionedInLimits2 = licencesReferencedInLimits.Any();
-
-            if (licencesExplicitlyMentionedInLimits2)
-            {
-                updatedLicencesReferencedInLimits.Insert(0, primaryLicence);
-            }
-
-            var missingLicences = updatedLicencesReferencedInLimits
-                .Where(l => licenceSetInLimits.Licences.All(ll => l.LicenceNumber?.Value != ll.LicenceNumber?.Value))
-                .ToList();
-            
-            if (missingLicences.Count >= 1)
-            {
-                var newLicences = new List<Licence>();
-                newLicences.AddRange(licenceSetInLimits.Licences);
-                newLicences.AddRange(missingLicences);
-                
-                licenceSetInLimits.Licences = newLicences.ToArray();
-            }
-        }
+        AddLicencesReferencedInLimitsToLicenceSets(
+            returnLicenceSets,
+            primaryLicence,
+            allLicences,
+            explicitlyReferencedLimitsLicenceSet,
+            licencesReferencedInLimits);
 
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return returnLicenceSets;
+    }
+
+    private static void AddLicencesReferencedInLimitsToLicenceSets(
+        List<LicenceSet> licenceSets,
+        Licence primaryLicence,
+        List<Licence> allLicences,
+        LicenceSet? explicitlyReferencedLimitsLicenceSet,
+        List<Licence> licencesReferencedInLimits)
+    {
+        var licenceSetInLimits = licenceSets.FirstOrDefault(ls =>
+            ls.LicenceSetTypes.First() == LicenceSetType.LicencesGroupedByAbstractionLimits);
+
+        if (explicitlyReferencedLimitsLicenceSet == null || licenceSetInLimits == null)
+        {
+            return;
+        }
+        
+        var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
+            .Where(linkedLicence =>
+                linkedLicence.ContainedIn?.Any(ci =>
+                    ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
+            .Select(ll => ll.LicenceNumber)
+            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
+            .Where(ln => ln != null)
+            .Select(ln => ln!)
+            .ToList();
+
+        if (licencesReferencedInLimits.Any())
+        {
+            updatedLicencesReferencedInLimits.Insert(0, primaryLicence);
+        }
+
+        var missingLicences = updatedLicencesReferencedInLimits
+            .Where(l => licenceSetInLimits.Licences.All(
+                ll => l.LicenceNumber?.Value != ll.LicenceNumber?.Value))
+            .ToList();
+
+        if (missingLicences.Count < 1)
+        {
+            return;
+        }
+        
+        var newLicences = new List<Licence>();
+        newLicences.AddRange(licenceSetInLimits.Licences);
+        newLicences.AddRange(missingLicences);
+                
+        licenceSetInLimits.Licences = newLicences.ToArray();
     }
 
     private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
@@ -2289,7 +2305,6 @@ public static class AbstractionLicenceSchemaConverter
     
     private static async Task<List<LicenceSet>> AddIncomingLinksAsync(
         IReadOnlyList<IReadOnlyList<LicenceSet>> licenceSetGroups,
-        bool addImplicitLicenceSet,
         LookupConfiguration lookupConfiguration,
         INaldDataLookupService naldDataLookupService)
     {
@@ -2325,13 +2340,6 @@ public static class AbstractionLicenceSchemaConverter
                         allLicencesInSets,
                         licence.LicenceNumber?.Value!);
                     
-                    var outgoingLinks = licence.LinkedLicences
-                        .Select(lll => lll.LicenceNumber!)
-                        .ToList();
-
-                    var incomingAndOutgoingLinks = new List<string>(incomingLinks.Select(l => l.LicenceNumber));
-                    incomingAndOutgoingLinks.AddRange(outgoingLinks);
-
                     foreach (var incomingLink in incomingLinks)
                     {
                         // If already output, don't add again
@@ -2376,50 +2384,6 @@ public static class AbstractionLicenceSchemaConverter
                         {
                             incomingLinkedLicence 
                         }.ToArray();
-
-                        /*if (!addImplicitLicenceSet)
-                        {
-                            continue;
-                        }
-
-                        var implicitGroupExists = licenceSetGroup.Any(lsg =>
-                            lsg.LicenceSetTypes[0] == LicenceSetType.AllLicencesIncludingImplicitlyReferenced);
-
-                        if (implicitGroupExists)
-                        {
-                            continue;
-                        }
-
-                        var implicitLicences = new List<Licence>
-                        {
-                            licence
-                        };
-
-                        implicitLicences.AddRange(
-                            GetLicencesFromStrings(allLicencesInSets, incomingAndOutgoingLinks));
-
-                        var implicitLicenceSet = new LicenceSet
-                        {
-                            LicenceSetTypes = [LicenceSetType.AllLicencesIncludingImplicitlyReferenced],
-                            Licences = implicitLicences.ToArray(),
-                            AggregateSets = GetAggregateSets(
-                                implicitLicences,
-                                allLicencesInSets,
-                                false)
-                        };
-
-                        returnList.Add(implicitLicenceSet);
-
-                        var newLicenceSetIds = new List<LicenceSetReference>(licence.LicenceSets)
-                        {
-                            new()
-                            {
-                                LicenceSetId = implicitLicenceSet.LicenceSetId,
-                                LicenceSetType = implicitLicenceSet.LicenceSetTypes[0]
-                            }
-                        };
-
-                        licence.LicenceSets = newLicenceSetIds.ToArray();*/
                     }
                     
                     licence.LinkedLicences = (await ConsolidateLinkedLicencesAsync(
@@ -6161,7 +6125,6 @@ public static class AbstractionLicenceSchemaConverter
 
         distinctLicenceSets.AddRange(await AddIncomingLinksAsync(
             licenceSetGroups,
-            true,
             lookupConfiguration,
             naldDataLookupService));
 

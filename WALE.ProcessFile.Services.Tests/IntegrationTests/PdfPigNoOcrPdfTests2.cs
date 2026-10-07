@@ -2135,7 +2135,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);
 
         Assert.Equal(2, agreedSchemaLicenceGroup.AggregateSets!.Length);
-        Assert.Equal("NE0260034052-LV2019121120270331-C3493707.89", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
+        Assert.Equal("NE0260034052-LV2019121120270331-C3493706", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
         Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN-C200000", agreedSchemaLicenceGroup.AggregateSets![1].AggregateSetId);
         
         Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length); // TODO should have a /056 back link ideally

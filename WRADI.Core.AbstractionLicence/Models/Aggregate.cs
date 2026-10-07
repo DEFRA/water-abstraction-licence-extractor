@@ -58,7 +58,7 @@ public class Aggregate : AbstractionLimitGroup
         }
     }
 
-    public double GetCombinedLimitValue()
+    public int GetCombinedLimitValue()
     {
         var combinedValue = 0.0;
         
@@ -72,7 +72,7 @@ public class Aggregate : AbstractionLimitGroup
             combinedValue += limit.Value!.Value;
         }
 
-        return combinedValue;
+        return (int)combinedValue;
     }
     
     public string? AggregateSetId { get; set; }

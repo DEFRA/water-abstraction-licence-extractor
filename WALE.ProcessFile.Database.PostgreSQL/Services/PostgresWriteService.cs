@@ -91,7 +91,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                                @FileName, 
                                @UTCStartDateTime
                            )
-                           ON CONFLICT (process_run_id, file_name) DO NOTHING
+                           ON CONFLICT (process_run_id, file_name) DO UPDATE
+                               SET process_run_id = EXCLUDED.process_run_id
                            RETURNING process_run__file_id;
                            """;
 

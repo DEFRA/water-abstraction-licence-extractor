@@ -2432,7 +2432,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "LegalText",
                         Text =
                         [
-                            new("as may be renewed from time")
+                            new("as may be renewed from time"),
+                            new("or such other licence")
                         ],
                         Position = LabelPosition.LabelIsBeforeTextToFind,
                         Format = "Text"

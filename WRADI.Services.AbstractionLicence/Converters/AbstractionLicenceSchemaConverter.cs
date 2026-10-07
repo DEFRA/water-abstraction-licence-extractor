@@ -177,6 +177,15 @@ public static class AbstractionLicenceSchemaConverter
         noneSchemaData.Add("ocr", ocr);
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
+
+        if (matchesResult.ServicesFailed.Count > 0)
+        {
+            // Lets a harness or the portal tell "rules got worse" from "a provider was throttled".
+            noneSchemaData.Add("servicesFailed", matchesResult.ServicesFailed
+                .Select(failure => $"{failure.ServiceName} P{failure.PageNumber} I{failure.ImageNumber} " +
+                    $"{(failure.IsTransient ? "transient" : "permanent")} {failure.ErrorType}")
+                .ToArray());
+        }
         
         var (naldStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldAbstractionDataLine);
 

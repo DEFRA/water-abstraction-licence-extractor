@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -568,11 +569,6 @@ public class PdfDataExtractorService(
                 {
                     servicesUsed.TryAdd(ocrService.Name, 0);
                     var serviceStartTimeUtc = DateTime.UtcNow;
-                    
-                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
-                    {
-                        returnResult.ServicesUsed.Add(ocrService.Name);
-                    }
 
                     try
                     {
@@ -592,9 +588,30 @@ public class PdfDataExtractorService(
 
                         var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
                         servicesUsed[ocrService.Name] += serviceDurationMs;
-                        
+
+                        var isTransient = ex is OcrServiceTransientException;
+
+                        // Record it on the result so a page that lost this provider is visible, rather
+                        // than the file saving as a normal success that happens to extract differently.
+                        returnResult.ServicesFailed.Add(new OcrServiceFailure
+                        {
+                            ServiceName = ocrService.Name,
+                            PageNumber = pageNumber,
+                            ImageNumber = imageNumber,
+                            IsTransient = isTransient,
+                            ErrorType = (ex.InnerException ?? ex).GetType().Name,
+                            Message = ex.Message
+                        });
+
                         // Don't rethrow - just carry on with the other providers and pages
                         continue;
+                    }
+
+                    // Only counts as "used" once a call has actually completed, so ServicesUsed is
+                    // never claimed for a provider that contributed nothing.
+                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                    {
+                        returnResult.ServicesUsed.Add(ocrService.Name);
                     }
                     
                     // No lines found, no point processing that with the other services

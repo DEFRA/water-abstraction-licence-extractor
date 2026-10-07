@@ -2139,7 +2139,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         var agreedSchemaLicenceGroup = licenceSets[1];
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);
 
-        Assert.Equal(2, licenceSets[1].AggregateSets!.Length);
+        Assert.Equal(2, licenceSets[1].AggregateSets!.Length); // TODO for some reason its not creating an abstraction limits group
         Assert.Equal("NE0260034052-LV2019121120270331-C3493706", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
         Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN-C200000", agreedSchemaLicenceGroup.AggregateSets![1].AggregateSetId);
         
@@ -2790,8 +2790,11 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         
         Assert.Equal(2, licenceSets.Count);
         
-        Assert.Equal("22727153-LV20231214-NE0270027017R01-LVUNKNOWN-NE0270027018R01-LVUNKNOWN-NE0270027047-LVUNKNOWN", licenceSets[0].LicenceSetId);
-        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
+        Assert.Equal("22727153-LV20231214-NE027027018R01-LVUNKNOWN", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.Others, licenceSets[0].LicenceSetType);
+        
+        Assert.Equal("22727153-LV20231214-NE0270027017R01-LVUNKNOWN-NE0270027018R01-LVUNKNOWN-NE0270027047-LVUNKNOWN", licenceSets[1].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];

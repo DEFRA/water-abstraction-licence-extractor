@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -27,7 +28,8 @@ public class MatchResultController(IOutputService outputService) : Controller
         var matchResultId = await outputService.SaveStubMatchesResultAsync(
             request.filename!,
             request.fileId,
-            request.processRunId);
+            request.processRunId,
+            request.isUpdate);
         
         return Ok(matchResultId);
     }
@@ -35,12 +37,17 @@ public class MatchResultController(IOutputService outputService) : Controller
     [HttpPost]
     public async Task<IActionResult> SaveErrorAsync([FromBody] SaveErrorMatchResultRequest request)
     {
+        var status = Enum.TryParse<ScrapeStatus>(request.status, ignoreCase: true, out var parsedStatus)
+            ? parsedStatus
+            : ScrapeStatus.Error;
+
         var matchResultId = await outputService.SaveErrorMatchesResultAsync(
             request.filename!,
             request.fileId,
             request.processRunId,
             request.error,
-            request.isUpdate);
+            request.isUpdate,
+            status);
         
         return Ok(matchResultId);
     }

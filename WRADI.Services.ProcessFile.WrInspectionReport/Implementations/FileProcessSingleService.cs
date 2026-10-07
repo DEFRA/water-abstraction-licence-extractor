@@ -174,8 +174,17 @@ public class FileProcessSingleService(
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many images");
-
+            
             return false;
+        }
+        catch (OcrServiceTransientException ex)
+        {
+            // Deliberately not swallowed: the matches_result row has been left as TransientError and
+            // the queue message must be marked failed so SQS redelivers it once the throttle passes.
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - '{pdfFilename}' failed on a " +
+                $"transient OCR error from {ex.ServiceName}, leaving for retry - {ex.Message}");
+
+            throw;
         }
         catch (Exception ex)
         {

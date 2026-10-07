@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -201,7 +202,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false)
     {
         var path = "/Extractor/MatchResult/SaveStub";
 
@@ -209,7 +210,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         {
             filename,
             fileId,
-            ProcessRunId = processRunId
+            ProcessRunId = processRunId,
+            isUpdate
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
@@ -221,7 +223,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
 
-    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
+    public async Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error)
     {
         var path = "/Extractor/MatchResult/SaveError";
 
@@ -231,7 +239,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             fileId,
             processRunId,
             error,
-            isUpdate
+            isUpdate,
+            status = status.ToString()
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

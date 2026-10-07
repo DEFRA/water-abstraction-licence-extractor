@@ -3,6 +3,8 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.NoOcrService;
 using WALE.ProcessFile.Core.Models.OcrService;
 
+using WALE.ProcessFile.Core.Enums;
+
 namespace WALE.ProcessFile.Core.Interfaces;
 
 public interface IDatabaseWriteService
@@ -19,9 +21,15 @@ public interface IDatabaseWriteService
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
 
-    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false);
     
-    Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate);
+    Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error);
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate);
 

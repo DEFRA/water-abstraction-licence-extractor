@@ -251,6 +251,15 @@ public class FileProcessSingleService(
             
             return (false, []);
         }
+        catch (OcrServiceTransientException ex)
+        {
+            // Deliberately not swallowed: the matches_result row has been left as TransientError and
+            // the queue message must be marked failed so SQS redelivers it once the throttle passes.
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - '{pdfFilename}' failed on a " +
+                $"transient OCR error from {ex.ServiceName}, leaving for retry - {ex.Message}");
+
+            throw;
+        }
         catch (Exception ex)
         {
             ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +

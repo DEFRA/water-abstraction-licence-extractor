@@ -58,17 +58,24 @@ public class PdfDataExtractorService(
                 return (true, null, null);
             }
 
-            if (matchesResult != null)
+            // A TransientError row (e.g. an OCR provider was throttled last time) does not hold the
+            // lock: this retry reclaims it in place and processes the file from scratch.
+            var reclaimingTransientError =
+                matchesResult?.Status == nameof(ScrapeStatus.TransientError);
+
+            if (matchesResult != null && !reclaimingTransientError)
             {
                 return (false, true, matchesResult);
             }
 
-            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock) for {dmsDataForFile.FileId}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock" +
+                $"{(reclaimingTransientError ? ", reclaiming TransientError" : string.Empty)}) for {dmsDataForFile.FileId}");
             
             await outputService.SaveStubMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
-                processRunId);
+                processRunId,
+                isUpdate: reclaimingTransientError);
         }
 
         try
@@ -82,12 +89,19 @@ public class PdfDataExtractorService(
         }
         catch (Exception ex)
         {
+            // Transient (e.g. OCR throttling): leave the row reclaimable so the queue's retry of this
+            // message re-OCRs the file. Anything else is terminal for this run, as before.
+            var status = ex is OcrServiceTransientException
+                ? ScrapeStatus.TransientError
+                : ScrapeStatus.Error;
+
             await outputService.SaveErrorMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
                 ex.ToString(),
-                configuration.UseLockExclusivity);
+                configuration.UseLockExclusivity,
+                status);
 
             throw;
         }
@@ -603,8 +617,7 @@ public class PdfDataExtractorService(
                             Message = ex.Message
                         });
 
-                        if (isTransient
-                            && ocrService.FailurePolicy == OcrServiceFailurePolicy.FailFileOnTransientError)
+                        if (isTransient && ocrService.FailurePolicy == OcrServiceFailurePolicy.FailFileOnTransientError)
                         {
                             // Fail the whole file: the caller marks the queue message as failed and SQS
                             // redelivers it once the visibility timeout passes, by which time the

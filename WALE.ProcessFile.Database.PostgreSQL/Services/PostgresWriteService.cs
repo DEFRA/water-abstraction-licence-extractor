@@ -182,14 +182,46 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO matches_result (file_id, filename, status, data, process_run_id, date_time_utc)
-                           VALUES (@FileId, @Filename, @Status, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING matches_result_id
-                           """;
+
+        string sql;
+
+        if (isUpdate)
+        {
+            const string updateSql = """
+               UPDATE matches_result
+               SET
+                    date_time_utc = @DateTimeUtc,
+                    filename = @Filename,
+                    data = @Data,
+                    status = @Status
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+
+               SELECT
+                   matches_result_id
+               FROM
+                    matches_result
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+               """;
+
+            sql = updateSql;
+        }
+        else
+        {
+            const string insertSql = """
+               INSERT INTO matches_result (file_id, filename, status, data, process_run_id, date_time_utc)
+               VALUES (@FileId, @Filename, @Status, @Data, @ProcessRunId, @DateTimeUtc)
+               RETURNING matches_result_id
+               """;
+
+            sql = insertSql;
+        }
 
         const string status = nameof(ScrapeStatus.InProgress);
         var data = JsonSerializer.Serialize(new
@@ -213,7 +245,13 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
+    public async Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error)
     {
         await using var connection = GetPostgresConnection();
         
@@ -253,11 +291,11 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             sql = insertSql;            
         }
 
-        const string status = nameof(ScrapeStatus.Error);
+        var statusName = status.ToString();
         var data = JsonSerializer.Serialize(new
         {
             Filename = filename,
-            Status = status,
+            Status = statusName,
             Error = error
         }, JsonHelper.GetSerializerOptions());
         
@@ -268,7 +306,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             new
             {
                 FileId = fileId,
-                Status = status,
+                Status = statusName,
                 Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow

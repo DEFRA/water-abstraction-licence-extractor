@@ -1,6 +1,7 @@
 using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -106,14 +107,20 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchAsync(matchesResultId, labelName, labelGroupName, matchStr);
     }
 
-    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false)
     {
-        return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId);
+        return databaseWriteService.SaveStubMatchesResultAsync(filename, fileId, processRunId, isUpdate);
     }
 
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
+    public Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error)
     {
-        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error, isUpdate);
+        return databaseWriteService.SaveErrorMatchesResultAsync(filename, fileId, processRunId, error, isUpdate, status);
     }
 
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate)

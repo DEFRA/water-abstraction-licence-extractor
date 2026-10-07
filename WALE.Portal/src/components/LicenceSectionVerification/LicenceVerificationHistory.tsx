@@ -1,7 +1,8 @@
 import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
 import {LinkedLicenceItem} from "./LinkedLicences/LinkedLicenceItem.tsx";
-import {AggregateItem} from "./Aggregates/AggregateItem.tsx";
+// TODO: aggregate verifications temporarily disabled
+// import {AggregateItem} from "./Aggregates/AggregateItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -14,10 +15,14 @@ interface LicenceVerificationHistoryProps {
 
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
     "Linked Licences": LinkedLicenceItem,
-    "Aggregates": AggregateItem
+    // TODO: aggregate verifications temporarily disabled
+    // "Aggregates": AggregateItem
 };
 
-export function LicenceVerificationHistory({verifications, isLoading, onJumpToPage, onRefresh, onDeleted}: LicenceVerificationHistoryProps) {
+export function LicenceVerificationHistory({verifications: allVerifications, isLoading, onJumpToPage, onRefresh, onDeleted}: LicenceVerificationHistoryProps) {
+    // TODO: aggregate verifications temporarily disabled
+    const verifications = allVerifications?.filter(v => v.licenceSectionName !== 'Aggregates');
+
     if (isLoading) {
         return <div>Loading history...</div>;
     }
@@ -110,9 +115,11 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
                 {verification.licenceSectionName === 'Linked Licences' && verification.licenceSectionItemId === 'None Outgoing' && (
                     <label>No outgoing linked licences</label>
                 )}
+                {/* TODO: aggregate verifications temporarily disabled
                 {verification.licenceSectionName === 'Aggregates' && verification.licenceSectionItemId === 'None' && (
                     <label>No aggregates</label>
                 )}
+                */}
                 {renderValue(verification.licenceSectionScrapedValue, `Original value (scraped on process run ${verification.processRunId})`)}
                 {renderValue(verification.licenceSectionSnapshotValue, getSnapshotLabel(verificationType))}
                 {renderValue(verification.licenceSectionOverrideValue, getOverrideLabel(verificationType))}

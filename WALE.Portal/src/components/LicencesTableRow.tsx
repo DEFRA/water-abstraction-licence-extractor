@@ -14,6 +14,9 @@ interface OutputItemTableRowProps {
 }
 
 function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+    // TODO: aggregate verifications temporarily disabled
+    const licenceSectionVerifications = item.licenceSectionVerifications?.filter(s => s.licenceSectionName !== 'Aggregates');
+
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -53,8 +56,8 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 />
             </td>
             <td>
-                {((item.licenceSectionVerifications?.length ?? 0) > 0 ?
-                    [...item.licenceSectionVerifications!]
+                {((licenceSectionVerifications?.length ?? 0) > 0 ?
+                    [...licenceSectionVerifications!]
                         .sort((a, b) => compareAlphanumeric(a.licenceSectionName, b.licenceSectionName))
                         .map((section) => (
                             <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>

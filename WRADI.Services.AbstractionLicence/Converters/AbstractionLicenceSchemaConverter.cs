@@ -1441,31 +1441,21 @@ public static class AbstractionLicenceSchemaConverter
                 true)
         };
 
-        returnLicenceSets.Add(singleLicenceOnlySet);
+        var hasInLicenceAggregate = primaryLicence.AbstractionLimits.Aggregates?.Any(agg =>
+            agg.LinkedLicences == null || agg.LinkedLicences.Length == 0) == true;
 
-        var hasExplicitlyReferencedLicenceSet = allLicences.Count > 1
-            || allLicences[0].LicenceNumber?.Value != primaryLicence.LicenceNumber?.Value;
-
-        var explicitlyReferencedLicenceSet = hasExplicitlyReferencedLicenceSet
-            ? new LicenceSet
-            {
-                LicenceSetTypes = [LicenceSetType.LicencesReferencedAnywhere],
-                Licences = allLicences.ToArray(),
-                AggregateSets = GetAggregateSets(
-                    allLicences,
-                    allLicences,
-                    true)
-            }
-            : null;
-
-        if (explicitlyReferencedLicenceSet != null)
+        var hasNoAggregates = primaryLicence.AbstractionLimits.Aggregates == null
+            || primaryLicence.AbstractionLimits.Aggregates.Length == 0;
+        
+        if (hasInLicenceAggregate || hasNoAggregates)
         {
-            returnLicenceSets.Add(explicitlyReferencedLicenceSet);
+            returnLicenceSets.Add(singleLicenceOnlySet);
         }
 
         var licencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
-                linkedLicence.ContainedIn?.Any(ci =>
+                linkedLicence.IsBecauseOfAggregate == true
+                || linkedLicence.ContainedIn?.Any(ci =>
                     ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
@@ -1494,48 +1484,7 @@ public static class AbstractionLicenceSchemaConverter
 
         if (explicitlyReferencedLimitsLicenceSet != null)
         {
-            if (explicitlyReferencedLimitsLicenceSet.LicenceSetId == explicitlyReferencedLicenceSet?.LicenceSetId)
-            {
-                var oldSet = explicitlyReferencedLicenceSet;
-                var newSet = explicitlyReferencedLimitsLicenceSet;
-
-                foreach (var newSetLicence in newSet.Licences)
-                {
-                    if (!oldSet.Licences
-                        .Select(l => l.LicenceNumber?.Value)
-                        .Contains(newSetLicence.LicenceNumber?.Value))
-                    {
-                        var updatedLicences = oldSet.Licences.ToList();
-                        updatedLicences.Add(newSetLicence);
-
-                        oldSet.Licences = updatedLicences.ToArray();
-                    }
-                }
-
-                if (newSet.AggregateSets != null)
-                {
-                    foreach (var newSetAggregateSet in newSet.AggregateSets!)
-                    {
-                        if (oldSet.AggregateSets?
-                                .Select(a => a.AggregateSetId)
-                                .Contains(newSetAggregateSet.AggregateSetId) != true)
-                        {
-                            var updatedAggregateSets = oldSet.AggregateSets?.ToList() ?? [];
-                            updatedAggregateSets.Add(newSetAggregateSet);
-
-                            oldSet.AggregateSets = updatedAggregateSets.ToArray();
-                        }
-                    }
-                }
-
-                var updatedTypes = oldSet.LicenceSetTypes.ToList();
-                updatedTypes.AddRange(newSet.LicenceSetTypes);
-                oldSet.LicenceSetTypes = updatedTypes.ToArray();
-            }
-            else
-            {
-                returnLicenceSets.Add(explicitlyReferencedLimitsLicenceSet);
-            }
+            returnLicenceSets.Add(explicitlyReferencedLimitsLicenceSet);
         }
 
         ConsoleHelper.WriteLine(
@@ -1563,7 +1512,7 @@ public static class AbstractionLicenceSchemaConverter
             tStart = DateTime.Now;
             
             await AddIncomingLinksAsync(
-                [[explicitlyReferencedLicenceSet ?? singleLicenceOnlySet]],
+                [[explicitlyReferencedLimitsLicenceSet ?? singleLicenceOnlySet]],
                 lookupConfiguration,
                 naldDataLookupService);
 
@@ -1584,14 +1533,14 @@ public static class AbstractionLicenceSchemaConverter
                 }
             };
 
-            if (explicitlyReferencedLicenceSet != null)
+            /*if (explicitlyReferencedLicenceSet != null)
             {
                 newLicenceSetIds.Add(new()
                 {
                     LicenceSetId = explicitlyReferencedLicenceSet.LicenceSetId,
                     LicenceSetType = explicitlyReferencedLicenceSet.LicenceSetTypes[0]
                 });
-            }
+            }*/
 
             if (explicitlyReferencedLimitsLicenceSet != null)
             {
@@ -1643,7 +1592,8 @@ public static class AbstractionLicenceSchemaConverter
         var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
                 linkedLicence.ContainedIn?.Any(ci =>
-                    ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
+                    linkedLicence.IsBecauseOfAggregate == true
+                    || ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
             .Select(ll => ll.LicenceNumber)
             .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
             .Where(ln => ln != null)
@@ -6118,7 +6068,6 @@ public static class AbstractionLicenceSchemaConverter
     public static async Task<List<LicenceSet>> AddAdditionalLicenceSetsAsync(
         List<IReadOnlyList<LicenceSet>> licenceSetGroups,
         LookupConfiguration lookupConfiguration,
-        IAbstractionLicenceCacheService cacheService,
         INaldDataLookupService naldDataLookupService)
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);

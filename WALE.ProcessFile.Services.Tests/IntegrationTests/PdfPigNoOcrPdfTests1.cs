@@ -2539,7 +2539,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
                 DmsPath = "main path"
             });
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         var agreedSchemaLicenceGroup = licenceSets.Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);

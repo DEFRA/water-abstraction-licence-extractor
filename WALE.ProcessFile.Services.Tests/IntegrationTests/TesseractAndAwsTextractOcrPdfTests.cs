@@ -272,7 +272,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -361,7 +361,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -531,7 +531,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         Assert.Equal("12405035-LV19660310", agreedSchemaLicenceGroup[0].LicenceSetId);
         Assert.Equal("035", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         

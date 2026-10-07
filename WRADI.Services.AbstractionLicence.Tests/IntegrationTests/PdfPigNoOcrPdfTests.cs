@@ -132,8 +132,8 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(3, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("NE/027/0023/036", licence.LicenceNumber!.Value);

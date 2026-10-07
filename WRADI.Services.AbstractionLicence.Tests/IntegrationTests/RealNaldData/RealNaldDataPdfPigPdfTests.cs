@@ -210,8 +210,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count); // TODO its being too heavy handed combining at the moment
-        Assert.Single(licenceSets.First().Licences);
+        Assert.Single(licenceSets); // TODO its being too heavy handed combining at the moment
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
         // Quick check of the linked ones
         Assert.Equal(3, licenceSets.Last().Licences.Length);
@@ -299,7 +299,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
         
         var licence = abstractionLicence.First().Licences[0];
@@ -398,7 +398,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence);
         Assert.Single(abstractionLicence.First().Licences);
         
         var licence =  abstractionLicence.First().Licences[0];
@@ -653,8 +653,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(2, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("NE/027/0027/041/R01", licence.LicenceNumber!.Value);
@@ -757,8 +757,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(2, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("NE/026/0032/074", licence.LicenceNumber!.Value);

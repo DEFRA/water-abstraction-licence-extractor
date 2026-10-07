@@ -262,7 +262,9 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                     )}
                     {!isLoading && !error && aggregates
                         .map((_, i) => i)
-                        .sort((a, b) => compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
+                        .sort((a, b) =>
+                            compareAlphanumeric(aggregates[a].documentIdentifier, aggregates[b].documentIdentifier)
+                            || compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
                         .map((index) => {
                             const aggregate = aggregates[index];
                             const itemId = aggregateIds[index];

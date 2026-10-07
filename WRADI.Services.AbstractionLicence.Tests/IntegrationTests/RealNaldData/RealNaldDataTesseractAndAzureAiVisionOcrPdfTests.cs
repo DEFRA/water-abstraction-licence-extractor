@@ -469,8 +469,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence); // TODO sort this + next bit
-        Assert.Equal(4, abstractionLicence.First().Licences.Length);
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(4, abstractionLicence.Last().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("2/27/10/112", licence.LicenceNumber!.Value);

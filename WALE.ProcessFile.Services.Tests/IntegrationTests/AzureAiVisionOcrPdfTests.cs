@@ -942,9 +942,10 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-
+        Assert.Equal(4, agreedSchemaLicenceGroup.Last().Licences.Length);
+        
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);

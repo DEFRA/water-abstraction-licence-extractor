@@ -2,6 +2,7 @@ using System.Text.Json;
 using Azure;
 using Azure.AI.DocumentIntelligence;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -19,6 +20,8 @@ public class AzureAiServicesDocumentIntelligenceOcrDataExtractorService(
     int id = -1) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
+
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.DegradeOnError;
     public string Name => "AzureAiServicesDocumentIntelligenceOcr";
     public int Id { get; set; } = id;
 

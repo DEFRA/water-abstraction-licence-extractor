@@ -603,7 +603,21 @@ public class PdfDataExtractorService(
                             Message = ex.Message
                         });
 
-                        // Don't rethrow - just carry on with the other providers and pages
+                        if (isTransient
+                            && ocrService.FailurePolicy == OcrServiceFailurePolicy.FailFileOnTransientError)
+                        {
+                            // Fail the whole file: the caller marks the queue message as failed and SQS
+                            // redelivers it once the visibility timeout passes, by which time the
+                            // throttle has usually cleared. Nothing has been cached for this page.
+                            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {ocrService.Name} " +
+                                $"transient failure on page {pageNumber} image {imageNumber}, failing file for retry " +
+                                $"- {pdfDocument.PdfFilename}");
+
+                            throw;
+                        }
+
+                        // Permanent error, or a supplementary provider: carry on with the other
+                        // providers and pages.
                         continue;
                     }
 

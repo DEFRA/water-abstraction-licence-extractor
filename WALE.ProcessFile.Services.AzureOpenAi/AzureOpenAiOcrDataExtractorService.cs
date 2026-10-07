@@ -3,6 +3,7 @@ using Azure.AI.OpenAI;
 using Microsoft.ML.Tokenizers;
 using OpenAI.Chat;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -19,6 +20,8 @@ public class AzureOpenAiOcrDataExtractorService(
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => true;
+    
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.DegradeOnError;
     public string Name => "AzureOpenAiOcr";
     
     public async Task<IReadOnlyList<DocumentLine>>

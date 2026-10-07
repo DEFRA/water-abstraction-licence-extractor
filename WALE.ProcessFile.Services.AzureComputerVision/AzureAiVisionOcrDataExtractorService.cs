@@ -2,6 +2,8 @@ using System.Text.Json;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -17,6 +19,10 @@ public class AzureAiVisionOcrDataExtractorService(
     int id = -1) : IOcrDataExtractorService
 {
     public bool HasDirectCost => true;
+
+    // Paid primary provider: a throttled page should fail the file so the queue retries it once
+    // the throttle passes, rather than silently extracting without this provider.
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.FailFileOnTransientError;
     public string Name => "AzureAiVisionOcr";
     public int Id { get; set; } = id;
 
@@ -153,6 +159,18 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         catch (Exception ex)
         {
+            // Throttling / service-side failure: surface as transient before any of the
+            // "treat as bad image" handling below, which would otherwise cache an empty result.
+            if (IsTransient(ex))
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - transient failure - {ex.Message}");
+
+                throw new OcrServiceTransientException(
+                    Name,
+                    $"{Name} transient failure for P{request.PageNumber}, I{request.ImageNumber}, {request.FileId}: {ex.Message}",
+                    ex);
+            }
+
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
                 var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
@@ -298,6 +316,17 @@ public class AzureAiVisionOcrDataExtractorService(
         return pageLines.Select(line => (line.Text, line.Words));
     }
     
+    private static bool IsTransient(Exception ex)
+    {
+        if (ex is ComputerVisionOcrErrorException { Response: not null } ocrEx)
+        {
+            var statusCode = (int)ocrEx.Response.StatusCode;
+            return statusCode == 429 || statusCode >= 500;
+        }
+
+        return ex is HttpRequestException or TaskCanceledException;
+    }
+
     private static ComputerVisionClient CreateClient(string endpoint, string key)
     {
         return new ComputerVisionClient(

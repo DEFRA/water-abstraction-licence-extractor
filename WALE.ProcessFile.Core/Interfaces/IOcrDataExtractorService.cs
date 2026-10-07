@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Interfaces;
@@ -14,6 +15,8 @@ public interface IOcrDataExtractorService
             string noOcrServiceName);
     
     public bool HasDirectCost { get; }
+    
+    public OcrServiceFailurePolicy FailurePolicy { get; }
     
     public string Name { get; }
 

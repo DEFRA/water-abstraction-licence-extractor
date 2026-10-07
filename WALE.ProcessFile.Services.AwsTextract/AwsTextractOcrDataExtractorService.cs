@@ -3,6 +3,8 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.Textract;
 using Amazon.Textract.Model;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Interfaces;
@@ -56,6 +58,11 @@ public class AwsTextractOcrDataExtractorService
     private readonly string? _secretKey;
     
     public bool HasDirectCost => true;
+
+    // Paid primary provider: when DetectDocumentText is throttled (ProvisionedThroughputExceededException
+    // after the SDK's own retries are exhausted) fail the file so SQS redelivers it and the page is
+    // re-OCRed, rather than saving a "successful" result that silently lacks Textract on that page.
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.FailFileOnTransientError;
     public string Name => "AwsTextractOcrDataExtractorService";
     
     private static readonly Lock ClientInitialisationLock = new();
@@ -147,6 +154,16 @@ public class AwsTextractOcrDataExtractorService
                     returnLines = returnList;
                 }
             }
+            catch (AmazonServiceException e) when (IsTransient(e))
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - transient failure (SDK retries exhausted) - {e}");
+
+                throw new OcrServiceTransientException(
+                    Name,
+                    $"{Name} transient failure for P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}: " +
+                    $"{e.GetType().Name} - {e.Message}",
+                    e);
+            }
             catch (Exception e)
             {
                 ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - {e}");
@@ -176,6 +193,29 @@ public class AwsTextractOcrDataExtractorService
             considerableOverlapAmount);
     }
     
+    /// <summary>
+    /// Errors that are expected to clear on their own. The SDK has already retried these
+    /// (RetryMode.Standard, MaxErrorRetry = 5) by the time they surface here, so reaching this
+    /// point means sustained throttling or a service-side outage, not a blip.
+    /// </summary>
+    private static bool IsTransient(AmazonServiceException exception)
+    {
+        if (exception is ProvisionedThroughputExceededException
+            or ThrottlingException
+            or LimitExceededException
+            or InternalServerErrorException)
+        {
+            return true;
+        }
+
+        if (exception.Retryable is { Throttling: true })
+        {
+            return true;
+        }
+
+        return (int)exception.StatusCode >= 500;
+    }
+
     private static async Task<DetectDocumentTextResponse> DetectDocumentTextAsync(
         AmazonTextractClient client,
         DetectDocumentTextRequest detectDocumentTextRequest)

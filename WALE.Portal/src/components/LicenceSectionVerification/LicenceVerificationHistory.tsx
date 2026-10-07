@@ -2,6 +2,7 @@ import {LicenceSectionVerification} from "../../api/generated/apiClient.ts";
 import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHistory.tsx";
 import {LinkedLicenceItem} from "./LinkedLicences/LinkedLicenceItem.tsx";
 import {AggregateItem} from "./Aggregates/AggregateItem.tsx";
+import {CollapsibleItem} from "./CollapsibleItem.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -12,6 +13,7 @@ interface LicenceVerificationHistoryProps {
     onDeleted?: () => void;
 }
 
+// Order matches the section order on the Verification tabs
 const SECTION_COMPONENTS: Record<string, ComponentType<any>> = {
     "Linked Licences": LinkedLicenceItem,
     "Aggregates": AggregateItem
@@ -26,9 +28,18 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
         return <div>No verification history found for this licence.</div>;
     }
 
+    // Match the section order of the sibling tabs; unknown sections go last
+    const sectionOrder = Object.keys(SECTION_COMPONENTS);
+    const sectionRank = (name: string) => {
+        const rank = sectionOrder.indexOf(name);
+        return rank === -1 ? sectionOrder.length : rank;
+    };
+
     const sortedVerifications = [...(verifications || [])].sort((a, b) => {
         const nameA = a.licenceSectionName || '';
         const nameB = b.licenceSectionName || '';
+        const rankDiff = sectionRank(nameA) - sectionRank(nameB);
+        if (rankDiff !== 0) return rankDiff;
         if (nameA < nameB) return -1;
         if (nameA > nameB) return 1;
 
@@ -120,25 +131,43 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
         );
     };
 
+    const verificationsBySection = new Map<string, LicenceSectionVerification[]>();
+    sortedVerifications.forEach(v => {
+        const sectionName = v.licenceSectionName || '';
+        if (!verificationsBySection.has(sectionName)) {
+            verificationsBySection.set(sectionName, []);
+        }
+        verificationsBySection.get(sectionName)!.push(v);
+    });
+
     return (
         <div>
-            {sortedVerifications.map((verification, index) => {
-                const canDelete = !verification.deletedDateTimeUtc &&
-                    latestActiveIdByGroup.get(groupKey(verification)) === verification.licenceSectionVerificationId;
+            {[...verificationsBySection].map(([sectionName, sectionVerifications]) => (
+                <CollapsibleItem
+                    key={sectionName}
+                    variant="section"
+                    defaultOpen={true}
+                    summary={<h3 style={{ margin: 0, fontSize: '1.1rem' }}>{sectionName || 'N/A'}</h3>}
+                >
+                    {sectionVerifications.map((verification, index) => {
+                        const canDelete = !verification.deletedDateTimeUtc &&
+                            latestActiveIdByGroup.get(groupKey(verification)) === verification.licenceSectionVerificationId;
 
-                return (
-                    <LicenceSectionVerificationHistory
-                        key={verification.licenceSectionVerificationId || index}
-                        verification={verification}
-                        initialOpen={index === 0}
-                        canDelete={canDelete}
-                        onRefresh={onRefresh}
-                        onDeleted={onDeleted}
-                    >
-                        {renderVerificationContent(verification)}
-                    </LicenceSectionVerificationHistory>
-                );
-            })}
+                        return (
+                            <LicenceSectionVerificationHistory
+                                key={verification.licenceSectionVerificationId || index}
+                                verification={verification}
+                                initialOpen={index === 0}
+                                canDelete={canDelete}
+                                onRefresh={onRefresh}
+                                onDeleted={onDeleted}
+                            >
+                                {renderVerificationContent(verification)}
+                            </LicenceSectionVerificationHistory>
+                        );
+                    })}
+                </CollapsibleItem>
+            ))}
         </div>
     );
 }

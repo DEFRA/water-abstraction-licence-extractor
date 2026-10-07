@@ -1040,7 +1040,8 @@ public static class AbstractionLicenceSchemaConverter
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
                         NaldType = GetNaldType(naldDataLine),
-                        AggregateSetId = PositionConstants.ReplacementMarker
+                        AggregateSetId = PositionConstants.ReplacementMarker,
+                        ContainsLegalText = individual.ContainsLegalText
                     });
 
                     continue;
@@ -1085,7 +1086,8 @@ public static class AbstractionLicenceSchemaConverter
                         SourceLicenceVersionId = licenceVersionId,
                         PrimaryType = PrimaryType.InLicence,
                         NaldType = GetNaldType(naldDataLine),
-                        AggregateSetId = PositionConstants.ReplacementMarker
+                        AggregateSetId = PositionConstants.ReplacementMarker,
+                        ContainsLegalText = individual.ContainsLegalText
                     });
 
                     continue;
@@ -3797,6 +3799,9 @@ public static class AbstractionLicenceSchemaConverter
             .FirstOrDefault()?
             .Text;
         
+        var containsLegalText = abstractionLimitPointSub.SubResults
+            .Any(x => x.MatchedLabelName == "LegalText");
+        
         if (limitPointTable != null)
         {
             var tableLines = limitPointTable.Text!;
@@ -3844,6 +3849,7 @@ public static class AbstractionLicenceSchemaConverter
                         })
                         .ToArray(),
                     DocumentIdentifier = documentIdentifier,
+                    ContainsLegalText = containsLegalText,
                     Limits =
                     [
                         new()
@@ -4248,7 +4254,8 @@ public static class AbstractionLicenceSchemaConverter
                                 .ToList(),
                             Points = previouslyFoundIndividualLimit.Points,
                             Purposes = previouslyFoundIndividualLimit.Purposes,
-                            IsExplicitlyAggregate = true
+                            IsExplicitlyAggregate = true,
+                            ContainsLegalText = containsLegalText
                         }
                     )
             );
@@ -4305,7 +4312,8 @@ public static class AbstractionLicenceSchemaConverter
                 DocumentIdentifier = documentIdentifier,
                 Limits = [],
                 Points = limitPoints.ToArray(),
-                Purposes = limitPurposes.ToArray()
+                Purposes = limitPurposes.ToArray(),
+                ContainsLegalText = containsLegalText
             });
         }
         else if (datePurposesTimePeriods.Count >= 1)
@@ -4315,7 +4323,8 @@ public static class AbstractionLicenceSchemaConverter
                 Limits = [],
                 Points = limitPoints.ToArray(),
                 Purposes = limitPurposes.ToArray(),
-                DocumentIdentifier = documentIdentifier
+                DocumentIdentifier = documentIdentifier,
+                ContainsLegalText = containsLegalText
             });
 
             foreach (var datePurpose in datePurposesTimePeriods)
@@ -4326,7 +4335,8 @@ public static class AbstractionLicenceSchemaConverter
                     DocumentIdentifier = documentIdentifier,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
-                    Purposes = limitPurposes?.ToArray()
+                    Purposes = limitPurposes?.ToArray(),
+                    ContainsLegalText = containsLegalText
                 });
             }
         }
@@ -4338,7 +4348,8 @@ public static class AbstractionLicenceSchemaConverter
                 Limits = [],
                 DocumentIdentifier = documentIdentifier,
                 Points = limitPoints.ToArray(),
-                Purposes = limitPurposes.ToArray()
+                Purposes = limitPurposes.ToArray(),
+                ContainsLegalText = containsLegalText
             });
         }
         else if (individualGroups.Count == 0)
@@ -4481,7 +4492,8 @@ public static class AbstractionLicenceSchemaConverter
                             Points = abstractionLimit.Points,
                             Purposes = abstractionLimit.Purposes,
                             Limits = [],
-                            DocumentIdentifier = documentIdentifier
+                            DocumentIdentifier = documentIdentifier,
+                            ContainsLegalText = containsLegalText
                         };
 
                         individualGroups.Add(individualGroup);
@@ -4569,7 +4581,8 @@ public static class AbstractionLicenceSchemaConverter
             Purposes = purposesLoop?.ToArray() ?? [],
             TimeCutoff = timeCutoff,
             TimePeriod = timePeriod,
-            DocumentIdentifier = documentIdentifier
+            DocumentIdentifier = documentIdentifier,
+            ContainsLegalText = containsLegalText
         };
 
         var aggregatePointsLength = aggregate.Points.Count(p => p.IsImplicit != true);

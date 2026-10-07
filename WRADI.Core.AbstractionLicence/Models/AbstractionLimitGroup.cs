@@ -13,6 +13,8 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     public List<AbstractionLimit> Limits { get; set; } = [];
     
     public ContainedInInformation[]? ContainedIn { get; set; }
+    
+    public bool? ContainsLegalText { get; set; }
 
     public AbstractionLimitGroup Clone()
     {
@@ -31,6 +33,7 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
         destinationGroup.TimeCutoff = sourceGroup.TimeCutoff;
         destinationGroup.Limits = sourceGroup.Limits.ToList();
         destinationGroup.ContainedIn = sourceGroup.ContainedIn?.ToArray();
+        destinationGroup.ContainsLegalText = sourceGroup.ContainsLegalText;
         
         PeriodAndPointRestricted.CloneProperties(sourceGroup, destinationGroup);
     }

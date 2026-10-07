@@ -726,8 +726,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(13, section2Sub1.SubResults.Count);
-            
+        Assert.Equal(14, section2Sub1.SubResults.Count);
+
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
@@ -842,6 +842,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal(2, primaryLicence.LinkedLicences[2].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", primaryLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+        
+        Assert.True(primaryLicence.AbstractionLimits.Aggregates![0].ContainsLegalText);
     }
     
     [Fact]

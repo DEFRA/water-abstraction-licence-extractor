@@ -1,5 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import { getVerificationWithNotesFirstPart, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import { getVerificationWithNotesFirstPart, getVerificationWithNotesTooltip, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -70,7 +70,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                     {(v.verificationTypesWithNotes?.length
                                                         ? v.verificationTypesWithNotes
                                                         : v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                        <span key={idx} title={vt.replace('::', ' #') ?? ''} style={{
+                                                        <span key={idx} title={getVerificationWithNotesTooltip(vt)} style={{
                                                             backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',
                                                             fontSize: '0.7em',

@@ -7,6 +7,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -796,6 +797,60 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
         
         return returnDictionary;
+    }
+
+    public async Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT
+                               current_licence.licence_id AS LicenceId,
+                               CASE
+                                   WHEN previous_run.process_run_id IS NULL THEN @NewLicence
+                                   ELSE @NewLicenceDocument
+                               END AS FlagReason
+                           FROM licence current_licence
+                           LEFT JOIN LATERAL (
+                               SELECT previous_licence.process_run_id
+                               FROM licence previous_licence
+                               WHERE
+                                   previous_licence.licence_number = current_licence.licence_number
+                                   AND previous_licence.process_run_id < current_licence.process_run_id
+                                   AND (previous_licence.data::jsonb ->> 'status') = 'Ok'
+                               ORDER BY previous_licence.process_run_id DESC
+                               LIMIT 1
+                           ) previous_run ON TRUE
+                           WHERE
+                               current_licence.process_run_id = @ProcessRunId
+                               AND current_licence.licence_number IS NOT NULL
+                               AND (current_licence.data::jsonb ->> 'status') = 'Ok'
+                               AND (
+                                   previous_run.process_run_id IS NULL
+                                   OR NOT EXISTS (
+                                       SELECT 1
+                                       FROM licence previous_licence
+                                       WHERE
+                                           previous_licence.process_run_id = previous_run.process_run_id
+                                           AND previous_licence.licence_number = current_licence.licence_number
+                                           AND previous_licence.file_id = current_licence.file_id
+                                           AND (previous_licence.data::jsonb ->> 'status') = 'Ok'
+                                   )
+                               );
+                           """;
+
+        var results = await QueryAsync<(int LicenceId, string FlagReason)>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                LicenceNumberFlagReasons.NewLicence,
+                LicenceNumberFlagReasons.NewLicenceDocument
+            });
+
+        return results.ToDictionary(result => result.LicenceId, result => result.FlagReason);
     }
     
     public async Task<int> GetLicencesListSearchCountAsync(int processRunId, ProcessRunQuery query)
@@ -3361,7 +3416,9 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            verification_item.is_flagged
+            -- WRADI-400: Aggregates flags suppressed; revert to `verification_item.is_flagged` to restore
+            (verification_item.is_flagged
+                AND verification_section.licence_section_name <> 'Aggregates')
                 AS IsFlagged,
 
             verification_item.flag_reason
@@ -3699,6 +3756,8 @@ private async Task<
             verification_sections_count AS VerificationSectionsCount,
             verification_items_count AS VerificationItemsCount,
             has_verifications AS HasVerifications,
+            is_licence_number_flagged AS IsLicenceNumberFlagged,
+            licence_number_flag_reason AS LicenceNumberFlagReason,
             created_date_time_utc AS CreatedDateTimeUtc,
             updated_date_time_utc AS UpdatedDateTimeUtc
         FROM licence_list_item
@@ -3814,6 +3873,13 @@ private static void AddLicenceListItemFilters(
         "means_found",
         "MeansFound",
         query.MeansFound);
+
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "is_licence_number_flagged",
+        "IsLicenceNumberFlagged",
+        query.IsLicenceNumberFlagged);
 
     ReadSqlHelper.AddCountEmptyFilter(
         sql,

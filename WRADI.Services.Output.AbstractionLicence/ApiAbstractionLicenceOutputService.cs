@@ -483,6 +483,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     {
         throw new NotImplementedException();
     }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
     
     private async Task<List<Guid>> GetFileIdsAsync(int processRunId)
     {

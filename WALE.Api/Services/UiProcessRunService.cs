@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
@@ -21,19 +23,25 @@ public class UiProcessRunService(
             Skip = 0,
             Take = int.MaxValue
         };
-
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
         var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-        
-        ConsoleHelper.WriteLine(
-            $"DataRefresh - Found {processRunRawDataList.Count} output data items to process");
-        
+        ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - started - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
+
         await UpdateLicenceListRepo(processRunRawDataList);
+        
+        stopwatch.Stop();
+        ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - completed - in {stopwatch.Elapsed.Seconds} seconds - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }
 
     public async Task<string> UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
     {
+        var stopwatch = new Stopwatch();
+        stopwatch.Start();
+        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - started - processRunId-{processRunId} for {licenceNumbers.Length} licences at {DateTime.UtcNow}");
+       
         var query = new ProcessRunQuery
         {
             Skip = 0,
@@ -43,6 +51,9 @@ public class UiProcessRunService(
 
         var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
         await UpdateLicenceListRepo(processRunRawDataList);
+        
+        stopwatch.Stop();
+        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - time taken - {stopwatch.Elapsed.Seconds} seconds - completed - processRunId-{processRunId} for {processRunRawDataList.Count} DB licences found to be updated for trigger licences : {string.Join(",", licenceNumbers)} at {DateTime.UtcNow}");
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }
@@ -55,6 +66,8 @@ public class UiProcessRunService(
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
+        var licenceNumberFlagReasonsTask =
+            abstractionLicenceOutputService.GetLicenceNumberFlagReasonsAsync(processRunId);
         
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
@@ -62,6 +75,7 @@ public class UiProcessRunService(
         
         var verificationsBySection = await verificationsBySectionTask;
         var fileIdToLicenceNumberMapping = await fileIdTask;
+        var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
         
         var paginationOutputLines = licences
             .Where(licence => licence.Status == ScrapeStatus.Ok)
@@ -78,6 +92,15 @@ public class UiProcessRunService(
             processRunId,
             verificationsBySection,
             fileIdToLicenceNumberMapping);
+
+        foreach (var listDataItem in paginationListData)
+        {
+            if (licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
+            {
+                listDataItem.isLicenceNumberFlagged = true;
+                listDataItem.licenceNumberFlagReason = flagReason;
+            }
+        }
 
         return paginationListData;
     }

@@ -38,6 +38,10 @@ public sealed class UpsertLicenceListItem
 
     public string? Status { get; init; }
 
+    public bool IsLicenceNumberFlagged { get; init; }
+
+    public string? LicenceNumberFlagReason { get; init; }
+
     public UpsertLinkedLicenceItem[] LinkedLicences { get; init; } = [];
 
     public UpsertLicenceSetItem[] LicenceSets { get; init; } = [];

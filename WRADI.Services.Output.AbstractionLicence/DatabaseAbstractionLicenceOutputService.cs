@@ -535,6 +535,11 @@ public class DatabaseAbstractionLicenceOutputService(
     {
         return databaseReadService.GetLicenceFileIdsAsync(processRunId);
     }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        return databaseReadService.GetLicenceNumberFlagReasonsAsync(processRunId);
+    }
     
     public async Task<long> UpsertLicenceListItemAsync(
         UpsertLicenceListItem item,

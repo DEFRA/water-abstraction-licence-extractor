@@ -900,6 +900,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_sections_count,
                 verification_items_count,
                 has_verifications,
+                is_licence_number_flagged,
+                licence_number_flag_reason,
                 search_text,
                 source_data,
                 created_date_time_utc,
@@ -933,6 +935,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @VerificationSectionsCount,
                 @VerificationItemsCount,
                 @HasVerifications,
+                @IsLicenceNumberFlagged,
+                @LicenceNumberFlagReason,
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
@@ -973,6 +977,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.verification_items_count,
                 has_verifications =
                     EXCLUDED.has_verifications,
+                is_licence_number_flagged =
+                    EXCLUDED.is_licence_number_flagged,
+                licence_number_flag_reason =
+                    EXCLUDED.licence_number_flag_reason,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
                 updated_date_time_utc = NOW()
@@ -1007,6 +1015,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             summary.VerificationSectionsCount,
             summary.VerificationItemsCount,
             summary.HasVerifications,
+            item.IsLicenceNumberFlagged,
+            item.LicenceNumberFlagReason,
             summary.SearchText,
             SourceData = NullIfWhiteSpace(item.SourceData)
         };

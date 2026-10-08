@@ -1,4 +1,6 @@
+using System.Text.Json;
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.Core.AbstractionLicence.Enums;
@@ -487,14 +489,16 @@ public class PdfPigNoOcrPdfTests
             "30 cubic meters per day in aggregate with 1/01/01/001, 1/01/01/002 and 1/01/01/004",
             "30",
             "cubic meters",
-            ["1/01/01/001", "1/01/01/002", "1/01/01/004"]);
+            ["1/01/01/001", "1/01/01/002", "1/01/01/004"],
+            true);
         
         var licence4MatchesResult = GetLicenceMatchesResult(
             "1/01/01/004",
             null,
             null,
             null,
-            []);
+            [],
+            false);
 
         var data = new Dictionary<string, MatchesResult>
         {
@@ -736,10 +740,15 @@ public class PdfPigNoOcrPdfTests
             dmsDataForFile: new DmsFileData());
         
         Assert.NotNull(licenceSets);
-        Assert.Equal(2, licenceSets.Count); // TODO its not creating the 2 groups properly
+        Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
-        Assert.Equal(5, licenceSets[0].Licences.Length); // TODO wrong, should be 4
+        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-10101004-LVUNKNOWN-10101005-LVUNKNOWN", licenceSets[0].LicenceSetId); // TODO wrong
+        Assert.Equal(5, licenceSets[0].Licences.Length); // 5 (should be 3)
+        
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetType);
+        Assert.Equal("10101001-LVUNKNOWN-10101004-LVUNKNOWN-10101005-LVUNKNOWN", licenceSets[1].LicenceSetId);
+        Assert.Equal(3, licenceSets[1].Licences.Length);
         
         var licence1 = licenceSets[0].Licences[0];
         Assert.Equal("1/01/01/001", licence1.LicenceNumber!.Value);            

@@ -57,7 +57,7 @@ public class Aggregate : AbstractionLimitGroup
             return outputSb.ToString();
         }
     }
-
+    
     public int GetCombinedLimitValue()
     {
         var combinedValue = 0.0;

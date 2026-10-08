@@ -716,7 +716,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(1, agreedSchemaLicenceGroup.Count);
-        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
+        Assert.Equal(3, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);

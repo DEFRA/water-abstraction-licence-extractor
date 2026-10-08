@@ -1458,48 +1458,49 @@ public static class AbstractionLicenceSchemaConverter
 
         var licencesExplicitlyMentionedInLimits = false;
         var allLicencesReferencedInLimits = new List<Licence>();
-        
+
         foreach (var licence in allLicences)
         {
-            var licencesReferencedInLimits = licence.LinkedLicences
-                .Where(linkedLicence =>
-                    linkedLicence.IsBecauseOfAggregate == true
-                    || linkedLicence.ContainedIn?.Any(ci =>
-                        ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
-                .Select(ll => ll.LicenceNumber)
-                .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
-                .Where(ln => ln != null)
-                .Select(ln => ln!)
-                .ToList();
-
-            if (licencesReferencedInLimits.Count == 0)
+            if (licence.AbstractionLimits.Aggregates == null)
             {
                 continue;
             }
-            
-            licencesExplicitlyMentionedInLimits = true;
-            licencesReferencedInLimits.Insert(0, licence);
-            
-            allLicencesReferencedInLimits.AddRange(licencesReferencedInLimits);
-        }
 
-        allLicencesReferencedInLimits = allLicencesReferencedInLimits.Distinct().ToList();
+            var aggregatesWithLinkedLicnces = licence.AbstractionLimits.Aggregates!
+                .Where(agg => agg.LinkedLicences?.Length >= 1);
 
-        var explicitlyReferencedLimitsLicenceSet = licencesExplicitlyMentionedInLimits
-            ? new LicenceSet
+            foreach (var aggregate in aggregatesWithLinkedLicnces)
             {
-                LicenceSetType = LicenceSetType.LicencesGroupedByAbstractionLimits,
-                Licences = allLicencesReferencedInLimits.ToArray(),
-                AggregateSets = GetAggregateSets(
-                    allLicencesReferencedInLimits,
-                    allLicences,
-                    false)
-            }
-            : null;
+                var licencesReferencedInLimits = aggregate.LinkedLicences!
+                    .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
+                    .Where(ln => ln != null)
+                    .Select(ln => ln!)
+                    .ToList();
 
-        if (explicitlyReferencedLimitsLicenceSet != null)
-        {
-            returnLicenceSets.Add(explicitlyReferencedLimitsLicenceSet);
+                if (licencesReferencedInLimits.Count == 0)
+                {
+                    continue;
+                }
+
+                licencesReferencedInLimits.Insert(0, licence);
+
+                var licenceSet = new LicenceSet
+                {
+                    LicenceSetType = LicenceSetType.LicencesGroupedByAbstractionLimits,
+                    Licences = licencesReferencedInLimits.ToArray(),
+                    AggregateSets = GetAggregateSets(
+                        licencesReferencedInLimits,
+                        allLicences,
+                        false)
+                };
+
+                if (returnLicenceSets.Any(x => x.LicenceSetId == licenceSet.LicenceSetId))
+                {
+                    continue;
+                }
+                
+                returnLicenceSets.Add(licenceSet);
+            }
         }
 
         ConsoleHelper.WriteLine(
@@ -1539,12 +1540,17 @@ public static class AbstractionLicenceSchemaConverter
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         FlattenSubVariations(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
+
+        var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
+            .Where(ls =>
+                ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
+            .ToList();
         
         AddLicencesReferencedInLimitsToLicenceSets(
             returnLicenceSets,
             primaryLicence,
             allLicences,
-            explicitlyReferencedLimitsLicenceSet,
+            licencesGroupedByAbstractionLimitsLicenceSets,
             allLicencesReferencedInLimits);
         
         foreach (var licence in allLicences)
@@ -1587,13 +1593,13 @@ public static class AbstractionLicenceSchemaConverter
         List<LicenceSet> licenceSets,
         Licence primaryLicence,
         List<Licence> allLicences,
-        LicenceSet? explicitlyReferencedLimitsLicenceSet,
+        List<LicenceSet> explicitlyReferencedLimitsLicenceSets,
         List<Licence> licencesReferencedInLimits)
     {
         var licenceSetInLimits = licenceSets.FirstOrDefault(ls =>
             ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits);
 
-        if (explicitlyReferencedLimitsLicenceSet == null || licenceSetInLimits == null)
+        if (explicitlyReferencedLimitsLicenceSets.Count == 0 || licenceSetInLimits == null)
         {
             return;
         }

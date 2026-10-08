@@ -5,8 +5,7 @@ import {ScrapedLicenceSection} from "./ScrapedLicenceSection";
 import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
-// TODO: aggregate verifications temporarily disabled
-// import {Aggregates} from "./Aggregates/Aggregates.tsx";
+import {Aggregates} from "./Aggregates/Aggregates.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -124,7 +123,6 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             history={activeHistory}
                         />
                     </LicenceSection>
-                    {/* TODO: aggregate verifications temporarily disabled
                     <LicenceSection
                         title="Aggregates"
                         itemType="aggregate"
@@ -144,7 +142,6 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             history={activeHistory}
                         />
                     </LicenceSection>
-                    */}
                 </div>
             )}
 
@@ -168,7 +165,6 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             history={activeHistory}
                         />
                     </ScrapedLicenceSection>
-                    {/* TODO: aggregate verifications temporarily disabled
                     <ScrapedLicenceSection
                         title="Aggregates"
                         itemType="aggregate"
@@ -186,7 +182,6 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             history={activeHistory}
                         />
                     </ScrapedLicenceSection>
-                    */}
                 </div>
             )}
 

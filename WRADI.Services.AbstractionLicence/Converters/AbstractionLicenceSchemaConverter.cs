@@ -561,7 +561,8 @@ public static class AbstractionLicenceSchemaConverter
             NaldStatus = naldStatus,
             NaldHasAggregateCondition = naldHasAggCondition,
             LicenceType = licenceType,
-            RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode
+            RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode,
+            ProcessRunId = processRunId
         };
     }
 

@@ -53,7 +53,7 @@ public class UiProcessRunService(
         await UpdateLicenceListRepo(processRunRawDataList);
         
         stopwatch.Stop();
-        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - time taken - {stopwatch.Elapsed.Seconds} seconds - completed - processRunId-{processRunId} for {processRunRawDataList.Count} DB licences found to be updated for trigger licences : {string.Join(",", licenceNumbers)} at {DateTime.UtcNow}");
+        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - time taken - {stopwatch.Elapsed.Seconds} seconds - Completed - processRunId-{processRunId} for {processRunRawDataList.Count} DB licences found to be updated for trigger licences : {string.Join(",", licenceNumbers)} at {DateTime.UtcNow}");
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }
@@ -113,7 +113,12 @@ public class UiProcessRunService(
 
         const int maxRetries = 3;
 
-        foreach (var batch in dbItems.Chunk(50))
+        const int delayAfterBatchProcessing = 5;
+        var processedCount = 0;
+        const int batchSize = 75;
+        var totalListCount = processRunRawDataList.Count;
+
+        foreach (var batch in dbItems.Chunk(batchSize))
         {
             var attempt = 0;
 
@@ -124,10 +129,19 @@ public class UiProcessRunService(
                     await licenceListRepository.UpsertLicenceListItemManyAsync(
                         batch);
 
+                    await Task.Delay(TimeSpan.FromSeconds(delayAfterBatchProcessing));
+                    processedCount += batch.Length;
+
+                    ConsoleHelper.WriteLine(
+                        $"DataRefresh - Now processed {processedCount} of {totalListCount} data items to process");
+
                     break;
                 }
-                catch (Exception) when (attempt < maxRetries)
+                catch (Exception exception) when (attempt < maxRetries)
                 {
+                    ConsoleHelper.WriteLine(
+                        $"DataRefresh - ERROR - Exception on update - {exception.Message} on count of  {processedCount} data items processed");
+
                     attempt++;
 
                     var delay = TimeSpan.FromSeconds(
@@ -135,6 +149,11 @@ public class UiProcessRunService(
 
                     await Task.Delay(
                         delay);
+                }
+                catch (Exception exception)
+                {
+                       ConsoleHelper.WriteLine(
+                        $"DataRefresh - ERROR - Final Exception on update - {exception.Message} on count of  {processedCount} data items processed");
                 }
             }
         }

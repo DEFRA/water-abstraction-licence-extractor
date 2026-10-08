@@ -3,8 +3,10 @@ using System.Text;
 using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.Tools.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -16,7 +18,10 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Area("BFF")]
 [Route("/[area]/[controller]/[action]")]
 public class VerificationController(
-    IAbstractionLicenceOutputService abstractionLicenceOutputService, IOptions<VerificationConfig> verificationConfig) : Controller
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
+    IOptions<VerificationConfig> verificationConfig,
+    IMemoryCache memoryCache,
+    IOutputService outputService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> ExtractHistory(
@@ -25,7 +30,7 @@ public class VerificationController(
         var chunkSize = verificationConfig.Value.ChunkSize;
 
         var skip = chunk * chunkSize;
-
+ 
         // Grab one extra row so we know whether another chunk exists.
         var verifications =
             await abstractionLicenceOutputService.GetExportVerificationsAsync(
@@ -42,10 +47,12 @@ public class VerificationController(
             licenceSectionVerifications
                 .Take(chunkSize)
                 .ToList();
+ 
+        var outputVerificationChunk = await MapVerifications(verificationChunk);
 
         var file =
             await ToolHelper.CreateCsvAsync(
-                verificationChunk);
+                outputVerificationChunk);
 
         var csv =
             Encoding.UTF8.GetString(file);
@@ -54,7 +61,7 @@ public class VerificationController(
             new VerificationExportChunkResponse
             {
                 FileName =
-                    $"{verificationConfig.Value.PostgresqlHost}-verifications.csv",
+                    $"{verificationConfig.Value.PostgresqlHost}-verifications-{DateTime.UtcNow}.csv",
 
                 Csv = csv,
                 Chunk = chunk,
@@ -74,11 +81,14 @@ public class VerificationController(
             currentVerificationCountTask,
             currentBackupCountTask);
 
+        var backupVersion = await currentBackupVersionTask;
+
         var result = new VerificationDataStatus
         {
             CurrentVerificationsBackupCount = await currentBackupCountTask,
             CurrentVerificationsCount = await currentVerificationCountTask,
-            CurrentVerificationsBackupVersion = await currentBackupVersionTask
+            CurrentVerificationsBackupVersion = backupVersion.BackupVersion,
+            LatestBackupVersionDate = backupVersion.BackupDateTimeUtc
         };
         
         return Ok(result);
@@ -162,6 +172,11 @@ public async Task<IActionResult> ImportCsvChunk(
             records.Add(record);
         }
 
+        if (records.Count == 0)
+        {
+            return BadRequest("No records found to be imported.");
+        }
+
         var environment =
             verificationConfig.Value.PostgresqlHost;
 
@@ -171,14 +186,27 @@ public async Task<IActionResult> ImportCsvChunk(
             environment,
             records);
 
-        await abstractionLicenceOutputService
+       var success = await abstractionLicenceOutputService
             .ImportVerificationsAsync(records);
+
+       if (success)
+       {
+          await FireAndForgetDataRefresh();
+       }
 
         return Ok(new
         {
             imported = records.Count,
             completed = true
         });
+    }
+    catch (HeaderValidationException exception)
+    {
+        return BadRequest("Invalid file format, please check file columns.");
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(ex.Message);
     }
     finally
     {
@@ -199,6 +227,71 @@ public async Task<IActionResult> ImportCsvChunk(
         foreach (var record in records)
         {
             record.ProcessRunId = processRunId;
+        }
+    }
+
+    private async Task<List<LicenceSectionVerificationOutput>> MapVerifications(
+        List<LicenceSectionVerification> records)
+    {
+        var map = await GetLicenceNumberFileIdMapEntries();
+
+        return (from record in records
+            let sourceLicenceNumber = map.FirstOrDefault(x => x.FileId == record.LicenceFileId)?.LicenceNumber
+            select new LicenceSectionVerificationOutput
+            {
+                LicenceSectionVerificationId = record.LicenceSectionVerificationId,
+                LicenceFileId = record.LicenceFileId,
+                ProcessRunId = record.ProcessRunId,
+                LicenceSectionName = record.LicenceSectionName,
+                LicenceSectionScrapedValue = record.LicenceSectionScrapedValue,
+                LicenceSectionSnapshotValue = record.LicenceSectionSnapshotValue,
+                LicenceSectionOverrideValue = record.LicenceSectionOverrideValue,
+                VerificationType = record.VerificationType,
+                LicenceSectionItemId = record.LicenceSectionItemId,
+                Notes = record.Notes,
+                CreatedDateTimeUtc = record.CreatedDateTimeUtc,
+                DeletedDateTimeUtc = record.DeletedDateTimeUtc,
+                SourceLicenceNumber = sourceLicenceNumber
+            }).ToList();
+    }
+    
+    private async Task<List<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapEntries()
+    {
+        const string cacheKey = "licence-number-file-ids";
+
+        return await memoryCache.GetOrCreateAsync(
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow =
+                    TimeSpan.FromMinutes(10);
+
+                var map = await abstractionLicenceOutputService.GetLicenceNumberFileIdMapAsync();
+
+                return map.ToList();
+            }) ?? [];
+    }
+    
+    private async Task FireAndForgetDataRefresh()
+    {
+        var processRuns = await outputService.GetAllProcessRunsAsync();
+
+        var processRunId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId ?? 0;
+
+        if (processRunId != 0)
+        {
+            _ = Task.Run((Func<Task?>)(async () =>
+            {
+                try
+                {
+                    await outputService
+                        .UpdateLicenceListProcessRunAsync(processRunId);
+                }
+                catch
+                {
+                    // intentionally swallowed
+                }
+            }));
         }
     }
 }

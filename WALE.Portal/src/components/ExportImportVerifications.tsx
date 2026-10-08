@@ -20,6 +20,7 @@ export function ExportImportVerifications() {
     const [currentBackupVersion, setCurrentBackupVersion] = useState<number | undefined>();
     const [currentBackupVerificationsCount, setCurrentBackupVerificationsCount] = useState<number | undefined>();
     const [currentVerificationsCount, setCurrentVerificationsCount] = useState<number | undefined>();
+    const [latestBackupDate, setLatestBackupDate] = useState<string | undefined>();
 
     const uploadFileAsync = async (
         file: File,
@@ -76,6 +77,11 @@ export function ExportImportVerifications() {
                 }
             }
         } catch (error) {
+            
+            let message: string;
+            message =  error instanceof Error
+                ? error.message
+                : "Upload failed"
             failed.push({
                 filename: file.name,
                 error:
@@ -83,6 +89,7 @@ export function ExportImportVerifications() {
                         ? error.message
                         : "Upload failed"
             });
+            setError(message);
         }
     };
     
@@ -239,6 +246,9 @@ export function ExportImportVerifications() {
         setCurrentBackupVersion(
             verificationDataStatusResult.currentVerificationsBackupVersion
         );
+        
+        setLatestBackupDate(
+            verificationDataStatusResult.latestBackupVersionDate?.toLocaleString());
     };
 
     useEffect(() => {
@@ -270,6 +280,7 @@ export function ExportImportVerifications() {
                 <p>Current Verification Count : {currentVerificationsCount} </p>
                 <p>Current Backup Verification Count : {currentBackupVerificationsCount}</p>
                 <p>Current Backup Version Number : {currentBackupVersion}</p>
+                <p>Latest Import Date : {latestBackupDate}</p>
                 
                 <h3>Export Verifications Section</h3>
             <div style={{
@@ -296,7 +307,7 @@ export function ExportImportVerifications() {
                 {error && (
                     <div
                         style={{
-                            backgroundColor: 'red',
+                            backgroundColor: 'pink',
                             border: '1px solid #c3e6cb',
                             color: '#155724',
                             padding: '10px',
@@ -314,13 +325,13 @@ export function ExportImportVerifications() {
                                 right: '10px',
                                 border: 'none',
                                 background: 'transparent',
-                                color: '#155724',
+                                color: '#721c24',
                                 fontSize: '20px',
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
                             }}
                         >
-                           Clear
+                           X
                         </button>
                     </div>
                 )}

@@ -12319,6 +12319,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
     currentVerificationsCount?: number | undefined;
     currentVerificationsBackupCount?: number | undefined;
     currentVerificationsBackupVersion?: number | undefined;
+    latestBackupVersionDate?: Date | undefined;
 
     [key: string]: any;
 
@@ -12340,6 +12341,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
             this.currentVerificationsCount = _data["currentVerificationsCount"];
             this.currentVerificationsBackupCount = _data["currentVerificationsBackupCount"];
             this.currentVerificationsBackupVersion = _data["currentVerificationsBackupVersion"];
+            this.latestBackupVersionDate = _data["latestBackupVersionDate"] ? new Date(_data["latestBackupVersionDate"].toString()) : undefined as any;
         }
     }
 
@@ -12359,6 +12361,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
         data["currentVerificationsCount"] = this.currentVerificationsCount;
         data["currentVerificationsBackupCount"] = this.currentVerificationsBackupCount;
         data["currentVerificationsBackupVersion"] = this.currentVerificationsBackupVersion;
+        data["latestBackupVersionDate"] = this.latestBackupVersionDate ? this.latestBackupVersionDate.toISOString() : undefined as any;
         return data;
     }
 }
@@ -12367,6 +12370,7 @@ export interface IVerificationDataStatus {
     currentVerificationsCount?: number | undefined;
     currentVerificationsBackupCount?: number | undefined;
     currentVerificationsBackupVersion?: number | undefined;
+    latestBackupVersionDate?: Date | undefined;
 
     [key: string]: any;
 }

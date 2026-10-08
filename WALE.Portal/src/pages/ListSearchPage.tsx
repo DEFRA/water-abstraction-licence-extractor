@@ -1,5 +1,5 @@
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem } from "../api/generated/apiClient.ts";
+import {OutputListDataItem, CumulativeFilterCounts } from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableRow from "../components/LicencesTableRow";
@@ -62,6 +62,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         licenceNumbers: []
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
+    const [cumulativeFilterCounts, setCumulativeFilterCounts] = useState<CumulativeFilterCounts | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -141,6 +142,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             );
 
             setOutputList(listDataItems.records);
+            setCumulativeFilterCounts(listDataItems.cumulativeFilterCounts);
             setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
@@ -343,7 +345,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                             />
                         ))}
                         </tbody>
-                        <tfoot><LicencesTableFooters totals={totals}/></tfoot>
+                        <tfoot><LicencesTableFooters cumulativeTotals={cumulativeFilterCounts} totals={totals}/></tfoot>
                     </table>
                 </div>
             )}

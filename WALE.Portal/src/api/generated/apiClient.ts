@@ -7084,6 +7084,102 @@ export interface IContainedInInformation {
     [key: string]: any;
 }
 
+export class CumulativeFilterCounts implements ICumulativeFilterCounts {
+    licenceNumbers?: number | undefined;
+    purposes?: number | undefined;
+    points?: number | undefined;
+    absLimits?: number | undefined;
+    aggregates?: number | undefined;
+    scans?: number | undefined;
+    issueDates?: number | undefined;
+    issuers?: number | undefined;
+    meansOfAbs?: number | undefined;
+    linkedLicences?: number | undefined;
+    licenceSets?: number | undefined;
+    status?: number | undefined;
+    licenceSectionVerifications?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICumulativeFilterCounts) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumbers = _data["licenceNumbers"];
+            this.purposes = _data["purposes"];
+            this.points = _data["points"];
+            this.absLimits = _data["absLimits"];
+            this.aggregates = _data["aggregates"];
+            this.scans = _data["scans"];
+            this.issueDates = _data["issueDates"];
+            this.issuers = _data["issuers"];
+            this.meansOfAbs = _data["meansOfAbs"];
+            this.linkedLicences = _data["linkedLicences"];
+            this.licenceSets = _data["licenceSets"];
+            this.status = _data["status"];
+            this.licenceSectionVerifications = _data["licenceSectionVerifications"];
+        }
+    }
+
+    static fromJS(data: any): CumulativeFilterCounts {
+        data = typeof data === 'object' ? data : {};
+        let result = new CumulativeFilterCounts();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumbers"] = this.licenceNumbers;
+        data["purposes"] = this.purposes;
+        data["points"] = this.points;
+        data["absLimits"] = this.absLimits;
+        data["aggregates"] = this.aggregates;
+        data["scans"] = this.scans;
+        data["issueDates"] = this.issueDates;
+        data["issuers"] = this.issuers;
+        data["meansOfAbs"] = this.meansOfAbs;
+        data["linkedLicences"] = this.linkedLicences;
+        data["licenceSets"] = this.licenceSets;
+        data["status"] = this.status;
+        data["licenceSectionVerifications"] = this.licenceSectionVerifications;
+        return data;
+    }
+}
+
+export interface ICumulativeFilterCounts {
+    licenceNumbers?: number | undefined;
+    purposes?: number | undefined;
+    points?: number | undefined;
+    absLimits?: number | undefined;
+    aggregates?: number | undefined;
+    scans?: number | undefined;
+    issueDates?: number | undefined;
+    issuers?: number | undefined;
+    meansOfAbs?: number | undefined;
+    linkedLicences?: number | undefined;
+    licenceSets?: number | undefined;
+    status?: number | undefined;
+    licenceSectionVerifications?: number | undefined;
+
+    [key: string]: any;
+}
+
 export class DmsFileIdInformation implements IDmsFileIdInformation {
     fileId?: string;
     dmsFilePath?: string | undefined;
@@ -10733,6 +10829,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
     issuers?: string[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
+    cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
 
     [key: string]: any;
 
@@ -10775,6 +10872,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 for (let item of _data["licenceSetIds"])
                     this.licenceSetIds!.push(item);
             }
+            this.cumulativeFilterCounts = _data["cumulativeFilterCounts"] ? CumulativeFilterCounts.fromJS(_data["cumulativeFilterCounts"]) : undefined as any;
         }
     }
 
@@ -10812,6 +10910,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.licenceSetIds)
                 data["licenceSetIds"].push(item);
         }
+        data["cumulativeFilterCounts"] = this.cumulativeFilterCounts ? this.cumulativeFilterCounts.toJSON() : undefined as any;
         return data;
     }
 }
@@ -10822,6 +10921,7 @@ export interface IProcessRunResponse {
     issuers?: string[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
+    cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
 
     [key: string]: any;
 }

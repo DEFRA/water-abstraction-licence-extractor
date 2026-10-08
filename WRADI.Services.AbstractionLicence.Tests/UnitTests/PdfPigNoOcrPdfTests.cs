@@ -488,12 +488,19 @@ public class PdfPigNoOcrPdfTests
             "30",
             "cubic meters",
             ["1/01/01/001", "1/01/01/002", "1/01/01/004"]);
+        
+        var licence4MatchesResult = GetLicenceMatchesResult(
+            "1/01/01/004",
+            null,
+            null,
+            null,
+            []);
 
         var data = new Dictionary<string, MatchesResult>
         {
             { "1/01/01/002", licence2MatchesResult },
             { "1/01/01/003", licence3MatchesResult },
-            { "1/01/01/004", licence3MatchesResult }
+            { "1/01/01/004", licence4MatchesResult }
         };
         
         var lookupConfig = new LookupConfiguration(
@@ -827,28 +834,33 @@ public class PdfPigNoOcrPdfTests
 
     private static MatchesResult GetLicenceMatchesResult(
         string sourceLicenceNumber,
-        string abstractionLimitsText,
-        string value,
-        string units,
+        string? abstractionLimitsText,
+        string? value,
+        string? units,
         List<string> linkedLicenceNumbers,
         bool containsLegalText = false)
     {
-        var limitLines = TextToLines(abstractionLimitsText);
-        var baseSubResults = new List<LabelGroupResult>
-        {
-            new()
+        var limitLines = !string.IsNullOrEmpty(abstractionLimitsText)
+            ? TextToLines(abstractionLimitsText)
+            : [];
+        
+        var baseSubResults = !string.IsNullOrEmpty(value) && !string.IsNullOrEmpty(units)
+            ? new List<LabelGroupResult>
             {
-                MatchedLabelName = "PerDayValue",
-                MatchedLabelRelatedName = "PerDayUnits",
-                Text = TextToLines(value),
-                MatchedLabelTextFirstLine = "per day"
-            },
-            new()
-            {
-                MatchedLabelName = "PerDayUnits",
-                Text = TextToLines(units)
+                new()
+                {
+                    MatchedLabelName = "PerDayValue",
+                    MatchedLabelRelatedName = "PerDayUnits",
+                    Text = TextToLines(value),
+                    MatchedLabelTextFirstLine = "per day"
+                },
+                new()
+                {
+                    MatchedLabelName = "PerDayUnits",
+                    Text = TextToLines(units)
+                }
             }
-        };
+            : [];
 
         if (containsLegalText)
         {

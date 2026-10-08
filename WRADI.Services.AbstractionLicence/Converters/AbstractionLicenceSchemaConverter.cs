@@ -1429,7 +1429,16 @@ public static class AbstractionLicenceSchemaConverter
         allLicences.Insert(0, primaryLicence);
 
         // Add any that were linked from a linked licence
-        allLicences.AddRange(GetLicenceLinkedFromLinkedLicence(allLicences, lookupConfiguration.RegionId));
+        allLicences.AddRange(
+            await GetLicenceLinkedFromLinkedLicenceAsync(
+                primaryLicence,
+                allLicences,
+                pdfDataExtractorService,
+                previouslyParsedPaths,
+                processRunId,
+                lookupConfiguration,
+                cacheService,
+                naldDataLookupService));
 
         foreach (var licence in allLicences)
         {
@@ -1774,7 +1783,15 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static List<Licence> GetLicenceLinkedFromLinkedLicence(List<Licence> allLicences, int regionId)
+    private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(
+        Licence primaryLicence,
+        List<Licence> allLicences,
+        IPdfDataExtractorService pdfDataExtractorService,
+        List<string> previouslyParsedPaths,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        IAbstractionLicenceCacheService abstractionLicenceCacheService,
+        INaldDataLookupService naldDataLookupService)
     {
         var returnList = new List<Licence>();
 
@@ -1786,15 +1803,21 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (!alreadyHave)
                 {
-                    var newLicence = new Licence // TODO use the other method
+                    var newLicence = await GetLinkedLicenceAsync(
+                        primaryLicence,
+                        linkedLicence,
+                        pdfDataExtractorService,
+                        previouslyParsedPaths,
+                        processRunId,
+                        lookupConfiguration,
+                        abstractionLicenceCacheService,
+                        naldDataLookupService,
+                        allLicences);
+
+                    if (newLicence == null)
                     {
-                        Status = ScrapeStatus.FileIdMissing,
-                        LicenceNumber = new ValueWithConfidence<string>
-                        {
-                            Value = linkedLicence.LicenceNumber
-                        },
-                        RegionId = regionId
-                    };
+                        continue;
+                    }
                     
                     returnList.Add(newLicence);
                 }
@@ -2528,129 +2551,18 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var linkedLicence in primaryLicence.LinkedLicences)
         {
-            var strippedLlNumbers = FormattingHelper.StripForComparisonMultipleOptions(
-                linkedLicence.LicenceNumber,
-                linkedLicence.RegionId!.Value);
-
-            if (strippedLlNumbers.Count == 0)
-            {
-                continue;
-            }
-            
-            var continueOuter = false;
-            
-            foreach (var strippedLlNumber in strippedLlNumbers)
-            {
-                // Already found it
-                if (returnLicences.Any(returnLicence =>
-                    FormattingHelper.StripForComparison(
-                        returnLicence.LicenceNumber?.Value, returnLicence.RegionId!.Value) == strippedLlNumber))
-                {
-                    continueOuter = true;
-                    break;
-                }
-            }
-
-            if (continueOuter)
-            {
-                continue;
-            }
-
-            var dmsFileData = await lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
-                linkedLicence.LicenceNumber,
-                lookupConfiguration.CacheService);
-
-            var foundDmsData = dmsFileData != null;
-
-            var destinationFileId = dmsFileData?.FileId;
-            var destinationFileName = dmsFileData?.DestinationFileName;
-            
-            var missingDmsData = !foundDmsData;
-            var missingFileId = destinationFileId == Guid.Empty || destinationFileId == null;
-            var missingFilename = string.IsNullOrEmpty(destinationFileName);
-                        
-            if (missingDmsData || missingFileId || missingFilename)
-            {
-                var status = ScrapeStatus.NotFound;
-                
-                if (missingDmsData) {}
-                else if (missingFilename) status = ScrapeStatus.PathMissing;
-                else if (missingFileId) status = ScrapeStatus.FileIdMissing;
-                
-                returnLicences.Add(new Licence
-                {
-                    LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
-                    Status = status,
-                    RegionId = primaryLicence.RegionId!.Value,
-                });
-                
-                continue;
-            }
-            
-            var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
-                linkedLicence.LicenceNumber,
-                primaryLicence.RegionId!.Value);
-
-            var clonedConfig = lookupConfiguration.Clone();
-            clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
-
-            (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
-
-            try
-            {
-                relatedFileMatches = await pdfDataExtractorService.GetMatchesAsync(
-                    destinationFileName!,
-                    dmsFileData!,
-                    clonedConfig,
-                    previouslyParsedFiles,
-                    processRunId);
-
-                if (relatedFileMatches.StopExecution)
-                {
-                    continue;
-                }
-                
-                ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished/released lock/saving for {dmsFileData!.FileId}");
-
-                if (relatedFileMatches.AlreadySaved != true && lookupConfiguration.UseLockExclusivity)
-                {
-                    await pdfDataExtractorService.SaveMatchResultAsync(
-                        relatedFileMatches.Item!,
-                        dmsFileData.FileId,
-                        processRunId,
-                        lookupConfiguration.UseLockExclusivity);
-                }
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
-                
-                await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
-                    destinationFileName!,
-                    dmsFileData.FileId,
-                    processRunId,
-                    ex.ToString(),
-                    lookupConfiguration.UseLockExclusivity);
-                
-                throw;
-            }
-
-            if (relatedFileMatches.StopExecution)
-            {
-                continue;
-            }
-            
-            var licence = await ToLicenceAsync(
-                relatedFileMatches.Item!,
-                dmsFileData,
-                naldDataLine?.LicenceNumber,
-                (NaldLinkedLicenceHelper?)lookupConfiguration.NaldLinkedLicenceHelper,
+            var licence = await GetLinkedLicenceAsync(
+                primaryLicence,
+                linkedLicence,
+                pdfDataExtractorService,
+                previouslyParsedFiles,
+                processRunId,
                 lookupConfiguration,
                 cacheService,
                 naldDataLookupService,
-                processRunId);
+                returnLicences);
 
-            if (licence.Status == ScrapeStatus.Error)
+            if (licence == null)
             {
                 continue;
             }

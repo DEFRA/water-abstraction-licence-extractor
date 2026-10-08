@@ -3589,6 +3589,97 @@ export class Client {
     }
 
     /**
+     * @param fileId (optional) 
+     * @return OK
+     */
+    matchesResultString(fileId: string | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/MatchesResultString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMatchesResultString(_response);
+        });
+    }
+
+    protected processMatchesResultString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    wrInspectionReportString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
+        let url_ = this.baseUrl + "/BFF/FileData/WrInspectionReportString?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processWrInspectionReportString(_response);
+        });
+    }
+
+    protected processWrInspectionReportString(response: Response): Promise<string> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<string>(null as any);
+    }
+
+    /**
      * @param matchesResultId (optional) 
      * @return OK
      */
@@ -3674,98 +3765,93 @@ export class Client {
     }
 
     /**
-     * @param fileId (optional)
+     * @param processRunId (optional) 
+     * @param excludeInternalColumns (optional) 
      * @return OK
      */
-    matchesResultString(fileId: string | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/MatchesResultString?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: RequestInit = {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        };
-
-        return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processMatchesResultString(_response);
-        });
-    }
-
-    protected processMatchesResultString(response: Response): Promise<string> {
-        const status = response.status;
-        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
-        if (status === 200) {
-            return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-
-            return result200;
-            });
-        } else if (status !== 200 && status !== 204) {
-            return response.text().then((_responseText) => {
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-            });
-        }
-        return Promise.resolve<string>(null as any);
-    }
-
-    /**
-     * @param fileId (optional)
-     * @param processRunId (optional)
-     * @return OK
-     */
-    wrInspectionReportString(fileId: string | undefined, processRunId: number | undefined): Promise<string> {
-        let url_ = this.baseUrl + "/BFF/FileData/WrInspectionReportString?";
-        if (fileId === null)
-            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
-        else if (fileId !== undefined)
-            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+    exportWrInspectionReportCsv(processRunId: number | undefined, excludeInternalColumns: boolean | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/ExportWrInspectionReportCsv?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (excludeInternalColumns === null)
+            throw new globalThis.Error("The parameter 'excludeInternalColumns' cannot be null.");
+        else if (excludeInternalColumns !== undefined)
+            url_ += "excludeInternalColumns=" + encodeURIComponent("" + excludeInternalColumns) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
             method: "GET",
             headers: {
-                "Accept": "application/json"
             }
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processWrInspectionReportString(_response);
+            return this.processExportWrInspectionReportCsv(_response);
         });
     }
 
-    protected processWrInspectionReportString(response: Response): Promise<string> {
+    protected processExportWrInspectionReportCsv(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
-            let result200: any = null;
-            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-                result200 = resultData200 !== undefined ? resultData200 : null as any;
-
-            return result200;
+            return;
             });
         } else if (status !== 200 && status !== 204) {
             return response.text().then((_responseText) => {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<string>(null as any);
+        return Promise.resolve<void>(null as any);
     }
 
     /**
-     * @param processRunId (optional)
+     * @param processRunId (optional) 
+     * @param excludeInternalColumns (optional) 
+     * @return OK
+     */
+    exportWrInspectionReportXlsx(processRunId: number | undefined, excludeInternalColumns: boolean | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/ExportWrInspectionReportXlsx?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (excludeInternalColumns === null)
+            throw new globalThis.Error("The parameter 'excludeInternalColumns' cannot be null.");
+        else if (excludeInternalColumns !== undefined)
+            url_ += "excludeInternalColumns=" + encodeURIComponent("" + excludeInternalColumns) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processExportWrInspectionReportXlsx(_response);
+        });
+    }
+
+    protected processExportWrInspectionReportXlsx(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
      * @return OK
      */
     getLicenceFileIdMap(processRunId: number | undefined): Promise<{ [key: string]: LicenceFileMapEntry[]; }> {
@@ -5777,10 +5863,15 @@ export class Client {
     }
 
     /**
+     * @param chunk (optional) 
      * @return OK
      */
-    extractHistory(): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Verification/ExtractHistory";
+    extractHistory(chunk: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Verification/ExtractHistory?";
+        if (chunk === null)
+            throw new globalThis.Error("The parameter 'chunk' cannot be null.");
+        else if (chunk !== undefined)
+            url_ += "chunk=" + encodeURIComponent("" + chunk) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -5848,14 +5939,34 @@ export class Client {
 
     /**
      * @param processRunId (optional) 
+     * @param uploadId (optional) 
+     * @param chunkIndex (optional) 
+     * @param totalChunks (optional) 
+     * @param fileName (optional) 
      * @return OK
      */
-    importCsv(processRunId: number | undefined, body: Body2): Promise<void> {
-        let url_ = this.baseUrl + "/BFF/Verification/ImportCsv?";
+    importCsvChunk(processRunId: number | undefined, uploadId: string | undefined, chunkIndex: number | undefined, totalChunks: number | undefined, fileName: string | undefined, body: Body2): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/Verification/ImportCsvChunk?";
         if (processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (uploadId === null)
+            throw new globalThis.Error("The parameter 'uploadId' cannot be null.");
+        else if (uploadId !== undefined)
+            url_ += "uploadId=" + encodeURIComponent("" + uploadId) + "&";
+        if (chunkIndex === null)
+            throw new globalThis.Error("The parameter 'chunkIndex' cannot be null.");
+        else if (chunkIndex !== undefined)
+            url_ += "chunkIndex=" + encodeURIComponent("" + chunkIndex) + "&";
+        if (totalChunks === null)
+            throw new globalThis.Error("The parameter 'totalChunks' cannot be null.");
+        else if (totalChunks !== undefined)
+            url_ += "totalChunks=" + encodeURIComponent("" + totalChunks) + "&";
+        if (fileName === null)
+            throw new globalThis.Error("The parameter 'fileName' cannot be null.");
+        else if (fileName !== undefined)
+            url_ += "fileName=" + encodeURIComponent("" + fileName) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = Object.keys(body as any).map((key) => {
@@ -5871,11 +5982,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processImportCsv(_response);
+            return this.processImportCsvChunk(_response);
         });
     }
 
-    protected processImportCsv(response: Response): Promise<void> {
+    protected processImportCsvChunk(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -6113,6 +6224,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6146,6 +6258,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6185,6 +6298,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6205,6 +6319,7 @@ export interface IAbstractionLimitGroup {
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6405,11 +6520,13 @@ export class Aggregate implements IAggregate {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6443,6 +6560,11 @@ export class Aggregate implements IAggregate {
                 for (let item of _data["linkedLicences"])
                     this.linkedLicences!.push(item);
             }
+            if (Array.isArray(_data["variations"])) {
+                this.variations = [] as any;
+                for (let item of _data["variations"])
+                    this.variations!.push(AggregateVariation.fromJS(item));
+            }
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
@@ -6456,6 +6578,7 @@ export class Aggregate implements IAggregate {
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6495,6 +6618,11 @@ export class Aggregate implements IAggregate {
             for (let item of this.linkedLicences)
                 data["linkedLicences"].push(item);
         }
+        if (Array.isArray(this.variations)) {
+            data["variations"] = [];
+            for (let item of this.variations)
+                data["variations"].push(item ? item.toJSON() : undefined as any);
+        }
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
@@ -6508,6 +6636,7 @@ export class Aggregate implements IAggregate {
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6532,11 +6661,13 @@ export interface IAggregate {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6603,6 +6734,174 @@ export interface IAggregateSet {
     [key: string]: any;
 }
 
+export class AggregateVariation implements IAggregateVariation {
+    difference?: string | undefined;
+    id?: string | undefined;
+    aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
+    naldType?: string | undefined;
+    linkedLicences?: string[] | undefined;
+    variations?: any[] | undefined;
+    documentIdentifier?: string | undefined;
+    timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
+    limits?: any[];
+    containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
+    points?: any[] | undefined;
+    purposes?: any[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IAggregateVariation) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.difference = _data["difference"];
+            this.id = _data["id"];
+            this.aggregateSetId = _data["aggregateSetId"];
+            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
+            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
+            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
+            this.primaryType = _data["primaryType"];
+            this.subType = _data["subType"];
+            this.naldType = _data["naldType"];
+            if (Array.isArray(_data["linkedLicences"])) {
+                this.linkedLicences = [] as any;
+                for (let item of _data["linkedLicences"])
+                    this.linkedLicences!.push(item);
+            }
+            if (Array.isArray(_data["variations"])) {
+                this.variations = [] as any;
+                for (let item of _data["variations"])
+                    this.variations!.push(item);
+            }
+            this.documentIdentifier = _data["documentIdentifier"];
+            this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
+            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
+            if (Array.isArray(_data["limits"])) {
+                this.limits = [] as any;
+                for (let item of _data["limits"])
+                    this.limits!.push(item);
+            }
+            if (Array.isArray(_data["containedIn"])) {
+                this.containedIn = [] as any;
+                for (let item of _data["containedIn"])
+                    this.containedIn!.push(item);
+            }
+            this.containsLegalText = _data["containsLegalText"];
+            if (Array.isArray(_data["points"])) {
+                this.points = [] as any;
+                for (let item of _data["points"])
+                    this.points!.push(item);
+            }
+            if (Array.isArray(_data["purposes"])) {
+                this.purposes = [] as any;
+                for (let item of _data["purposes"])
+                    this.purposes!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): AggregateVariation {
+        data = typeof data === 'object' ? data : {};
+        let result = new AggregateVariation();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["difference"] = this.difference;
+        data["id"] = this.id;
+        data["aggregateSetId"] = this.aggregateSetId;
+        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
+        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
+        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
+        data["primaryType"] = this.primaryType;
+        data["subType"] = this.subType;
+        data["naldType"] = this.naldType;
+        if (Array.isArray(this.linkedLicences)) {
+            data["linkedLicences"] = [];
+            for (let item of this.linkedLicences)
+                data["linkedLicences"].push(item);
+        }
+        if (Array.isArray(this.variations)) {
+            data["variations"] = [];
+            for (let item of this.variations)
+                data["variations"].push(item);
+        }
+        data["documentIdentifier"] = this.documentIdentifier;
+        data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
+        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
+        if (Array.isArray(this.limits)) {
+            data["limits"] = [];
+            for (let item of this.limits)
+                data["limits"].push(item);
+        }
+        if (Array.isArray(this.containedIn)) {
+            data["containedIn"] = [];
+            for (let item of this.containedIn)
+                data["containedIn"].push(item);
+        }
+        data["containsLegalText"] = this.containsLegalText;
+        if (Array.isArray(this.points)) {
+            data["points"] = [];
+            for (let item of this.points)
+                data["points"].push(item);
+        }
+        if (Array.isArray(this.purposes)) {
+            data["purposes"] = [];
+            for (let item of this.purposes)
+                data["purposes"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface IAggregateVariation {
+    difference?: string | undefined;
+    id?: string | undefined;
+    aggregateSetId?: string | undefined;
+    sourceLicenceNumber?: string | undefined;
+    sourceLicenceVersionId?: string | undefined;
+    isExplicitlyAggregate?: boolean | undefined;
+    primaryType?: PrimaryType;
+    subType?: NullableOfSubType | undefined;
+    naldType?: string | undefined;
+    linkedLicences?: string[] | undefined;
+    variations?: any[] | undefined;
+    documentIdentifier?: string | undefined;
+    timePeriod?: TimePeriod | undefined;
+    timeCutoff?: TimeCutoff | undefined;
+    limits?: any[];
+    containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
+    points?: any[] | undefined;
+    purposes?: any[] | undefined;
+
+    [key: string]: any;
+}
+
 export class AggregateWithContext implements IAggregateWithContext {
     id?: string | undefined;
     aggregateSetId?: string | undefined;
@@ -6613,11 +6912,13 @@ export class AggregateWithContext implements IAggregateWithContext {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
+    limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6651,19 +6952,25 @@ export class AggregateWithContext implements IAggregateWithContext {
                 for (let item of _data["linkedLicences"])
                     this.linkedLicences!.push(item);
             }
+            if (Array.isArray(_data["variations"])) {
+                this.variations = [] as any;
+                for (let item of _data["variations"])
+                    this.variations!.push(AggregateVariation.fromJS(item));
+            }
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
-                    this.limits!.push(AbstractionLimit2.fromJS(item));
+                    this.limits!.push(item);
             }
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6703,19 +7010,25 @@ export class AggregateWithContext implements IAggregateWithContext {
             for (let item of this.linkedLicences)
                 data["linkedLicences"].push(item);
         }
+        if (Array.isArray(this.variations)) {
+            data["variations"] = [];
+            for (let item of this.variations)
+                data["variations"].push(item ? item.toJSON() : undefined as any);
+        }
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
-                data["limits"].push(item ? item.toJSON() : undefined as any);
+                data["limits"].push(item);
         }
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6740,11 +7053,13 @@ export interface IAggregateWithContext {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
+    limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -7474,6 +7789,7 @@ export class FileProcessSingleRequest implements IFileProcessSingleRequest {
     delayInSeconds?: number | undefined;
     requestedAt?: Date;
     lockRetryCount?: number;
+    documentType?: string;
 
     [key: string]: any;
 
@@ -7502,6 +7818,7 @@ export class FileProcessSingleRequest implements IFileProcessSingleRequest {
             this.delayInSeconds = _data["delayInSeconds"];
             this.requestedAt = _data["requestedAt"] ? new Date(_data["requestedAt"].toString()) : undefined as any;
             this.lockRetryCount = _data["lockRetryCount"];
+            this.documentType = _data["documentType"];
         }
     }
 
@@ -7528,6 +7845,7 @@ export class FileProcessSingleRequest implements IFileProcessSingleRequest {
         data["delayInSeconds"] = this.delayInSeconds;
         data["requestedAt"] = this.requestedAt ? this.requestedAt.toISOString() : undefined as any;
         data["lockRetryCount"] = this.lockRetryCount;
+        data["documentType"] = this.documentType;
         return data;
     }
 }
@@ -7543,6 +7861,7 @@ export interface IFileProcessSingleRequest {
     delayInSeconds?: number | undefined;
     requestedAt?: Date;
     lockRetryCount?: number;
+    documentType?: string;
 
     [key: string]: any;
 }
@@ -8628,7 +8947,7 @@ export interface ILicenceSectionVerificationSummary {
 export class LicenceSet implements ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
-    licenceSetTypes?: number[];
+    licenceSetType?: LicenceSetType;
     aggregateSets?: AggregateSet[] | undefined;
     licences?: Licence[];
 
@@ -8651,11 +8970,7 @@ export class LicenceSet implements ILicenceSet {
             }
             this.licenceSetId = _data["licenceSetId"];
             this.shortLicenceSetId = _data["shortLicenceSetId"];
-            if (Array.isArray(_data["licenceSetTypes"])) {
-                this.licenceSetTypes = [] as any;
-                for (let item of _data["licenceSetTypes"])
-                    this.licenceSetTypes!.push(item);
-            }
+            this.licenceSetType = _data["licenceSetType"];
             if (Array.isArray(_data["aggregateSets"])) {
                 this.aggregateSets = [] as any;
                 for (let item of _data["aggregateSets"])
@@ -8684,11 +8999,7 @@ export class LicenceSet implements ILicenceSet {
         }
         data["licenceSetId"] = this.licenceSetId;
         data["shortLicenceSetId"] = this.shortLicenceSetId;
-        if (Array.isArray(this.licenceSetTypes)) {
-            data["licenceSetTypes"] = [];
-            for (let item of this.licenceSetTypes)
-                data["licenceSetTypes"].push(item);
-        }
+        data["licenceSetType"] = this.licenceSetType;
         if (Array.isArray(this.aggregateSets)) {
             data["aggregateSets"] = [];
             for (let item of this.aggregateSets)
@@ -8706,7 +9017,7 @@ export class LicenceSet implements ILicenceSet {
 export interface ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
-    licenceSetTypes?: number[];
+    licenceSetType?: LicenceSetType;
     aggregateSets?: AggregateSet[] | undefined;
     licences?: Licence[];
 
@@ -8766,13 +9077,10 @@ export interface ILicenceSetReference {
 }
 
 export enum LicenceSetType {
+    Unknown = "Unknown",
     SingleLicenceOnly = "SingleLicenceOnly",
-    AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
-    AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
-    AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
-    AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
-    FullyEncompassedIn = "FullyEncompassedIn",
-    PartiallyEncompassedIn = "PartiallyEncompassedIn",
+    LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
+    Others = "Others",
 }
 
 export enum LicenceType {
@@ -9550,6 +9858,7 @@ export enum NullableOfInformationDirection {
     Unknown = "Unknown",
     Incoming = "Incoming",
     Outgoing = "Outgoing",
+    PointingElsewhere = "PointingElsewhere",
 }
 
 export enum NullableOfLabelPosition {
@@ -10430,6 +10739,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
     status?: string | undefined;
+    documentType?: string | undefined;
 
     [key: string]: any;
 
@@ -10451,6 +10761,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
             this.description = _data["description"];
             this.numberOfFiles = _data["numberOfFiles"];
             this.status = _data["status"];
+            this.documentType = _data["documentType"];
         }
     }
 
@@ -10470,6 +10781,7 @@ export class ProcessRunCreateRequest implements IProcessRunCreateRequest {
         data["description"] = this.description;
         data["numberOfFiles"] = this.numberOfFiles;
         data["status"] = this.status;
+        data["documentType"] = this.documentType;
         return data;
     }
 }
@@ -10478,6 +10790,7 @@ export interface IProcessRunCreateRequest {
     description?: string | undefined;
     numberOfFiles?: number;
     status?: string | undefined;
+    documentType?: string | undefined;
 
     [key: string]: any;
 }

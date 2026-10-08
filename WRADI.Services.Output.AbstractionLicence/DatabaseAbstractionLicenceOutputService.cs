@@ -511,6 +511,11 @@ public class DatabaseAbstractionLicenceOutputService(
                 (await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId)).FirstOrDefault();
             licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
 
+            if (licenceSet.AggregateSets?.Length == 0)
+            {
+                licenceSet.AggregateSets = null;
+            }
+
             returnList.Add(licenceSet);
         }
 

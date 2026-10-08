@@ -53,7 +53,7 @@ public class UiProcessRunService(
         await UpdateLicenceListRepo(processRunRawDataList);
         
         stopwatch.Stop();
-        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - time taken - {stopwatch.Elapsed.Seconds} seconds - completed - processRunId-{processRunId} for {processRunRawDataList.Count} DB licences found to be updated for trigger licences : {string.Join(",", licenceNumbers)} at {DateTime.UtcNow}");
+        ConsoleHelper.WriteLine($"UpdateProcessRunByLicenceNumbersAsync - time taken - {stopwatch.Elapsed.Seconds} seconds - Completed - processRunId-{processRunId} for {processRunRawDataList.Count} DB licences found to be updated for trigger licences : {string.Join(",", licenceNumbers)} at {DateTime.UtcNow}");
 
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }

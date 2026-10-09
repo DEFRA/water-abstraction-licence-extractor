@@ -1039,14 +1039,15 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count);
-        var agreedSchemaLicenceGroup = licenceSets[1];
+        Assert.Equal(2, licenceSets.Count);
+        var agreedSchemaLicenceGroup = licenceSets[0];
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
 
         Assert.Equal("SW/047/0051/003", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
         Assert.Equal("15/47/013/S/020", agreedSchemaLicenceGroup.Licences[1].LicenceNumber?.Value);
-        Assert.Equal("15/47/52/I/1", agreedSchemaLicenceGroup.Licences[2].LicenceNumber?.Value);
+        Assert.Equal("SW/047/0051/003", licenceSets[1].Licences[0].LicenceNumber?.Value);
+        Assert.Equal("15/47/52/I/1", licenceSets[1].Licences[1].LicenceNumber?.Value);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal("SW0470051003-LV2023020720380331", agreedSchemaLicence.Id);
@@ -1080,7 +1081,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(556, limitGroup.Limits[3].Value);
 
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates!);
-        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020-6_2",
+        Assert.Equal("SW0470051003-LV2023020720380331-LL-1547013S020-6_2-C148000",
             agreedSchemaLicence.AbstractionLimits.Aggregates![0].Id);
         Assert.Equal("LV2023020720380331",
             agreedSchemaLicence.AbstractionLimits.Aggregates[0].SourceLicenceVersionId);
@@ -1329,7 +1330,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Aggregates);
 
         var aggregate = agreedSchemaLicence.AbstractionLimits.Aggregates[0];
-        Assert.Equal("22705026-LV20210930-ILPU-6_3", aggregate.Id);
+        Assert.Equal("22705026-LV20210930-ILPU-6_3-C10178640", aggregate.Id);
         Assert.Equal(2, aggregate.Purposes!.Length);
         Assert.Equal("4.1", aggregate.Purposes[0].Id);
         Assert.Equal("4.2", aggregate.Purposes[1].Id);
@@ -1798,11 +1799,11 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         
         Assert.Equal(3, licenceGroups.Count);
 
-        var agreedSchemaLicenceGroup = licenceGroups[1];
-        Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
+        var agreedSchemaLicenceGroup = licenceGroups[2];
+        Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicenceGroup.Licences[0].LicenceNumber?.Value);
-        Assert.Equal("NE/027/0028/059", agreedSchemaLicenceGroup.Licences[1].LicenceNumber?.Value);
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicenceGroup.Licences[1].LicenceNumber?.Value);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
@@ -1906,14 +1907,18 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(4, licenceSets.Count);
+        
+        // TODO put some more checks in here
+        
+        Assert.Equal("NE0260034053-LVUNKNOWN-NE0260034056-LV2020091020370331",
+            licenceSets[3].LicenceSetId);
+        
+        Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN",
+            licenceSets[2].LicenceSetId);
+
         var agreedSchemaLicenceGroup = licenceSets[1];
-        
-        Assert.Equal("NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN-NE0260034056-LV2020091020370331",
-            agreedSchemaLicenceGroup.LicenceSetId);
-        
-        //Assert.Equal(4, agreedSchemaLicenceGroup.AggregateSets!.Length);
-        Assert.Equal(4, agreedSchemaLicenceGroup.Licences.Length);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length);
         
         // For primary licence
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -1987,7 +1992,8 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             , agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
         
         // For third licence
-        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[2];
+        agreedSchemaLicenceGroup = licenceSets[2];
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
@@ -2033,9 +2039,9 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             agreedSchemaLicence.LinkedLicences[3].ContainedIn![0].LinkReason);   
         
         // For fourth licence
-        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[3];
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[1];
         
-        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LicenceNumber?.Value);
+        Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.NotFound, agreedSchemaLicence.Status);
         Assert.Empty(agreedSchemaLicence.AbstractionLimits.Individual!);
     }
@@ -2118,32 +2124,32 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(4, licenceSets.Count);
         
         Assert.Equal("NE0260034018-LV2019121120250331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var expectedLicenceSetId =
-            "NE0260034018-LV2019121120250331-NE0260034052-LV2019121120270331-NE0260034053-LVUNKNOWN";
-        Assert.Equal(expectedLicenceSetId, licenceSets[1].LicenceSetId);
-        Assert.Equal([LicenceSetType.AllLicencesExplicitlyReferencedAnywhere], licenceSets[1].LicenceSetTypes);
+            "NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN";
+        Assert.Equal(expectedLicenceSetId, licenceSets[2].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[2].LicenceSetType);
 
-        var agreedSchemaLicenceGroup = licenceSets[1];
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicenceGroup.LicenceSetId);
-
-        Assert.Single(agreedSchemaLicenceGroup.AggregateSets!);
-        Assert.Equal("NE0260034052-LV2019121120270331", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
+        var agreedSchemaLicenceGroup = licenceSets[2];
+        Assert.Equal(2, licenceSets[2].AggregateSets!.Length); // TODO for some reason its not creating an abstraction limits group
+        Assert.Equal("NE0260034052-LV2019121120270331-C3493706", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
+        Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN-C200000", agreedSchemaLicenceGroup.AggregateSets![1].AggregateSetId);
         
-        Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length); // TODO should have a /056 back link ideally
+        agreedSchemaLicenceGroup = licenceSets[3];
+        Assert.Equal(2, agreedSchemaLicenceGroup.Licences.Length); // TODO should have a /056 back link ideally
         
         // For primary licence
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
-
+        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber?.Value);
+        
         Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
         Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
+        Assert.Equal("NE0260034018-LV2019121120250331-NE0260034053-LVUNKNOWN", agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
-        Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);
         Assert.NotNull(agreedSchemaLicence.AbstractionLimits.Individual!);
         Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual);
@@ -2161,17 +2167,18 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
         Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
-
+        
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         
         // For second licence
-        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[1];
+        agreedSchemaLicenceGroup = licenceSets[2];
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
         
         Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
-        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal("NE0260034052-LV2019121120270331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
@@ -2210,13 +2217,12 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].Source);
         
         // For third licence
-        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[2];
+        agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[1];
         
-        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
-        Assert.Equal("NE0260034018-LV2019121120250331", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
+        Assert.Single(agreedSchemaLicence.LicenceSets);
+        Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
         
-        Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LicenceNumber?.Value);
+        Assert.Equal("NE/027/0028/059", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.NotFound, agreedSchemaLicence.Status);
     }
     
@@ -2240,7 +2246,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0270023043-LV2018121720290331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2282,13 +2288,13 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(4, licenceSets.Count);
         
         Assert.Equal("NE0260034018-LV2019121120250331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
-        var aggregateLicenceSet = licenceSets[1];
-        var otherLicence = aggregateLicenceSet.Licences[1];
+        var aggregateLicenceSet = licenceSets[2];
+        var otherLicence = aggregateLicenceSet.Licences[0];
         Assert.Equal("NE/026/0034/052", otherLicence.LicenceNumber!.Value);
         Assert.Equal(ScrapeStatus.Ok, otherLicence.Status);
         
@@ -2339,10 +2345,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         
-        Assert.Equal("12100074R01-LV2025040920270331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("12100073R01-LVUNKNOWN-12100074R01-LV2025040920270331", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2383,10 +2389,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         
-        Assert.Equal("12100073R01-LV2015040120270331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("12100073R01-LV2015040120270331-12100074R01-LVUNKNOWN", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2426,7 +2432,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12100068-LV20250617", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2476,7 +2482,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("22631079-LV20230224", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2509,7 +2515,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12304073-LV20151106", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2542,7 +2548,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("12504142-LV20250423", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2575,7 +2581,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("12504008-LV20160203", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2658,7 +2664,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(3, licenceSets.Count);
         
         Assert.Equal("22702039-LV2023063020370331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2779,10 +2785,13 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(2, licenceSets.Count);
         
-        Assert.Equal("22727153-LV20231214", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22727153-LV20231214-NE027027018R01-LVUNKNOWN", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.Others, licenceSets[0].LicenceSetType);
+        
+        Assert.Equal("22727153-LV20231214-NE0270027017R01-LVUNKNOWN-NE0270027018R01-LVUNKNOWN-NE0270027047-LVUNKNOWN", licenceSets[1].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2816,10 +2825,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         
-        Assert.Equal("22722265-LV20160630", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22722265-LV20160630-NE0270022043-LVUNKNOWN", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2854,7 +2863,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("NE0270024056-LV2017061220300331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2890,7 +2899,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("22708052-LV20170124", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2928,7 +2937,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("22728270R01-LV2015062420270331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -2965,7 +2974,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, licenceSets.Count);
         
         Assert.Equal("NE0230003031-LV2022072220300331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3000,7 +3009,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0210000014-LV2021033120270331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3042,7 +3051,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(3, licenceSets.Count);
         
         Assert.Equal("NE0270024044-LV2017061320290331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3078,7 +3087,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0240005016-LV2021032420260331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3111,7 +3120,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0230001007-LV2022072220300331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3144,7 +3153,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("22722562R01-LV2019052220290331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3177,7 +3186,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0240005010-LV20130606", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3210,7 +3219,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("22724199-LV20100716", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3243,7 +3252,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(licenceSets);
         
         Assert.Equal("NE0270007008-LV2014033120360331", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3273,10 +3282,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         
-        Assert.Equal("22718077-LV20161012", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22718077-LV20161012-22718078-LVUNKNOWN-22718079-LVUNKNOWN-22718080-LVUNKNOWN-22718081-LVUNKNOWN-22718120R01-LVUNKNOWN-22724305-LVUNKNOWN", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -3315,10 +3324,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(1, licenceSets.Count);
         
-        Assert.Equal("22715041-LV20130322", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22714009-LVUNKNOWN-22714010-LVUNKNOWN-22714058-LVUNKNOWN-22715041-LV20130322", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];

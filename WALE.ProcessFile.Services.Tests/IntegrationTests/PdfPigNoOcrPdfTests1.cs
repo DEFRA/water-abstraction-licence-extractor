@@ -590,7 +590,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
+        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111-C6138", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates!);
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates![0].Limits);
@@ -726,8 +726,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(abstractionLimitsSection2.SubResults);
 
         var section2Sub1 = abstractionLimitsSection2.SubResults[0];
-        Assert.Equal(13, section2Sub1.SubResults.Count);
-            
+        Assert.Equal(14, section2Sub1.SubResults.Count);
+
         perHour = section2Sub1.SubResults
             .FirstOrDefault(subResult =>
                 subResult.MatchedLabel!.Format == "Number"
@@ -842,6 +842,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal(2, primaryLicence.LinkedLicences[2].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", primaryLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+        
+        Assert.True(primaryLicence.AbstractionLimits.Aggregates![0].ContainsLegalText);
     }
     
     [Fact]
@@ -2523,8 +2525,8 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.NotNull(licenceNumberResult);
         Assert.False(licenceNumberResult.IsOcr);
         Assert.Equal("25 68 001 249", licenceNumberResult.Text!.FirstOrDefault()?.Text);
-        
-        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -2535,7 +2537,10 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
             {
                 FileId = Guid.Parse("10000000-0000-0000-0000-000000000000"),
                 DmsPath = "main path"
-            })).Last();
+            });
+        
+        Assert.Equal(1, licenceSets.Count);
+        var agreedSchemaLicenceGroup = licenceSets.Last();
 
         Assert.NotNull(agreedSchemaLicenceGroup.Licences);
         Assert.Equal(3, agreedSchemaLicenceGroup.Licences.Length);
@@ -2605,7 +2610,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.NotNull(primaryLicence.AbstractionLimits.Aggregates!.Single());
         
         var aggregate = primaryLicence.AbstractionLimits.Aggregates!.Single();
-        Assert.Equal("2568001249-LV20190619-LL-2568001247-2568001248", aggregate.Id);
+        Assert.Equal("2568001249-LV20190619-LL-2568001247-2568001248-C173928", aggregate.Id);
         Assert.NotNull(aggregate.Limits);
         Assert.Equal(2, aggregate.Limits.Count);
         
@@ -2662,7 +2667,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
-        Assert.Equal(3, agreedSchemaLicenceGroup.AggregateSets[0].Aggregates.Length);
+        Assert.Single(agreedSchemaLicenceGroup.AggregateSets[0].Aggregates);
 
         // Need to update these for comparison
         agreedSchemaLicenceGroup.Licences[0].LicenceVersion.DmsFileIdStatusDateUtc = new DateTime(2001, 2, 3);

@@ -131,7 +131,7 @@ public static class JsOutputHelper
                     {
                         LicenceSetId = ls.LicenceSetId,
                         ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = ls.LicenceSetTypes,
+                        LicenceSetTypes = [ls.LicenceSetType],
                         LicenceSetType = licenceSetType
                     };
                 })

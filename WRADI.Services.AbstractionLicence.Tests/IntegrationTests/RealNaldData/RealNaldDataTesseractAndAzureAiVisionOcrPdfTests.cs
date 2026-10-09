@@ -21,6 +21,7 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
+using WRADI.Services.AbstractionLicence.Tests.Config;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -384,8 +385,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(2, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("2/27/22/395", licence.LicenceNumber!.Value);
@@ -470,6 +471,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         
         Assert.Equal(2, abstractionLicence.Count);
         Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(4, abstractionLicence.Last().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("2/27/10/112", licence.LicenceNumber!.Value);

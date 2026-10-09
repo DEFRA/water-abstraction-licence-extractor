@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using WRADI.Core.AbstractionLicence.Enums;
 
 namespace WRADI.Core.AbstractionLicence.Models;
@@ -59,7 +60,8 @@ public class LicenceSet
         }
     }
 
-    public LicenceSetType[] LicenceSetTypes { get; set; } = [];
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LicenceSetType LicenceSetType { get; set; }
     
     public AggregateSet[]? AggregateSets { get; set; } = [];
     

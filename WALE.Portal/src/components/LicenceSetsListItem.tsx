@@ -1,11 +1,11 @@
-import type {LicenceSet} from "../api/generated/apiClient.ts";
+import type {OutputListDataItemLicenceSet} from "../api/generated/apiClient.ts";
 import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
 interface LicenceSetsListItemProps {
     fileId: string | undefined;
     licenceId: number | undefined;
     matchesResultId: number | undefined;
-    licenceSet: LicenceSet;
+    licenceSet: OutputListDataItemLicenceSet;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
 }
 

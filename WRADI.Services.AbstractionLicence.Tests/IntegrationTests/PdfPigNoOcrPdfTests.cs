@@ -18,6 +18,7 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
+using WRADI.Services.AbstractionLicence.Tests.Config;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -131,8 +132,8 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(3, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("NE/027/0023/036", licence.LicenceNumber!.Value);

@@ -1,17 +1,14 @@
 {
   "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
   "shortLicenceSetId": "247-248-249",
-  "licenceSetTypes": [
-    "allLicencesExplicitlyReferencedAnywhere",
-    "allLicencesExplicitlyReferencedInLimits"
-  ],
+  "licenceSetType": "LicencesGroupedByAbstractionLimits",
   "aggregateSets": [
     {
-      "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+      "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
       "aggregates": [
         {
-          "id": "2568001249-LV20190619-LL-2568001247-2568001248",
-          "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+          "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
           "sourceLicenceNumber": "25/68/001/249",
           "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
@@ -19,6 +16,106 @@
             "25/68/001/247",
             "25/68/001/248"
           ],
+          "variations": [
+            {
+              "difference": "Different source licence / different order",
+              "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+              "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+              "sourceLicenceNumber": "25/68/001/247",
+              "sourceLicenceVersionId": "LV20190619",
+              "primaryType": "LicenceToLicence",
+              "linkedLicences": [
+                "25/68/001/248",
+                "25/68/001/249"
+              ],
+              "limits": [
+                {
+                  "periodType": "PerDay",
+                  "value": 475,
+                  "units": "cubic metres",
+                  "isAverage": false
+                },
+                {
+                  "periodType": "PerYear",
+                  "value": 173453,
+                  "units": "cubic metres",
+                  "isAverage": false
+                }
+              ],
+              "containedIn": [
+                {
+                  "source": "Document",
+                  "direction": "Outgoing",
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "ShallNotExceed",
+                  "lineNumber": 18,
+                  "pageNumber": 4
+                }
+              ],
+              "containsLegalText": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ],
+              "purposes": [
+                {
+                  "id": "4.1",
+                  "isImplicit": true
+                }
+              ]
+            },
+            {
+              "difference": "Different source licence / different order",
+              "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+              "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+              "sourceLicenceNumber": "25/68/001/248",
+              "sourceLicenceVersionId": "LV20190619",
+              "primaryType": "LicenceToLicence",
+              "linkedLicences": [
+                "25/68/001/247",
+                "25/68/001/249"
+              ],
+              "limits": [
+                {
+                  "periodType": "PerDay",
+                  "value": 475,
+                  "units": "cubic metres",
+                  "isAverage": false
+                },
+                {
+                  "periodType": "PerYear",
+                  "value": 173453,
+                  "units": "cubic metres",
+                  "isAverage": false
+                }
+              ],
+              "containedIn": [
+                {
+                  "source": "Document",
+                  "direction": "Outgoing",
+                  "sectionName": "AbstractionLimits",
+                  "linkReason": "ShallNotExceed",
+                  "lineNumber": 18,
+                  "pageNumber": 4
+                }
+              ],
+              "containsLegalText": false,
+              "points": [
+                {
+                  "id": "2.1",
+                  "isImplicit": true
+                }
+              ],
+              "purposes": [
+                {
+                  "id": "4.1",
+                  "isImplicit": true
+                }
+              ]
+            }
+          ],
           "limits": [
             {
               "periodType": "PerDay",
@@ -43,100 +140,7 @@
               "pageNumber": 4
             }
           ],
-          "points": [
-            {
-              "id": "2.1",
-              "isImplicit": true
-            }
-          ],
-          "purposes": [
-            {
-              "id": "4.1",
-              "isImplicit": true
-            }
-          ]
-        },
-        {
-          "id": "2568001247-LV20190619-LL-2568001248-2568001249",
-          "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "sourceLicenceNumber": "25/68/001/247",
-          "sourceLicenceVersionId": "LV20190619",
-          "primaryType": "LicenceToLicence",
-          "linkedLicences": [
-            "25/68/001/248",
-            "25/68/001/249"
-          ],
-          "limits": [
-            {
-              "periodType": "PerDay",
-              "value": 475,
-              "units": "cubic metres",
-              "isAverage": false
-            },
-            {
-              "periodType": "PerYear",
-              "value": 173453,
-              "units": "cubic metres",
-              "isAverage": false
-            }
-          ],
-          "containedIn": [
-            {
-              "source": "Document",
-              "direction": "Outgoing",
-              "sectionName": "AbstractionLimits",
-              "linkReason": "ShallNotExceed",
-              "lineNumber": 18,
-              "pageNumber": 4
-            }
-          ],
-          "points": [
-            {
-              "id": "2.1",
-              "isImplicit": true
-            }
-          ],
-          "purposes": [
-            {
-              "id": "4.1",
-              "isImplicit": true
-            }
-          ]
-        },
-        {
-          "id": "2568001248-LV20190619-LL-2568001247-2568001249",
-          "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "sourceLicenceNumber": "25/68/001/248",
-          "sourceLicenceVersionId": "LV20190619",
-          "primaryType": "LicenceToLicence",
-          "linkedLicences": [
-            "25/68/001/247",
-            "25/68/001/249"
-          ],
-          "limits": [
-            {
-              "periodType": "PerDay",
-              "value": 475,
-              "units": "cubic metres",
-              "isAverage": false
-            },
-            {
-              "periodType": "PerYear",
-              "value": 173453,
-              "units": "cubic metres",
-              "isAverage": false
-            }
-          ],
-          "containedIn": [
-            {
-              "source": "Document",
-              "direction": "Outgoing",
-              "sectionName": "AbstractionLimits",
-              "linkReason": "ShallNotExceed",
-              "lineNumber": 18,
-              "pageNumber": 4
-            }
-          ],
+          "containsLegalText": false,
           "points": [
             {
               "id": "2.1",
@@ -155,6 +159,7 @@
   ],
   "licences": [
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001249-LV20190619",
@@ -267,6 +272,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -283,14 +289,114 @@
         ],
         "aggregates": [
           {
-            "id": "2568001249-LV20190619-LL-2568001247-2568001248",
-            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
             "sourceLicenceNumber": "25/68/001/249",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/247",
               "25/68/001/248"
+            ],
+            "variations": [
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/247",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/248",
+                  "25/68/001/249"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              },
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/248",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/247",
+                  "25/68/001/249"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              }
             ],
             "limits": [
               {
@@ -316,6 +422,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -411,16 +518,8 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "SingleLicenceOnly"
-        },
-        {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
-        },
-        {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],
       "noneSchemaData": {
@@ -448,6 +547,7 @@
       }
     },
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001247-LV20190619",
@@ -560,6 +660,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -576,14 +677,114 @@
         ],
         "aggregates": [
           {
-            "id": "2568001247-LV20190619-LL-2568001248-2568001249",
-            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
             "sourceLicenceNumber": "25/68/001/247",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/248",
               "25/68/001/249"
+            ],
+            "variations": [
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/249",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/247",
+                  "25/68/001/248"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              },
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/248",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/247",
+                  "25/68/001/249"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              }
             ],
             "limits": [
               {
@@ -609,6 +810,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -702,16 +904,8 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "SingleLicenceOnly"
-        },
-        {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
-        },
-        {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],
       "noneSchemaData": {
@@ -739,6 +933,7 @@
       }
     },
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001248-LV20190619",
@@ -851,6 +1046,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -867,14 +1063,114 @@
         ],
         "aggregates": [
           {
-            "id": "2568001248-LV20190619-LL-2568001247-2568001249",
-            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+            "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+            "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
             "sourceLicenceNumber": "25/68/001/248",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
             "linkedLicences": [
               "25/68/001/247",
               "25/68/001/249"
+            ],
+            "variations": [
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/249",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/247",
+                  "25/68/001/248"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              },
+              {
+                "difference": "Different source licence / different order",
+                "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                "aggregateSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619-C173928",
+                "sourceLicenceNumber": "25/68/001/247",
+                "sourceLicenceVersionId": "LV20190619",
+                "primaryType": "LicenceToLicence",
+                "linkedLicences": [
+                  "25/68/001/248",
+                  "25/68/001/249"
+                ],
+                "limits": [
+                  {
+                    "periodType": "PerDay",
+                    "value": 475,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  },
+                  {
+                    "periodType": "PerYear",
+                    "value": 173453,
+                    "units": "cubic metres",
+                    "isAverage": false
+                  }
+                ],
+                "containedIn": [
+                  {
+                    "source": "Document",
+                    "direction": "Outgoing",
+                    "sectionName": "AbstractionLimits",
+                    "linkReason": "ShallNotExceed",
+                    "lineNumber": 18,
+                    "pageNumber": 4
+                  }
+                ],
+                "containsLegalText": false,
+                "points": [
+                  {
+                    "id": "2.1",
+                    "isImplicit": true
+                  }
+                ],
+                "purposes": [
+                  {
+                    "id": "4.1",
+                    "isImplicit": true
+                  }
+                ]
+              }
             ],
             "limits": [
               {
@@ -900,6 +1196,7 @@
                 "pageNumber": 4
               }
             ],
+            "containsLegalText": false,
             "points": [
               {
                 "id": "2.1",
@@ -993,16 +1290,8 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001249-LV20190619",
-          "licenceSetType": "SingleLicenceOnly"
-        },
-        {
           "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedAnywhere"
-        },
-        {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
-          "licenceSetType": "AllLicencesExplicitlyReferencedInLimits"
+          "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],
       "noneSchemaData": {

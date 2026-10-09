@@ -271,8 +271,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -715,8 +715,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(3, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -1759,8 +1759,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -1855,13 +1855,11 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService,
             NaldDataLookupService);
 
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Equal("283922427-LV19760114", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
-        Assert.Equal("283922217-LVUNKNOWN-283922427-LV19760114", agreedSchemaLicenceGroup[1].LicenceSetId);
-        Assert.Equal("217-427", agreedSchemaLicenceGroup[1].ShortLicenceSetId);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal("283922217-LVUNKNOWN-283922427-LV19760114", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
 
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("28/39/22/427", agreedSchemaLicence.LicenceNumber!.Value);

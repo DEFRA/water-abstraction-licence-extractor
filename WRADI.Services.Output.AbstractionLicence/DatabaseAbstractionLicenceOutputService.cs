@@ -62,13 +62,10 @@ public class DatabaseAbstractionLicenceOutputService(
                 processRunId);
         }
 
-        foreach (var licenceSetType in licenceSet.LicenceSetTypes)
-        {
-            await databaseWriteService.SaveLicenceSetTypeAsync(
-                licenceSetId,
-                (int)licenceSetType,
-                processRunId);
-        }
+        await databaseWriteService.SaveLicenceSetTypeAsync(
+            licenceSetId,
+            (int)licenceSet.LicenceSetType,
+            processRunId);
 
         if (licenceSet.AggregateSets == null)
         {
@@ -424,10 +421,10 @@ public class DatabaseAbstractionLicenceOutputService(
             licenceSet.Licences = licences
                 .ToArray();
 
-            licenceSet.LicenceSetTypes = allLicenceSetTypes
+            licenceSet.LicenceSetType = allLicenceSetTypes
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
                 .Select(lst => lst.Type)
-                .ToArray();
+                .FirstOrDefault();
 
             licenceSet.AggregateSets = allAggregateSets
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
@@ -476,7 +473,8 @@ public class DatabaseAbstractionLicenceOutputService(
             }
 
             licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId);
+            licenceSet.LicenceSetType = 
+                (await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId))[0];
             licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
 
             returnList.Add(licenceSet);
@@ -507,23 +505,21 @@ public class DatabaseAbstractionLicenceOutputService(
 
             foreach (var licenceSetLicence in licenceSetLicenceIds)
             {
-                var licence = new Licence
-                {
-                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber)
-                        ? new ValueWithConfidence<string>(
-                            licenceSetLicence.LicenceNumber,
-                            -1, // TODO
-                            -1) // TODO
-                        : null
-                };
-
-                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                var licence = await GetLicenceAsync(licenceSetLicence.LicenceId!.Value);
+                licence!.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                
                 licences.Add(licence);
             }
 
             licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetTypes = await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId);
+            licenceSet.LicenceSetType =
+                (await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId)).FirstOrDefault();
             licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
+
+            if (licenceSet.AggregateSets?.Length == 0)
+            {
+                licenceSet.AggregateSets = null;
+            }
 
             returnList.Add(licenceSet);
         }

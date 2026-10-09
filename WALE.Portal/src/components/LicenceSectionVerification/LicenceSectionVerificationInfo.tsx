@@ -13,7 +13,7 @@ export const LicenceSectionVerificationInfo = ({ verification }: LicenceSectionV
     const notes = isVerification ? verification.notes : undefined;
 
     return (
-        <div style={{ marginRight: 'auto', fontSize: '0.75rem', color: '#666', fontStyle: 'italic' }}>
+        <div style={{ marginRight: 'auto', fontSize: '0.75rem', color: '#666', fontStyle: 'italic', overflowWrap: 'anywhere' }}>
             <span style={{ 
                 fontSize: '0.85rem', 
                 color: getVerificationTypeColor(verificationType || ''), 

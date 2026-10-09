@@ -3,12 +3,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
-using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
@@ -188,7 +188,9 @@ public partial class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputH
 
         var fileService = new LocalFileService(folder);
         var cacheService = new FileSystemCacheService("Cache/");
-        var outputService = new FileSystemOutputService("Output/");
+
+        // Nothing here reads the rendered pages back, and writing them costs ~11 MB a document.
+        var outputService = new NoPersistenceOutputService();
 
         var pdfDataExtractor = new PdfDataExtractorService(
             new PdfPigNoOcrDataExtractorService(),
@@ -212,9 +214,14 @@ public partial class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputH
             skipFileIfMoreThenPages: 100,
             useLockExclusivity: false);
 
+        // The document's own file id, parsed out of the wq__{permit}__{fileId}.pdf name. A fresh
+        // Guid here would mint a new cache folder on every run rather than reusing one, which is
+        // what turned a few hundred documents into 16,549 folders and 197 GB.
+        var fileId = FileHelper.ExtractFileId(fileName) ?? Guid.NewGuid();
+
         var (_, _, matchesResult) = await pdfDataExtractor.GetMatchesAsync(
             fileName,
-            new DmsFileData { FileId = Guid.NewGuid() },
+            new DmsFileData { FileId = fileId },
             lookupConfiguration,
             [fileName],
             -1);

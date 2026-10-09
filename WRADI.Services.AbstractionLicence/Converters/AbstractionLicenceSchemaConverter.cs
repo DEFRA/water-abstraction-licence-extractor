@@ -1548,6 +1548,11 @@ public static class AbstractionLicenceSchemaConverter
         FlattenSubVariations(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
 
+        // Do these bits again
+        AddVariationsToLicenceAggregates(allLicences);
+        FlattenSubVariations(returnLicenceSets);
+        AddVariationsToLicenceAggregates(allLicences);
+        
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
                 ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
@@ -1748,39 +1753,61 @@ public static class AbstractionLicenceSchemaConverter
     {
         foreach (var licenceSet in licenceSets)
         {
-            if (licenceSet.AggregateSets == null)
+            if (licenceSet.AggregateSets != null)
             {
-                continue;
-            }
-            
-            foreach (var aggregateSet in licenceSet.AggregateSets!)
-            {
-                foreach (var aggregate in aggregateSet.Aggregates)
+                foreach (var aggregateSet in licenceSet.AggregateSets!)
                 {
-                    if (aggregate.Variations == null)
+                    foreach (var aggregate in aggregateSet.Aggregates)
                     {
-                        continue;
+                        FlattenSubVariations(aggregate);
                     }
+                }
+            }
 
-                    var newVariations = new List<AggregateVariation>();
-                    
-                    foreach (var variation in aggregate.Variations)
-                    {
-                        newVariations.Add(variation);
-                        
-                        if (variation.Variations == null)
-                        {
-                            continue;
-                        }
-                        
-                        newVariations.AddRange(variation.Variations);
-                        variation.Variations = null;
-                    }
+            foreach (var licence in licenceSet.Licences)
+            {
+                if (licence.AbstractionLimits.Aggregates == null)
+                {
+                    continue;
+                }
 
-                    aggregate.Variations = newVariations.Count >= 1 ? newVariations.ToArray() : null;
+                foreach (var aggregate in licence.AbstractionLimits.Aggregates!)
+                {
+                    FlattenSubVariations(aggregate);
                 }
             }
         }
+    }
+
+    private static void FlattenSubVariations(Aggregate aggregate)
+    {
+        if (aggregate.Variations == null)
+        {
+            return;
+        }
+
+        var newVariations = new List<AggregateVariation>();
+
+        foreach (var variation in aggregate.Variations)
+        {
+            newVariations.Add(variation);
+
+            if (variation.Variations == null)
+            {
+                continue;
+            }
+
+            newVariations.AddRange(variation.Variations);
+            variation.Variations = null;
+        }
+
+        newVariations = newVariations
+            .GroupBy(v => v.Id)
+            .Select(v => v.First())
+            .Where(v => v.Id != aggregate.Id)
+            .ToList();
+
+        aggregate.Variations = newVariations.Count >= 1 ? newVariations.ToArray() : null;
     }
 
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(

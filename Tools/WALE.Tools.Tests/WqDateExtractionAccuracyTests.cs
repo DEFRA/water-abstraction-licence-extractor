@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
@@ -8,6 +9,7 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.Formats;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.Tools._2ndHalf.Configuration;
@@ -49,7 +51,7 @@ namespace WALE.Tools.Tests;
 /// Skips with a message when the ground truth file or the corpus is absent, so an ordinary test
 /// run of the solution is unaffected.
 /// </summary>
-public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
+public partial class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
 {
     private static string CorpusFolder => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -79,8 +81,9 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
 
     private sealed record Scored(
         GroundTruthRow Truth,
-        DateTime? ExtractedIssued,
+        DateTime? ExtractedAuthorised,
         DateTime? ExtractedEffective,
+        DateTime? ExtractedStatusLogLatest,
         string? Error);
 
     private static List<GroundTruthRow> ReadGroundTruth()
@@ -126,13 +129,62 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
             : null;
     }
 
+    /// <summary>The three WRADI-415 dates for one document.</summary>
+    internal sealed record ExtractedDates(
+        DateTime? StatusLogLatest,
+        DateTime? EffectiveStart,
+        DateTime? Authorised,
+        bool EffectiveFromDateOfIssue);
+
+    /// <summary>
+    /// The one place the three dates are derived from a document. Shared with
+    /// WqDateCorpusExtractTests so the bulk extract and the measurement cannot drift apart - a rule
+    /// scored here is the rule that produced the CSV.
+    /// </summary>
+    internal static async Task<ExtractedDates> ExtractDatesAsync(string fileName, string folder)
+    {
+        var result = await ExtractAsync(fileName, folder);
+
+        if (result == null)
+        {
+            return new ExtractedDates(null, null, null, false);
+        }
+
+        var authorised = DateFromGroup(result, WqFormDateLabelConfiguration.AuthorisedDateLabelGroup);
+        var effective = DateFromGroup(result, WqFormDateLabelConfiguration.EffectiveStartDateLabelGroup);
+        var fromDateOfIssue = false;
+
+        // "The notice shall take effect from the date of issue" names no date, so the effective
+        // start date IS the authorised date. Substituting it knowingly is the document's own
+        // statement, not a guess.
+        if (effective == null
+            && authorised != null
+            && GroupMatched(result, WqFormDateLabelConfiguration.EffectiveOnIssueLabelGroup))
+        {
+            effective = authorised;
+            fromDateOfIssue = true;
+        }
+
+        // The status log lists rows out of date order in about one document in ten, so the latest
+        // entry is the maximum of the dates in the block, not its last row.
+        var statusLogDates = AllDatesIn(TextOfGroup(
+            result, WqFormDateLabelConfiguration.StatusLogLabelGroup));
+
+        return new ExtractedDates(
+            statusLogDates.Count > 0 ? statusLogDates.Max() : null,
+            effective,
+            authorised,
+            fromDateOfIssue);
+    }
+
     /// <summary>
     /// Runs the real extraction pipeline over one document, so the harness measures the same path
     /// production would use rather than a test-only shortcut.
     /// </summary>
-    private static async Task<MatchesResult?> ExtractAsync(string fileName)
+    private static async Task<MatchesResult?> ExtractAsync(string fileName, string? corpusFolder = null)
     {
-        var folder = CorpusFolder.EndsWith('/') ? CorpusFolder : CorpusFolder + "/";
+        var root = corpusFolder ?? CorpusFolder;
+        var folder = root.EndsWith('/') ? root : root + "/";
 
         var fileService = new LocalFileService(folder);
         var cacheService = new FileSystemCacheService("Cache/");
@@ -201,10 +253,54 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
         return null;
     }
 
+    /// <summary>Every line of text a label group captured.</summary>
+    private static List<string> TextOfGroup(MatchesResult result, string labelGroupName)
+    {
+        return result.Matches?
+            .Where(match => match.LabelGroupName == labelGroupName)
+            .SelectMany(match => match.Text ?? [])
+            .Select(line => line.Text)
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select(line => line!)
+            .ToList() ?? [];
+    }
+
     /// <summary>Whether a label group matched at all, regardless of what text it captured.</summary>
     private static bool GroupMatched(MatchesResult result, string labelGroupName)
     {
         return result.Matches?.Any(match => match.LabelGroupName == labelGroupName) == true;
+    }
+
+    /// <summary>
+    /// Every date in a block of text, used for the status log where the latest of them is wanted.
+    /// </summary>
+    private static List<DateTime> AllDatesIn(IEnumerable<string> lines)
+    {
+        var dates = new List<DateTime>();
+
+        foreach (var line in lines)
+        {
+            foreach (Match match in SlashedDateRegex().Matches(line))
+            {
+                if (DateTime.TryParseExact(match.Value, ["dd/MM/yyyy", "d/M/yyyy"],
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var slashed))
+                {
+                    dates.Add(slashed.Date);
+                }
+            }
+
+            foreach (Match match in WrittenDateRegex().Matches(line))
+            {
+                var written = Date.GetDateFromString(match.Value);
+
+                if (written != null)
+                {
+                    dates.Add(written.Value.Date);
+                }
+            }
+        }
+
+        return dates;
     }
 
     private static DateTime? FirstDateIn(string text)
@@ -230,11 +326,30 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         // The written form spans three tokens, so try the whole string too.
-        return DateTime.TryParseExact(text.Trim(), formats, CultureInfo.InvariantCulture,
-            DateTimeStyles.None, out var wholeLine)
-            ? wholeLine.Date
+        if (DateTime.TryParseExact(text.Trim(), formats, CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out var wholeLine))
+        {
+            return wholeLine.Date;
+        }
+
+        // Written and ordinal forms ("28 July 2015", "the 1st day of April 2009") go to the rule
+        // engine's own date parser, which already strips ordinal suffixes and handles month words.
+        var match = WrittenDateRegex().Match(text);
+
+        return match.Success
+            ? Date.GetDateFromString(match.Value)?.Date
             : null;
     }
+
+    [GeneratedRegex(@"\b\d{1,2}/\d{1,2}/\d{4}\b")]
+    private static partial Regex SlashedDateRegex();
+
+    /// <summary>
+    /// "28 July 2015" and the older "1st day of April 2009", with the ordinal suffix and the "day
+    /// of" wording both optional.
+    /// </summary>
+    [GeneratedRegex(@"\b\d{1,2}(?:st|nd|rd|th)?\s+(?:day\s+of\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", RegexOptions.IgnoreCase)]
+    private static partial Regex WrittenDateRegex();
 
     [Fact]
     public async Task WhenGroundTruthIsPresent_ThenWqDateExtractionIsScored()
@@ -265,32 +380,14 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
         {
             try
             {
-                var result = await ExtractAsync(row.FileName);
+                var dates = await ExtractDatesAsync(row.FileName, CorpusFolder);
 
-                if (result == null)
-                {
-                    scored.Add(new Scored(row, null, null, "no result"));
-                    continue;
-                }
-
-                var issuedDate = DateFromGroup(result, WqFormDateLabelConfiguration.IssuedDateLabelGroup);
-                var effectiveDate = DateFromGroup(result, WqFormDateLabelConfiguration.EffectiveDateLabelGroup);
-
-                // "The notice shall take effect from the date of issue" names no date, so the
-                // effective date is the issued one. Substituting it knowingly is the document's own
-                // statement, not a guess.
-                if (effectiveDate == null
-                    && issuedDate != null
-                    && GroupMatched(result, WqFormDateLabelConfiguration.EffectiveOnIssueLabelGroup))
-                {
-                    effectiveDate = issuedDate;
-                }
-
-                scored.Add(new Scored(row, issuedDate, effectiveDate, null));
+                scored.Add(new Scored(
+                    row, dates.Authorised, dates.EffectiveStart, dates.StatusLogLatest, null));
             }
             catch (Exception exception)
             {
-                scored.Add(new Scored(row, null, null, $"{exception.GetType().Name}: {exception.Message}"));
+                scored.Add(new Scored(row, null, null, null, $"{exception.GetType().Name}: {exception.Message}"));
             }
 
             if (scored.Count % 25 == 0)
@@ -301,11 +398,31 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
 
         // Assert
         var effective = Tally(scored, s => s.Truth.EffectiveDate, s => s.ExtractedEffective);
-        var issued = Tally(scored, s => s.Truth.IssuedDate, s => s.ExtractedIssued);
+        var issued = Tally(scored, s => s.Truth.IssuedDate, s => s.ExtractedAuthorised);
 
         testOutputHelper.WriteLine("");
-        testOutputHelper.WriteLine($"Effective date  {Describe(effective, scored.Count)}");
-        testOutputHelper.WriteLine($"Issued date     {Describe(issued, scored.Count)}");
+        testOutputHelper.WriteLine($"Effective start date  {Describe(effective, scored.Count)}");
+        testOutputHelper.WriteLine($"Authorised date       {Describe(issued, scored.Count)}");
+
+        // No ground truth exists for the status log date - the publishing log carries no such
+        // column - so it is reported as coverage plus a sanity check. A permit's own history cannot
+        // postdate its authorisation, so anything later than the authorised date means the block
+        // capture over-ran the table.
+        var statusLogFound = scored.Count(s => s.ExtractedStatusLogLatest != null);
+
+        var statusLogAfterAuthorised = scored.Count(s =>
+            s.ExtractedStatusLogLatest != null
+            && s.ExtractedAuthorised != null
+            && s.ExtractedStatusLogLatest > s.ExtractedAuthorised);
+
+        var statusLogEqualsAuthorised = scored.Count(s =>
+            s.ExtractedStatusLogLatest != null
+            && s.ExtractedStatusLogLatest == s.ExtractedAuthorised);
+
+        testOutputHelper.WriteLine(
+            $"Status log latest     found {statusLogFound} ({(double)statusLogFound / scored.Count:P0})  " +
+            $"same as authorised {statusLogEqualsAuthorised}  " +
+            $"later than authorised (suspect) {statusLogAfterAuthorised}  of {scored.Count}");
 
         var errors = scored.Count(s => s.Error != null);
 
@@ -376,7 +493,7 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
         Directory.CreateDirectory(folder);
 
         var results = new StringBuilder(
-            "fileName,permit,version,permitType,truthIssued,extractedIssued,truthEffective,extractedEffective,error\n");
+            "fileName,permit,version,permitType,truthAuthorised,extractedAuthorised,truthEffective,extractedEffective,extractedStatusLogLatest,error\n");
 
         var disagreements = new StringBuilder(
             "fileName,permit,version,permitType,field,truth,extracted\n");
@@ -389,9 +506,10 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
                 row.Truth.Version,
                 row.Truth.PermitType,
                 Show(row.Truth.IssuedDate),
-                Show(row.ExtractedIssued),
+                Show(row.ExtractedAuthorised),
                 Show(row.Truth.EffectiveDate),
                 Show(row.ExtractedEffective),
+                Show(row.ExtractedStatusLogLatest),
                 row.Error ?? string.Empty));
 
             if (row.ExtractedEffective != null && row.ExtractedEffective != row.Truth.EffectiveDate)
@@ -401,11 +519,11 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
                     "effective", Show(row.Truth.EffectiveDate), Show(row.ExtractedEffective)));
             }
 
-            if (row.ExtractedIssued != null && row.ExtractedIssued != row.Truth.IssuedDate)
+            if (row.ExtractedAuthorised != null && row.ExtractedAuthorised != row.Truth.IssuedDate)
             {
                 disagreements.AppendLine(string.Join(',',
                     row.Truth.FileName, row.Truth.Permit, row.Truth.Version, row.Truth.PermitType,
-                    "issued", Show(row.Truth.IssuedDate), Show(row.ExtractedIssued)));
+                    "authorised", Show(row.Truth.IssuedDate), Show(row.ExtractedAuthorised)));
             }
         }
 
@@ -413,5 +531,7 @@ public class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputHelper)
         await File.WriteAllTextAsync(Path.Combine(folder, "disagreements.csv"), disagreements.ToString());
     }
 
-    private static string Show(DateTime? value) => value?.ToString("yyyy-MM-dd") ?? string.Empty;
+    /// <summary>WRADI-415 asks for DD/MM/YYYY, so that is what the reports carry.</summary>
+    private static string Show(DateTime? value) =>
+        value?.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) ?? string.Empty;
 }

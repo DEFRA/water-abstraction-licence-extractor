@@ -276,6 +276,32 @@ public static class ReadSqlHelper
             return;
         }
 
+        if (string.Equals(
+                linkedLicencesType,
+                "NaldOnly",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    INNER JOIN licence_list_item_link_location link_location
+                        ON link_location.linked_licence_id =
+                           linked_licence.linked_licence_id
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                    GROUP BY linked_licence.linked_licence_id
+                    HAVING COUNT(*) = COUNT(*) FILTER (
+                        WHERE link_location.source = 'Nald'
+                    )
+                )
+                """);
+
+            return;
+        }
+
         parameters.Add(
             "LinkedLicencesType",
             linkedLicencesType.Trim());

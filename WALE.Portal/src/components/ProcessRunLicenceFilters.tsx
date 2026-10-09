@@ -64,6 +64,7 @@ export function ProcessRunLicenceFilters({
             issuer: undefined,
             meansFound: undefined,
             isLicenceNumberFlagged: undefined,
+            isIssueDateFlagged: undefined,
             linkedLicencesType: undefined,
             ShortLicenceSetId: undefined,
             verificationType: undefined
@@ -265,20 +266,25 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={!pendingQuery.issueYear ? "" : "filter-active"}
+                    className={!pendingQuery.issueYear && pendingQuery.isIssueDateFlagged === undefined ? "" : "filter-active"}
                     value={
-                        pendingQuery.issueYear === undefined
-                            ? ""
-                            : String(pendingQuery.issueYear)
+                        pendingQuery.isIssueDateFlagged
+                            ? "flagged"
+                            : pendingQuery.issueYear === undefined
+                                ? ""
+                                : String(pendingQuery.issueYear)
                     }
-                    onChange={e =>
-                        updatePendingQuery(
-                            "issueYear",
-                            e.target.value === "" ? undefined : Number(e.target.value)
-                        )
-                    }
+                    onChange={e => {
+                        const value = e.target.value;
+                        setPendingQuery(prev => ({
+                            ...prev,
+                            issueYear: value === "" || value === "flagged" ? undefined : Number(value),
+                            isIssueDateFlagged: value === "flagged" ? true : undefined
+                        }));
+                    }}
                 >
-                    <option value="">All years</option>
+                    <option value="">All</option>
+                    <option value="flagged">Flagged</option>
 
                     {issueDates?.map(year => (
                         <option key={year} value={year}>

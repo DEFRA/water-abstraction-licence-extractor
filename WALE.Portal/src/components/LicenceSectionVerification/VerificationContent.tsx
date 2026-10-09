@@ -6,6 +6,7 @@ import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {Aggregates} from "./Aggregates/Aggregates.tsx";
+import {DocumentInfo} from "./DocumentInfo.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -54,14 +55,8 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
-            <div id="simpleOverview" style={{ textAlign: 'right' }}>
-                <strong>Licence contains Aggregates (NALD):</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
-                <br/>
-                <strong>NALD Original Signature Date:</strong> {licence.licenceVersion?.naldOrigSignatureDate ? new Date(licence.licenceVersion.naldOrigSignatureDate).toLocaleDateString() : 'N/A'}
-                <br/>
-                <strong>Issue Date:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
-            </div>
-                
+            <DocumentInfo licence={licence} outputListDataItem={outputListDataItem} />
+
             <ul className="ul-links">
                 <li>
                     <a

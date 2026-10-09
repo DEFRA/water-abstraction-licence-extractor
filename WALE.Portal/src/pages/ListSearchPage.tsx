@@ -54,6 +54,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         issueYear: undefined,
         meansFound: undefined,
         isLicenceNumberFlagged: undefined,
+        isIssueDateFlagged: undefined,
         ShortLicenceSetId: '',
         linkedLicencesType: '',
         verificationType: undefined,
@@ -102,6 +103,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.issueYear +
                 currentQuery.meansFound +
                 currentQuery.isLicenceNumberFlagged +
+                currentQuery.isIssueDateFlagged +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
                 currentQuery.verificationType +
@@ -133,6 +135,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.issueYear,
                 currentQuery.meansFound,
                 currentQuery.isLicenceNumberFlagged,
+                currentQuery.isIssueDateFlagged,
                 currentQuery.ShortLicenceSetId,
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
@@ -185,6 +188,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     'N/A',
                     '',
                     0,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,

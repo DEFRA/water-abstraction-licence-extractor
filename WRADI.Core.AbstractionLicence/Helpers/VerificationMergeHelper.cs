@@ -8,7 +8,8 @@ public static class VerificationMergeHelper
 
     public static string GetVerificationWithNotes(LicenceSectionVerification verification)
     {
-        return $"{(string.IsNullOrWhiteSpace(verification.Notes) ? verification.VerificationType : $"{verification.VerificationType}::{verification.Notes}")}";
+        var typeWithProcessRun = $"{verification.VerificationType}::{verification.ProcessRunId}";
+        return string.IsNullOrWhiteSpace(verification.Notes) ? typeWithProcessRun : $"{typeWithProcessRun}::{verification.Notes}";
     }
     
     public static bool IsBusinessReviewWithNotes(string? verificationTypeWithNotes)

@@ -17,7 +17,6 @@ export function LicenceSectionVerificationHistory({ verification, children, init
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    const sectionName = verification.licenceSectionName || 'N/A';
     const verificationType = verification.verificationType || 'N/A';
     const notes = verification.notes;
     const date = verification.createdDateTimeUtc ? new Date(verification.createdDateTimeUtc).toLocaleDateString() : 'N/A';
@@ -44,12 +43,12 @@ export function LicenceSectionVerificationHistory({ verification, children, init
     return (
         <>
             <CollapsibleItem
-                variant="section"
+                variant="item"
                 defaultOpen={initialOpen}
                 summary={
                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                         <span style={isDeleted ? { textDecoration: 'line-through' } : undefined}>
-                            {sectionName} - <span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span>{verification.processRunId && (<> - PR {verification.processRunId}</>)}{itemId && (<> -  {itemId}</>)} - {date}
+                            <span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span>{verification.processRunId && (<> - PR {verification.processRunId}</>)}{itemId && (<> -  {itemId}</>)} - {date}
                         </span>
                         {isDeleted && (
                             <span style={{ marginLeft: '8px', color: '#666', fontStyle: 'italic' }}> {deletedLabel}</span>

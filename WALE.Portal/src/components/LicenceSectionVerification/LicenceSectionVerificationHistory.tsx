@@ -48,7 +48,7 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                 summary={
                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                         <span style={isDeleted ? { textDecoration: 'line-through' } : undefined}>
-<span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span>{itemId && (<> -  {itemId}</>)} - {date}
+                            <span style={{ color: getVerificationTypeColor(verificationType) }}>{verificationType}</span>{verification.processRunId && (<> - PR {verification.processRunId}</>)}{itemId && (<> -  {itemId}</>)} - {date}
                         </span>
                         {isDeleted && (
                             <span style={{ marginLeft: '8px', color: '#666', fontStyle: 'italic' }}> {deletedLabel}</span>

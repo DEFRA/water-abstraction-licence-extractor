@@ -5497,6 +5497,7 @@ export class Client {
      * @param issueYear (optional) 
      * @param meansFound (optional) 
      * @param isLicenceNumberFlagged (optional) 
+     * @param isIssueDateFlagged (optional) 
      * @param shortLicenceSetId (optional) 
      * @param linkedLicencesType (optional) 
      * @param verificationType (optional) 
@@ -5505,7 +5506,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -5562,6 +5563,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'isLicenceNumberFlagged' cannot be null.");
         else if (isLicenceNumberFlagged !== undefined)
             url_ += "IsLicenceNumberFlagged=" + encodeURIComponent("" + isLicenceNumberFlagged) + "&";
+        if (isIssueDateFlagged === null)
+            throw new globalThis.Error("The parameter 'isIssueDateFlagged' cannot be null.");
+        else if (isIssueDateFlagged !== undefined)
+            url_ += "IsIssueDateFlagged=" + encodeURIComponent("" + isIssueDateFlagged) + "&";
         if (shortLicenceSetId === null)
             throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
         else if (shortLicenceSetId !== undefined)
@@ -5632,6 +5637,7 @@ export class Client {
      * @param issueYear (optional) 
      * @param meansFound (optional) 
      * @param isLicenceNumberFlagged (optional) 
+     * @param isIssueDateFlagged (optional) 
      * @param shortLicenceSetId (optional) 
      * @param linkedLicencesType (optional) 
      * @param verificationType (optional) 
@@ -5640,7 +5646,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -5697,6 +5703,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'isLicenceNumberFlagged' cannot be null.");
         else if (isLicenceNumberFlagged !== undefined)
             url_ += "IsLicenceNumberFlagged=" + encodeURIComponent("" + isLicenceNumberFlagged) + "&";
+        if (isIssueDateFlagged === null)
+            throw new globalThis.Error("The parameter 'isIssueDateFlagged' cannot be null.");
+        else if (isIssueDateFlagged !== undefined)
+            url_ += "IsIssueDateFlagged=" + encodeURIComponent("" + isIssueDateFlagged) + "&";
         if (shortLicenceSetId === null)
             throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
         else if (shortLicenceSetId !== undefined)
@@ -7080,6 +7090,102 @@ export interface IContainedInInformation {
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
     pageNumber?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class CumulativeFilterCounts implements ICumulativeFilterCounts {
+    licenceNumbers?: number | undefined;
+    purposes?: number | undefined;
+    points?: number | undefined;
+    absLimits?: number | undefined;
+    aggregates?: number | undefined;
+    scans?: number | undefined;
+    issueDates?: number | undefined;
+    issuers?: number | undefined;
+    meansOfAbs?: number | undefined;
+    linkedLicences?: number | undefined;
+    licenceSets?: number | undefined;
+    status?: number | undefined;
+    licenceSectionVerifications?: number | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ICumulativeFilterCounts) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumbers = _data["licenceNumbers"];
+            this.purposes = _data["purposes"];
+            this.points = _data["points"];
+            this.absLimits = _data["absLimits"];
+            this.aggregates = _data["aggregates"];
+            this.scans = _data["scans"];
+            this.issueDates = _data["issueDates"];
+            this.issuers = _data["issuers"];
+            this.meansOfAbs = _data["meansOfAbs"];
+            this.linkedLicences = _data["linkedLicences"];
+            this.licenceSets = _data["licenceSets"];
+            this.status = _data["status"];
+            this.licenceSectionVerifications = _data["licenceSectionVerifications"];
+        }
+    }
+
+    static fromJS(data: any): CumulativeFilterCounts {
+        data = typeof data === 'object' ? data : {};
+        let result = new CumulativeFilterCounts();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumbers"] = this.licenceNumbers;
+        data["purposes"] = this.purposes;
+        data["points"] = this.points;
+        data["absLimits"] = this.absLimits;
+        data["aggregates"] = this.aggregates;
+        data["scans"] = this.scans;
+        data["issueDates"] = this.issueDates;
+        data["issuers"] = this.issuers;
+        data["meansOfAbs"] = this.meansOfAbs;
+        data["linkedLicences"] = this.linkedLicences;
+        data["licenceSets"] = this.licenceSets;
+        data["status"] = this.status;
+        data["licenceSectionVerifications"] = this.licenceSectionVerifications;
+        return data;
+    }
+}
+
+export interface ICumulativeFilterCounts {
+    licenceNumbers?: number | undefined;
+    purposes?: number | undefined;
+    points?: number | undefined;
+    absLimits?: number | undefined;
+    aggregates?: number | undefined;
+    scans?: number | undefined;
+    issueDates?: number | undefined;
+    issuers?: number | undefined;
+    meansOfAbs?: number | undefined;
+    linkedLicences?: number | undefined;
+    licenceSets?: number | undefined;
+    status?: number | undefined;
+    licenceSectionVerifications?: number | undefined;
 
     [key: string]: any;
 }
@@ -9713,6 +9819,9 @@ export class OutputListDataItem implements IOutputListDataItem {
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
+    naldOrigSignatureDate?: string | undefined;
+    naldSignatureDate?: string | undefined;
+    isIssueDateFlagged?: boolean;
     issuer?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
@@ -9767,6 +9876,9 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
             this.issueDate = _data["issueDate"];
+            this.naldOrigSignatureDate = _data["naldOrigSignatureDate"];
+            this.naldSignatureDate = _data["naldSignatureDate"];
+            this.isIssueDateFlagged = _data["isIssueDateFlagged"];
             this.issuer = _data["issuer"];
             this.meansFound = _data["meansFound"];
             this.status = _data["status"];
@@ -9831,6 +9943,9 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
         data["issueDate"] = this.issueDate;
+        data["naldOrigSignatureDate"] = this.naldOrigSignatureDate;
+        data["naldSignatureDate"] = this.naldSignatureDate;
+        data["isIssueDateFlagged"] = this.isIssueDateFlagged;
         data["issuer"] = this.issuer;
         data["meansFound"] = this.meansFound;
         data["status"] = this.status;
@@ -9872,6 +9987,9 @@ export interface IOutputListDataItem {
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
+    naldOrigSignatureDate?: string | undefined;
+    naldSignatureDate?: string | undefined;
+    isIssueDateFlagged?: boolean;
     issuer?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
@@ -10733,6 +10851,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
     issuers?: string[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
+    cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
 
     [key: string]: any;
 
@@ -10775,6 +10894,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 for (let item of _data["licenceSetIds"])
                     this.licenceSetIds!.push(item);
             }
+            this.cumulativeFilterCounts = _data["cumulativeFilterCounts"] ? CumulativeFilterCounts.fromJS(_data["cumulativeFilterCounts"]) : undefined as any;
         }
     }
 
@@ -10812,6 +10932,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.licenceSetIds)
                 data["licenceSetIds"].push(item);
         }
+        data["cumulativeFilterCounts"] = this.cumulativeFilterCounts ? this.cumulativeFilterCounts.toJSON() : undefined as any;
         return data;
     }
 }
@@ -10822,6 +10943,7 @@ export interface IProcessRunResponse {
     issuers?: string[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
+    cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
 
     [key: string]: any;
 }
@@ -12219,6 +12341,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
     currentVerificationsCount?: number | undefined;
     currentVerificationsBackupCount?: number | undefined;
     currentVerificationsBackupVersion?: number | undefined;
+    latestBackupVersionDate?: Date | undefined;
 
     [key: string]: any;
 
@@ -12240,6 +12363,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
             this.currentVerificationsCount = _data["currentVerificationsCount"];
             this.currentVerificationsBackupCount = _data["currentVerificationsBackupCount"];
             this.currentVerificationsBackupVersion = _data["currentVerificationsBackupVersion"];
+            this.latestBackupVersionDate = _data["latestBackupVersionDate"] ? new Date(_data["latestBackupVersionDate"].toString()) : undefined as any;
         }
     }
 
@@ -12259,6 +12383,7 @@ export class VerificationDataStatus implements IVerificationDataStatus {
         data["currentVerificationsCount"] = this.currentVerificationsCount;
         data["currentVerificationsBackupCount"] = this.currentVerificationsBackupCount;
         data["currentVerificationsBackupVersion"] = this.currentVerificationsBackupVersion;
+        data["latestBackupVersionDate"] = this.latestBackupVersionDate ? this.latestBackupVersionDate.toISOString() : undefined as any;
         return data;
     }
 }
@@ -12267,6 +12392,7 @@ export interface IVerificationDataStatus {
     currentVerificationsCount?: number | undefined;
     currentVerificationsBackupCount?: number | undefined;
     currentVerificationsBackupVersion?: number | undefined;
+    latestBackupVersionDate?: Date | undefined;
 
     [key: string]: any;
 }

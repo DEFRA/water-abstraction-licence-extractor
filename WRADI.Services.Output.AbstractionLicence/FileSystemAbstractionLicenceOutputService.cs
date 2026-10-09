@@ -64,7 +64,12 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return File.WriteAllTextAsync(jsListFilePath, "var data = " +
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
-    
+
+    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
@@ -161,7 +166,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         throw new NotImplementedException();
     }

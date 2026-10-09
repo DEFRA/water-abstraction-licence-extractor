@@ -29,7 +29,7 @@ export function RefreshLicenceListData({
             await client.updateLicenceListProcessRun(processRunId);
 
             setSuccessMessage(
-                `Refresh Licence List Data process started successfully for process run ${processRunId}.`
+                `Refresh Licence List Data process completed successfully for process run ${processRunId}.`
             );
         } catch (err) {
             const message =

@@ -1,5 +1,5 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import { getVerificationWithNotesFirstPart, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import { getVerificationWithNotesFirstPart, getVerificationWithNotesTooltip, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
@@ -36,7 +36,12 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 <strong>File:</strong> {(item.aggregatesCount ?? 0) > 0 ? "True" : "False"} ({dashesIfNull(item.aggregatesCount)})
                 <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
             <td>{(item.ocr ? "True" : "False")}</td>
-            <td>{dashesIfNullOrEmpty(item.issueDate)}</td>
+            <td>
+                <strong>Doc:</strong><br /> {dashesIfNullOrEmpty(item.issueDate)}
+                {item.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
+                <br /><strong>Nald:</strong><br /> {dashesIfNullOrEmpty(item.naldSignatureDate)}
+                <br /><strong>Nald OG:</strong><br /> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
+            </td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
             <td>
@@ -70,7 +75,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                     {(v.verificationTypesWithNotes?.length
                                                         ? v.verificationTypesWithNotes
                                                         : v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                        <span key={idx} title={vt.replace('::', ' #') ?? ''} style={{
+                                                        <span key={idx} title={getVerificationWithNotesTooltip(vt)} style={{
                                                             backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',
                                                             fontSize: '0.7em',

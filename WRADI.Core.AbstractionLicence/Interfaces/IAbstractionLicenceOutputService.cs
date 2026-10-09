@@ -42,7 +42,7 @@ public interface IAbstractionLicenceOutputService
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take);
     
-    Task<int> GetCurrentVerificationsBackupVersionAsync();
+    Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync();
     Task<int> GetCurrentVerificationsCountAsync();
     Task<int> GetCurrentBackupVerificationsCountAsync();
     Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
@@ -65,6 +65,8 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
 
     Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId);
+    
+    Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync();
     
     Task FinishProcessRunAsync(ProcessRun processRun);
 

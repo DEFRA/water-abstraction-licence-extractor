@@ -218,6 +218,15 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             .map(ll => ll.licenceNumber)
             .filter((n): n is string => !!n);
 
+        // Aggregate points/purposes carry only ids; descriptions live on the licence's top-level lists.
+        const sourceLicence = scrapedView ? licence : currentLicence;
+        const pointDescriptions = new Map((sourceLicence?.points ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+        const purposeDescriptions = new Map((sourceLicence?.purposes ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+
         return (
             <div className="aggregates-container" style={{padding: '8px'}}>
                 <div className="aggregates-list">
@@ -262,7 +271,9 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                     )}
                     {!isLoading && !error && aggregates
                         .map((_, i) => i)
-                        .sort((a, b) => compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
+                        .sort((a, b) =>
+                            compareAlphanumeric(aggregates[a].documentIdentifier, aggregates[b].documentIdentifier)
+                            || compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
                         .map((index) => {
                             const aggregate = aggregates[index];
                             const itemId = aggregateIds[index];
@@ -272,6 +283,8 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     aggregate={aggregate}
                                     itemId={itemId}
                                     linkedLicenceOptions={linkedLicenceOptions}
+                                    pointDescriptions={pointDescriptions}
+                                    purposeDescriptions={purposeDescriptions}
                                     isEditing={editingIndex === index && !isWaitingForVerification}
                                     isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                     onUpdate={(updated) => handleUpdateAggregate(index, updated)}

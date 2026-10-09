@@ -266,7 +266,7 @@ public class FileDataController(
 
         if (result != 0)
         {
-            await RefreshLicenceListData(verification);
+           FireAndForgetDataRefresh(verification);
         }
 
         return Ok(result);
@@ -281,12 +281,26 @@ public class FileDataController(
 
         if (result != 0)
         {
-            await RefreshLicenceListData(verification);
+            FireAndForgetDataRefresh(verification);
         }
 
         return Ok(result);
     }
-
+    private void FireAndForgetDataRefresh(LicenceSectionVerification verification)
+    {
+        _ = Task.Run((Func<Task?>)(async () =>
+        {
+            try
+            {
+                await RefreshLicenceListData(verification);
+            }
+            catch
+            {
+                // intentionally swallowed
+            }
+        }));
+    }
+    
     private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();

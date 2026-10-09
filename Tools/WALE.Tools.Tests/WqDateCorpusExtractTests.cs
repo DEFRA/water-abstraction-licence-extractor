@@ -23,9 +23,29 @@ namespace WALE.Tools.Tests;
 /// says whether the rules are any good, on the 206 documents where ground truth exists. Here every
 /// document is processed and nothing is scored.
 ///
+/// COLUMNS. fileName, permitNumber and fileId all come off the filename, which follows the
+/// wq__{permit}__{fileId}.pdf ingestion convention; the permit keeps whatever form the filename
+/// used, so normalising it for a join against ReSP is the caller's business. The three dates are
+/// DD/MM/YYYY as WRADI-415 asks, blank where not found.
+///
+/// effectiveDateSource says where the effective start date came from, and matters more than it
+/// looks:
+/// <list type="bullet">
+/// <item>"explicit" - the document stated a date after "The notice shall take effect from".</item>
+/// <item>"dateOfIssue" - the document said it takes effect from the date of issue and named no
+/// date, so the authorised date was copied into it.</item>
+/// <item>blank - no effective start date was found.</item>
+/// </list>
+/// Every "dateOfIssue" row therefore has effectiveStartDate equal to authorisedDate by
+/// construction. Without the flag a reader comparing those two columns would see them agree and
+/// take it as two independent readings corroborating each other, when it is one date printed
+/// twice. That is easy to do here because 89% of the "explicit" rows agree as well - but those
+/// agree because two separate places in the document say the same thing, which is a different
+/// claim entirely.
+///
 /// The CSV is written incrementally, so a run that is stopped part way still leaves a usable file
-/// covering everything processed so far. Roughly a second a document, so the full corpus of ~10,300
-/// takes a few hours; set <see cref="MaxDocuments"/> to sample instead.
+/// covering everything processed so far. Set <see cref="MaxDocuments"/> to sample instead of
+/// running the lot; the full corpus takes about 15 minutes cold and under 3 on a warm cache.
 ///
 /// Skips with a message when the corpus folder is absent, so an ordinary test run of the solution
 /// is unaffected.
@@ -96,7 +116,8 @@ public class WqDateCorpusExtractTests(ITestOutputHelper testOutputHelper)
                 statusLog = result.StatusLogLatest;
                 effective = result.EffectiveStart;
                 authorised = result.Authorised;
-                // Blank when there is no effective date to describe the source of.
+                // Blank when there is no effective date whose source could be described. See the
+                // class summary for why this column exists at all.
                 effectiveSource = effective == null
                     ? string.Empty
                     : result.EffectiveFromDateOfIssue ? "dateOfIssue" : "explicit";

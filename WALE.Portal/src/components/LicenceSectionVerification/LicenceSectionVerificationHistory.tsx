@@ -69,7 +69,8 @@ export function LicenceSectionVerificationHistory({ verification, children, init
                             borderTop: '1px dashed #eee',
                             fontSize: '0.8rem',
                             color: '#666',
-                            textAlign: 'right'
+                            textAlign: 'right',
+                            overflowWrap: 'anywhere'
                         }}
                     >
                         {notes && (<span>Notes: {notes}<br/></span>)}

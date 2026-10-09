@@ -159,6 +159,7 @@
   ],
   "licences": [
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001249-LV20190619",
@@ -546,6 +547,7 @@
       }
     },
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001247-LV20190619",
@@ -1031,6 +1033,7 @@
       }
     },
     {
+      "processRunId": 0,
       "licenceId": 0,
       "matchesResultId": -1,
       "id": "2568001248-LV20190619",

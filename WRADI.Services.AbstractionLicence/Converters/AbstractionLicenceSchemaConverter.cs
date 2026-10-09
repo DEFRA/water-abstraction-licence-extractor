@@ -1466,9 +1466,6 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
-        var licencesExplicitlyMentionedInLimits = false;
-        var allLicencesReferencedInLimits = new List<Licence>();
-
         foreach (var licence in allLicences)
         {
             if (licence.AbstractionLimits.Aggregates == null)
@@ -1560,8 +1557,7 @@ public static class AbstractionLicenceSchemaConverter
             returnLicenceSets,
             primaryLicence,
             allLicences,
-            licencesGroupedByAbstractionLimitsLicenceSets,
-            allLicencesReferencedInLimits);
+            licencesGroupedByAbstractionLimitsLicenceSets);
         
         foreach (var licence in allLicences)
         {
@@ -1603,17 +1599,17 @@ public static class AbstractionLicenceSchemaConverter
         List<LicenceSet> licenceSets,
         Licence primaryLicence,
         List<Licence> allLicences,
-        List<LicenceSet> explicitlyReferencedLimitsLicenceSets,
-        List<Licence> licencesReferencedInLimits)
+        List<LicenceSet> explicitlyReferencedLimitsLicenceSets)
     {
-        var licenceSetInLimits = licenceSets.FirstOrDefault(ls =>
-            ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits);
+        var licenceSetsInLimits = licenceSets
+            .Where(ls => ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
+            .ToList();
 
-        if (explicitlyReferencedLimitsLicenceSets.Count == 0 || licenceSetInLimits == null)
+        if (explicitlyReferencedLimitsLicenceSets.Count == 0 || licenceSetsInLimits.Count == 0)
         {
             return;
         }
-        
+
         var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
             .Where(linkedLicence =>
                 linkedLicence.ContainedIn?.Any(ci =>
@@ -1625,26 +1621,29 @@ public static class AbstractionLicenceSchemaConverter
             .Select(ln => ln!)
             .ToList();
 
-        if (licencesReferencedInLimits.Any())
-        {
-            updatedLicencesReferencedInLimits.Insert(0, primaryLicence);
-        }
-
+        var allLicenceSetInLimitsLicences = licenceSetsInLimits
+            .SelectMany(ls => ls.Licences)
+            .ToList();
+        
         var missingLicences = updatedLicencesReferencedInLimits
-            .Where(l => licenceSetInLimits.Licences.All(
+            .Where(l => allLicenceSetInLimitsLicences.All(
                 ll => l.LicenceNumber?.Value != ll.LicenceNumber?.Value))
             .ToList();
-
+        
         if (missingLicences.Count < 1)
         {
             return;
         }
+
+        // Just add them to the first group, as we don't know which to add them to - this logic might need
+        // revisting/expanding in future
+        var firstLicenceSetInLimits = licenceSetsInLimits[0]; 
         
         var newLicences = new List<Licence>();
-        newLicences.AddRange(licenceSetInLimits.Licences);
+        newLicences.AddRange(firstLicenceSetInLimits.Licences);
         newLicences.AddRange(missingLicences);
                 
-        licenceSetInLimits.Licences = newLicences.ToArray();
+        firstLicenceSetInLimits.Licences = newLicences.ToArray();
     }
 
     private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)

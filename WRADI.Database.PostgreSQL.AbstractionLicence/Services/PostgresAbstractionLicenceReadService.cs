@@ -1479,7 +1479,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.Select(r => (r.LicenceSetId, (LicenceSetType)r.LicenceSetType)).ToList();
     }
 
-    public async Task<AggregateSet[]?> GetAggregateSets(int licenceSetId)
+    public async Task<Aggregate[]?> GetAggregateSets(int licenceSetId)
     {
         await using var connection = GetPostgresConnection();
         /*const string sql = """
@@ -1495,7 +1495,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return [];
     }
 
-    public async Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(
+    public async Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(
         int processRunId)
     {
         await using var connection = GetPostgresConnection();

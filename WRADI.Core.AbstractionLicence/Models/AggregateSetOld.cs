@@ -3,7 +3,7 @@ using WALE.ProcessFile.Core.Helpers;
 
 namespace WRADI.Core.AbstractionLicence.Models;
 
-public class AggregateSet
+public class AggregateSetOld
 {
     public string SetAggregateSetId(IReadOnlyList<Licence> allLicences)
     {

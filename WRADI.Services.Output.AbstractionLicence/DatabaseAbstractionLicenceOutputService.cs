@@ -72,12 +72,14 @@ public class DatabaseAbstractionLicenceOutputService(
             return;
         }
 
+        // TODO RY i think this is wrong
+        
         foreach (var aggregateSet in licenceSet.AggregateSets)
         {
             await databaseWriteService.SaveAggregateSetAsync(
                 licenceSetId,
                 aggregateSet.AggregateSetId,
-                JsonSerializer.Serialize(aggregateSet.Aggregates, JsonHelper.GetSerializerOptions()),
+                JsonSerializer.Serialize(aggregateSet, JsonHelper.GetSerializerOptions()),
                 processRunId);
         }
     }
@@ -423,7 +425,7 @@ public class DatabaseAbstractionLicenceOutputService(
 
             licenceSet.AggregateSets = allAggregateSets
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                .Select(lst => lst.AggregateSet)
+                .SelectMany(lst => lst.AggregateSet)
                 .ToArray();
 
             returnList.TryAdd(licenceSet.LicenceSetId, licenceSet);

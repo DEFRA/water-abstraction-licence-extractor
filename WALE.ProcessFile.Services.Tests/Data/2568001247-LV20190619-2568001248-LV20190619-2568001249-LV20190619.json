@@ -1,5 +1,5 @@
 {
-  "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+  "licenceSetId": "2568001247-2568001248-2568001249",
   "shortLicenceSetId": "247-248-249",
   "licenceSetType": "LicencesGroupedByAbstractionLimits",
   "aggregateSets": [
@@ -518,7 +518,7 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetId": "2568001247-2568001248-2568001249",
           "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],
@@ -904,7 +904,7 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetId": "2568001247-2568001248-2568001249",
           "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],
@@ -1290,7 +1290,7 @@
       ],
       "licenceSets": [
         {
-          "licenceSetId": "2568001247-LV20190619-2568001248-LV20190619-2568001249-LV20190619",
+          "licenceSetId": "2568001247-2568001248-2568001249",
           "licenceSetType": "LicencesGroupedByAbstractionLimits"
         }
       ],

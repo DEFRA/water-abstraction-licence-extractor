@@ -348,7 +348,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(new DateTime(1968, 05, 15), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2022, 07, 05), agreedSchemaLicence.LicenceVersion.IssueDate);
 
-        Assert.Equal("12504059-LV20220705", agreedSchemaLicenceGroup.Last().LicenceSetId);
+        Assert.Equal("12504059", agreedSchemaLicenceGroup.Last().LicenceSetId);
 
         Assert.NotNull(agreedSchemaLicenceGroup.Last().Licences);
         Assert.Single(agreedSchemaLicenceGroup.Last().Licences);

@@ -14,19 +14,22 @@ export function LicenceNumberFlagTag({reason}: LicenceNumberFlagTagProps) {
     }
 
     return (
-        <span title={reason} style={{
-            backgroundColor: tag.backgroundColor,
-            color: "white",
-            fontSize: "0.7em",
-            padding: "2px 5px",
-            borderRadius: "3px",
-            marginLeft: "5px",
-            verticalAlign: "middle",
-            fontWeight: "bold",
-            fontFamily: "sans-serif"
-        }}>
-            {tag.label}
-        </span>
+        <>
+            {" "}
+            <span title={reason} style={{
+                backgroundColor: tag.backgroundColor,
+                color: "white",
+                fontSize: "0.7em",
+                padding: "2px 5px",
+                borderRadius: "3px",
+                verticalAlign: "middle",
+                fontWeight: "bold",
+                fontFamily: "sans-serif",
+                whiteSpace: "nowrap"
+            }}>
+                {tag.label}
+            </span>
+        </>
     );
 }
 

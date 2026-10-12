@@ -7,4 +7,6 @@ public class WrInspectionReportAddress
     public string? TelephoneNumber { get; set; }
     
     public string? SiteAddress { get; set; }
+
+    public string? Email { get; set; }
 }

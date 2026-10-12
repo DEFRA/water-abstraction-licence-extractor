@@ -16,7 +16,10 @@ public static class WrInspectionReportReportBuilder
         nameof(WrInspectionReportCsvLine.InspectionDate__RawTime),
         nameof(WrInspectionReportCsvLine.MeasurementDetails__DateOfCertificateOrRecord__RawDate),
         nameof(WrInspectionReportCsvLine.InspectionDate__Year),
-        nameof(WrInspectionReportCsvLine.Metadata__DocumentTemplateVerison)
+        nameof(WrInspectionReportCsvLine.Metadata__DocumentTemplateVerison),
+        nameof(WrInspectionReportCsvLine.LicenceConditionsRaw),
+        nameof(WrInspectionReportCsvLine.NonCompliancesRaw),
+        nameof(WrInspectionReportCsvLine.ActionsRaw)
     };
 
     public static byte[] BuildCsv(IEnumerable<WrInspectionReportCsvLine> lines, bool excludeInternalColumns = false)

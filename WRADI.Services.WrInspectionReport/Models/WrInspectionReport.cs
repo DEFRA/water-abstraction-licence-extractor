@@ -34,4 +34,17 @@ public class WrInspectionReport
     public List<string> Images { get; set; } = [];
     
     public string? GeneralComments { get; set; }
+
+    public string? LicenceCriticality { get; set; }
+
+    public string? EnforcementResponse { get; set; }
+
+    // v3 replaces v1's provisions grid with a condition-and-outcome list, and adds
+    // non-compliance and action tables. Every sample is an unfilled dropdown, so the row shape
+    // is unverified and these hold the raw capture until a filled example exists.
+    public string? LicenceConditionsRaw { get; set; }
+
+    public string? NonCompliancesRaw { get; set; }
+
+    public string? ActionsRaw { get; set; }
 }

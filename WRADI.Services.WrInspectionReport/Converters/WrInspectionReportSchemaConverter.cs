@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Models;
+using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.DocumentType.WrInspectionReport.Converters;
 
@@ -20,6 +21,16 @@ public static class WrInspectionReportSchemaConverter
         DmsFileData? dmsFileData,
         WrTemplateType? knownTemplate = null)
     {
+        // v3 writes its own field names, so without this every shared field below reads back
+        // empty. Off the marker as well as knownTemplate: callers reading a stored result do not
+        // always pass one. Mutates matchesResult, additively, so a second call is a no-op.
+        if (knownTemplate == WrTemplateType.V3
+            || !string.IsNullOrWhiteSpace(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3)))
+        {
+            WrInspectionV3SharedFieldMapper.Apply(matchesResult);
+        }
+
         var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
 
         DateOnly? formDate = null;
@@ -333,7 +344,8 @@ public static class WrInspectionReportSchemaConverter
             {
                 NameAndAddress = nameAndAddress,
                 TelephoneNumber = CollapseSpacedDigits(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TelephoneNumber)),
-                SiteAddress = siteAddress
+                SiteAddress = siteAddress,
+                Email = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3SiteContactEmail)
             },
             MetWith = new WrInspectionReportMetWith()
             {
@@ -345,7 +357,8 @@ public static class WrInspectionReportSchemaConverter
             {
                 DateTime = inspectionDateTime,
                 RawDate = rawInspectionDate,
-                RawTime = rawInspectionTime
+                RawTime = rawInspectionTime,
+                RawEndTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3InspectionEndTime)
             },
             LicenceProvisions = new WrInspectionReportLicenceProvisions
             {
@@ -394,7 +407,16 @@ public static class WrInspectionReportSchemaConverter
                 WhereKept = whereKept
             },
             GeneralComments = GetMultilineText(matchesResult, WrInspectionReportFieldNames.GeneralComments),
-            Images = images
+            Images = images,
+            LicenceCriticality = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3LicenceCriticality),
+            EnforcementResponse = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3EnforcementResponse)),
+            LicenceConditionsRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3LicenceConditionsBlock)),
+            NonCompliancesRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3NonCompliancesBlock)),
+            ActionsRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3ActionsBlock))
         };
     }
 

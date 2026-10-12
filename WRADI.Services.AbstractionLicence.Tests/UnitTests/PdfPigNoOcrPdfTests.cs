@@ -472,7 +472,7 @@ public class PdfPigNoOcrPdfTests
         // Check aggregate sets
         Assert.NotNull(licenceSets[0].AggregateSets!);
         Assert.Single(licenceSets[0].AggregateSets!);
-        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C90", licenceSets[0].AggregateSets[0].AggregateSetId);
+        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C0", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Equal(2, licenceSets[0].AggregateSets.Length);
         Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C90", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licenceSets[0].AggregateSets[0].Id);
@@ -886,8 +886,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence3.LicenceSets[0].LicenceSetType);
         
         // Check aggregate sets
-        Assert.NotNull(licenceSets[0].AggregateSets!);
-        Assert.Equal(2, licenceSets[0].AggregateSets!.Length);
+        Assert.NotNull(licenceSets[0].AggregateSets);
+        Assert.Single(licenceSets[0].AggregateSets!);
         Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C30", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Single(licenceSets[0].AggregateSets);
         Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C30", licenceSets[0].AggregateSets[0].AggregateSetId);
@@ -911,6 +911,32 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(2, licenceSets[0].AggregateSets[0].Variations![1].LinkedLicences!.Length);
         Assert.Single(licenceSets[0].AggregateSets[0].Variations![1].Limits);
         Assert.Equal(30, licenceSets[0].AggregateSets[0].Variations![1].Limits[0].Value);
+        
+        Assert.NotNull(licenceSets[1].AggregateSets);
+        Assert.Single(licenceSets[1].AggregateSets!);
+        Assert.Equal("10101001-LVUNKNOWN-10101004-LVUNKNOWN-10101005-LVUNKNOWN-C60", licenceSets[1].AggregateSets[0].AggregateSetId);
+        Assert.Single(licenceSets[1].AggregateSets);
+        Assert.Equal("10101001-LVUNKNOWN-10101004-LVUNKNOWN-10101005-LVUNKNOWN-C60", licenceSets[1].AggregateSets[0].AggregateSetId);
+        Assert.Equal("10101001-LVUNKNOWN-LL-10101004-10101005-C60", licenceSets[1].AggregateSets[0].Id);
+        Assert.True(licenceSets[1].AggregateSets[0].ContainsLegalText);
+        Assert.Equal("1/01/01/001", licenceSets[1].AggregateSets[0].SourceLicenceNumber);
+        Assert.Equal(2, licenceSets[1].AggregateSets[0].LinkedLicences!.Length);
+        Assert.Single(licenceSets[1].AggregateSets[0].Limits);
+        Assert.Equal(60, licenceSets[1].AggregateSets[0].Limits[0].Value);
+        Assert.NotNull(licenceSets[1].AggregateSets[0].Variations);
+        Assert.Equal(2, licenceSets[1].AggregateSets[0].Variations!.Length);
+        Assert.Equal("10101004-LVUNKNOWN-LL-10101001-10101005-C60", licenceSets[1].AggregateSets[0].Variations![0].Id);
+        Assert.Equal("1/01/01/004", licenceSets[1].AggregateSets[0].Variations![0].SourceLicenceNumber);
+        Assert.True(licenceSets[1].AggregateSets[0].Variations![0].ContainsLegalText);
+        Assert.Equal(2, licenceSets[1].AggregateSets[0].Variations![0].LinkedLicences!.Length);
+        Assert.Single(licenceSets[1].AggregateSets[0].Variations![0].Limits);
+        Assert.Equal(60, licenceSets[1].AggregateSets[0].Variations![0].Limits[0].Value);
+        Assert.Equal("10101005-LVUNKNOWN-LL-10101001-10101004-C60", licenceSets[1].AggregateSets[0].Variations![1].Id);
+        Assert.Equal("1/01/01/005", licenceSets[1].AggregateSets[0].Variations![1].SourceLicenceNumber);
+        Assert.True(licenceSets[1].AggregateSets[0].Variations![1].ContainsLegalText);
+        Assert.Equal(2, licenceSets[1].AggregateSets[0].Variations![1].LinkedLicences!.Length);
+        Assert.Single(licenceSets[1].AggregateSets[0].Variations![1].Limits);
+        Assert.Equal(60, licenceSets[1].AggregateSets[0].Variations![1].Limits[0].Value);
     }
 
     private static MatchesResult GetLicenceMatchesResult(

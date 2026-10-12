@@ -1495,10 +1495,7 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     LicenceSetType = LicenceSetType.LicencesGroupedByAbstractionLimits,
                     Licences = licencesReferencedInLimits.ToArray(),
-                    AggregateSets = GetAggregates(
-                        licencesReferencedInLimits,
-                        allLicences,
-                        false)
+                    AggregateSets = [aggregate]
                 };
 
                 if (returnLicenceSets.Any(x => x.LicenceSetId == licenceSet.LicenceSetId))
@@ -1592,6 +1589,16 @@ public static class AbstractionLicenceSchemaConverter
 
             // Add LicenceSetIds to licence
             licence.LicenceSets = newLicenceSetIds.ToArray();
+        }
+
+        foreach (var licenceSet in returnLicenceSets)
+        {
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+            
+            PopulateAggregateSetIds(licenceSet.AggregateSets!, allLicences);
         }
         
         ConsoleHelper.WriteLine(
@@ -2481,6 +2488,17 @@ public static class AbstractionLicenceSchemaConverter
 
                 // Need to do this as the version in the aggregate set is a clone
                 aggregate.AggregateSetId = aggregateSet.SetAggregateSetId(allLicences);
+
+                if (aggregate.Variations == null)
+                {
+                    return;
+                }
+
+                PopulateAggregateSetIds(
+                    aggregate.Variations
+                        .Select(Aggregate (v) => v)
+                        .ToArray(),
+                    allLicences);
             });
     }
 

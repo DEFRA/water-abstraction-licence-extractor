@@ -147,27 +147,42 @@ public static class WrInspectionReportExtractionOrchestrator
             }
         }
 
-        if (template == WrTemplateType.V3
-            && tableExtractorService != null
-            && pdfBytesForTableExtraction != null)
+        // V3's fields live in two-column key/value grids, and reading them as cells is the only
+        // way its multi-line values (the licence holder name and address) come out whole - a line
+        // rule truncates them at the first line, and a document with five meters collapses to one.
+        //
+        // REQUIRED for V3, unlike the opt-in T1 overlay above. Without it a v3 document still
+        // produces a result, and that result looks healthy while being quietly wrong - which is
+        // precisely the failure WRADI-392 existed to stamp out. Better to refuse the file than to
+        // save a plausible-looking truncation. A free local extractor resolves the whole form, so
+        // this costs nothing to satisfy and the paid fallback is deliberately never consulted.
+        if (template == WrTemplateType.V3)
         {
-            try
+            if (tableExtractorService == null || pdfBytesForTableExtraction == null)
             {
-                var tables = await tableExtractorService.GetTablesAsync(
-                    BuildTableLookupDocument(pdfBytesForTableExtraction, dmsDataForFile.FileId),
-                    dmsDataForFile.FileId,
-                    processRunId);
-
-                WrInspectionV3KeyValueMatcher.Apply(
-                    scrapeResult, tables, configuration1.Labels, tableExtractorService.Name);
-
-                WrInspectionV3KeyValueMatcher.ApplyMeters(
-                    scrapeResult, tables, tableExtractorService.Name);
+                throw new InvalidOperationException(
+                    $"A {nameof(ITableExtractorService)} and the document bytes are required to " +
+                    $"extract a {nameof(WrTemplateType.V3)} document ({pdfFileName}). Its fields " +
+                    "are two-column key/value grids, and without them the multi-line values are " +
+                    "truncated and multiple meters collapse into one.");
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ERROR - {nameof(WrInspectionV3KeyValueMatcher)} - {ex.Message}");
-            }
+
+            // Fetched once and shared, so a document costs a single GetTablesAsync call whether
+            // one field or every field is resolved from it.
+            var tables = await tableExtractorService.GetTablesAsync(
+                BuildTableLookupDocument(pdfBytesForTableExtraction, dmsDataForFile.FileId),
+                dmsDataForFile.FileId,
+                processRunId);
+
+            // Deliberately not wrapped in a try/catch, unlike the T1 overlay. There the table pass
+            // is an enhancement, so losing it leaves a result that is merely less good; here it is
+            // how the document is read, so swallowing a failure would ship the truncation this
+            // whole mechanism exists to avoid.
+            WrInspectionV3KeyValueMatcher.Apply(
+                scrapeResult, tables, configuration1.Labels, tableExtractorService.Name);
+
+            WrInspectionV3KeyValueMatcher.ApplyMeters(
+                scrapeResult, tables, tableExtractorService.Name);
         }
 
         scrapeResult.AdditionalInformation ??= [];

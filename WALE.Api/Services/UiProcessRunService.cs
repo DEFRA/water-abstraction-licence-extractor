@@ -112,8 +112,6 @@ public class UiProcessRunService(
             .ToList();
 
         const int maxRetries = 3;
-
-        const int delayAfterBatchProcessing = 5;
         var processedCount = 0;
         const int batchSize = 75;
         var totalListCount = processRunRawDataList.Count;
@@ -128,8 +126,7 @@ public class UiProcessRunService(
                 {
                     await licenceListRepository.UpsertLicenceListItemManyAsync(
                         batch);
-
-                    await Task.Delay(TimeSpan.FromSeconds(delayAfterBatchProcessing));
+                    
                     processedCount += batch.Length;
 
                     ConsoleHelper.WriteLine(

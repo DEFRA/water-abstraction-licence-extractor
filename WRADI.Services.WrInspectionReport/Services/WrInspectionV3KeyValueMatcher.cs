@@ -80,9 +80,9 @@ public static class WrInspectionV3KeyValueMatcher
     }
 
     /// <summary>
-    /// The v3 meter keys against the shared meter fields. The two v3 keys left out - metering
-    /// accuracy and maintenance records - hold a compliance outcome rather than a measurement, so
-    /// they belong with the condition outcomes, not in CalibrationCertificate.
+    /// The v3 meter keys against the shared meter fields. Metering accuracy and maintenance
+    /// records are deliberately absent: they hold a compliance outcome, not a measurement, and
+    /// have no shared meter field.
     /// </summary>
     private static readonly (string Key, string FieldName)[] MeterKeys =
     [

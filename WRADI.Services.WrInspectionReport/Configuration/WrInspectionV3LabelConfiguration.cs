@@ -86,7 +86,10 @@ public static class WrInspectionV3LabelConfiguration
                 .EndsAt("Job title or role")
                 .Build()]);
 
-    /// <summary>Multi-valued in the samples, left as read for the converter to split.</summary>
+    /// <summary>
+    /// Multi-valued in the samples ("Bekah Flynn &amp; Anna Pursey") and left unsplit: the shared
+    /// model's InspectingOfficer is a single string, so there is nowhere for a second name to go.
+    /// </summary>
     private static (string, List<LabelToMatch>) RuleInspectingOfficers() =>
         (WrInspectionReportFieldNames.V3InspectingOfficers, [
             WrFluentRule
@@ -120,8 +123,8 @@ public static class WrInspectionV3LabelConfiguration
                 .Build()]);
 
     /// <summary>
-    /// The non-compliances table, empty in every consultation sample (header row only), so its
-    /// row shape is unverified. Captured whole until a filled example exists.
+    /// The non-compliances table, empty in every consultation sample, so its row shape is
+    /// unverified. The capture yields only the tail of the wrapped header ("category date").
     /// </summary>
     private static (string, List<LabelToMatch>) RuleNonCompliancesBlock() =>
         (WrInspectionReportFieldNames.V3NonCompliancesBlock, [
@@ -146,9 +149,10 @@ public static class WrInspectionV3LabelConfiguration
                 .Build()]);
 
     /// <summary>
-    /// The actions table: Reference, Type, Action, Complete by. Every row is an unfilled dropdown
-    /// in the consultation samples, so like the non-compliances table its filled shape is
-    /// unverified and it is captured whole for now.
+    /// The actions table: Reference, Type, Action, Complete by. Two of the six consultation
+    /// samples have filled rows, the rest are unfilled dropdowns reading "Choose an item.".
+    /// Captured whole: the capture also leads with the tail of the wrapped "Complete by" header,
+    /// and splitting it into rows is unbuilt.
     /// </summary>
     private static (string, List<LabelToMatch>) RuleActionsBlock() =>
         (WrInspectionReportFieldNames.V3ActionsBlock, [

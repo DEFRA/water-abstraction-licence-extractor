@@ -26,11 +26,13 @@ namespace WRADI.DocumentType.WrInspectionReport.Enums;
 // structurally a different document from every value above rather than another family within the
 // same form. It drops the "Form WR - 51" header for "Form WR51", renames nearly every field
 // ("Person met with/contacted" for MetWith, "Assessment date" for InspectionDate), splits the old
-// combined name-and-address into two fields, adds fields with no v1 equivalent (Licence
-// criticality, Site contact number/email, Job title or role, separate inspection start and end
-// times), and replaces the provisions grid with a condition-to-outcome list. Its rules therefore
-// live in their own standalone configuration rather than filtering the v1 set, because almost no
-// label text is shared.
+// combined name-and-address into two fields, and replaces the provisions grid with a
+// condition-to-outcome list. Its rules live in their own standalone configuration.
+//
+// Of the fields it adds, only Licence criticality has no v1 counterpart: Site contact
+// number/email and Job title or role land on v1's own TelephoneNumber, Email and Position, and
+// the separate start and end times on v1's single Time plus one new slot. See
+// WrInspectionV3SharedFieldMapper for the full projection onto the shared model.
 public enum WrTemplateType
 {
     Unknown,

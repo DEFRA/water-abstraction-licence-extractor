@@ -60,7 +60,6 @@ app.UseResponseCompression();
 app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
-// After building your app
 app.MapHub<ProcessHub>("/hubs/process");
 app.Run();
 

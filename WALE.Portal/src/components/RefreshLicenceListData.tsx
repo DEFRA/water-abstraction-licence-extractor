@@ -130,7 +130,7 @@ export function RefreshLicenceListData({
         };
     }, [processRunId]);
 
-    const startScrapingProcess = async () => {
+    const startRefreshProcess = async () => {
         if (!processRunId || statusRef.current === 'starting' ||
             statusRef.current === 'processing') {
             return;
@@ -187,7 +187,7 @@ export function RefreshLicenceListData({
             >
                 <button
                     type="button"
-                    onClick={startScrapingProcess}
+                    onClick={startRefreshProcess}
                     disabled={isRunning || !isConnected || !processRunId}
                     style={{
                         backgroundColor: '#dc3545',

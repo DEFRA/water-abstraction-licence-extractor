@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.SignalR;
+using WALE.Api.Areas.BFF.SignalR;
 using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -13,27 +15,40 @@ namespace WALE.Api.Services;
 public class UiProcessRunService( 
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     ILicenceListItemModelService licenceListItemModelService,
-    ILicenceListRepository licenceListRepository) 
+    ILicenceListRepository licenceListRepository,
+    IHubContext<ProcessHub> hubContext) 
     : IUiProcessRunService
 {
     public async Task<string> UpdateLicenceListProcessRunAsync(int processRunId)
     {
-        var query = new ProcessRunQuery
+        try
         {
-            Skip = 0,
-            Take = int.MaxValue
-        };
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
-        ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - started - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
+            var query = new ProcessRunQuery
+            {
+                Skip = 0,
+                Take = int.MaxValue
+            };
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var processRunRawDataList = await GetProcessRunRawDataList(processRunId, query);
+            ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - started - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
 
-        await UpdateLicenceListRepo(processRunRawDataList);
+            await UpdateLicenceListRepo(processRunRawDataList);
         
-        stopwatch.Stop();
-        ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - completed - in {stopwatch.Elapsed.Seconds} seconds - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
+            stopwatch.Stop();
+            ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - completed - in {stopwatch.Elapsed.TotalSeconds} seconds - processRunId-{processRunId} for {processRunRawDataList.Count} licences at {DateTime.UtcNow}");
 
-        return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
+            await NotifyCompletedAsync(processRunId, stopwatch.Elapsed.TotalSeconds);
+            return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
+        }
+        catch (Exception e)
+        {
+            ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - ERROR - started - processRunId-{processRunId} with {e.Message}");
+
+            await NotifyFailedAsync(processRunId);
+            throw;
+        }
+     
     }
 
     public async Task<string> UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)
@@ -154,5 +169,29 @@ public class UiProcessRunService(
                 }
             }
         }
+    }
+    
+    private async Task NotifyCompletedAsync(int processRunId, double secondsTaken)
+    {
+        await hubContext.Clients
+            .Group($"process-{processRunId}")
+            .SendAsync("ProcessCompleted", new
+            {
+                ProcessRunId = processRunId,
+                Status = "Completed",
+                Message = $"Licence List Data refresh completed successfully for {processRunId} in {secondsTaken} seconds."
+            });
+    }
+
+    private async Task NotifyFailedAsync(int processRunId)
+    {
+        await hubContext.Clients
+            .Group($"process-{processRunId}")
+            .SendAsync("ProcessFailed", new
+            {
+                ProcessRunId = processRunId,
+                Status = "Failed",
+                Message = $"Licence List Data refresh failed  for {processRunId}."
+            });
     }
 }

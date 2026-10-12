@@ -38,11 +38,17 @@ public static class WrInspectionReportExtractionOrchestrator
             List<string> previouslyParsedFiles,
             int processRunId,
             IPdfDataExtractorService pdfDataExtractor,
-            // Opt-in overlay, off by default (both null) - see WrInspectionReportTableMatcher.
-            // Passing a non-null tableExtractorService AND pdfBytesForTableExtraction attempts the
-            // table-based lookup for the LicenceProvisions grid fields; any field it can't
-            // confidently resolve keeps its existing heuristic result unchanged. Not yet wired into
-            // any production caller.
+            // Pass both of these together or neither. What they mean depends on the template:
+            //
+            //   T1  - optional. An overlay for the LicenceProvisions grid fields; any field it
+            //         cannot confidently resolve keeps its existing heuristic result. Omitting
+            //         them leaves a result that is merely less good. See
+            //         WrInspectionReportTableMatcher.
+            //   V3  - required. Its fields are two-column key/value grids, so this IS how the
+            //         document is read; the V3 block below throws without it rather than
+            //         returning a quietly truncated result.
+            //
+            // Any other template ignores them.
             ITableExtractorService? tableExtractorService = null,
             byte[]? pdfBytesForTableExtraction = null,
             // Cost-optimised two-tier design: pass a free/local extractor (e.g. TabulaTableExtractorService)
@@ -141,6 +147,26 @@ public static class WrInspectionReportExtractionOrchestrator
             }
         }
 
+        if (template == WrTemplateType.V3
+            && tableExtractorService != null
+            && pdfBytesForTableExtraction != null)
+        {
+            try
+            {
+                var tables = await tableExtractorService.GetTablesAsync(
+                    BuildTableLookupDocument(pdfBytesForTableExtraction, dmsDataForFile.FileId),
+                    dmsDataForFile.FileId,
+                    processRunId);
+
+                WrInspectionV3KeyValueMatcher.Apply(
+                    scrapeResult, tables, configuration1.Labels, tableExtractorService.Name);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR - {nameof(WrInspectionV3KeyValueMatcher)} - {ex.Message}");
+            }
+        }
+
         scrapeResult.AdditionalInformation ??= [];
         scrapeResult.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey]
             = template.ToString();
@@ -222,6 +248,32 @@ public static class WrInspectionReportExtractionOrchestrator
     // tables), not propagated - so a primary extractor that throws (a local parser tripping on a
     // malformed PDF, say) still gives a fallback extractor its own chance, rather than the whole
     // overlay being abandoned on the primary's failure alone. Tables/serviceName are returned
+    /// <summary>
+    /// The minimal PdfDocument a table extractor needs: it only reads the bytes, so everything
+    /// else is left unset rather than loading the document twice.
+    /// </summary>
+    private static PdfDocument BuildTableLookupDocument(byte[] pdfBytes, Guid fileId) =>
+        new(
+            null!,
+            fileId,
+            false,
+            pdfBytes,
+            pdfBytes.Length,
+            null!,
+            null!,
+            null!,
+            new LookupConfiguration(
+                [],
+                [],
+                null!,
+                null!, null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                -1,
+                DateTime.UtcNow));
+
     // alongside the grid matches so the caller can resolve free-text fields from the SAME fetched
     // tables afterward, without a second (and for a paid fallback, separately billed)
     // GetTablesAsync call.
@@ -239,26 +291,7 @@ public static class WrInspectionReportExtractionOrchestrator
         try
         {
             var tables = await tableExtractorService.GetTablesAsync(
-                new PdfDocument(
-                    null!,
-                    fileId,
-                    false,
-                    pdfBytes,
-                    pdfBytes.Length,
-                    null!,
-                    null!, 
-                    null!, 
-                    new LookupConfiguration(
-                        [],
-                        [],
-                        null!,
-                        null!, null!,
-                        null!,
-                        null!,
-                        null!,
-                        null!,
-                        -1,
-                        DateTime.UtcNow)),
+                BuildTableLookupDocument(pdfBytes, fileId),
                 fileId,
                 processRunId);
 

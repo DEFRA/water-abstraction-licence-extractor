@@ -529,9 +529,9 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
     /// WRADI-418 deliverable: the inspection data from the v3 test documents as a CSV, to be
     /// checked against the forms by hand.
     ///
-    /// Writes two files - the full column set, and the one with diagnostic columns dropped, which
-    /// is the shape the portal's own export produces. The CSV is one row per document, so it shows
-    /// only the first meter; the multi-meter documents are covered by the meter tests above.
+    /// Writes three files: the full column set, the one with diagnostic columns dropped which is
+    /// the shape the portal's own export produces, and a per-meter file. The first two are one row
+    /// per document and so show only the first meter, which the multi-borehole documents exceed.
     /// </summary>
     [Fact]
     public async Task WhenV3ConsultationDocuments_ThenWriteCsv()
@@ -552,6 +552,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         Assert.NotEmpty(files);
 
         var lines = new List<WrInspectionReportCsvLine>();
+        var meterLines = new List<WrInspectionReportMeterCsvLine>();
 
         // Act
         foreach (var filename in files)
@@ -567,6 +568,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
                 template);
 
             lines.Add(WrInspectionReportCsvLine.FromForm(form));
+            meterLines.AddRange(WrInspectionReportMeterCsvLine.FromForm(form));
         }
 
         var outputFolder = Path.Combine(Directory.GetCurrentDirectory(), "Output");
@@ -574,16 +576,21 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
         var fullPath = Path.Combine(outputFolder, "WR51-v3-all-columns.csv");
         var sharedPath = Path.Combine(outputFolder, "WR51-v3.csv");
+        var metersPath = Path.Combine(outputFolder, "WR51-v3-meters.csv");
 
         await File.WriteAllBytesAsync(fullPath, WrInspectionReportReportBuilder.BuildCsv(lines));
         await File.WriteAllBytesAsync(
             sharedPath,
             WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns: true));
+        await File.WriteAllBytesAsync(
+            metersPath,
+            WrInspectionReportReportBuilder.BuildCsv(meterLines));
 
         // Assert
-        testOutputHelper.WriteLine($"{lines.Count} row(s) written");
+        testOutputHelper.WriteLine($"{lines.Count} document row(s), {meterLines.Count} meter row(s)");
         testOutputHelper.WriteLine($"  {fullPath}");
         testOutputHelper.WriteLine($"  {sharedPath}");
+        testOutputHelper.WriteLine($"  {metersPath}");
 
         foreach (var line in lines)
         {
@@ -610,6 +617,17 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             .ToList();
 
         Assert.Empty(unmapped);
+
+        // The meter file exists because the per-document one truncates to the first meter, so the
+        // thing worth asserting is that it holds more rows than there are documents.
+        Assert.True(
+            meterLines.Count > lines.Count,
+            $"Expected more meter rows than documents, got {meterLines.Count} for {lines.Count}");
+
+        foreach (var group in meterLines.GroupBy(line => line.Metadata__Filename))
+        {
+            Assert.Equal(group.First().MeterCount, group.Count());
+        }
     }
 
     private static string Flatten(string? value) =>

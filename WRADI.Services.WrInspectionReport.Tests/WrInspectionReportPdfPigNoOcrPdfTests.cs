@@ -167,6 +167,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         testOutputHelper.WriteLine($"CSV written to:           {csvPath}");
 
+        // The per-document CSV above truncates to the first meter, so this is where every later
+        // meter on a document appears. Meters are unbounded, hence a file rather than columns.
+        var metersPath = Path.Combine(OutputService.OutputFolder!, "_extraction-results-meters.csv");
+        var meterRows = formsList
+            .OrderBy(f => f.Metadata.Filename, StringComparer.OrdinalIgnoreCase)
+            .SelectMany(WrInspectionReportMeterCsvLine.FromForm)
+            .ToList();
+
+        await File.WriteAllBytesAsync(
+            metersPath,
+            WrInspectionReportReportBuilder.BuildCsv(meterRows));
+
+        testOutputHelper.WriteLine($"Meter rows:               {meterRows.Count} from {csvRows.Count} documents");
+        testOutputHelper.WriteLine($"Meter CSV written to:     {metersPath}");
+
         await ReportCoverage(formsList, testOutputHelper, failures, total);
     }
 

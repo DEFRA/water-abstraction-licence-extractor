@@ -22,9 +22,17 @@ public static class WrInspectionReportReportBuilder
         nameof(WrInspectionReportCsvLine.ActionsRaw)
     };
 
-    public static byte[] BuildCsv(IEnumerable<WrInspectionReportCsvLine> lines, bool excludeInternalColumns = false)
+    // These two keep the per-document signatures the API and the portal already call, so the
+    // generic versions below could be added without touching them.
+    public static byte[] BuildCsv(IEnumerable<WrInspectionReportCsvLine> lines, bool excludeInternalColumns = false) =>
+        BuildCsv<WrInspectionReportCsvLine>(lines, excludeInternalColumns);
+
+    public static byte[] BuildXlsx(IEnumerable<WrInspectionReportCsvLine> lines, bool excludeInternalColumns = false) =>
+        BuildXlsx<WrInspectionReportCsvLine>(lines, excludeInternalColumns);
+
+    public static byte[] BuildCsv<T>(IEnumerable<T> lines, bool excludeInternalColumns = false)
     {
-        var properties = GetColumns(excludeInternalColumns);
+        var properties = GetColumns(typeof(T), excludeInternalColumns);
 
         using var memoryStream = new MemoryStream();
 
@@ -52,9 +60,9 @@ public static class WrInspectionReportReportBuilder
         return memoryStream.ToArray();
     }
 
-    public static byte[] BuildXlsx(IEnumerable<WrInspectionReportCsvLine> lines, bool excludeInternalColumns = false)
+    public static byte[] BuildXlsx<T>(IEnumerable<T> lines, bool excludeInternalColumns = false)
     {
-        var properties = GetColumns(excludeInternalColumns);
+        var properties = GetColumns(typeof(T), excludeInternalColumns);
 
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("WR51");
@@ -85,9 +93,9 @@ public static class WrInspectionReportReportBuilder
         return memoryStream.ToArray();
     }
 
-    private static PropertyInfo[] GetColumns(bool excludeInternalColumns)
+    private static PropertyInfo[] GetColumns(Type lineType, bool excludeInternalColumns)
     {
-        var properties = typeof(WrInspectionReportCsvLine).GetProperties();
+        var properties = lineType.GetProperties();
 
         return excludeInternalColumns
             ? properties.Where(property => !InternalColumnNames.Contains(property.Name)).ToArray()

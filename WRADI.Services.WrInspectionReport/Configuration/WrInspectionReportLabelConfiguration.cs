@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
@@ -6,7 +7,7 @@ using WRADI.DocumentType.WrInspectionReport.Models.Configuration;
 
 namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
-public static class WrInspectionReportLabelConfiguration
+public static partial class WrInspectionReportLabelConfiguration
 {
     public static void ConfigurationPropertiesToSet(LookupConfiguration lookupConfiguration)
     {
@@ -60,6 +61,7 @@ public static class WrInspectionReportLabelConfiguration
         RuleFormSentTo(),
         RuleDate(),
         RuleDocumentTemplateVersion(),
+        RuleTemplateMarkerV3(),
         RuleDocumentHeader(),
         RuleTemplateMarkerT4(),
         RuleTemplateMarkerT6(),
@@ -735,6 +737,16 @@ public static class WrInspectionReportLabelConfiguration
 
     // ---- Template-family markers (presence checks, not value extraction) ----
 
+    private static (string, List<LabelToMatch>) RuleTemplateMarkerV3() =>
+        (WrInspectionReportFieldNames.TemplateMarkerV3,
+            TemplateMarker(
+                "Document Template Version",
+                WrInspectionReportFieldNames.TemplateMarkerV3,
+                regex: DocumentTemplateVersionV3Regex()));
+
+    [GeneratedRegex(@"Document Template Version\s+\S*[Vv]3\b")]
+    private static partial Regex DocumentTemplateVersionV3Regex();
+
     private static (string, List<LabelToMatch>) RuleTemplateMarkerT4() =>
         (WrInspectionReportFieldNames.TemplateMarkerT4, TemplateMarker("Permit holder name and address", WrInspectionReportFieldNames.TemplateMarkerT4));
 
@@ -834,13 +846,16 @@ public static class WrInspectionReportLabelConfiguration
     private static List<LabelToMatch> TemplateMarker(
         string text,
         string labelName,
-        List<string>? additionalTextStarts = null)
+        List<string>? additionalTextStarts = null,
+        Regex? regex = null)
     {
         return
         [
             new LabelToMatch
             {
-                TextStart =
+                TextStart = regex != null
+                    ? [new TextToMatch(text) { Regex = regex }]
+                    :
                 [
                     new(text) { ColumnMustStartWith = true },
                     ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t) { ColumnMustStartWith = true })

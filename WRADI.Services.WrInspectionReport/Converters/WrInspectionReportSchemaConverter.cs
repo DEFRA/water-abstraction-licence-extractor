@@ -541,6 +541,15 @@ public static class WrInspectionReportSchemaConverter
     // ruleset to extract with.
     internal static WrTemplateType ClassifyTemplate(MatchesResult matchesResult, string? documentHeader)
     {
+        // Before everything else, including the documentHeader guard below: a v3 document prints
+        // "Form WR51" rather than "Form WR - 51", so RuleDocumentHeader finds nothing and it would
+        // otherwise fall through to Unknown and be read with v1 rules that match almost none of
+        // its labels.
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3)))
+        {
+            return WrTemplateType.V3;
+        }
+
         if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerImpounding)))
         {
             return WrTemplateType.Impounding;

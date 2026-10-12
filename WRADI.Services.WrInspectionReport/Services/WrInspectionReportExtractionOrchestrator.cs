@@ -94,9 +94,13 @@ public static class WrInspectionReportExtractionOrchestrator
             documentHeader);
 
         configuration1 = configuration1.Clone();
-        configuration1.Labels = template == WrTemplateType.T1
-            ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
-            : originalLabels;
+
+        configuration1.Labels = template switch
+        {
+            WrTemplateType.V3 => WrInspectionV3LabelConfiguration.GetLabels(),
+            WrTemplateType.T1 => WrInspectionT1LabelConfiguration.FilterFrom(originalLabels),
+            _ => originalLabels
+        };
 
         var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,

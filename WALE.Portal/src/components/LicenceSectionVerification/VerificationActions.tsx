@@ -37,6 +37,8 @@ export const VerificationActions = ({
             return dateB - dateA;
         })[0];
 
+    const canConfirm = !!itemId && latestVerification?.verificationType !== 'RequestBusinessReview';
+
     return (
         <div style={{
             marginBottom: '10px',
@@ -55,7 +57,7 @@ export const VerificationActions = ({
             </div>
             <div style={{display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end'}}>
                 <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                    <button disabled={!itemId} onClick={onVerify} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Confirmed'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Confirm</button>
+                    <button disabled={!canConfirm} onClick={onVerify} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Confirmed'), color: 'white', border: 'none', borderRadius: '4px', cursor: canConfirm ? 'pointer' : 'not-allowed', opacity: canConfirm ? 1 : 0.5, fontSize: '0.85rem'}}>Confirm</button>
                     <button disabled={!itemId} onClick={onReject} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Removed'), color: 'white', border: 'none', borderRadius: '4px', cursor: itemId ? 'pointer' : 'not-allowed', fontSize: '0.85rem'}}>Remove</button>
                     <button onClick={onOverride} style={{padding: '4px 12px', backgroundColor: getVerificationTypeBackgroundColor('Edited'), color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'}}>Edit</button>
                 </div>

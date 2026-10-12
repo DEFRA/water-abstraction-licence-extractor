@@ -13,6 +13,7 @@ using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Services;
 using WRADI.Services.WrInspectionReport.Tests.Helper;
 using Xunit.Abstractions;
@@ -33,6 +34,9 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// cannot flatter the coverage figure.
 ///
 /// Skips with a message when the folder is absent, so an ordinary test run is unaffected.
+///
+/// WhenV3ConsultationDocuments_ThenWriteCsv is the one test here that produces a deliverable
+/// rather than a measurement.
 /// </summary>
 public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 {
@@ -520,4 +524,94 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             Assert.True(meterCount > 0, $"No meter blocks captured in {filename}");
         }
     }
+
+    /// <summary>
+    /// WRADI-418 deliverable: the inspection data from the v3 test documents as a CSV, to be
+    /// checked against the forms by hand.
+    ///
+    /// Writes two files - the full column set, and the one with diagnostic columns dropped, which
+    /// is the shape the portal's own export produces. The CSV is one row per document, so it shows
+    /// only the first meter; the multi-meter documents are covered by the meter tests above.
+    /// </summary>
+    [Fact]
+    public async Task WhenV3ConsultationDocuments_ThenWriteCsv()
+    {
+        // Arrange
+        if (!Directory.Exists(V3Folder))
+        {
+            testOutputHelper.WriteLine($"Skipped - no v3 documents at {V3Folder}");
+            return;
+        }
+
+        var files = Directory.GetFiles(V3Folder, "*.pdf")
+            .Select(Path.GetFileName)
+            .Where(filename => filename != null)
+            .OrderBy(filename => filename)
+            .ToList();
+
+        Assert.NotEmpty(files);
+
+        var lines = new List<WrInspectionReportCsvLine>();
+
+        // Act
+        foreach (var filename in files)
+        {
+            var (result, template) = await ExtractAsync(filename!);
+            Assert.NotNull(result);
+
+            result.Filename = filename;
+
+            var form = WrInspectionReportSchemaConverter.ToForm(
+                result,
+                new DmsFileData { FileId = GuidHelper.GetConsistentFileIdFromFilename(filename!) },
+                template);
+
+            lines.Add(WrInspectionReportCsvLine.FromForm(form));
+        }
+
+        var outputFolder = Path.Combine(Directory.GetCurrentDirectory(), "Output");
+        Directory.CreateDirectory(outputFolder);
+
+        var fullPath = Path.Combine(outputFolder, "WR51-v3-all-columns.csv");
+        var sharedPath = Path.Combine(outputFolder, "WR51-v3.csv");
+
+        await File.WriteAllBytesAsync(fullPath, WrInspectionReportReportBuilder.BuildCsv(lines));
+        await File.WriteAllBytesAsync(
+            sharedPath,
+            WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns: true));
+
+        // Assert
+        testOutputHelper.WriteLine($"{lines.Count} row(s) written");
+        testOutputHelper.WriteLine($"  {fullPath}");
+        testOutputHelper.WriteLine($"  {sharedPath}");
+
+        foreach (var line in lines)
+        {
+            testOutputHelper.WriteLine(string.Empty);
+            testOutputHelper.WriteLine($"  {line.Metadata__Filename}");
+            testOutputHelper.WriteLine($"      template={line.Metadata__Template}  version={line.Metadata__DocumentTemplateVerison}");
+            testOutputHelper.WriteLine($"      licence={line.LicenceNumber}  criticality={line.LicenceCriticality}");
+            testOutputHelper.WriteLine($"      class={line.InspectionClass}");
+            testOutputHelper.WriteLine($"      holder={Flatten(line.Address__NameAndAddress)}");
+            testOutputHelper.WriteLine($"      site={Flatten(line.Address__SiteAddress)}");
+            testOutputHelper.WriteLine($"      tel={line.Address__TelephoneNumber}  email={line.Address__Email}");
+            testOutputHelper.WriteLine($"      metWith={line.MetWith__Name}  position={line.MetWith__Position}");
+            testOutputHelper.WriteLine($"      officer={Flatten(line.InspectingOfficer)}");
+            testOutputHelper.WriteLine($"      date={line.InspectionDate__RawDate}  start={line.InspectionDate__RawTime}  end={line.InspectionDate__RawEndTime}");
+            testOutputHelper.WriteLine($"      meter1={line.MeasurementDetails__MeterName}  serial={line.MeasurementDetails__SerialNumber}");
+        }
+
+        // Every v3 document must reach the shared columns.
+        var unmapped = lines
+            .Where(line => string.IsNullOrWhiteSpace(line.LicenceNumber)
+                || string.IsNullOrWhiteSpace(line.Address__NameAndAddress)
+                || string.IsNullOrWhiteSpace(line.InspectionDate__RawDate))
+            .Select(line => line.Metadata__Filename)
+            .ToList();
+
+        Assert.Empty(unmapped);
+    }
+
+    private static string Flatten(string? value) =>
+        value == null ? string.Empty : value.ReplaceLineEndings(" / ");
 }

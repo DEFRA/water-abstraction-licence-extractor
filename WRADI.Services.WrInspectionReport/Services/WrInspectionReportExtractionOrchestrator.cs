@@ -160,6 +160,9 @@ public static class WrInspectionReportExtractionOrchestrator
 
                 WrInspectionV3KeyValueMatcher.Apply(
                     scrapeResult, tables, configuration1.Labels, tableExtractorService.Name);
+
+                WrInspectionV3KeyValueMatcher.ApplyMeters(
+                    scrapeResult, tables, tableExtractorService.Name);
             }
             catch (Exception ex)
             {

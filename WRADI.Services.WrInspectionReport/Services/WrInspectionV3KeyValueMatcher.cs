@@ -17,6 +17,8 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 /// </summary>
 public static class WrInspectionV3KeyValueMatcher
 {
+    /// <summary>The key that starts each repeat of the meter group.</summary>
+    public const string MeterGroupFirstKey = "Meter location or reference";
 
     /// <summary>
     /// Takes tables already fetched: one GetTablesAsync call per document however much is read
@@ -76,11 +78,87 @@ public static class WrInspectionV3KeyValueMatcher
             .Concat(resolved.Values)
             .ToList();
     }
+
+    /// <summary>
+    /// The v3 meter keys against the shared meter fields. The two v3 keys left out - metering
+    /// accuracy and maintenance records - hold a compliance outcome rather than a measurement, so
+    /// they belong with the condition outcomes, not in CalibrationCertificate.
+    /// </summary>
+    private static readonly (string Key, string FieldName)[] MeterKeys =
+    [
+        (MeterGroupFirstKey, WrInspectionReportFieldNames.MeterName),
+        ("Meter make and model", WrInspectionReportFieldNames.MeterMake),
+        ("Serial number", WrInspectionReportFieldNames.SerialNumber),
+        ("Meter reading at inspection", WrInspectionReportFieldNames.Reading),
+        ("Unit of measurement", WrInspectionReportFieldNames.Units)
+    ];
+
+    /// <summary>
+    /// One line per meter into the shared meter fields, which
+    /// WrInspectionReportSchemaConverter.BuildMeters then zips by line index into one record each.
+    ///
+    /// Because it zips by index, a meter stating no value contributes an empty line rather than
+    /// being skipped - otherwise every later meter shifts up and takes the wrong serial number.
+    /// </summary>
+    public static void ApplyMeters(
+        MatchesResult item,
+        IReadOnlyList<DocumentTable> tables,
+        string serviceName)
+    {
+        var meters = KeyValueTableHelper.ReadRepeatingGroups(tables, MeterGroupFirstKey);
+
+        if (meters.Count == 0)
+        {
+            return;
+        }
+
+        var resolved = new Dictionary<string, LabelGroupResult>();
+
+        foreach (var (key, fieldName) in MeterKeys)
+        {
+            var perMeter = meters
+                .Select(meter => KeyValueTableHelper.FindValue(meter, key) ?? string.Empty)
+                .ToList();
+
+            if (perMeter.All(string.IsNullOrWhiteSpace))
+            {
+                continue;
+            }
+
+            resolved[fieldName] = BuildResultFromLines(fieldName, perMeter, serviceName);
+        }
+
+        if (resolved.Count == 0)
+        {
+            return;
+        }
+
+        item.Matches = (item.Matches ?? [])
+            .Where(match => match.LabelGroupName == null || !resolved.ContainsKey(match.LabelGroupName))
+            .Concat(resolved.Values)
+            .ToList();
+    }
+
     private static LabelGroupResult BuildResult(string fieldName, string value, string serviceName)
     {
         var lines = value
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+
+        return BuildResultFromLines(fieldName, lines, serviceName);
+    }
+
+    /// <summary>
+    /// Keeps empty lines, unlike <see cref="BuildResult"/>: in a repeating group the line position
+    /// carries meaning.
+    /// </summary>
+    private static LabelGroupResult BuildResultFromLines(
+        string fieldName,
+        IReadOnlyList<string> values,
+        string serviceName)
+    {
+        var lines = values
             .Select(line => new DocumentLine
             {
                 Columns = [new DocumentLineColumn(DocumentLineColumn.TextToWords(line.Trim(), null))]

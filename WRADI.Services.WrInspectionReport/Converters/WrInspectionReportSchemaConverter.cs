@@ -12,20 +12,9 @@ public static class WrInspectionReportSchemaConverter
 {
     public const string AdditionalInformationTemplateKey = "WrInspectionReportTemplate";
 
-    // knownTemplate: 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="matchesResult"></param>
-    /// <param name="dmsFileData"></param>
-    /// <param name="knownTemplate">Pass this when the caller already classified the document (e.g.
-    /// WrInspectionReportExtractionOrchestrator's own pre-pass) - lets ClassifyTemplate's
-    /// TemplateMarker* fields be left out of whichever ruleset actually ran without losing
-    /// Metadata.Template, so GetT1Labels() can genuinely drop the T4/T6/T7/NonStandardNarrative-
-    /// only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
-    /// back to the old self-contained behaviour - re-deriving Template from matchesResult itself
-    /// - for any caller that runs a single pass with no separate classification step.</param>
-    /// <returns></returns>
+    /// <param name="knownTemplate">Supplied when the caller already classified the document, so
+    /// the TemplateMarker* fields can be left out of whichever ruleset ran without losing
+    /// Metadata.Template. Null re-derives it from <paramref name="matchesResult"/>.</param>
     public static Models.WrInspectionReport ToForm(
         MatchesResult matchesResult,
         DmsFileData? dmsFileData,
@@ -503,48 +492,24 @@ public static class WrInspectionReportSchemaConverter
             : text[..index].TrimEnd().TrimEnd(',');
     }
 
-    // v2 classifier - see WrTemplateType and the TemplateMarker* label groups in
-    // WrInspectionReportLabelConfiguration for the literal markers, sourced from the client's
-    // TemplateSpec_v5.0.xlsx (T4/T6/T7 sheets) plus the GeneralComments heading catalogue for
-    // the T1-vs-NonStandardNarrative check. Checked in order most-specific-first (Impounding and
-    // T4/T6/T7 are all positive, distinguishing markers).
+    // Markers come from the client's TemplateSpec_v5.0.xlsx (T4/T6/T7) plus the GeneralComments
+    // heading catalogue. Checked most-specific-first.
     //
-    // v1 made T1 the plain default/fallback for anything not T4/T6/T7/Impounding, which measured
-    // at 86% of the real corpus against the client's own ~60% expectation - the gap was largely
-    // documents whose GeneralComments section uses an alternate heading, or none at all. v2
-    // (current) excludes on EITHER signal: a positive alternate-heading match, or the baseline
-    // heading being absent entirely.
+    // T1 as a plain fallback measured at 86% of the real corpus against the client's own ~60%
+    // expectation, so NonStandardNarrative is excluded on EITHER signal: an alternate-heading
+    // match, or the baseline heading being absent. Excluding on an alternate-heading match alone
+    // avoided 2 false positives but cost 6 true positives on headingless documents.
     //
-    // Deliberate choice over the narrower alternative (exclude on alternate-heading match
-    // alone): that avoided 2 false positives (`wr51__1041433013`, `wr51__nw0690016005` - tagged
-    // "baseline" but with nothing written in that section at all) but cost 6 true positives on
-    // genuinely non-standard, headingless documents that only "missing baseline heading" alone
-    // catches (`wr51__1955120809`, `wr51__1753001s427`, `wr51__sw0430023015`,
-    // `wr51__53114s0109`, `wr51__nw0760002001`, `wr51__25092`). Resolving the 2 remaining false
-    // positives would need a genuinely new signal (e.g. how much text sits between the last
-    // measurement field and "Form sent to") - not attempted, scope separately if it matters.
-    // Separately confirmed NOT a bug: wr51__83617s0016__... is tagged "desktop_review" but
-    // correctly stays T1 - that tag describes the inspection method (no site visit), not the
-    // comments-section shape, and the document genuinely has the standard heading.
-    // Deliberately NOT treated as anomalies (stay T1): all_blank_provisions,
-    // remote_meeting, no_telephone_field, compliance_only, temporal_meter_change,
-    // struck_through_measurement_section - these are content variation within a genuinely
-    // T1-shaped document, not a different comments-section structure. Not yet resolved: a
-    // handful of other documentShape tags found while labelling (Y_N_provisions_grid,
-    // narrative_provisions, checkbox_pair_grid, NI_provisions) describe how the LicenceProvisions
-    // grid itself is marked, not the comments section - no literal text marker distinguishes
-    // these the way a heading does, so they're not addressed by this pass.
-    // Unknown is reserved for documents where extraction didn't even recognise the WR51 header
-    // at all (DocumentHeader empty) - a parse failure, not a shape ambiguity.
-    // internal, not private: WrInspectionReportExtractionOrchestrator's classification pre-pass
-    // calls this directly against its own (smaller) MatchesResult, before deciding which full
-    // ruleset to extract with.
+    // Deliberately still T1: all_blank_provisions, remote_meeting, no_telephone_field,
+    // compliance_only, temporal_meter_change, struck_through_measurement_section, desktop_review -
+    // content variation, not a different comments-section shape.
+    // Not addressed: Y_N_provisions_grid, narrative_provisions, checkbox_pair_grid, NI_provisions
+    // describe the LicenceProvisions grid, which no literal text marker distinguishes.
+    // Unknown means extraction did not recognise the WR51 header at all - a parse failure.
     internal static WrTemplateType ClassifyTemplate(MatchesResult matchesResult, string? documentHeader)
     {
-        // Before everything else, including the documentHeader guard below: a v3 document prints
-        // "Form WR51" rather than "Form WR - 51", so RuleDocumentHeader finds nothing and it would
-        // otherwise fall through to Unknown and be read with v1 rules that match almost none of
-        // its labels.
+        // Before the documentHeader guard: a v3 document prints "Form WR51", which
+        // RuleDocumentHeader never matches, so it would otherwise fall through to Unknown.
         if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3)))
         {
             return WrTemplateType.V3;
@@ -618,15 +583,14 @@ public static class WrInspectionReportSchemaConverter
             .ToList();
     }
 
-    // One WrInspectionReportMeter per line, zipping corresponding lines across each field by
-    // index (line 1 of MeterMake pairs with line 1 of SerialNumber, etc.) - correct as long as a
-    // multi-meter table lists its points in the same order down every column, which is the only
-    // layout confirmed so far (spot-checked on a real multi-meter document).
-    // Always returns at least one entry, even when every field is empty, matching
-    // WrInspectionReportMeter's own single-meter-by-default contract. Doesn't attempt to parse
-    // the "Point N, <site>:" prefix some documents embed in each value out into MeterName - that
-    // format isn't confirmed universal, so the raw value ships as-is rather than guessing at a
-    // parse.
+    // Zips the meter fields by line index, which holds as long as a multi-meter table lists its
+    // points in the same order down every column - the only layout confirmed so far. Always
+    // returns at least one entry. The "Point N, <site>:" prefix some documents embed in each
+    // value is left in rather than parsed out, that format not being confirmed universal.
+    /// <summary>Test seam for the v3 per-meter overlay.</summary>
+    internal static List<WrInspectionReportMeter> BuildMetersForTests(MatchesResult matchesResult) =>
+        BuildMeters(matchesResult);
+
     private static List<WrInspectionReportMeter> BuildMeters(MatchesResult matchesResult)
     {
         var meterName = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterName);

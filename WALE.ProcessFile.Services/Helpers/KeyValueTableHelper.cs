@@ -60,6 +60,85 @@ public static class KeyValueTableHelper
         return candidates.Count > 0 ? candidates[0].Value : null;
     }
 
+    /// <summary>
+    /// One set of pairs per occurrence, a new group starting each time
+    /// <paramref name="firstKeyOfGroup"/> is seen again. Rows are taken in document order.
+    /// </summary>
+    public static List<Dictionary<string, string>> ReadRepeatingGroups(
+        IReadOnlyList<DocumentTable> tables,
+        string firstKeyOfGroup)
+    {
+        var groups = new List<Dictionary<string, string>>();
+        Dictionary<string, string>? current = null;
+
+        foreach (var table in tables.Where(table => table.ColumnCount == 2))
+        {
+            foreach (var row in table.Cells.GroupBy(cell => cell.RowIndex).OrderBy(row => row.Key))
+            {
+                var key = Normalise(row.FirstOrDefault(cell => cell.ColumnIndex == 0)?.Content);
+                var value = row.FirstOrDefault(cell => cell.ColumnIndex == 1)?.Content?.Trim();
+
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    continue;
+                }
+
+                if (key.StartsWith(firstKeyOfGroup, StringComparison.OrdinalIgnoreCase))
+                {
+                    current = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    groups.Add(current);
+                }
+
+                if (current == null || string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+
+                current.TryAdd(key, value);
+            }
+        }
+
+        // Overlapping tables yield each group more than once (5 boreholes came out as 10 records),
+        // and the copies disagree, so deduplicating on identical content does not catch them.
+        return MergeByGroupKey(groups, firstKeyOfGroup);
+    }
+
+    private static List<Dictionary<string, string>> MergeByGroupKey(
+        List<Dictionary<string, string>> groups,
+        string firstKeyOfGroup)
+    {
+        var merged = new List<Dictionary<string, string>>();
+        var byIdentity = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var group in groups)
+        {
+            var identity = FindValue(group, firstKeyOfGroup);
+
+            if (string.IsNullOrWhiteSpace(identity))
+            {
+                merged.Add(group);
+                continue;
+            }
+
+            if (!byIdentity.TryGetValue(identity, out var existing))
+            {
+                byIdentity[identity] = group;
+                merged.Add(group);
+                continue;
+            }
+
+            foreach (var (key, value) in group)
+            {
+                if (!existing.TryGetValue(key, out var held) || value.Length > held.Length)
+                {
+                    existing[key] = value;
+                }
+            }
+        }
+
+        return merged;
+    }
+
     private static string Normalise(string? content)
     {
         if (string.IsNullOrWhiteSpace(content))

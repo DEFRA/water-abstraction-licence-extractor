@@ -32,6 +32,12 @@ public class OutputListDataItem
     
     public string? issueDate { get; set; }
     
+    public string? naldOrigSignatureDate { get; set; }
+    
+    public string? naldSignatureDate { get; set; }
+    
+    public bool isIssueDateFlagged { get; set; }
+    
     public string? issuer { get; set; }
     
     public bool meansFound { get; set; }

@@ -7,4 +7,6 @@ public class VerificationDataStatus
     public int? CurrentVerificationsBackupCount { get; set; }
 
     public int? CurrentVerificationsBackupVersion { get; set; }
+
+    public DateTime? LatestBackupVersionDate { get; set; }
 }

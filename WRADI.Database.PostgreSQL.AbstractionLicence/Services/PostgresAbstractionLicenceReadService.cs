@@ -51,22 +51,25 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return purposeMapping.ToList();
     }
 
-    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public async Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         await using var connection = GetPostgresConnection();
 
         var sql = new StringBuilder(
             """
-            SELECT backup_version
+            SELECT backup_version,
+                   backup_date_time_utc
             FROM public.licence_section_verification_backup_version
             ORDER BY backup_version DESC
             LIMIT 1;
             """);
         
-        return await QuerySingleOrDefaultAsync<int>(
+        var results = await QueryAsync<VerificationBackupVersion>(
             connection,
             sql.ToString(),
             0);
+
+        return results?.FirstOrDefault() ?? new VerificationBackupVersion();
     }
 
     public async Task<int> GetCurrentVerificationsCount()
@@ -148,6 +151,28 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             })
             .Where(l => l != null)
             .ToList()!;
+    }
+
+    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           SELECT distinct 
+                               licence_number,
+                               file_id
+                           FROM licence
+                           WHERE
+                                 licence_number IS NOT NULL
+                                AND file_id IS NOT NULL;
+                           """;
+
+        var results = await QueryAsync<LicenceNumberFileIdMapEntry>(
+            connection,
+            sql,
+            0);
+        
+        return results;
     }
 
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
@@ -3391,7 +3416,9 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            verification_item.is_flagged
+            -- WRADI-400: Aggregates flags suppressed; revert to `verification_item.is_flagged` to restore
+            (verification_item.is_flagged
+                AND verification_section.licence_section_name <> 'Aggregates')
                 AS IsFlagged,
 
             verification_item.flag_reason
@@ -3717,6 +3744,9 @@ private async Task<
             ocr AS Ocr,
             issue_date AS IssueDate,
             issue_year AS IssueYear,
+            nald_orig_signature_date AS NaldOrigSignatureDate,
+            nald_signature_date AS NaldSignatureDate,
+            is_issue_date_flagged AS IsIssueDateFlagged,
             issuer AS Issuer,
             means_found AS MeansFound,
             status AS Status,
@@ -3853,6 +3883,13 @@ private static void AddLicenceListItemFilters(
         "is_licence_number_flagged",
         "IsLicenceNumberFlagged",
         query.IsLicenceNumberFlagged);
+
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "is_issue_date_flagged",
+        "IsIssueDateFlagged",
+        query.IsIssueDateFlagged);
 
     ReadSqlHelper.AddCountEmptyFilter(
         sql,

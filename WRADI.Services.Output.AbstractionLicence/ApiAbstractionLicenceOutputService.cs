@@ -99,6 +99,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
@@ -402,7 +407,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         throw new NotImplementedException();
     }

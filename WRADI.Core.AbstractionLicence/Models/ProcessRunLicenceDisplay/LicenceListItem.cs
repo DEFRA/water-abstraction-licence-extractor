@@ -32,6 +32,12 @@ public sealed class LicenceListItem
 
     public short? IssueYear { get; set; }
 
+    public DateOnly? NaldOrigSignatureDate { get; set; }
+
+    public DateOnly? NaldSignatureDate { get; set; }
+
+    public bool IsIssueDateFlagged { get; set; }
+
     public string? Issuer { get; set; }
 
     public bool MeansFound { get; set; }

@@ -51,6 +51,8 @@ public static class JsOutputHelper
         }
 
         var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
+        var naldOrigSignatureDate = licence.LicenceVersion.NaldOrigSignatureDate?.ToString("yyyy-MM-dd");
+        var naldSignatureDate = licence.LicenceVersion.NaldSignatureDate?.ToString("yyyy-MM-dd");
         var issuer = licence.LicenceVersion.Issuer;
 
         var licenceSets = licence.LicenceSets
@@ -74,6 +76,9 @@ public static class JsOutputHelper
             AggregateIds = licence.AbstractionLimits.Aggregates?.Select(a => a.Id).ToArray() ?? [],
             NaldHasAggregateCondition = licence.NaldHasAggregateCondition,
             IssueDate = issueDate,
+            NaldOrigSignatureDate = naldOrigSignatureDate,
+            NaldSignatureDate = naldSignatureDate,
+            IsIssueDateFlagged = IsIssueDateFlagged(licence.LicenceVersion),
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,
             Status = status,
@@ -150,6 +155,9 @@ public static class JsOutputHelper
                 naldHasAggregateCondition = outputLine.NaldHasAggregateCondition,
                 ocr = outputLine.Ocr == "OCR",
                 issueDate = outputLine.IssueDate,
+                naldOrigSignatureDate = outputLine.NaldOrigSignatureDate,
+                naldSignatureDate = outputLine.NaldSignatureDate,
+                isIssueDateFlagged = outputLine.IsIssueDateFlagged,
                 issuer = outputLine.Issuer,
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
@@ -170,6 +178,23 @@ public static class JsOutputHelper
         }
 
         return listData;
+    }
+
+    // Flagged when the issue date matches neither of the NALD signature dates that are present
+    private static bool IsIssueDateFlagged(LicenceVersion licenceVersion)
+    {
+        if (licenceVersion.IssueDate is null)
+        {
+            return false;
+        }
+
+        if (licenceVersion.NaldOrigSignatureDate is null && licenceVersion.NaldSignatureDate is null)
+        {
+            return false;
+        }
+
+        return licenceVersion.NaldOrigSignatureDate?.Date != licenceVersion.IssueDate.Value.Date &&
+               licenceVersion.NaldSignatureDate?.Date != licenceVersion.IssueDate.Value.Date;
     }
 
     private static string ToPercent(double? value, string? ocr)

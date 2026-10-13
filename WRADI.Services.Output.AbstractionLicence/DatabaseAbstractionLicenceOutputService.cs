@@ -121,6 +121,11 @@ public class DatabaseAbstractionLicenceOutputService(
         return Task.CompletedTask;
     }
 
+    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        return await databaseReadService.GetLicenceNumberFileIdMapAsync();
+    }
+
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         // Fix up missing LicenceIds in LicenceSetList
@@ -264,7 +269,7 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetExportVerificationsAsync(skip, take);
     }
 
-    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public async Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         return await databaseReadService.GetCurrentVerificationsBackupVersionAsync();
     }

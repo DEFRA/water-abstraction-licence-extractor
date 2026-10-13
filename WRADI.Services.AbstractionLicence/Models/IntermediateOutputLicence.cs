@@ -32,6 +32,12 @@ public class IntermediateOutputLicence
     
     public string? IssueDate;
     
+    public string? NaldOrigSignatureDate;
+    
+    public string? NaldSignatureDate;
+    
+    public bool IsIssueDateFlagged;
+    
     public string? Issuer;
     
     public bool MeansFound;

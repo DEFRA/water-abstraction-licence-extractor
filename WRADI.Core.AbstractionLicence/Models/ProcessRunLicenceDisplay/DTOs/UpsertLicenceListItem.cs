@@ -32,6 +32,12 @@ public sealed class UpsertLicenceListItem
 
     public DateOnly? IssueDate { get; init; }
 
+    public DateOnly? NaldOrigSignatureDate { get; init; }
+
+    public DateOnly? NaldSignatureDate { get; init; }
+
+    public bool IsIssueDateFlagged { get; init; }
+
     public string? Issuer { get; init; }
 
     public bool MeansFound { get; init; }

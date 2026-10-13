@@ -309,6 +309,18 @@ public class AwsS3FileService(
         return GetS3Client().GetPreSignedURLAsync(request);
     }
 
+    public string GetHttpsUrl(string filename, StorageFolder folder)
+    {
+        var bucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath;
+
+        // Escaped per path segment, not whole: Uri.EscapeDataString would encode any "/" in a key
+        // as %2F and address a different object. Keys here are flat today, but that is not
+        // enforced anywhere.
+        var key = string.Join('/', filename.Split('/').Select(Uri.EscapeDataString));
+
+        return $"https://{bucketName}.s3.{regionName}.amazonaws.com/{key}";
+    }
+
     private AmazonS3Client GetS3Client()
     {
         if (_client != null)

@@ -19,6 +19,14 @@ export const getVerificationWithNotesFirstPart = (value: string): string => {
     return value.split("::")[0];
 };
 
+// Value is "Type::ProcessRunId[::Notes]", or legacy "Type[::Notes]" without the process run
+export const getVerificationWithNotesTooltip = (value: string): string => {
+    const [type, second, ...rest] = value.split("::");
+    const hasProcessRun = second !== undefined && /^\d+$/.test(second);
+    const notes = hasProcessRun ? rest.join("::") : [second, ...rest].filter(x => x !== undefined).join("::");
+    return `${type}${hasProcessRun ? ` (PR ${second})` : ''}${notes ? ` #${notes}` : ''}`;
+};
+
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
         case 'AutoConfirm':

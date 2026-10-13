@@ -2500,13 +2500,8 @@ public static class AbstractionLicenceSchemaConverter
             .ToList() // Foreach only available on lists weirdly
             .ForEach(aggregate =>
             {
-                var aggregateSet = new AggregateSetOld
-                {
-                    Aggregates = [AggregateWithContext.FromAggregate(aggregate)]
-                };
-
                 // Need to do this as the version in the aggregate set is a clone
-                aggregate.AggregateSetId = aggregateSet.SetAggregateSetId(allLicences);
+                aggregate.AggregateSetId = AggregateSetHelper.GetAggregateSetId(allLicences, [aggregate]);
 
                 if (aggregate.Variations == null)
                 {
@@ -2561,19 +2556,10 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var aggregatesGroupedByLicences in aggregatesGroupedByLicencesList)
         {
-            var aggregateSet = new AggregateSetOld
-            {
-                Aggregates = aggregatesGroupedByLicences
-                    .Select(AggregateWithContext.FromAggregate)
-                    .ToArray()
-            };
-
-            var aggregateSetId = aggregateSet.SetAggregateSetId(allLicences);
-
             // Need to do this as the version in the aggregate set is a clone
             foreach (var aggregate in aggregatesGroupedByLicences)
             {
-                aggregate.AggregateSetId = aggregateSetId;
+                aggregate.AggregateSetId = AggregateSetHelper.GetAggregateSetId(allLicences, [aggregate]);
             }
         }
         

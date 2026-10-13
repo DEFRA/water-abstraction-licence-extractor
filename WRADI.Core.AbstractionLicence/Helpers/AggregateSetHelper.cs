@@ -1,13 +1,14 @@
 using System.Text;
 using WALE.ProcessFile.Core.Helpers;
+using WRADI.Core.AbstractionLicence.Models;
 
-namespace WRADI.Core.AbstractionLicence.Models;
+namespace WRADI.Core.AbstractionLicence.Helpers;
 
-public class AggregateSetOld
+public static class AggregateSetHelper
 {
-    public string SetAggregateSetId(IReadOnlyList<Licence> allLicences)
+    public static string GetAggregateSetId(IReadOnlyList<Licence> allLicences, List<Aggregate> aggregates)
     {
-        var groupedAggregates = Aggregates
+        var groupedAggregates = aggregates
             .GroupBy(aggregate =>
             {
                 var allLicenceNumbers = new List<string> { aggregate.SourceLicenceNumber! };
@@ -77,25 +78,6 @@ public class AggregateSetOld
         }
 
         outputSb.Append($"-C{combinedValue}");
-        AggregateSetId = outputSb.ToString();
-
-        return AggregateSetId;
+        return outputSb.ToString();
     }
-
-    public string? AggregateSetId
-    {
-        get;
-        // ReSharper disable once MemberCanBePrivate.Global - can't make private as used in serialisation
-        set
-        {
-            field = value;
-
-            foreach (var aggregate in Aggregates)
-            {
-                aggregate.AggregateSetId = value;
-            }
-        }
-    }
-
-    public AggregateWithContext[] Aggregates { get; set; } = [];
 }

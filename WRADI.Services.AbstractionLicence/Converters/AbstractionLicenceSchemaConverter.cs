@@ -1566,9 +1566,8 @@ public static class AbstractionLicenceSchemaConverter
         
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
-        //AddVariationsToLicenceAggregates(allLicences);
         FlattenSubVariations(returnLicenceSets);
-        AddVariationsToLicenceAggregates(allLicences); // Do this again
+        AddVariationsToLicenceAggregates(allLicences); 
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>

@@ -12,6 +12,7 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.Services.Cache.WrInspectionReport.Interfaces;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -23,6 +24,7 @@ public class FileDataController(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
     IFileService fileService,
+    IInspectionReportFinderCacheService inspectionReportFinderCacheService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -84,6 +86,14 @@ public class FileDataController(
     {
         var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
 
+        // The list shows the ingress key, which says nothing about the document. The DMS name is
+        // held only by the discovery result, keyed by the same file id. Fetched once per run.
+        var originalFileNames = (await inspectionReportFinderCacheService
+                .GetInspectionReportFinderResultsAsync(0, int.MaxValue))
+            .Where(result => !string.IsNullOrWhiteSpace(result.FileId))
+            .GroupBy(result => result.FileId!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First().FileName, StringComparer.OrdinalIgnoreCase);
+
         using var semaphore = new SemaphoreSlim(10);
 
         var tasks = simpleResults.Select(async simpleResult =>
@@ -115,6 +125,7 @@ public class FileDataController(
                 return (object)new
                 {
                     fileId = simpleResult.FileId,
+                    originalFileName = originalFileNames.GetValueOrDefault(simpleResult.FileId.ToString()),
                     template = GetStringOrNull(metadata, "template"),
                     date = GetInspectionDate(root, metadata),
                     completeness = ComputeCompleteness(root),

@@ -71,8 +71,6 @@ public class DatabaseAbstractionLicenceOutputService(
         {
             return;
         }
-
-        // TODO RY i think this is wrong
         
         foreach (var aggregateSet in licenceSet.AggregateSets)
         {

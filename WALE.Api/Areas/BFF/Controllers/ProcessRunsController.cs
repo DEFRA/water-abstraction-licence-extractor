@@ -183,11 +183,25 @@ public class ProcessRunsController(
     }
 
     [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
+    public ActionResult UpdateLicenceListProcessRunAsync(
         [FromRoute] int processRunId)
     {
-        var result = await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);  
-        return Ok(result);
+        if (processRunId != 0)
+        {
+            _ = Task.Run((Func<Task?>)(async () =>
+            {
+                try
+                {
+                    await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);
+                }
+                catch
+                {
+                    // intentionally swallowed
+                }
+            }));
+        }
+        
+        return Ok();
     }
 
     [HttpGet]

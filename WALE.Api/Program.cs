@@ -3,6 +3,7 @@ using Amazon.SQS;
 using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
+using WALE.Api.Areas.BFF.SignalR;
 using WALE.Api.Interfaces;
 using WALE.Api.Services;
 using WALE.ProcessFile.Core.Interfaces;
@@ -39,6 +40,8 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 
 builder.Services.AddOutputCache();
+builder.Services.AddSignalR();
+
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
@@ -57,6 +60,7 @@ app.UseResponseCompression();
 app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
+app.MapHub<ProcessHub>("/hubs/process");
 app.Run();
 
 return;

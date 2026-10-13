@@ -177,7 +177,11 @@ async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsP
             && Guid.TryParse(candidate.FileId, out _))
         .Select(candidate =>
         {
-            var destinationFileName = $"{candidate.PermitNumber!.ToLower()}__{candidate.FileId!.ToLower()}.pdf";
+            // Prefixed, as WrInspectionReportIngressFile describes. Without it this source asked
+            // for keys that do not exist, leaving the "s3" source below the only one that worked.
+            var destinationFileName = WrInspectionReportIngressFile.BuildFileName(
+                candidate.PermitNumber!,
+                candidate.FileId!);
 
             return (
                 FilePath: destinationFileName,
@@ -191,7 +195,7 @@ async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsP
 async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsPath)>> GetCandidatesFromS3Async(
     IServiceProvider serviceProvider)
 {
-    const string wr51Prefix = "wr51__";
+    const string wr51Prefix = WrInspectionReportIngressFile.Prefix;
 
     var fileService = serviceProvider.GetRequiredService<IFileService>();
     var allFiles = await fileService.GetAllFilesAsync();

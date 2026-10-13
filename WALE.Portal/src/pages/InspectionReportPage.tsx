@@ -17,6 +17,7 @@ interface SimpleMatchResult {
 const PAGE_SIZES = [10, 100, 500, 1000];
 
 interface FileDetails {
+    originalFileName?: string | null;
     template?: string;
     date?: string;
     completeness?: number;
@@ -50,7 +51,7 @@ function InspectionReportPage() {
 
     const [activeTab, setActiveTab] = useState<'files' | 'actions'>('files');
 
-    type SortField = 'filename' | 'status' | 'date' | 'template' | 'completeness' | 'isScan';
+    type SortField = 'filename' | 'originalFileName' | 'status' | 'date' | 'template' | 'completeness' | 'isScan';
     const [sortField, setSortField] = useState<SortField | ''>('');
     const [sortAscending, setSortAscending] = useState(true);
 
@@ -120,6 +121,7 @@ function InspectionReportPage() {
         const getSortValue = (file: SimpleMatchResult, field: SortField): string | number | undefined => {
             switch (field) {
                 case 'filename': return file.filename ?? undefined;
+                case 'originalFileName': return detailsByFileId[file.fileId]?.originalFileName ?? undefined;
                 case 'status': return file.status;
                 case 'date': return detailsByFileId[file.fileId]?.date;
                 case 'template': return detailsByFileId[file.fileId]?.template;
@@ -135,7 +137,10 @@ function InspectionReportPage() {
         const matching = files.filter(f => {
             const isScan = detailsByFileId[f.fileId]?.isScan;
 
-            return (term === '' || (f.filename ?? '').toLowerCase().includes(term))
+            const originalName = (detailsByFileId[f.fileId]?.originalFileName ?? '').toLowerCase();
+
+            return (term === '' || (f.filename ?? '').toLowerCase().includes(term)
+                    || originalName.includes(term))
                 && (statusFilter === '' || f.status === statusFilter)
                 && (templateFilter === '' || detailsByFileId[f.fileId]?.template === templateFilter)
                 && (scanFilter === '' || (scanFilter === 'scan' ? isScan === true : isScan === false));
@@ -358,6 +363,9 @@ function InspectionReportPage() {
                         Filename <a href="#" onClick={(e) => { e.preventDefault(); handleSort('filename'); }}>&#8693;</a>
                     </th>
                     <th style={{textAlign: 'left'}}>
+                        DMS name <a href="#" onClick={(e) => { e.preventDefault(); handleSort('originalFileName'); }}>&#8693;</a>
+                    </th>
+                    <th style={{textAlign: 'left'}}>
                         Status <a href="#" onClick={(e) => { e.preventDefault(); handleSort('status'); }}>&#8693;</a>
                     </th>
                     <th style={{textAlign: 'left'}}>
@@ -404,6 +412,7 @@ function InspectionReportPage() {
                                     {file.filename}
                                 </a>
                             </td>
+                            <td>{details ? (details.originalFileName ?? '-') : '...'}</td>
                             <td>{file.status}</td>
                             <td>{details ? (details.date ?? '-') : '...'}</td>
                             <td>

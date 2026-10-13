@@ -1566,7 +1566,6 @@ public static class AbstractionLicenceSchemaConverter
         
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
-        FlattenSubVariations(returnLicenceSets);
         AddVariationsToLicenceAggregates(allLicences); 
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
@@ -1826,64 +1825,6 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void FlattenSubVariations(List<LicenceSet> licenceSets)
-    {
-        foreach (var licenceSet in licenceSets)
-        {
-            if (licenceSet.AggregateSets != null)
-            {
-                foreach (var aggregate in licenceSet.AggregateSets!)
-                {
-                    FlattenSubVariations(aggregate);
-                }
-            }
-
-            foreach (var licence in licenceSet.Licences)
-            {
-                if (licence.AbstractionLimits.Aggregates == null)
-                {
-                    continue;
-                }
-
-                foreach (var aggregate in licence.AbstractionLimits.Aggregates!)
-                {
-                    FlattenSubVariations(aggregate);
-                }
-            }
-        }
-    }
-
-    private static void FlattenSubVariations(Aggregate aggregate)
-    {
-        if (aggregate.Variations == null)
-        {
-            return;
-        }
-
-        var newVariations = new List<AggregateVariation>();
-
-        foreach (var variation in aggregate.Variations)
-        {
-            newVariations.Add(variation);
-
-            if (variation.Variations == null)
-            {
-                continue;
-            }
-
-            newVariations.AddRange(variation.Variations);
-            variation.Variations = null;
-        }
-
-        newVariations = newVariations
-            .GroupBy(v => v.Id)
-            .Select(v => v.First())
-            .Where(v => v.Id != aggregate.Id)
-            .ToList();
-
-        aggregate.Variations = newVariations.Count >= 1 ? newVariations.ToArray() : null;
-    }
-
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(
         Licence primaryLicence,
         List<Licence> allLicences,

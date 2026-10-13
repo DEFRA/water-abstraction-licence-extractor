@@ -3680,6 +3680,44 @@ export class Client {
     }
 
     /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getWrInspectionReportSummaries(processRunId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetWrInspectionReportSummaries?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWrInspectionReportSummaries(_response);
+        });
+    }
+
+    protected processGetWrInspectionReportSummaries(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param matchesResultId (optional) 
      * @return OK
      */
@@ -4624,6 +4662,48 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    deleteLicenceSectionVerifications(body: LicenceSectionVerification[]): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/DeleteLicenceSectionVerifications";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLicenceSectionVerifications(_response);
+        });
+    }
+
+    protected processDeleteLicenceSectionVerifications(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * @param filename (optional) 
      * @param folder (optional) 
      * @return OK
@@ -5202,6 +5282,47 @@ export class Client {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    sendFileProcessSingleMessages(body: FileProcessSingleRequest[]): Promise<SendFileProcessSingleMessagesResponse> {
+        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessSingleMessages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendFileProcessSingleMessages(_response);
+        });
+    }
+
+    protected processSendFileProcessSingleMessages(response: Response): Promise<SendFileProcessSingleMessagesResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = SendFileProcessSingleMessagesResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SendFileProcessSingleMessagesResponse>(null as any);
     }
 
     /**
@@ -7108,6 +7229,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
     licenceSets?: number | undefined;
     status?: number | undefined;
     licenceSectionVerifications?: number | undefined;
+    ocr?: number | undefined;
 
     [key: string]: any;
 
@@ -7139,6 +7261,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
             this.licenceSets = _data["licenceSets"];
             this.status = _data["status"];
             this.licenceSectionVerifications = _data["licenceSectionVerifications"];
+            this.ocr = _data["ocr"];
         }
     }
 
@@ -7168,6 +7291,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
         data["licenceSets"] = this.licenceSets;
         data["status"] = this.status;
         data["licenceSectionVerifications"] = this.licenceSectionVerifications;
+        data["ocr"] = this.ocr;
         return data;
     }
 }
@@ -7186,6 +7310,7 @@ export interface ICumulativeFilterCounts {
     licenceSets?: number | undefined;
     status?: number | undefined;
     licenceSectionVerifications?: number | undefined;
+    ocr?: number | undefined;
 
     [key: string]: any;
 }
@@ -12023,6 +12148,70 @@ export enum ScrapeStatus {
     FileIdMissing = "FileIdMissing",
     InProgress = "InProgress",
     Error = "Error",
+}
+
+export class SendFileProcessSingleMessagesResponse implements ISendFileProcessSingleMessagesResponse {
+    requested?: number;
+    enqueued?: number;
+    failedFileIds?: string[];
+
+    [key: string]: any;
+
+    constructor(data?: ISendFileProcessSingleMessagesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.requested = _data["requested"];
+            this.enqueued = _data["enqueued"];
+            if (Array.isArray(_data["failedFileIds"])) {
+                this.failedFileIds = [] as any;
+                for (let item of _data["failedFileIds"])
+                    this.failedFileIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SendFileProcessSingleMessagesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new SendFileProcessSingleMessagesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["requested"] = this.requested;
+        data["enqueued"] = this.enqueued;
+        if (Array.isArray(this.failedFileIds)) {
+            data["failedFileIds"] = [];
+            for (let item of this.failedFileIds)
+                data["failedFileIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISendFileProcessSingleMessagesResponse {
+    requested?: number;
+    enqueued?: number;
+    failedFileIds?: string[];
+
+    [key: string]: any;
 }
 
 export class TimeCutoff implements ITimeCutoff {

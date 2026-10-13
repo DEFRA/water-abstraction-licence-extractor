@@ -212,6 +212,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return Task.FromResult(0);
     }
 
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        return Task.FromResult(0);
+    }
+
     public Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         throw new NotImplementedException();

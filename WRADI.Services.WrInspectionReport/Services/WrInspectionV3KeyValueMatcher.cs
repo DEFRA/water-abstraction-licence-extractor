@@ -147,6 +147,73 @@ public static class WrInspectionV3KeyValueMatcher
             .ToList();
     }
 
+    /// <summary>The actions grid's own column names, and the dropdown text an unfilled row holds.</summary>
+    private static readonly string[] ActionHeaders = ["Reference", "Type", "Action", "Complete by"];
+
+    private const string UnfilledDropdown = "Choose an item.";
+
+    private static readonly (string Header, string FieldName)[] ActionKeys =
+    [
+        ("Reference", WrInspectionReportFieldNames.ActionReference),
+        ("Type", WrInspectionReportFieldNames.ActionType),
+        ("Action", WrInspectionReportFieldNames.ActionDescription),
+        ("Complete by", WrInspectionReportFieldNames.ActionCompleteBy)
+    ];
+
+    /// <summary>
+    /// One line per action into four parallel fields, which the converter zips by index the same
+    /// way it does meters. Empty lines are kept, so an action with no reference does not pull the
+    /// next action's reference onto itself.
+    /// </summary>
+    public static void ApplyActions(
+        MatchesResult item,
+        IReadOnlyList<DocumentTable> tables,
+        string serviceName)
+    {
+        var actions = HeaderedTableHelper.ReadRows(tables, ActionHeaders, [UnfilledDropdown]);
+
+        if (actions.Count == 0)
+        {
+            return;
+        }
+
+        var resolved = new Dictionary<string, LabelGroupResult>();
+
+        foreach (var (header, fieldName) in ActionKeys)
+        {
+            var perAction = actions
+                .Select(action => action.GetValueOrDefault(header, string.Empty))
+                .Select(value => fieldName == WrInspectionReportFieldNames.ActionType
+                    ? RejoinHyphenatedWrap(value)
+                    : value)
+                .ToList();
+
+            if (perAction.All(string.IsNullOrWhiteSpace))
+            {
+                continue;
+            }
+
+            resolved[fieldName] = BuildResultFromLines(fieldName, perAction, serviceName);
+        }
+
+        if (resolved.Count == 0)
+        {
+            return;
+        }
+
+        item.Matches = (item.Matches ?? [])
+            .Where(match => match.LabelGroupName == null || !resolved.ContainsKey(match.LabelGroupName))
+            .Concat(resolved.Values)
+            .ToList();
+    }
+
+    /// <summary>
+    /// The type cell wraps mid-word, so "Non-compliance" is read back as "Non- compliance". Only
+    /// applied to the type, which is a dropdown whose values never contain a space after a hyphen.
+    /// The action text is left alone, where a hyphen followed by a space can be genuine.
+    /// </summary>
+    private static string RejoinHyphenatedWrap(string value) => value.Replace("- ", "-");
+
     private static LabelGroupResult BuildResult(string fieldName, string value, string serviceName)
     {
         var lines = value

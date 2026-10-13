@@ -47,4 +47,8 @@ public class WrInspectionReport
     public string? NonCompliancesRaw { get; set; }
 
     public string? ActionsRaw { get; set; }
+
+    // ActionsRaw is kept alongside: the rows come from the table read, so a document whose actions
+    // grid is not found still shows what the line capture saw.
+    public List<WrInspectionReportAction>? Actions { get; set; }
 }

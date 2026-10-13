@@ -419,7 +419,8 @@ public static class WrInspectionReportSchemaConverter
             NonCompliancesRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
                 GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3NonCompliancesBlock)),
             ActionsRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
-                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3ActionsBlock))
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3ActionsBlock)),
+            Actions = BuildActions(matchesResult)
         };
     }
 
@@ -653,6 +654,42 @@ public static class WrInspectionReportSchemaConverter
     /// <summary>Test seam for the v3 per-meter overlay.</summary>
     internal static List<WrInspectionReportMeter> BuildMetersForTests(MatchesResult matchesResult) =>
         BuildMeters(matchesResult);
+
+    /// <summary>
+    /// Null rather than empty when the actions grid was not read, so a caller can tell "no actions
+    /// on this document" from "this template's actions are not extracted".
+    /// </summary>
+    private static List<WrInspectionReportAction>? BuildActions(MatchesResult matchesResult)
+    {
+        var reference = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionReference);
+        var type = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionType);
+        var action = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionDescription);
+        var completeBy = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionCompleteBy);
+
+        var actionCount = new[] { reference.Count, type.Count, action.Count, completeBy.Count }.Max();
+
+        if (actionCount == 0)
+        {
+            return null;
+        }
+
+        return Enumerable.Range(0, actionCount)
+            .Select(i => new WrInspectionReportAction
+            {
+                Reference = Blank(reference.ElementAtOrDefault(i)),
+                Type = Blank(type.ElementAtOrDefault(i)),
+                Action = Blank(action.ElementAtOrDefault(i)),
+                CompleteBy = Blank(completeBy.ElementAtOrDefault(i))
+            })
+            .ToList();
+    }
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 
     /// <summary>
     /// Gap-preserving only on v3, whose meter lines come from the table read and use position as

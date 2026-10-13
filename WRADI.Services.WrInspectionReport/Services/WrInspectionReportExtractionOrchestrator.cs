@@ -183,6 +183,9 @@ public static class WrInspectionReportExtractionOrchestrator
 
             WrInspectionV3KeyValueMatcher.ApplyMeters(
                 scrapeResult, tables, tableExtractorService.Name);
+
+            WrInspectionV3KeyValueMatcher.ApplyActions(
+                scrapeResult, tables, tableExtractorService.Name);
         }
 
         scrapeResult.AdditionalInformation ??= [];

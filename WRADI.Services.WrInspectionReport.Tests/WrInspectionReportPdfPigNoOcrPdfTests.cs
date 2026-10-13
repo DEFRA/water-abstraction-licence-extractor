@@ -182,6 +182,21 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"Meter rows:               {meterRows.Count} from {csvRows.Count} documents");
         testOutputHelper.WriteLine($"Meter CSV written to:     {metersPath}");
 
+        // Zero on this corpus until v3 documents enter it: only v3 prints an actions grid. Written
+        // regardless so the file is not mistaken for a missing export when it does.
+        var actionsPath = Path.Combine(OutputService.OutputFolder!, "_extraction-results-actions.csv");
+        var actionRows = formsList
+            .OrderBy(f => f.Metadata.Filename, StringComparer.OrdinalIgnoreCase)
+            .SelectMany(WrInspectionReportActionCsvLine.FromForm)
+            .ToList();
+
+        await File.WriteAllBytesAsync(
+            actionsPath,
+            WrInspectionReportReportBuilder.BuildCsv(actionRows));
+
+        testOutputHelper.WriteLine(
+            $"Action rows:              {actionRows.Count} (v3 only - none in this corpus yet)");
+
         await ReportCoverage(formsList, testOutputHelper, failures, total);
     }
 

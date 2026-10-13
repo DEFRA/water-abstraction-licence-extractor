@@ -553,6 +553,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
         var lines = new List<WrInspectionReportCsvLine>();
         var meterLines = new List<WrInspectionReportMeterCsvLine>();
+        var actionLines = new List<WrInspectionReportActionCsvLine>();
 
         // Act
         foreach (var filename in files)
@@ -569,6 +570,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
             lines.Add(WrInspectionReportCsvLine.FromForm(form));
             meterLines.AddRange(WrInspectionReportMeterCsvLine.FromForm(form));
+            actionLines.AddRange(WrInspectionReportActionCsvLine.FromForm(form));
         }
 
         var outputFolder = Path.Combine(Directory.GetCurrentDirectory(), "Output");
@@ -577,6 +579,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         var fullPath = Path.Combine(outputFolder, "WR51-v3-all-columns.csv");
         var sharedPath = Path.Combine(outputFolder, "WR51-v3.csv");
         var metersPath = Path.Combine(outputFolder, "WR51-v3-meters.csv");
+        var actionsPath = Path.Combine(outputFolder, "WR51-v3-actions.csv");
 
         await File.WriteAllBytesAsync(fullPath, WrInspectionReportReportBuilder.BuildCsv(lines));
         await File.WriteAllBytesAsync(
@@ -585,12 +588,18 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         await File.WriteAllBytesAsync(
             metersPath,
             WrInspectionReportReportBuilder.BuildCsv(meterLines));
+        await File.WriteAllBytesAsync(
+            actionsPath,
+            WrInspectionReportReportBuilder.BuildCsv(actionLines));
 
         // Assert
-        testOutputHelper.WriteLine($"{lines.Count} document row(s), {meterLines.Count} meter row(s)");
+        testOutputHelper.WriteLine(
+            $"{lines.Count} document row(s), {meterLines.Count} meter row(s), " +
+            $"{actionLines.Count} action row(s)");
         testOutputHelper.WriteLine($"  {fullPath}");
         testOutputHelper.WriteLine($"  {sharedPath}");
         testOutputHelper.WriteLine($"  {metersPath}");
+        testOutputHelper.WriteLine($"  {actionsPath}");
 
         foreach (var line in lines)
         {
@@ -640,6 +649,24 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             .ToList();
 
         Assert.Empty(unresolvedProvisions);
+
+        // Only the documents with a filled action contribute rows, the rest being unfilled
+        // dropdowns. Asserting the text survives whole is the point: the fragmented copy of this
+        // same grid splits one action across a row per line.
+        Assert.NotEmpty(actionLines);
+
+        foreach (var line in actionLines)
+        {
+            testOutputHelper.WriteLine(
+                $"  action {line.ActionNumber}/{line.ActionCount} type={line.Type} " +
+                $"text={line.Action?[..Math.Min(60, line.Action.Length)]}");
+        }
+
+        Assert.Contains(
+            actionLines,
+            line => line.Action != null
+                && line.Action.Contains("same day", StringComparison.OrdinalIgnoreCase)
+                && line.Action.Contains("record keeping", StringComparison.OrdinalIgnoreCase));
     }
 
     private static string Flatten(string? value) =>

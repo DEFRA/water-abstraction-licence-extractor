@@ -48,7 +48,9 @@ export function RefreshLicenceListData({
         let disposed = false;
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${waleApiBaseUrl}/hubs/process`)
+            .withUrl(`${waleApiBaseUrl}/hubs/process`, {
+                withCredentials: false
+            })
             .withAutomaticReconnect()
             .configureLogging(signalR.LogLevel.Information)
             .build();
@@ -138,11 +140,6 @@ export function RefreshLicenceListData({
 
         setError(null);
         setSuccessMessage(null);
-
-        if (!isConnected) {
-            setError('Notification connection is not available.');
-            return;
-        }
 
         updateStatus('starting');
 

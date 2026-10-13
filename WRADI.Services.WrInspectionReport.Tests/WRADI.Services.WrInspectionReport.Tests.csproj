@@ -23,16 +23,31 @@
         <Using Include="Xunit" />
     </ItemGroup>
 
+    <!-- PDFClown.NET's ContentScanner uses System.Drawing.Matrix/PointF for CTM math, which
+         .NET 6+ blocks outright on non-Windows unless explicitly opted back in - libgdiplus
+         alone (see link_deps below) isn't enough. -->
+    <ItemGroup>
+        <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+    </ItemGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
         <ProjectReference Include="..\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence\WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.csproj" />
         <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
         <ProjectReference Include="..\WALE.ProcessFile.Services.Tabula\WALE.ProcessFile.Services.Tabula.csproj" />
+        <ProjectReference Include="..\WALE.ProcessFile.Services.PdfClown\WALE.ProcessFile.Services.PdfClown.csproj" />
         <ProjectReference Include="..\WRADI.Services.ProcessFile.WrInspectionReport\WRADI.Services.ProcessFile.WrInspectionReport.csproj" />
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
         <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib" />
         <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib" />
+        <!-- System.Drawing.Common (needed by PDFClown.NET's ContentScanner) needs libgdiplus,
+             which isn't bundled for macOS - brew install mono-libgdiplus, then symlink it where
+             dyld actually looks. -->
+        <MakeDir Directories="$(OutDir)runtimes/osx-arm64/native" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libgdiplus.dylib $(OutDir)runtimes/osx-arm64/native/libgdiplus.dll.dylib" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libgdiplus.dylib $(OutDir)runtimes/osx-arm64/native/libgdiplus.dll" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libgdiplus.dylib $(OutDir)runtimes/osx-arm64/native/libgdiplus.dylib" />
     </Target>
 </Project>

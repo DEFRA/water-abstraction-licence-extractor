@@ -12,6 +12,13 @@
       <ProjectReference Include="..\WRADI.Services.ProcessFile.WrInspectionReport\WRADI.Services.ProcessFile.WrInspectionReport.csproj" />
     </ItemGroup>
 
+    <!-- Doesn't flow transitively from WALE.ProcessFile.Services.PdfClown's own csproj - needed
+         here directly, or PdfClownGridTableExtractorService's Gdip init throws
+         TypeInitializationException on Linux/Unix and silently returns no tables. -->
+    <ItemGroup>
+        <RuntimeHostConfigurationOption Include="System.Drawing.EnableUnixSupport" Value="true" />
+    </ItemGroup>
+
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.10" />
       <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.10" />

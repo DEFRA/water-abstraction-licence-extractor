@@ -6,11 +6,13 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfClown;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Tabula;
@@ -87,20 +89,22 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             MessageQueueService);
     }
 
-    private class TruthFile
+    // Internal, not private: lets PdfClownGoldenSetComparisonTests score against the same truth
+    // and classification rules, so the two harnesses' numbers stay comparable.
+    internal class TruthFile
     {
         public string? SourceFile { get; set; }
         public List<string>? DocumentShape { get; set; }
         public Dictionary<string, TruthField> Fields { get; set; } = new();
     }
 
-    private class TruthField
+    internal class TruthField
     {
         public bool Present { get; set; }
         public string? TruthValue { get; set; }
     }
 
-    private enum Outcome
+    internal enum Outcome
     {
         Unmodeled,
         TrueNegative,
@@ -299,7 +303,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         return 1.0 - (double)distance / Math.Max(a.Length, b.Length);
     }
 
-    private static Outcome Classify(string fieldName, TruthField truth, string? extractedRaw)
+    internal static Outcome Classify(string fieldName, TruthField truth, string? extractedRaw)
     {
         if (UnmodeledFields.Contains(fieldName))
         {
@@ -401,6 +405,21 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     }
 
     /// <summary>
+    /// Same harness, grid extraction via PdfClownGridTableExtractorService: the PDF's own drawn
+    /// hairline borders read through PdfClown's content-stream scanner, no cloud call or cost. Goes
+    /// through the production TableExtractorHelper matching via a real DocumentTable, so unlike
+    /// PdfClownGoldenSetComparisonTests' simplified scoring this is apples-to-apples. Separate CSV
+    /// (suffix "-pdfclown-table-based").
+    /// </summary>
+    [Fact]
+    public async Task WhenScoringWithPdfClownTableExtractionEnabled_ThenReportsPerFieldAccuracy()
+    {
+        var tableExtractorService = new PdfClownGridTableExtractorService(CacheService);
+
+        await RunHarnessAsync(tableExtractorService, outputSuffix: "-pdfclown-table-based");
+    }
+
+    /// <summary>
     /// The cost-optimised two-tier design actually wired into WrInspectionReportExtractionOrchestrator,
     /// at its default minimumFieldsToSkipFallback (10, tuned via
     /// WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve - see that
@@ -469,6 +488,19 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
     }
 
+    /// <summary>
+    /// Satisfies PdfDataExtractorService's non-null requirement on the baseline run without
+    /// enabling any table matching. Mirrors the stub of the same name in Wr51PdfPigNoOcrPdfTests.
+    /// </summary>
+    private class EmptyTableExtractorService : ITableExtractorService
+    {
+        public string Name => "Empty";
+
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+            PdfDocument pdfDocument, Guid fileId, int processRunId) =>
+            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
+    }
+
     private async Task RunHarnessAsync(
         ITableExtractorService? tableExtractorService,
         string outputSuffix,
@@ -490,7 +522,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         var pdfFolder = TestConfig.PdfFolder;
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
-        lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
+
+        // Same extractor for both roles: PdfDataExtractorService's Structured/Unstructured split is
+        // independent of this harness's overlay work, and it throws if either is null while any
+        // active label needs it. The baseline passes tableExtractorService: null to mean "no
+        // overlay", which these properties can't express, so they get an empty stub. The parameter
+        // itself stays null - it separately drives whether the orchestrator runs the overlay at all,
+        // so coalescing it there would turn the no-table baseline into a table-based run.
+        var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
+        lookupConfiguration.StructuredTableExtractorService = lookupTableExtractorService;
+        lookupConfiguration.UnstructuredTableExtractorService = lookupTableExtractorService;
 
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
@@ -714,5 +755,19 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
+
+        // A partial run is the dangerous case: recall is computed over whatever survived
+        // extraction, so a wiring bug that kills most of the golden set still reports a plausible
+        // percentage over a quietly smaller denominator, and only a total wipeout trips the assert
+        // above. Missing PDFs are environmental and excluded; anything else means the numbers are
+        // incomplete and not comparable to another run.
+        var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
+
+        Assert.True(
+            scoredDocumentCount == expectedDocumentCount,
+            $"Only {scoredDocumentCount} of {expectedDocumentCount} available golden-set documents were scored - "
+            + "the accuracy numbers above are computed over an incomplete set and are not comparable to other runs. "
+            + $"Failures:{Environment.NewLine}"
+            + string.Join(Environment.NewLine, extractionFailures.Select(f => $"  {f.SourceFile}: {f.Error}")));
     }
 }

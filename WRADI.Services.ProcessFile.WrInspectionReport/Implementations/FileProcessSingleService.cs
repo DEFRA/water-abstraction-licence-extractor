@@ -4,6 +4,7 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
+using WALE.ProcessFile.Services.PdfClown;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Services;
@@ -45,7 +46,7 @@ public class FileProcessSingleService(
         }
 
         var lookupConfig = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             fileService,
             cacheService,
@@ -133,6 +134,23 @@ public class FileProcessSingleService(
 
         try
         {
+            // KNOWN ISSUE: PDFClown.NET's ContentScanner has two memory-corruption bugs on Linux -
+            // a native Matrix handle leak in GraphicsState.Clone()/CopyTo() that segfaults after a
+            // document-dependent number of border rectangles, and an AccessViolationException in
+            // CompositeFont.LoadEncoding() on composite/CID-keyed fonts. Both kill the process
+            // rather than degrade, which is why this was reverted to Tabula. Wired back in for
+            // review only; the risk hasn't changed.
+            var pdfBytesForTableExtraction = await ReadPdfBytesAsync(pdfFilename);
+            var tableExtractorService = new PdfClownGridTableExtractorService(cacheService);
+
+            // WrFluentRule marks every table-based label LayoutExtractorTableShape.Unstructured, so
+            // PdfDataExtractorService's needsToParseUnstructuredTables is always true here and
+            // throws NoNullAllowedException without this. Added 2026-09-23 without updating
+            // lookupConfig, so every WR51 document failed at this point. Same instance as the
+            // orchestrator's overlay below - wiring, not new extraction.
+            lookupConfig.StructuredTableExtractorService = tableExtractorService;
+            lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
+
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     pdfFilename,
@@ -141,7 +159,9 @@ public class FileProcessSingleService(
                     lookupConfig,
                     [pdfFilename],
                     processRun.ProcessRunId,
-                    pdfDataExtractor);
+                    pdfDataExtractor,
+                    tableExtractorService,
+                    pdfBytesForTableExtraction);
 
             if (stopExecution)
             {
@@ -187,6 +207,36 @@ public class FileProcessSingleService(
         finally
         {
             pdfDataExtractor.InUse = false;
+        }
+    }
+
+    // A second, separate read of the same file pdfDataExtractor already reads internally for the
+    // heuristic pass - same pattern the golden-set harness already uses (Wr51GroundTruthAccuracyTests.
+    // RunHarnessAsync). Table extraction is a pure accuracy overlay, never load-bearing, so a read
+    // failure here degrades to null (heuristic-only, today's behaviour) rather than failing the
+    // document.
+    private async Task<byte[]?> ReadPdfBytesAsync(string pdfFilename)
+    {
+        try
+        {
+            await using var stream = await fileService.GetFileAsStreamAsync(pdfFilename);
+
+            if (stream == null)
+            {
+                return null;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            return memoryStream.ToArray();
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Could not read '{pdfFilename}' " +
+                $"for table extraction, falling back to heuristic-only matching - {ex.Message}");
+
+            return null;
         }
     }
 }

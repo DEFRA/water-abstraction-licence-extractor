@@ -19,6 +19,7 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Services.PdfClown\WALE.ProcessFile.Services.PdfClown.csproj" />
       <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
       <ProjectReference Include="..\WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj" />
     </ItemGroup>

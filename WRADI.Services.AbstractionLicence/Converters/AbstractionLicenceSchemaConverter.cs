@@ -1500,6 +1500,23 @@ public static class AbstractionLicenceSchemaConverter
 
                 if (returnLicenceSets.Any(x => x.LicenceSetId == licenceSet.LicenceSetId))
                 {
+                    var matchingLicenceSet = returnLicenceSets.First(x => x.LicenceSetId == licenceSet.LicenceSetId);
+
+                    if (matchingLicenceSet.AggregateSets == null)
+                    {
+                        continue;
+                    }
+
+                    // TODO should probably also not group on other stuff here
+                    if (matchingLicenceSet.AggregateSets.Any(x => x.GetCombinedLimitValue() == aggregate.GetCombinedLimitValue()))
+                    {
+                        continue;
+                    }
+
+                    var existingAggregateSets = matchingLicenceSet.AggregateSets!.ToList();
+                    existingAggregateSets.Add(aggregate);
+
+                    matchingLicenceSet.AggregateSets = existingAggregateSets.ToArray();
                     continue;
                 }
                 

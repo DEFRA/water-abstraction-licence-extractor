@@ -471,10 +471,8 @@ public class PdfPigNoOcrPdfTests
         
         // Check aggregate sets
         Assert.NotNull(licenceSets[0].AggregateSets!);
-        Assert.Single(licenceSets[0].AggregateSets!);
+        Assert.Equal(2, licenceSets[0].AggregateSets!.Length);
         Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C30", licenceSets[0].AggregateSets[0].AggregateSetId);
-        Assert.Equal(2, licenceSets[0].AggregateSets.Length);
-        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C90", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licenceSets[0].AggregateSets[0].Id);
         Assert.Equal("1/01/01/001", licenceSets[0].AggregateSets[0].SourceLicenceNumber);
         Assert.Equal(2, licenceSets[0].AggregateSets[0].LinkedLicences!.Length);
@@ -488,7 +486,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licenceSets[0].AggregateSets[0].Variations![0].Limits);
         Assert.Equal(30, licenceSets[0].AggregateSets[0].Variations![0].Limits[0].Value);
         
-        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C90", licenceSets[0].AggregateSets[1].AggregateSetId);
+        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C60", licenceSets[0].AggregateSets[1].AggregateSetId);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C60", licenceSets[0].AggregateSets[1].Id);
         Assert.Equal("1/01/01/003", licenceSets[0].AggregateSets[1].SourceLicenceNumber);
         Assert.Equal(2, licenceSets[0].AggregateSets[1].LinkedLicences!.Length);

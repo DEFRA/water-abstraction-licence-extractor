@@ -188,7 +188,7 @@ export function RefreshLicenceListData({
                 <button
                     type="button"
                     onClick={startRefreshProcess}
-                    disabled={isRunning || !isConnected || !processRunId}
+                    disabled={isRunning}
                     style={{
                         backgroundColor: '#dc3545',
                         color: 'white',

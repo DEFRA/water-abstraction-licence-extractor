@@ -627,11 +627,16 @@ public static class WrInspectionReportSchemaConverter
         var reading = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Reading);
         var flowRate = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.FlowRate);
         var units = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Units);
+        var verificationCertificate = GetMultilineTextLines(
+            matchesResult, WrInspectionReportFieldNames.VerificationCertificate);
+        var maintenanceRecords = GetMultilineTextLines(
+            matchesResult, WrInspectionReportFieldNames.MaintenanceRecords);
 
         var meterCount = new[]
         {
             meterName.Count, meterMake.Count, serialNumber.Count, meterAssetNumber.Count,
-            reading.Count, flowRate.Count, units.Count
+            reading.Count, flowRate.Count, units.Count, verificationCertificate.Count,
+            maintenanceRecords.Count
         }.Max();
 
         meterCount = Math.Max(meterCount, 1);
@@ -645,7 +650,9 @@ public static class WrInspectionReportSchemaConverter
                 MeterAssetNumber = meterAssetNumber.ElementAtOrDefault(i),
                 Reading = reading.ElementAtOrDefault(i),
                 FlowRate = flowRate.ElementAtOrDefault(i),
-                Units = units.ElementAtOrDefault(i)
+                Units = units.ElementAtOrDefault(i),
+                VerificationCertificate = verificationCertificate.ElementAtOrDefault(i),
+                MaintenanceRecords = maintenanceRecords.ElementAtOrDefault(i)
             })
             .ToList();
     }

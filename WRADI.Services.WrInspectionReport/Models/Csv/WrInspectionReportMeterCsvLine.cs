@@ -28,6 +28,7 @@ public class WrInspectionReportMeterCsvLine
     public string? Units { get; set; }
     public string? CalibrationCertificate { get; set; }
     public string? VerificationCertificate { get; set; }
+    public string? MaintenanceRecords { get; set; }
 
     /// <summary>
     /// A form from ToForm always yields at least one row: BuildMeters floors its count at one, so
@@ -57,7 +58,8 @@ public class WrInspectionReportMeterCsvLine
             FlowRate = meter.FlowRate,
             Units = meter.Units,
             CalibrationCertificate = meter.CalibrationCertificate,
-            VerificationCertificate = meter.VerificationCertificate
+            VerificationCertificate = meter.VerificationCertificate,
+            MaintenanceRecords = meter.MaintenanceRecords
         });
     }
 }

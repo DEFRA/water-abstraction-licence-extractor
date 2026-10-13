@@ -104,4 +104,6 @@ public static class WrInspectionReportFieldNames
     public const string V3ConditionCompensationOrAugmentation = nameof(V3ConditionCompensationOrAugmentation);
     public const string V3ConditionFishAndEelScreening = nameof(V3ConditionFishAndEelScreening);
 
+    public const string MaintenanceRecords = nameof(MaintenanceRecords);
+    public const string VerificationCertificate = nameof(VerificationCertificate);
 }

@@ -1498,7 +1498,7 @@ public static class AbstractionLicenceSchemaConverter
                     AggregateSets = [aggregate]
                 };
 
-                if (returnLicenceSets.Any(x => x.LicenceSetId == licenceSet.LicenceSetId))
+                if (returnLicenceSets.Any(ls => ls.LicenceSetId == licenceSet.LicenceSetId))
                 {
                     var matchingLicenceSet = returnLicenceSets.First(x => x.LicenceSetId == licenceSet.LicenceSetId);
 
@@ -1507,9 +1507,17 @@ public static class AbstractionLicenceSchemaConverter
                         continue;
                     }
 
-                    // TODO should probably also not group on other stuff here
-                    if (matchingLicenceSet.AggregateSets.Any(x => x.GetCombinedLimitValue() == aggregate.GetCombinedLimitValue()))
+                    if (matchingLicenceSet.AggregateSets.Any(
+                        agg => AreAggregatesFundamentallyEqual(agg, aggregate)))
                     {
+                        var primary = matchingLicenceSet.AggregateSets.First(agg =>
+                            AreAggregatesFundamentallyEqual(agg, aggregate));
+
+                        var variations = new List<AggregateVariation>();
+                        variations.AddRange(primary.Variations ?? []);
+                        variations.Add(AggregateVariation.FromAggregate(aggregate, "Different source licence / different order"));
+                        
+                        primary.Variations = variations.ToArray();
                         continue;
                     }
 
@@ -1556,18 +1564,11 @@ public static class AbstractionLicenceSchemaConverter
                 $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - AddIncomingLinksAsync took {duration}ms");
         }
         
-        AddVariationsAndGroupAggregatesLicenceAggregates(allLicences);
-        EnrichAndGroupLicenceSetAggregates(returnLicenceSets);
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
-        FlattenSubVariations(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
-
-        // Do these bits again
-        AddVariationsAndGroupAggregatesLicenceAggregates(allLicences);
+        //AddVariationsToLicenceAggregates(allLicences);
         FlattenSubVariations(returnLicenceSets);
-        AddVariationsAndGroupAggregatesLicenceAggregates(allLicences);
-        EnrichAndGroupLicenceSetAggregates(returnLicenceSets);
-        AddVariationsAndGroupAggregatesLicenceAggregates(allLicences);
+        AddVariationsToLicenceAggregates(allLicences); // Do this again
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
@@ -1742,11 +1743,17 @@ public static class AbstractionLicenceSchemaConverter
                             .Select(missingLinkedLicenceNumber =>
                             {
                                 var missingLinkedLicence = licenceSet.Licences
-                                    .First(l => l.LinkedLicences.Any(ll =>
-                                        ll.LicenceNumber == missingLinkedLicenceNumber))
+                                    .FirstOrDefault(l => l.LinkedLicences.Any(ll =>
+                                        ll.LicenceNumber == missingLinkedLicenceNumber))?
                                     .LinkedLicences
-                                    .First(ll => ll.LicenceNumber == missingLinkedLicenceNumber);
-                                
+                                    .FirstOrDefault(ll => ll.LicenceNumber == missingLinkedLicenceNumber);
+
+                                if (missingLinkedLicence == null)
+                                {
+                                    // TODO log in to how this can happen
+                                    return null;
+                                }
+                                    
                                 return new LinkedLicence
                                 {
                                     LicenceNumber = missingLinkedLicenceNumber,
@@ -1762,7 +1769,9 @@ public static class AbstractionLicenceSchemaConverter
                                         }
                                     ]
                                 };
-                            }));
+                            })
+                            .Where(x => x != null)
+                            .Select(x => x!));
                         
                         licenceSetLicence.LinkedLicences = newLinkedLicences.ToArray();
                     }
@@ -2205,7 +2214,7 @@ public static class AbstractionLicenceSchemaConverter
         return false;
     }
     
-    private static void AddVariationsAndGroupAggregatesLicenceAggregates(List<Licence> allLicences)
+    private static void AddVariationsToLicenceAggregates(List<Licence> allLicences)
     {
         foreach (var sourceLicence in allLicences)
         {
@@ -2254,57 +2263,6 @@ public static class AbstractionLicenceSchemaConverter
                 }
             }
         }
-
-        /*foreach (var licence in allLicences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-            
-            var newAggregates = new List<Aggregate>();
-            
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-            {
-                var otherAggregates = licence.AbstractionLimits.Aggregates
-                    .Where(agg => aggregate != agg)
-                    .ToList();
-                
-                var supersets = GetSupersets(aggregate, otherAggregates);
-
-                if (supersets.Count >= 1)
-                {
-                    foreach (var superset in supersets)
-                    {
-                        var contained = superset.Variations?.Any(v => v.Id == aggregate.Id) == true;
-
-                        if (contained)
-                        {
-                            continue;
-                        }
-
-                        var variations = new List<AggregateVariation>();
-
-                        if (superset.Variations != null)
-                        {
-                            variations.AddRange(superset.Variations);
-                        }
-                    
-                        variations.Add(AggregateVariation.FromAggregate(
-                            aggregate,
-                            "Different source licence / different order"));
-                        
-                        superset.Variations = variations.ToArray();
-                    }
-                    
-                    continue;
-                }
-                
-                newAggregates.Add(aggregate);
-            }
-            
-            licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
-        }*/
     }
 
     private static bool AreAggregatesFundamentallyEqual(

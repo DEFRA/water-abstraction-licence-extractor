@@ -1549,6 +1549,7 @@ public static class AbstractionLicenceSchemaConverter
         AddVariationsToLicenceAggregates(allLicences);
         FlattenSubVariations(returnLicenceSets);
         AddVariationsToLicenceAggregates(allLicences);
+        EnrichAndGroupAggregates(returnLicenceSets);
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
@@ -1698,7 +1699,7 @@ public static class AbstractionLicenceSchemaConverter
                         if (matchingVariations.Count == 0)
                         {
                             newAggregates.Add(licenceAggregate);
-                            continue;
+                            //continue;
                         }
                         
                         var missingLinkedLicences = aggregate.LinkedLicences
@@ -1708,7 +1709,11 @@ public static class AbstractionLicenceSchemaConverter
 
                         if (missingLinkedLicences.Count == 0)
                         {
-                            newAggregates.Add(licenceAggregate);
+                            if (!newAggregates.Contains(licenceAggregate))
+                            {
+                                newAggregates.Add(licenceAggregate);                                
+                            }
+
                             continue;
                         }
                         
@@ -1745,6 +1750,25 @@ public static class AbstractionLicenceSchemaConverter
                         licenceSetLicence.LinkedLicences = newLinkedLicences.ToArray();
                     }
 
+                    /*var newNewAggregates = new List<Aggregate>();
+                    
+                    foreach (var newAggregate in newAggregates)
+                    {
+                        var otherAggregates = newAggregates
+                            .Where(agg => agg != newAggregate)
+                            .ToList();
+
+                        var superset = GetSupersets(newAggregate, otherAggregates);
+
+                        if (superset.Count == 0)
+                        {
+                            newNewAggregates.Add(newAggregate);
+                        }
+                    }
+                    
+                    newAggregates = newNewAggregates;
+                    */
+                    
                     licenceSetLicence.AbstractionLimits.Aggregates = newAggregates.Count > 0
                         ? newAggregates.ToArray()
                         : null;

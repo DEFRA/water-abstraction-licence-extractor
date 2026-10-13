@@ -472,7 +472,7 @@ public class PdfPigNoOcrPdfTests
         // Check aggregate sets
         Assert.NotNull(licenceSets[0].AggregateSets!);
         Assert.Single(licenceSets[0].AggregateSets!);
-        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C0", licenceSets[0].AggregateSets[0].AggregateSetId);
+        Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C30", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Equal(2, licenceSets[0].AggregateSets.Length);
         Assert.Equal("10101001-LVUNKNOWN-10101002-LVUNKNOWN-10101003-LVUNKNOWN-C90", licenceSets[0].AggregateSets[0].AggregateSetId);
         Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licenceSets[0].AggregateSets[0].Id);

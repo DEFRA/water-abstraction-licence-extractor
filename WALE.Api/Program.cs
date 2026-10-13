@@ -78,7 +78,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         options.AddDefaultPolicy(policy =>
         {
             policy
-                .SetIsOriginAllowed(_ => true)
+                .WithOrigins(
+                    "https://wli-portal-dev.aws-int.defra.cloud",
+                    "http://localhost:5173"
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials()

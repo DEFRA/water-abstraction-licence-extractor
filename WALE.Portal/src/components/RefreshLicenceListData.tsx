@@ -156,7 +156,7 @@ export function RefreshLicenceListData({
                 updateStatus('processing');
 
                 setSuccessMessage(
-                    `Refresh Licence List Data started for process run ${processRunId}. Waiting for completion...`
+                    `Refresh Licence List Data started successfully for process run ${processRunId}.`
                 );
             }
         } catch (err) {
@@ -188,7 +188,7 @@ export function RefreshLicenceListData({
                 <button
                     type="button"
                     onClick={startRefreshProcess}
-                    disabled={isRunning || !isConnected || !processRunId}
+                    disabled={isRunning}
                     style={{
                         backgroundColor: '#dc3545',
                         color: 'white',

@@ -45,7 +45,7 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
                 defaultOpen={defaultOpen}
                 summary={
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
-                        <h4 style={{ margin: 0, fontSize: '1.05rem' }}>{itemId}</h4>
+                        <h4 style={{ margin: 0, fontSize: '1.05rem', textDecoration: activeCount === 0 ? 'line-through' : undefined }}>{itemId}</h4>
                         {activeCount > 0 && (
                             <button
                                 onClick={e => {
@@ -54,8 +54,13 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
                                 }}
                                 style={{ padding: '4px 12px', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
                             >
-                                Delete history ({activeCount})
+                                Delete all ({activeCount})
                             </button>
+                        )}
+                        {activeCount === 0 && (
+                            <span style={{ marginLeft: '8px', color: 'rgb(102, 102, 102)', fontStyle: 'italic' }}>
+                                All deleted
+                            </span>
                         )}
                     </div>
                 }
@@ -64,7 +69,7 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
             </CollapsibleItem>
             {showDeleteConfirm && (
                 <DeleteConfirmModal
-                    title={`Delete entire history for ${itemId}`}
+                    title={`Delete entire verification history for ${itemId}`}
                     isDeleting={isDeleting}
                     onConfirm={handleDelete}
                     onCancel={() => setShowDeleteConfirm(false)}
@@ -72,7 +77,7 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
                     cancelLabel="Cancel"
                 >
                     <p>
-                        This will delete <strong>all {activeCount} verification {activeCount === 1 ? 'entry' : 'entries'}</strong> for <strong>{itemId}</strong> in <strong>{sectionName}</strong>, not just the most recent one.
+                        This will delete <strong>all ({activeCount}) verification {activeCount === 1 ? 'entry' : 'entries'}</strong> for {sectionName} <strong>{itemId}</strong>
                     </p>
                     <ul style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #eee', borderRadius: '4px', padding: '8px 8px 8px 28px', margin: '0 0 10px 0' }}>
                         {activeVerifications.map((v, index) => {
@@ -85,11 +90,6 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
                             );
                         })}
                     </ul>
-                    {alreadyDeletedCount > 0 && (
-                        <p style={{ color: '#666', fontStyle: 'italic' }}>
-                            {alreadyDeletedCount} already-deleted {alreadyDeletedCount === 1 ? 'entry is' : 'entries are'} unaffected.
-                        </p>
-                    )}
                 </DeleteConfirmModal>
             )}
         </>

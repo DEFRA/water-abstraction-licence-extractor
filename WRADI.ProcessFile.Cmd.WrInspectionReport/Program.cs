@@ -22,6 +22,9 @@ using WRADI.Services.ProcessFile.WrInspectionReport;
 //   "s3"       - every wr51__-prefixed key already sitting in the shared ingress bucket, so this
 //                only ever processes files confirmed to actually exist, at the cost of skipping
 //                anything the finder knows about but nobody's uploaded yet.
+//
+// An extra integer arg (e.g. "s3 51") resumes that ProcessRun instead of starting a new one,
+// filtering out candidates that already have a MatchesResult for it.
 
 var configuration = new ConfigurationBuilder()
     .AddUserSecrets<Program>(optional: true)
@@ -37,6 +40,9 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
     var startDateTimeUtc = DateTime.UtcNow;
 
     var useS3Source = programArgs.Any(a => string.Equals(a, "s3", StringComparison.OrdinalIgnoreCase));
+    var resumeProcessRunId = programArgs
+        .Select(a => int.TryParse(a, out var id) ? (int?)id : null)
+        .FirstOrDefault(id => id.HasValue);
 
     var serviceProvider = new ServiceCollection()
         .AddWrInspectionReportFileProcessServices(configurationItem)
@@ -63,18 +69,65 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
         return;
     }
 
-    var processRun = await outputService.StartProcessRunAsync(
-        new ProcessRun
-        {
-            Description = description,
-            StartDateTimeUtc = startDateTimeUtc,
-            NumberOfFiles = candidates.Count,
-            Status = "Batch",
-            DocumentType = "WrInspectionReport"
-        });
+    ProcessRun processRun;
 
-    ConsoleHelper.WriteLine(
-        $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Created ProcessRun {processRun.ProcessRunId} for {candidates.Count} files");
+    if (resumeProcessRunId.HasValue)
+    {
+        var existingRun = (await outputService.GetAllProcessRunsAsync())
+            .FirstOrDefault(pr => pr.ProcessRunId == resumeProcessRunId.Value);
+
+        if (existingRun == null)
+        {
+            ConsoleHelper.WriteLine(
+                $"ERROR - WRADI.ProcessFile.Cmd.WrInspectionReport - ProcessRunId {resumeProcessRunId.Value} not found, cannot resume");
+            return;
+        }
+
+        processRun = existingRun;
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Resuming ProcessRun {processRun.ProcessRunId}, checking {candidates.Count} candidates for ones already done...");
+
+        var remainingCandidates = new List<(string FilePath, string PermitNumber, Guid FileId, string? DmsPath)>();
+
+        foreach (var candidate in candidates)
+        {
+            var existingResult = await outputService.GetMatchesResultAsync(candidate.FileId, processRun.ProcessRunId);
+
+            // "Done" means a real result, not just a row - an Error row (e.g. from a bug since
+            // fixed) should be retried, not treated as complete.
+            if (existingResult == null || string.Equals(existingResult.Status, "Error", StringComparison.OrdinalIgnoreCase))
+            {
+                remainingCandidates.Add(candidate);
+            }
+        }
+
+        candidates = remainingCandidates;
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - {candidates.Count} candidates remaining to process");
+
+        if (candidates.Count == 0)
+        {
+            ConsoleHelper.WriteLine("INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Nothing left to do, ProcessRun already complete");
+            return;
+        }
+    }
+    else
+    {
+        processRun = await outputService.StartProcessRunAsync(
+            new ProcessRun
+            {
+                Description = description,
+                StartDateTimeUtc = startDateTimeUtc,
+                NumberOfFiles = candidates.Count,
+                Status = "Batch",
+                DocumentType = "WrInspectionReport"
+            });
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Created ProcessRun {processRun.ProcessRunId} for {candidates.Count} files");
+    }
 
     var fileNumber = 0;
 

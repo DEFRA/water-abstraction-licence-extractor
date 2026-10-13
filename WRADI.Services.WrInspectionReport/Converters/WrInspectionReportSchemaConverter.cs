@@ -201,33 +201,34 @@ public static class WrInspectionReportSchemaConverter
             
             foreach (var potentialDate in potentialDates)
             {
-                if (!DateTime.TryParse(potentialDate, out var tInspectionDateTime))
-                {
-                    continue;
-                }
-                
-                // If we pulled a date that wasn't the current year, we must have contained a year
-                var year = tInspectionDateTime.Year.ToString();
-                var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
-                var containsYear = potentialDate.Contains($"/{year2Digits}")
-                    || potentialDate.Contains($"/{year}")
-                    || potentialDate.Contains($".{year2Digits}")
-                    || potentialDate.Contains($".{year}")
-                    || potentialDate.Contains($":{year2Digits}")
-                    || potentialDate.Contains($":{year}")
-                    || potentialDate.Contains($"-{year2Digits}")
-                    || potentialDate.Contains($"-{year}")
-                    || potentialDate.Contains($" {year2Digits}")
-                    || potentialDate.Contains($" {year}");
-                        
-                // Needs to contain a year and should never be today
-                if (!containsYear || tInspectionDateTime.Date == DateTime.Today)
+                if (!IsUsableInspectionDate(potentialDate, out var tInspectionDateTime))
                 {
                     continue;
                 }
 
                 inspectionDateTime = tInspectionDateTime;
                 break;
+            }
+
+            // Gated on everything above having failed, so it can't change a document that
+            // already resolves. Two-column layouts leak the neighbouring column in here, usually
+            // the inspecting officer's name - stripped by value since the label itself is gone.
+            if (inspectionDateTime == null)
+            {
+                var inspectingOfficer = TruncateAtKnownSiblingLabel(
+                    GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
+                    "Inspection Date:");
+
+                foreach (var salvaged in SalvageDateCandidates(rawInspectionDate, inspectingOfficer))
+                {
+                    if (!IsUsableInspectionDate(salvaged, out var tSalvagedDateTime))
+                    {
+                        continue;
+                    }
+
+                    inspectionDateTime = tSalvagedDateTime;
+                    break;
+                }
             }
         }
 
@@ -477,6 +478,77 @@ public static class WrInspectionReportSchemaConverter
         return System.Text.RegularExpressions.Regex
             .Replace(text, @"(?<=\d)\s*(?:th|st|nd|rd)\b", string.Empty, System.Text.RegularExpressions.RegexOptions.IgnoreCase)
             .Trim();
+    }
+
+    /// <summary>
+    /// Must parse, must carry its own year (a bare "24 March" would otherwise become the current
+    /// year), and must not be today (TryParse falls back to today for a time-only string).
+    /// </summary>
+    private static bool IsUsableInspectionDate(string potentialDate, out DateTime parsed)
+    {
+        if (!DateTime.TryParse(potentialDate, out parsed))
+        {
+            return false;
+        }
+
+        var year = parsed.Year.ToString();
+        var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
+
+        var containsYear = potentialDate.Contains($"/{year2Digits}")
+            || potentialDate.Contains($"/{year}")
+            || potentialDate.Contains($".{year2Digits}")
+            || potentialDate.Contains($".{year}")
+            || potentialDate.Contains($":{year2Digits}")
+            || potentialDate.Contains($":{year}")
+            || potentialDate.Contains($"-{year2Digits}")
+            || potentialDate.Contains($"-{year}")
+            || potentialDate.Contains($" {year2Digits}")
+            || potentialDate.Contains($" {year}");
+
+        return containsYear && parsed.Date != DateTime.Today;
+    }
+
+    /// <summary>
+    /// Date candidates from a raw capture the normal parsing couldn't resolve. Most-specific
+    /// first - a full numeric date beats a day/month needing a year from elsewhere in the text.
+    /// </summary>
+    private static IEnumerable<string> SalvageDateCandidates(string rawInspectionDate, string? inspectingOfficer)
+    {
+        var text = RemoveSpecialCharacters(rawInspectionDate) ?? rawInspectionDate;
+
+        if (!string.IsNullOrWhiteSpace(inspectingOfficer) && text.Contains(inspectingOfficer))
+        {
+            text = text.Replace(inspectingOfficer, " ");
+        }
+
+        text = text.Replace('\n', ' ').Replace("  ", " ").Trim();
+
+        // ':' is a real separator typo in the corpus ("27.02:26"), normalised toward '.'
+        // because "27:02:26" reads as a time.
+        foreach (Match m in Regex.Matches(text, @"\b\d{1,2}[/.\-:]\d{1,2}[/.\-:]\d{2,4}\b"))
+        {
+            yield return m.Value.Replace(':', '.');
+        }
+
+        // The year often wraps onto a different line of the capture, so pair a bare day/month
+        // with any year found anywhere in the remaining text.
+        var dayMonth = Regex.Match(
+            text,
+            @"\b\d{1,2}\s*(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b",
+            RegexOptions.IgnoreCase);
+
+        if (!dayMonth.Success)
+        {
+            yield break;
+        }
+
+        var cleanedDayMonth = Regex.Replace(dayMonth.Value, @"(?<=\d)\s*(?:st|nd|rd|th)", string.Empty, RegexOptions.IgnoreCase);
+        var year = Regex.Match(text, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+        if (year.Success)
+        {
+            yield return $"{cleanedDayMonth} {year.Value}";
+        }
     }
 
     // MetWith/InspectingOfficer share a row with a sibling field ("Position:"/"Inspection

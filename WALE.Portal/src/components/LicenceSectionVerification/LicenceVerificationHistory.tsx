@@ -3,6 +3,7 @@ import {LicenceSectionVerificationHistory} from "./LicenceSectionVerificationHis
 import {LinkedLicenceItem} from "./LinkedLicences/LinkedLicenceItem.tsx";
 import {AggregateItem} from "./Aggregates/AggregateItem.tsx";
 import {CollapsibleItem} from "./CollapsibleItem.tsx";
+import {ItemVerificationHistoryGroup} from "./ItemVerificationHistoryGroup.tsx";
 import type {ComponentType} from "react";
 
 interface LicenceVerificationHistoryProps {
@@ -200,15 +201,18 @@ export function LicenceVerificationHistory({verifications, isLoading, onJumpToPa
                         }
 
                         return (
-                            <CollapsibleItem
+                            <ItemVerificationHistoryGroup
                                 key={`item|${entry.itemId}`}
-                                variant="item"
+                                itemId={entry.itemId}
+                                sectionName={sectionName || 'N/A'}
+                                verifications={entry.verifications}
                                 defaultOpen={index === 0}
-                                summary={<h4 style={{ margin: 0, fontSize: '1.05rem' }}>{entry.itemId}</h4>}
+                                onRefresh={onRefresh}
+                                onDeleted={onDeleted}
                             >
                                 {entry.verifications.map((verification, groupIndex) =>
                                     renderVerification(verification, index === 0 && groupIndex === 0, groupIndex))}
-                            </CollapsibleItem>
+                            </ItemVerificationHistoryGroup>
                         );
                     })}
                 </CollapsibleItem>

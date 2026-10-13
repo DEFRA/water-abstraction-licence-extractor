@@ -56,6 +56,8 @@ public interface IAbstractionLicenceOutputService
 
     Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
 
+    Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds);
+
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);

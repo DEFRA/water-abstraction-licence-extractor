@@ -405,6 +405,28 @@ public class FileDataController(
 
         return Ok(result);
     }
+
+    [HttpPost]
+    public async Task<ActionResult<int>> DeleteLicenceSectionVerifications(
+        [FromBody] LicenceSectionVerification[] verifications)
+    {
+        if (verifications.Length == 0)
+        {
+            return BadRequest("No verifications supplied.");
+        }
+
+        var result = await abstractionLicenceOutputService.DeleteLicenceSectionVerificationsAsync(
+            verifications.Select(v => v.LicenceSectionVerificationId));
+
+        if (result != 0)
+        {
+            // Entries share a licence file and item ID, so refreshing from the earliest process run covers them all
+            FireAndForgetDataRefresh(verifications.MinBy(v => v.ProcessRunId)!);
+        }
+
+        return Ok(result);
+    }
+
     private void FireAndForgetDataRefresh(LicenceSectionVerification verification)
     {
         _ = Task.Run((Func<Task?>)(async () =>

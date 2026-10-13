@@ -170,15 +170,26 @@ public class FileDataController(
         return (int)Math.Round(withContent / (double)sectionNames.Length * 100);
     }
 
+    /// <summary>
+    /// DidntMatch means no rule matched the condition, so it is the absence of a finding. It still
+    /// serialises as a non-empty string, which made the provisions section always count and gave
+    /// every document a floor of 10%. Blank still counts: a rule did match, the value was empty.
+    /// </summary>
+    private const string NoFindingEnumValue = "DidntMatch";
+
     private static bool HasContent(JsonElement element) =>
         element.ValueKind switch
         {
             JsonValueKind.Null or JsonValueKind.Undefined => false,
-            JsonValueKind.String => !string.IsNullOrWhiteSpace(element.GetString()),
+            JsonValueKind.String => HasContent(element.GetString()),
             JsonValueKind.Array => element.EnumerateArray().Any(HasContent),
             JsonValueKind.Object => element.EnumerateObject().Any(property => HasContent(property.Value)),
             _ => true
         };
+
+    private static bool HasContent(string? value) =>
+        !string.IsNullOrWhiteSpace(value)
+        && !value.Equals(NoFindingEnumValue, StringComparison.Ordinal);
 
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdAsync(

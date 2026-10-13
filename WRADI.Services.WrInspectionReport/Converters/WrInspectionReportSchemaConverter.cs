@@ -24,9 +24,7 @@ public static class WrInspectionReportSchemaConverter
         // v3 writes its own field names, so without this every shared field below reads back
         // empty. Off the marker as well as knownTemplate: callers reading a stored result do not
         // always pass one. Mutates matchesResult, additively, so a second call is a no-op.
-        if (knownTemplate == WrTemplateType.V3
-            || !string.IsNullOrWhiteSpace(
-                GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3)))
+        if (knownTemplate == WrTemplateType.V3 || IsV3Document(matchesResult))
         {
             WrInspectionV3SharedFieldMapper.Apply(matchesResult);
         }
@@ -593,6 +591,44 @@ public static class WrInspectionReportSchemaConverter
     // line is one meter's value for this field, e.g. "Point 1, Yaxley: Honeywell" / "Point 2,
     // Eye: Honeywell" / ... - see BuildMeters. Blank lines dropped (a table with fewer filled
     // rows than the widened window fetched shouldn't produce empty meter entries).
+    private static bool IsV3Document(MatchesResult matchesResult) =>
+        !string.IsNullOrWhiteSpace(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3));
+
+    /// <summary>
+    /// For fields zipped together by line index, where a blank line means "this record has no
+    /// value" rather than noise. Leading and trailing blanks are still dropped, so a capture that
+    /// merely ends with empty lines does not invent records.
+    /// </summary>
+    private static List<string> GetMultilineTextLinesPreservingGaps(
+        MatchesResult matchesResult,
+        string name)
+    {
+        var matchedLabel = matchesResult.Matches?
+            .FirstOrDefault(m => m.MatchedLabelName == name);
+
+        if (matchedLabel?.Text == null)
+        {
+            return [];
+        }
+
+        var lines = matchedLabel.Text
+            .Select(t => t.Text?.Trim() ?? string.Empty)
+            .ToList();
+
+        while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines[0]))
+        {
+            lines.RemoveAt(0);
+        }
+
+        while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines[^1]))
+        {
+            lines.RemoveAt(lines.Count - 1);
+        }
+
+        return lines;
+    }
+
     private static List<string> GetMultilineTextLines(MatchesResult matchesResult, string name)
     {
         var matchedLabel = matchesResult.Matches?
@@ -618,18 +654,27 @@ public static class WrInspectionReportSchemaConverter
     internal static List<WrInspectionReportMeter> BuildMetersForTests(MatchesResult matchesResult) =>
         BuildMeters(matchesResult);
 
+    /// <summary>
+    /// Gap-preserving only on v3, whose meter lines come from the table read and use position as
+    /// the meter index. v1's come from line rules, where an interior blank is noise: preserving it
+    /// there invented phantom empty meter records on the real corpus.
+    /// </summary>
     private static List<WrInspectionReportMeter> BuildMeters(MatchesResult matchesResult)
     {
-        var meterName = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterName);
-        var meterMake = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterMake);
-        var serialNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.SerialNumber);
-        var meterAssetNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber);
-        var reading = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Reading);
-        var flowRate = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.FlowRate);
-        var units = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Units);
-        var verificationCertificate = GetMultilineTextLines(
+        Func<MatchesResult, string, List<string>> read = IsV3Document(matchesResult)
+            ? GetMultilineTextLinesPreservingGaps
+            : GetMultilineTextLines;
+
+        var meterName = read(matchesResult, WrInspectionReportFieldNames.MeterName);
+        var meterMake = read(matchesResult, WrInspectionReportFieldNames.MeterMake);
+        var serialNumber = read(matchesResult, WrInspectionReportFieldNames.SerialNumber);
+        var meterAssetNumber = read(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber);
+        var reading = read(matchesResult, WrInspectionReportFieldNames.Reading);
+        var flowRate = read(matchesResult, WrInspectionReportFieldNames.FlowRate);
+        var units = read(matchesResult, WrInspectionReportFieldNames.Units);
+        var verificationCertificate = read(
             matchesResult, WrInspectionReportFieldNames.VerificationCertificate);
-        var maintenanceRecords = GetMultilineTextLines(
+        var maintenanceRecords = read(
             matchesResult, WrInspectionReportFieldNames.MaintenanceRecords);
 
         var meterCount = new[]

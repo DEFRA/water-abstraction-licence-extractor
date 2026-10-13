@@ -104,12 +104,9 @@ public static class WrInspectionV3KeyValueMatcher
     /// One line per meter into the shared meter fields, which
     /// WrInspectionReportSchemaConverter.BuildMeters then zips by line index into one record each.
     ///
-    /// An absent value contributes an empty line to hold its position, but that does not survive:
-    /// GetMultilineTextLines drops blank lines, so a gap still shifts every later meter up. The
-    /// samples hide it because their only sparse field (maintenance records) has its value on the
-    /// first meter. A value absent on an earlier meter and present on a later one would attach to
-    /// the wrong borehole. Fixing it means preserving interior blanks in that read, which also
-    /// changes v1 meter counts, so it is not a one-line change.
+    /// An absent value contributes an empty line to hold its position, and the converter's v3 read
+    /// preserves interior blanks for exactly that reason. Without both halves a meter with a gap
+    /// pulls the next meter's serial number onto itself.
     /// </summary>
     public static void ApplyMeters(
         MatchesResult item,
@@ -162,8 +159,7 @@ public static class WrInspectionV3KeyValueMatcher
 
     /// <summary>
     /// Keeps empty lines, unlike <see cref="BuildResult"/>: in a repeating group the line position
-    /// carries meaning. Note that the converter's own read then drops them - see
-    /// <see cref="ApplyMeters"/>.
+    /// carries meaning.
     /// </summary>
     private static LabelGroupResult BuildResultFromLines(
         string fieldName,

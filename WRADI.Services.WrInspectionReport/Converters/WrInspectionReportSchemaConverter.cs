@@ -374,7 +374,12 @@ public static class WrInspectionReportSchemaConverter
                 Quantities = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Quantities),
                 Records = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Records),
                 OtherProvisions = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.OtherProvisions),
-                Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period)
+                Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period),
+                HandsOffFlow = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.V3ConditionHandsOffFlow),
+                CompensationOrAugmentation = GetInOrderStatus(
+                    matchesResult, WrInspectionReportFieldNames.V3ConditionCompensationOrAugmentation),
+                FishAndEelScreening = GetInOrderStatus(
+                    matchesResult, WrInspectionReportFieldNames.V3ConditionFishAndEelScreening)
             },
             MeasurementDetails = new WrInspectionReportMeasurementDetails
             {
@@ -742,6 +747,31 @@ public static class WrInspectionReportSchemaConverter
         if (text.Equals("n/a", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.NotApplicable;
+        }
+
+        // v3 states the outcome in words where v1 ticked a box. Same question, so the same enum,
+        // rather than a parallel status type the CSV and portal would both have to learn.
+        if (text.Equals("compliant", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.InOrder;
+        }
+
+        // Observed on the samples: means of measurement on one document, records on another.
+        if (text.Equals("non-compliant", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("not compliant", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInOrder;
+        }
+
+        if (text.Equals("not applicable", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotApplicable;
+        }
+
+        if (text.Equals("not assessed", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("not inspected", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInspected;
         }
 
         if (text.Equals("ni", StringComparison.InvariantCultureIgnoreCase))

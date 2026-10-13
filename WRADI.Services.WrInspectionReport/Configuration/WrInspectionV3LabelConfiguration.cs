@@ -27,11 +27,59 @@ public static class WrInspectionV3LabelConfiguration
         RuleInspectingOfficers(),
 
         RuleLicenceConditionsBlock(),
+        .. ConditionRules(),
         RuleMeterDetailsBlock(),
         RuleNonCompliancesBlock(),
         RuleEnforcementResponse(),
         RuleActionsBlock(),
         RuleGeneralComments()
+    ];
+
+    /// <summary>
+    /// v3 replaced v1's tick grid with a condition-and-outcome list, and each row of it is a
+    /// key/value pair like any other field, so the outcomes need no new reading mechanism.
+    ///
+    /// Named with the shared provision field names rather than V3-prefixed ones, unlike the text
+    /// fields above: GetInOrderStatus then resolves them with no mapping step. Safe because the
+    /// orchestrator replaces the whole label set for v3, so a v1 rule of the same name is never
+    /// also present.
+    ///
+    /// Three of v1's thirteen - special conditions, land, and charging factors - have no v3
+    /// counterpart and stay unmatched, which is correct: v3 does not print them.
+    ///
+    /// The metering accuracy and maintenance records rows are deliberately absent. They sit inside
+    /// the repeating meter group rather than the conditions list, and metering accuracy holds
+    /// evidence text ("Flow Meter Verification full report seen dated 31/03/2025 - meter accuracy
+    /// 6.33%") rather than a verdict, so neither is a provision. Both go to the meter record.
+    /// </summary>
+    private static List<(string, List<LabelToMatch>)> ConditionRules() =>
+    [
+        KeyValueField("Source of supply", WrInspectionReportFieldNames.SourceOfSupply),
+        KeyValueField("Purpose(s)", WrInspectionReportFieldNames.Purposes),
+        KeyValueField("Point(s) of abstraction", WrInspectionReportFieldNames.PointOfAbstraction),
+        KeyValueField("Means of abstraction", WrInspectionReportFieldNames.MeansOfAbstraction),
+        KeyValueField("Period", WrInspectionReportFieldNames.Period),
+        KeyValueField("Maximum quantity to be abstracted", WrInspectionReportFieldNames.Quantities),
+        KeyValueField("Means of measurement", WrInspectionReportFieldNames.MeansOfMeasurement),
+        KeyValueField("Records", WrInspectionReportFieldNames.Records),
+
+        // v3's "Returns" is the condition requiring the holder to send us their figures, which is
+        // what v1 called provision of information. A judgement call, not a name match.
+        KeyValueField("Returns", WrInspectionReportFieldNames.ProvisionOfInformation),
+
+        KeyValueField("Other further conditions", WrInspectionReportFieldNames.OtherProvisions),
+
+        // The full keys, not their stems: the extractor also emits truncated copies ("Compensation
+        // or flow", "Metering accuracy, calibration or") and an exact match beats a stem match.
+        KeyValueField(
+            "Hands of Flow (HoF), Level (HoL) or prescribed flow",
+            WrInspectionReportFieldNames.V3ConditionHandsOffFlow),
+        KeyValueField(
+            "Compensation or flow augmentation condition",
+            WrInspectionReportFieldNames.V3ConditionCompensationOrAugmentation),
+        KeyValueField(
+            "Fish and eel screening conditions",
+            WrInspectionReportFieldNames.V3ConditionFishAndEelScreening)
     ];
 
     private static (string, List<LabelToMatch>) KeyValueField(string key, string fieldName) =>

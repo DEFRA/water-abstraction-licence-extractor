@@ -628,6 +628,18 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         {
             Assert.Equal(group.First().MeterCount, group.Count());
         }
+
+        // The condition outcomes were read and discarded before the provision rules existed, so
+        // every v3 row showed DidntMatch across the board. Asserting on the value, not just
+        // presence: a regression here reads as a licence being out of order.
+        var unresolvedProvisions = lines
+            .Where(line => line.LicenceProvisions__SourceOfSupply != nameof(InOrderStatus.InOrder)
+                || line.LicenceProvisions__Records == nameof(InOrderStatus.DidntMatch)
+                || line.LicenceProvisions__Quantities == nameof(InOrderStatus.DidntMatch))
+            .Select(line => line.Metadata__Filename)
+            .ToList();
+
+        Assert.Empty(unresolvedProvisions);
     }
 
     private static string Flatten(string? value) =>

@@ -98,4 +98,10 @@ public static class WrInspectionReportFieldNames
     public const string V3ActionsBlock = nameof(V3ActionsBlock);
     public const string V3GeneralComments = nameof(V3GeneralComments);
     public const string V3DocumentTemplateVersion = nameof(V3DocumentTemplateVersion);
+
+    // The conditions v3 assesses that v1 never printed, so they have no shared provision slot.
+    public const string V3ConditionHandsOffFlow = nameof(V3ConditionHandsOffFlow);
+    public const string V3ConditionCompensationOrAugmentation = nameof(V3ConditionCompensationOrAugmentation);
+    public const string V3ConditionFishAndEelScreening = nameof(V3ConditionFishAndEelScreening);
+
 }

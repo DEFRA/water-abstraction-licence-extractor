@@ -73,6 +73,9 @@ public class WrInspectionReportCsvLine
     public string? LicenceConditionsRaw { get; set; }
     public string? NonCompliancesRaw { get; set; }
     public string? ActionsRaw { get; set; }
+    public string? LicenceProvisions__HandsOffFlow { get; set; }
+    public string? LicenceProvisions__CompensationOrAugmentation { get; set; }
+    public string? LicenceProvisions__FishAndEelScreening { get; set; }
 
     public static WrInspectionReportCsvLine FromForm(Models.WrInspectionReport form)
     {
@@ -145,7 +148,11 @@ public class WrInspectionReportCsvLine
             EnforcementResponse = form.EnforcementResponse,
             LicenceConditionsRaw = form.LicenceConditionsRaw,
             NonCompliancesRaw = form.NonCompliancesRaw,
-            ActionsRaw = form.ActionsRaw
+            ActionsRaw = form.ActionsRaw,
+            LicenceProvisions__HandsOffFlow = form.LicenceProvisions.HandsOffFlow.ToString(),
+            LicenceProvisions__CompensationOrAugmentation =
+                form.LicenceProvisions.CompensationOrAugmentation.ToString(),
+            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString()
         };
     }
 }

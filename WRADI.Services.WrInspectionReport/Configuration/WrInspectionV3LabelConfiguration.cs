@@ -123,8 +123,13 @@ public static class WrInspectionV3LabelConfiguration
                 .Build()]);
 
     /// <summary>
-    /// The non-compliances table, empty in every consultation sample, so its row shape is
-    /// unverified. The capture yields only the tail of the wrapped header ("category date").
+    /// The non-compliances table. The capture yields only the tail of the wrapped header
+    /// ("category date").
+    ///
+    /// Its columns are known - the extractor reads the header cleanly as condition reference,
+    /// condition breached, compliance category, CCS reference and breach date - but every body
+    /// row is empty in every consultation sample, so the value formats are unobserved and a
+    /// filled example is needed before anything parses or normalises them.
     /// </summary>
     private static (string, List<LabelToMatch>) RuleNonCompliancesBlock() =>
         (WrInspectionReportFieldNames.V3NonCompliancesBlock, [
@@ -149,10 +154,14 @@ public static class WrInspectionV3LabelConfiguration
                 .Build()]);
 
     /// <summary>
-    /// The actions table: Reference, Type, Action, Complete by. Two of the six consultation
-    /// samples have filled rows, the rest are unfilled dropdowns reading "Choose an item.".
-    /// Captured whole: the capture also leads with the tail of the wrapped "Complete by" header,
-    /// and splitting it into rows is unbuilt.
+    /// The actions table: Reference, Type, Action, Complete by. Captured as raw text, which leads
+    /// with the tail of the wrapped "Complete by" header.
+    ///
+    /// A row read is available and unbuilt, not blocked: the extractor yields this as a clean
+    /// four-column table, one row per action, with a filled action's whole text in a single cell.
+    /// Two things stand in the way. KeyValueTableHelper reads two-column tables only, and the
+    /// extractor also emits a fragmented duplicate of this table in which one action spans a row
+    /// per line, so picking the clean copy needs a rule. Unfilled rows read "Choose an item.".
     /// </summary>
     private static (string, List<LabelToMatch>) RuleActionsBlock() =>
         (WrInspectionReportFieldNames.V3ActionsBlock, [

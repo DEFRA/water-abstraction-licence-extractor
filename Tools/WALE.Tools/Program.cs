@@ -1,6 +1,7 @@
 ﻿using WALE.Tools._1stHalf;
 using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
+using WALE.ProcessFile.Core.Constants;
 using WALE.Tools.Config;
 
 string workflow;
@@ -17,6 +18,12 @@ string workflow;
 //workflow = "PurposeMapper";
 workflow = "GenerateS3Thumbnails";
 
+// Also selectable from the command line: "<workflow> [argument]".
+if (args.Length > 0)
+{
+    workflow = args[0];
+}
+
 const int processRunId = 3453;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
@@ -28,7 +35,8 @@ switch (workflow)
         return await ImportNaldData.ImportAsync();
     
     case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
-        return await ImportDmsData.ImportAsync();
+        // Second argument is the required extract type: "ImportDmsData WrInspectionReport".
+        return await ImportDmsData.ImportAsync(args.Length > 1 ? args[1] : null);
 
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO

@@ -483,9 +483,9 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
-        var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}";
+        var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}&extractType={extractType}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

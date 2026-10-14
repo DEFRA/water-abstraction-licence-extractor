@@ -21,7 +21,6 @@ export function ItemVerificationHistoryGroup({itemId, sectionName, verifications
 
     const activeVerifications = verifications.filter(v => !v.deletedDateTimeUtc);
     const activeCount = activeVerifications.length;
-    const alreadyDeletedCount = verifications.length - activeCount;
     const entriesLabel = `${activeCount} ${activeCount === 1 ? 'entry' : 'entries'}`;
 
     const handleDelete = async () => {

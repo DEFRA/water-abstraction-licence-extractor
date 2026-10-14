@@ -378,6 +378,9 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .After("Time")
                 .Named(WrInspectionReportFieldNames.Time)
+                // Some forms put the labels on one row and the values on the row beneath, where a
+                // same-line match finds nothing at all.
+                .NextLines(1)
                 .AlsoStartsWithLoose("Time:")
                 .FromText()
                 .Build()

@@ -2136,7 +2136,6 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
 
         var agreedSchemaLicenceGroup = licenceSets[2];
         Assert.Single(licenceSets[2].AggregateSets!);
-        Assert.Equal("NE0260034052-LV2019121120270331-NE0270028059-LVUNKNOWN-C200000", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId);
         //Assert.Equal("NE0260034052-LV2019121120270331-C3493706", agreedSchemaLicenceGroup.AggregateSets![0].AggregateSetId); // TODO check where this came from
         
         agreedSchemaLicenceGroup = licenceSets[3];

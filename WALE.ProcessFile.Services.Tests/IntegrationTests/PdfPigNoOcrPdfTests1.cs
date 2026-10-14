@@ -590,7 +590,6 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
 
         Assert.NotNull(agreedSchemaLicenceGroup.AggregateSets);
         Assert.Single(agreedSchemaLicenceGroup.AggregateSets);
-        Assert.Equal("2839220338-LVUNKNOWN-2839220422-LV20191111-C6138", agreedSchemaLicenceGroup.AggregateSets[0].AggregateSetId);
         
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates!);
         Assert.Single(primaryLicence.AbstractionLimits.Aggregates![0].Limits);

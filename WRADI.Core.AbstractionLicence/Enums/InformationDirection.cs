@@ -5,5 +5,5 @@ public enum InformationDirection
     Unknown,
     Incoming,
     Outgoing,
-    PointingElsewhere
+    InSameGroup
 }

@@ -6674,66 +6674,6 @@ export interface IAggregate {
     [key: string]: any;
 }
 
-export class AggregateSet implements IAggregateSet {
-    aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
-
-    [key: string]: any;
-
-    constructor(data?: IAggregateSet) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.aggregateSetId = _data["aggregateSetId"];
-            if (Array.isArray(_data["aggregates"])) {
-                this.aggregates = [] as any;
-                for (let item of _data["aggregates"])
-                    this.aggregates!.push(AggregateWithContext.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): AggregateSet {
-        data = typeof data === 'object' ? data : {};
-        let result = new AggregateSet();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["aggregateSetId"] = this.aggregateSetId;
-        if (Array.isArray(this.aggregates)) {
-            data["aggregates"] = [];
-            for (let item of this.aggregates)
-                data["aggregates"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IAggregateSet {
-    aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
-
-    [key: string]: any;
-}
-
 export class AggregateVariation implements IAggregateVariation {
     difference?: string | undefined;
     id?: string | undefined;
@@ -6890,170 +6830,6 @@ export interface IAggregateVariation {
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
     variations?: any[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    limits?: any[];
-    containedIn?: any[] | undefined;
-    containsLegalText?: boolean | undefined;
-    points?: any[] | undefined;
-    purposes?: any[] | undefined;
-
-    [key: string]: any;
-}
-
-export class AggregateWithContext implements IAggregateWithContext {
-    id?: string | undefined;
-    aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: boolean | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
-    naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    variations?: AggregateVariation[] | undefined;
-    documentIdentifier?: string | undefined;
-    timePeriod?: TimePeriod | undefined;
-    timeCutoff?: TimeCutoff | undefined;
-    limits?: any[];
-    containedIn?: any[] | undefined;
-    containsLegalText?: boolean | undefined;
-    points?: any[] | undefined;
-    purposes?: any[] | undefined;
-
-    [key: string]: any;
-
-    constructor(data?: IAggregateWithContext) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
-            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
-            this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
-            this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
-            this.primaryType = _data["primaryType"];
-            this.subType = _data["subType"];
-            this.naldType = _data["naldType"];
-            if (Array.isArray(_data["linkedLicences"])) {
-                this.linkedLicences = [] as any;
-                for (let item of _data["linkedLicences"])
-                    this.linkedLicences!.push(item);
-            }
-            if (Array.isArray(_data["variations"])) {
-                this.variations = [] as any;
-                for (let item of _data["variations"])
-                    this.variations!.push(AggregateVariation.fromJS(item));
-            }
-            this.documentIdentifier = _data["documentIdentifier"];
-            this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
-            this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
-            if (Array.isArray(_data["limits"])) {
-                this.limits = [] as any;
-                for (let item of _data["limits"])
-                    this.limits!.push(item);
-            }
-            if (Array.isArray(_data["containedIn"])) {
-                this.containedIn = [] as any;
-                for (let item of _data["containedIn"])
-                    this.containedIn!.push(item);
-            }
-            this.containsLegalText = _data["containsLegalText"];
-            if (Array.isArray(_data["points"])) {
-                this.points = [] as any;
-                for (let item of _data["points"])
-                    this.points!.push(item);
-            }
-            if (Array.isArray(_data["purposes"])) {
-                this.purposes = [] as any;
-                for (let item of _data["purposes"])
-                    this.purposes!.push(item);
-            }
-        }
-    }
-
-    static fromJS(data: any): AggregateWithContext {
-        data = typeof data === 'object' ? data : {};
-        let result = new AggregateWithContext();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
-        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
-        data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
-        data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
-        data["primaryType"] = this.primaryType;
-        data["subType"] = this.subType;
-        data["naldType"] = this.naldType;
-        if (Array.isArray(this.linkedLicences)) {
-            data["linkedLicences"] = [];
-            for (let item of this.linkedLicences)
-                data["linkedLicences"].push(item);
-        }
-        if (Array.isArray(this.variations)) {
-            data["variations"] = [];
-            for (let item of this.variations)
-                data["variations"].push(item ? item.toJSON() : undefined as any);
-        }
-        data["documentIdentifier"] = this.documentIdentifier;
-        data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
-        data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
-        if (Array.isArray(this.limits)) {
-            data["limits"] = [];
-            for (let item of this.limits)
-                data["limits"].push(item);
-        }
-        if (Array.isArray(this.containedIn)) {
-            data["containedIn"] = [];
-            for (let item of this.containedIn)
-                data["containedIn"].push(item);
-        }
-        data["containsLegalText"] = this.containsLegalText;
-        if (Array.isArray(this.points)) {
-            data["points"] = [];
-            for (let item of this.points)
-                data["points"].push(item);
-        }
-        if (Array.isArray(this.purposes)) {
-            data["purposes"] = [];
-            for (let item of this.purposes)
-                data["purposes"].push(item);
-        }
-        return data;
-    }
-}
-
-export interface IAggregateWithContext {
-    id?: string | undefined;
-    aggregateSetId?: string | undefined;
-    sourceLicenceNumber?: string | undefined;
-    sourceLicenceVersionId?: string | undefined;
-    isExplicitlyAggregate?: boolean | undefined;
-    primaryType?: PrimaryType;
-    subType?: NullableOfSubType | undefined;
-    naldType?: string | undefined;
-    linkedLicences?: string[] | undefined;
-    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -8948,7 +8724,7 @@ export class LicenceSet implements ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
     licenceSetType?: LicenceSetType;
-    aggregateSets?: AggregateSet[] | undefined;
+    aggregateSets?: Aggregate[] | undefined;
     licences?: Licence[];
 
     [key: string]: any;
@@ -8974,7 +8750,7 @@ export class LicenceSet implements ILicenceSet {
             if (Array.isArray(_data["aggregateSets"])) {
                 this.aggregateSets = [] as any;
                 for (let item of _data["aggregateSets"])
-                    this.aggregateSets!.push(AggregateSet.fromJS(item));
+                    this.aggregateSets!.push(Aggregate.fromJS(item));
             }
             if (Array.isArray(_data["licences"])) {
                 this.licences = [] as any;
@@ -9018,7 +8794,7 @@ export interface ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
     licenceSetType?: LicenceSetType;
-    aggregateSets?: AggregateSet[] | undefined;
+    aggregateSets?: Aggregate[] | undefined;
     licences?: Licence[];
 
     [key: string]: any;
@@ -9858,7 +9634,7 @@ export enum NullableOfInformationDirection {
     Unknown = "Unknown",
     Incoming = "Incoming",
     Outgoing = "Outgoing",
-    PointingElsewhere = "PointingElsewhere",
+    InSameGroup = "InSameGroup",
 }
 
 export enum NullableOfLabelPosition {

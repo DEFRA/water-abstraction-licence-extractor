@@ -75,8 +75,6 @@ public class Aggregate : AbstractionLimitGroup
         return (int)combinedValue;
     }
     
-    public string? AggregateSetId { get; set; }
-    
     public string? SourceLicenceNumber { get; set; }
     
     public string? SourceLicenceVersionId { get; set; }
@@ -107,7 +105,6 @@ public class Aggregate : AbstractionLimitGroup
         Aggregate sourceAggregate,
         Aggregate destinationAggregate)
     {
-        destinationAggregate.AggregateSetId = sourceAggregate.AggregateSetId;
         destinationAggregate.SourceLicenceNumber = sourceAggregate.SourceLicenceNumber;
         destinationAggregate.SourceLicenceVersionId = sourceAggregate.SourceLicenceVersionId;
         destinationAggregate.IsExplicitlyAggregate = sourceAggregate.IsExplicitlyAggregate;
@@ -124,7 +121,6 @@ public class Aggregate : AbstractionLimitGroup
     
     public new static Aggregate Template => new()
     {
-        AggregateSetId = string.Empty,
         NaldType = null,
         PrimaryType = PrimaryType.NotSet,
         SubType = Enums.SubType.NotSet,

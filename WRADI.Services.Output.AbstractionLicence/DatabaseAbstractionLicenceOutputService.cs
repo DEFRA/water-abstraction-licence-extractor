@@ -76,7 +76,7 @@ public class DatabaseAbstractionLicenceOutputService(
         {
             await databaseWriteService.SaveAggregateSetAsync(
                 licenceSetId,
-                aggregateSet.AggregateSetId,
+                aggregateSet.Id,
                 JsonSerializer.Serialize(aggregateSet, JsonHelper.GetSerializerOptions()),
                 processRunId);
         }

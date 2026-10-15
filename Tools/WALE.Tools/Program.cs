@@ -24,7 +24,11 @@ if (args.Length > 0)
     workflow = args[0];
 }
 
-const int processRunId = 3453;//112;//1707;
+// The second argument is whatever the chosen workflow wants, so it is only read as a run id
+// when it parses as one - ImportDmsData takes an extract type in the same slot.
+var processRunId = args.Length > 1 && int.TryParse(args[1], out var processRunIdArgument)
+    ? processRunIdArgument
+    : 3453;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 var folderPathUsername = "xxx";
@@ -37,6 +41,11 @@ switch (workflow)
     case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
         // Second argument is the required extract type: "ImportDmsData WrInspectionReport".
         return await ImportDmsData.ImportAsync(args.Length > 1 ? args[1] : null);
+
+    case "RebuildWrInspectionReportSummaries": // FREQUENT - Project a WR51 process run's results into
+        // wr_inspection_report_summary, which the date-driven report list reads. Derived data, so
+        // re-running is safe, including against a run that is still in progress.
+        return await RebuildWrInspectionReportSummaries.RebuildAsync(processRunId);
 
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO

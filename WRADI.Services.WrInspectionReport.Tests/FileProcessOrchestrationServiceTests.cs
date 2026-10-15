@@ -65,6 +65,75 @@ public class FileProcessOrchestrationServiceTests
     }
 
     /// <summary>
+    /// A skipped candidate must be absent from the run's NumberOfFiles as well as from the queue,
+    /// since the count is written before anything is sent.
+    /// </summary>
+    [Theory]
+    [InlineData("Compliance Inspection WR51 - 032842002.docx", false)]
+    [InlineData("Compliance Inspection WR51 - 032842002.doc", false)]
+    [InlineData("Compliance Inspection WR51 - 032842002.pdf", true)]
+    [InlineData("", true)]
+    public async Task WhenACandidateIsNotReadable_ThenItIsNeitherSentNorCounted(
+        string fileName,
+        bool expectSent)
+    {
+        // Arrange
+        var settings = new FileProcessAppSettings();
+        var inspectionReportFinderCacheService = A.Fake<IInspectionReportFinderCacheService>();
+        var outputService = A.Fake<IOutputService>();
+        var messageQueueService = A.Fake<IMessageQueueService>();
+
+        A.CallTo(() => inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue))
+            .Returns([
+                new InspectionReportFinderResult
+                {
+                    PermitNumber = "PERMIT-1",
+                    FileId = Guid.NewGuid().ToString(),
+                    FileName = fileName
+                }
+            ]);
+
+        ProcessRun? startedProcessRun = null;
+
+        A.CallTo(() => outputService.StartProcessRunAsync(A<ProcessRun>._))
+            .ReturnsLazily(call =>
+            {
+                startedProcessRun = call.GetArgument<ProcessRun>(0);
+
+                return Task.FromResult(startedProcessRun!);
+            });
+
+        var enqueuedRequests = new List<FileProcessSingleRequest>();
+
+        A.CallTo(() => messageQueueService.AddToFileProcessQueueBatch(A<IReadOnlyList<FileProcessSingleRequest>>._))
+            .ReturnsLazily(call =>
+            {
+                var batch = call.GetArgument<IReadOnlyList<FileProcessSingleRequest>>(0)!;
+                enqueuedRequests.AddRange(batch);
+
+                return Task.FromResult(new FileProcessQueueBatchResult
+                {
+                    Requested = batch.Count,
+                    Enqueued = batch.Count
+                });
+            });
+
+        var service = new FileProcessOrchestrationService(
+            settings,
+            A.Fake<ICacheService>(),
+            inspectionReportFinderCacheService,
+            outputService,
+            messageQueueService);
+
+        // Act
+        await service.RunAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expectSent ? 1 : 0, enqueuedRequests.Count);
+        Assert.Equal(expectSent ? 1 : 0, startedProcessRun?.NumberOfFiles);
+    }
+
+    /// <summary>
     /// The bug WRADI-391 fixes: the send loop was wrapped in one try/catch that rethrew, so a single
     /// rejected send (a 429 from the API, in the incident that prompted this) abandoned every
     /// remaining file in the run while the process run still recorded the full count.

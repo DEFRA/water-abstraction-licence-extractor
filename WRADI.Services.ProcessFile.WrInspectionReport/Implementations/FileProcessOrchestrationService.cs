@@ -14,6 +14,8 @@ public class FileProcessOrchestrationService(
     IMessageQueueService messageQueueService)
     : IFileProcessOrchestrator
 {
+    private static readonly string[] UnreadableExtensions = [".doc", ".docx"];
+
     public async Task<bool> RunAsync(CancellationToken cancellationToken)
     {
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
@@ -43,14 +45,15 @@ public class FileProcessOrchestrationService(
         var sendable = candidates
             .Where(candidate => !string.IsNullOrEmpty(candidate.PermitNumber)
                 && !string.IsNullOrEmpty(candidate.FileId)
-                && Guid.TryParse(candidate.FileId, out _))
+                && Guid.TryParse(candidate.FileId, out _)
+                && IsProcessable(candidate.FileName))
             .ToList();
 
         if (sendable.Count != candidates.Count)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
                 + $"{candidates.Count - sendable.Count} of {candidates.Count} candidates skipped for a missing "
-                + "permit number or an unparseable file id");
+                + "permit number, an unparseable file id, or a file type nothing can read yet");
         }
 
         // Applied after filtering, before the run is created, so NumberOfFiles matches what is sent.
@@ -144,4 +147,13 @@ public class FileProcessOrchestrationService(
 
         return true;
     }
+
+    /// Discovery holds the Word-format reports too, and BuildFileName names every ingress key
+    /// ".pdf" regardless, so unfiltered they would each be fetched as a PDF that does not exist.
+    /// An absent file name still passes: the key comes from the permit number and file id, not
+    /// the name, so treating unknown as unreadable would silently shrink runs.
+    private static bool IsProcessable(string? fileName) =>
+        string.IsNullOrWhiteSpace(fileName)
+        || !UnreadableExtensions.Any(extension =>
+            fileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase));
 }

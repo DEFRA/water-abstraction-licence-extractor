@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Methods;
 
@@ -33,7 +34,7 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    var matchedContent = FindTextValueInTable(table, label.TextStart);
+                    var (matchedContent, matchedCell) = FindTextValueInTable(table, label.TextStart);
 
                     if (transformContentFunction != null)
                     {
@@ -56,10 +57,14 @@ public static class TableMatcherHelper
 
                     var words = matchedPossibility.Text.Length == 0
                         ? []
-                        : DocumentLineColumn.TextToWords(matchedPossibility.Text, null);
+                        : DocumentLineColumn.TextToWords(
+                            matchedPossibility.Text,
+                            null,
+                            matchedCell?.ToCoordinates());
 
                     var syntheticLine = new DocumentLine
                     {
+                        PageNumber = table.PageNumber,
                         Columns = [new DocumentLineColumn(words)]
                     };
 
@@ -95,6 +100,8 @@ public static class TableMatcherHelper
 
             string? rawValue = null;
             LabelToMatch? matchedLabel = null;
+            DocumentTableCell? matchedValueCell = null;
+            var matchedPageNumber = PositionConstants.UnknownPageNumber;
 
             foreach (var label in labels)
             {
@@ -105,11 +112,12 @@ public static class TableMatcherHelper
 
                 foreach (var table in tables)
                 {
-                    rawValue = FindTextValueInTable(table, label.TextStart);
+                    (rawValue, matchedValueCell) = FindTextValueInTable(table, label.TextStart);
 
                     if (!string.IsNullOrEmpty(rawValue))
                     {
                         matchedLabel = label;
+                        matchedPageNumber = table.PageNumber;
                         break;
                     }
                 }
@@ -125,9 +133,10 @@ public static class TableMatcherHelper
                 continue;
             }
 
-            var words = DocumentLineColumn.TextToWords(rawValue, null);
+            var words = DocumentLineColumn.TextToWords(rawValue, null, matchedValueCell?.ToCoordinates());
             var syntheticLine = new DocumentLine
             {
+                PageNumber = matchedPageNumber,
                 Columns = [new DocumentLineColumn(words)]
             };
 
@@ -152,7 +161,11 @@ public static class TableMatcherHelper
     /// <param name="table"></param>
     /// <param name="textToMatch"></param>
     /// <returns></returns>
-    private static string? FindTextValueInTable(DocumentTable table, IReadOnlyList<TextToMatch> textToMatch)
+    /// Returns the value and the cell it came from, so the cell's rectangle can travel with it -
+    /// words synthesised from cell text have no geometry of their own.
+    private static (string? Value, DocumentTableCell? Cell) FindTextValueInTable(
+        DocumentTable table,
+        IReadOnlyList<TextToMatch> textToMatch)
     {
         foreach (var cell in table.Cells)
         {
@@ -173,7 +186,7 @@ public static class TableMatcherHelper
 
             if (rawRemainder.Length > 0)
             {
-                return rawRemainder;
+                return (rawRemainder, cell);
             }
 
             var nextCell = table.Cells.FirstOrDefault(c =>
@@ -181,12 +194,12 @@ public static class TableMatcherHelper
 
             if (nextCell?.Content == null)
             {
-                return string.Empty;
+                return (string.Empty, cell);
             }
-            
-            return nextCell.Content?.Trim();
+
+            return (nextCell.Content?.Trim(), nextCell);
         }
 
-        return null;
+        return (null, null);
     }
 }

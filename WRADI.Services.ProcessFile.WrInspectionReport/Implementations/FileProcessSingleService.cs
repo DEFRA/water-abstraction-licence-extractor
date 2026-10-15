@@ -45,21 +45,15 @@ public class FileProcessSingleService(
             throw new ArgumentException($"Could not extract a file id from '{fileProcessSingleRequest.FilePath}'");
         }
 
-        var lookupConfig = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
-            [],
+        // Built through the shared factory so the accuracy harness scores this exact pipeline.
+        var lookupConfig = WrInspectionReportLookupConfigurationFactory.Build(
             fileService,
             cacheService,
             outputService,
-            new NullLicenceNumberService(),
-            null!,
-            null!,
-            new DmsLookupService(),
+            new TabulaTableExtractorService(cacheService),
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
-            fileProcessSingleRequest.LockRetryCount,
-            lineHeight: 6,
-            minimumRowsForDigital: 30);
+            fileProcessSingleRequest.LockRetryCount);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
         var processRun = processRuns.Single(pr => pr.ProcessRunId == fileProcessSingleRequest.ProcessRunId);
@@ -122,6 +116,33 @@ public class FileProcessSingleService(
         }
     }
 
+    /// Null when the file cannot be read, which leaves the overlay off for that document rather
+    /// than failing the whole extraction.
+    private async Task<byte[]?> GetPdfBytesAsync(string pdfFilename)
+    {
+        try
+        {
+            await using var stream = await fileService.GetFileAsStreamAsync(pdfFilename);
+
+            if (stream == null)
+            {
+                return null;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            return memoryStream.ToArray();
+        }
+        catch (Exception exception)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - could not read "
+                + $"{pdfFilename} for the table overlay, continuing without it: {exception.Message}");
+
+            return null;
+        }
+    }
+
     private async Task<bool> ScrapeDocumentAsync(
         string pdfFilename,
         LookupConfiguration lookupConfig,
@@ -134,13 +155,11 @@ public class FileProcessSingleService(
 
         try
         {
-            // Every label in this ruleset is table-based, so an extractor is required here. A
-            // no-op satisfies the check but makes every table-based label match nothing. Tabula is
-            // the free local option; the paid Document Intelligence one stays behind the
-            // orchestrator's own cost-optimised fallback.
-            var tableExtractorService = new TabulaTableExtractorService(cacheService);
-            lookupConfig.StructuredTableExtractorService = tableExtractorService;
-            lookupConfig.UnstructuredTableExtractorService = tableExtractorService;
+            var tableExtractorService = lookupConfig.UnstructuredTableExtractorService;
+
+            // The grid overlay needs the file's own bytes, which the orchestrator reopens with
+            // PdfClown rather than reusing the extractor's PdfPig document.
+            var pdfBytes = await GetPdfBytesAsync(pdfFilename);
 
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
@@ -150,7 +169,12 @@ public class FileProcessSingleService(
                     lookupConfig,
                     [pdfFilename],
                     processRun.ProcessRunId,
-                    pdfDataExtractor);
+                    pdfDataExtractor,
+                    // Resolves the LicenceProvisions grid fields, leaving any it cannot resolve
+                    // with their existing heuristic result. Tabula only - the paid Document
+                    // Intelligence extractor stays behind the orchestrator's cost-optimised path.
+                    pdfBytes == null ? null : tableExtractorService,
+                    pdfBytes);
 
             if (stopExecution)
             {

@@ -1,9 +1,11 @@
 using Dapper;
 using Npgsql;
+using NpgsqlTypes;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Database.PostgreSQL.Services;
+using WALE.ProcessFile.Core.Constants;
 using WALE.Tools.Config;
 using WALE.Tools.Helpers;
 
@@ -11,9 +13,22 @@ namespace WALE.Tools._2ndHalf.ImportNaldData;
 
 public static class ImportDmsData
 {
-    public static async Task<int> ImportAsync()
+    /// <param name="extractType">Which document type's extract this file is. Only that type's
+    /// rows are replaced.</param>
+    public static async Task<int> ImportAsync(string? extractType)
     {
-        ConsoleHelper.WriteLine($"Starting DMS data import into {KeyConfig.PostgresHost}...");
+        // Required rather than defaulted: an omitted type would replace the licence extract with
+        // whichever file happens to be in the resources folder.
+        if (extractType != DocumentTypes.AbstractionLicence && extractType != DocumentTypes.WrInspectionReport)
+        {
+            ConsoleHelper.WriteLine($"An extract type is required - '{DocumentTypes.AbstractionLicence}' "
+                + $"or '{DocumentTypes.WrInspectionReport}'"
+                + (string.IsNullOrWhiteSpace(extractType) ? "" : $" (given '{extractType}')"));
+
+            return 1;
+        }
+
+        ConsoleHelper.WriteLine($"Starting {extractType} DMS data import into {KeyConfig.PostgresHost}...");
 
         var dmsRecords = GetDmsExtractsFromResourcesFolder();
 
@@ -31,45 +46,93 @@ public static class ImportDmsData
             KeyConfig.PostgresPassword);
 
         await using var dataSource = npgsqlDataSourceProvider.DataSource;
-        
-        await ClearExistingDmsExtractDataAsync(dataSource);
-        await SetDmsImportDateAsync(dataSource);
 
-        var count = dmsRecords.Sum(dmsFiles => dmsFiles.Value.Count);
-        ConsoleHelper.WriteLine($"{count} records to insert");
+        var records = dmsRecords.SelectMany(dmsFiles => dmsFiles.Value).ToList();
+        ConsoleHelper.WriteLine($"{records.Count} records to insert");
 
-        var loopIndex = 0;
-        var tasks = new List<Task>();
-        
-        foreach (var dmsRecord in dmsRecords.SelectMany(
-            dmsFiles => dmsFiles.Value))
+        foreach (var dmsRecord in records)
         {
             dmsRecord.DocumentDate = ConvertExcelEpochToDateTimeString(dmsRecord.DocumentDate);
             dmsRecord.ModifiedDate = ConvertExcelEpochToDateTimeString(dmsRecord.ModifiedDate);
             dmsRecord.UploadDate = ConvertExcelEpochToDateTimeString(dmsRecord.UploadDate);
-            
-            tasks.Add(InsertDmsRow(dataSource, dmsRecord));
-            loopIndex++;
-                
-            if (tasks.Count == 20)
-            {
-                await Task.WhenAll(tasks);
-                tasks.Clear();
-            }
-
-            if (loopIndex % 1000 == 0)
-            {
-                ConsoleHelper.WriteLine($"{loopIndex} records inserted so far");
-            }
         }
-        
-        await Task.WhenAll(tasks);
-        tasks.Clear();
-        
-        ConsoleHelper.WriteLine($"{loopIndex} records inserted");
+
+        // The clear and the load share one transaction, so a failed import leaves the previous
+        // extract in place rather than a half-filled table.
+        await using var connection = await dataSource.OpenConnectionAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        await ClearExistingDmsExtractDataAsync(connection, extractType);
+        var written = await CopyDmsRowsAsync(connection, records, extractType);
+
+        // Checked before committing, so a short load rolls back rather than leaving the table
+        // with fewer rows than the extract held.
+        if (written != (ulong)records.Count)
+        {
+            throw new InvalidOperationException(
+                $"COPY wrote {written} rows but {records.Count} were read from the extract. " +
+                "Rolling back - dms_extract is unchanged.");
+        }
+
+        await transaction.CommitAsync();
+
+        await SetDmsImportDateAsync(dataSource);
+
+        ConsoleHelper.WriteLine($"{written} records inserted");
         ConsoleHelper.WriteLine("DMS extract import done");
 
         return 1;
+    }
+
+    /// <summary>
+    /// Loads the rows with a single binary COPY rather than one INSERT each. Every column on
+    /// dms_extract is text, so there is nothing to coerce.
+    /// </summary>
+    private static async Task<ulong> CopyDmsRowsAsync(
+        NpgsqlConnection connection,
+        IReadOnlyList<DmsExtract> records,
+        string extractType)
+    {
+        await using var writer = await connection.BeginBinaryImportAsync(
+            """
+            COPY public.dms_extract (
+                site_collection, library_name, permit_number, file_name, file_size, file_type,
+                customer_operator_name, facility_name, facility_address,
+                facility_address_postcode, regime, activity_class, activity_sub_class,
+                type_of_permit, catchment, national_security, disclosure_status, document_date,
+                upload_date, file_url, other_reference, modified_date, file_id, extract_type)
+            FROM STDIN (FORMAT BINARY)
+            """);
+
+        var loopIndex = 0;
+
+        foreach (var record in records)
+        {
+            await writer.StartRowAsync();
+
+            foreach (var value in new[]
+            {
+                record.SiteCollection, record.LibraryName, record.PermitNumber, record.FileName,
+                record.FileSize, record.FileType, record.CustomerOperatorName, record.FacilityName,
+                record.FacilityAddress, record.FacilityAddressPostcode, record.Regime,
+                record.ActivityClass, record.ActivitySubClass, record.TypeOfPermit,
+                record.Catchment, record.NationalSecurity, record.DisclosureStatus,
+                record.DocumentDate, record.UploadDate, record.FileUrl, record.OtherReference,
+                record.ModifiedDate, record.FileId, extractType
+            })
+            {
+                await writer.WriteAsync(value, NpgsqlDbType.Text);
+            }
+
+            loopIndex++;
+
+            if (loopIndex % 50_000 == 0)
+            {
+                ConsoleHelper.WriteLine($"{loopIndex} records streamed so far");
+            }
+        }
+
+        return await writer.CompleteAsync();
     }
 
     private static string ConvertExcelEpochToDateTimeString(string excelEpoch)
@@ -172,6 +235,7 @@ public static class ImportDmsData
         });
     }
     
+    /// <summary>Called only after the load commits, so the date never outruns the data.</summary>
     private static async Task SetDmsImportDateAsync(NpgsqlDataSource dataSource)
     {
         var sql = @"
@@ -187,13 +251,12 @@ public static class ImportDmsData
         });
     }
     
-    private static async Task ClearExistingDmsExtractDataAsync(NpgsqlDataSource dataSource)
-    {
-        var sql = "DELETE FROM public.dms_extract;";
-
-        await using var connection = await dataSource.OpenConnectionAsync();
-        await connection.ExecuteAsync(sql);
-    }
+    private static async Task ClearExistingDmsExtractDataAsync(
+        NpgsqlConnection connection,
+        string extractType) =>
+        await connection.ExecuteAsync(
+            "DELETE FROM public.dms_extract WHERE extract_type = @ExtractType;",
+            new { ExtractType = extractType });
     
     /// <summary>
     /// Reads all files starting with 'Consolidated' from the resources folder

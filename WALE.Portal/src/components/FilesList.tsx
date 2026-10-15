@@ -52,6 +52,12 @@ export function FilesList({}: FilesListProps) {
             return "";
         }
 
+        let filenameParts = fileName.split("__");
+
+        if(filenameParts.length == 3)
+        {
+            return  filenameParts[1].trim();
+        }
         let underscoreIndex = fileName.indexOf("__");
 
         return underscoreIndex >= 0
@@ -68,6 +74,11 @@ export function FilesList({}: FilesListProps) {
 
         if (filenameParts.length != 2)
         {
+            if(filenameParts.length == 3)
+            {
+                let fileIdWithExtension = filenameParts[2].trim();
+                return fileIdWithExtension!.split('.')[0];
+            }
             return null;
         }
 

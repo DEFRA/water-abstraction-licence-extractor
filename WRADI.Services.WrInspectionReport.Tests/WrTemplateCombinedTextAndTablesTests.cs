@@ -67,7 +67,7 @@ public class WrTemplateCombinedTextAndTablesTests
             CacheService);
         
         var config = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
@@ -80,7 +80,7 @@ public class WrTemplateCombinedTextAndTablesTests
             DateTime.Now,
             useLockExclusivity: false);
         
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
     

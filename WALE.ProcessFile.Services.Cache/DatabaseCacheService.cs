@@ -295,9 +295,9 @@ public class DatabaseCacheService(
         return databaseWriteService.SaveDmsFileReaderResultAsync(dmsFileReaderResult);
     }
     
-    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
-        return databaseReadService.GetDmsExtractAsync(skip, take);
+        return databaseReadService.GetDmsExtractAsync(skip, take, extractType);
     }
 
     public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()

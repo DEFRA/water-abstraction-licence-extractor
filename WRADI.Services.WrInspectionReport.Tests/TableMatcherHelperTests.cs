@@ -16,7 +16,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 public class TableMatcherHelperTests
 {
     private static readonly IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
-        WrInspectionReportLabelConfiguration.GetLabels();
+        WrInspectionReportTextBasedLabelConfiguration.GetLabels();
 
     private static DocumentTableCell Cell(int row, int col, string content) => new()
     {

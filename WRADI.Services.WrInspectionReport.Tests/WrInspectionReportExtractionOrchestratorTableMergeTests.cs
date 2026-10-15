@@ -16,7 +16,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 public class WrInspectionReportExtractionOrchestratorTableMergeTests
 {
     private static readonly List<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
-        WrInspectionReportLabelConfiguration.GetLabels();
+        WrInspectionReportTextBasedLabelConfiguration.GetLabels();
 
     private class FakeTableExtractorService(IReadOnlyList<DocumentTable> tables) : ITableExtractorService
     {

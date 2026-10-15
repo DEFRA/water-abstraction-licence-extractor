@@ -10,6 +10,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
+using WALE.ProcessFile.Services.Tabula;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
@@ -38,7 +39,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         return new LookupConfiguration(
             textBasedConfig
                 ? WrInspectionReportTextBasedLabelConfiguration.GetLabels()
-                : WrInspectionReportLabelConfiguration.GetLabels(),
+                : WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
@@ -92,7 +93,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, null!);
+        // The consolidated ruleset reads table free text, so an extractor is required.
+        var lookupConfiguration = BuildLookupConfiguration(
+            pdfFolder, true, new TabulaTableExtractorService(CacheService));
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -330,12 +333,13 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         // Not gated on the date failing to parse: the converter's salvage can usually dig a date
         // back out of polluted text, so gating here reports zero while the capture stays wrong.
-        // Cause is two-column layouts, where the officer row sits between the date label and its
-        // wrapped value and the WholeLine fallback scoops both columns. Bounded per column by
-        // SkipColumnWhenStartsWith - text bounding can't fix it (that row is a boundary in one
-        // layout and an intruder in the other, 774 -> 685 tried), nor can rejecting the whole row,
-        // which loses the date it often carries in a further column (794 -> 758 tried). What's
-        // left is cells with no leading label, plus InspectingOfficer itself capturing junk.
+        // Cause is the squeezed layout's fallback rule anchoring on "Inspecting Officer"
+        // (because "Inspection Date:" wraps across two lines there), which starts the capture
+        // inside the officer's own value. Column-side routes are measured dead ends: text
+        // bounding (774 -> 685), rejecting the officer's row (794 -> 758, which loses dates
+        // carried in a further column), and dropping .WholeLine() for the column-limited
+        // default, which loses InspectionDate outright wherever the label wraps (10 of the
+        // tests in Wr51PdfPigNoOcrPdfTests go red).
         var inspectionDateLeaksOfficer = formsList.Count(f =>
             !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
             && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
@@ -575,8 +579,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             + "a value - see test output.");
 
         // Separate from the parse ratchet above: these documents do resolve a date, so a capture
-        // regression would otherwise hide behind the salvage that rescues it.
-        const int knownInspectionDateColumnLeaks = 38;
+        // regression would otherwise hide behind the salvage that rescues it. These are the
+        // guard in RemoveSiblingValue rather than real leaks: InspectingOfficer on those
+        // documents is itself "2019" or "Time: 10:50", so the Contains below matches the date's
+        // own year, and stripping it by value would delete the date.
+        const int knownInspectionDateColumnLeaks = 5;
 
         Assert.True(
             inspectionDateLeaksOfficer <= knownInspectionDateColumnLeaks,

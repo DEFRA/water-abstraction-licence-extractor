@@ -60,18 +60,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         PropertyNameCaseInsensitive = true
     };
 
-    private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
+    /// The pipeline's own construction, so the scores describe what actually runs.
+    private static LookupConfiguration BuildLookupConfiguration(
+        string pdfFolder,
+        ITableExtractorService tableExtractorService)
     {
-        return new LookupConfiguration(
-            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
-            [],
+        return WrInspectionReportLookupConfigurationFactory.Build(
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
-            new NullLicenceNumberService(),
-            null,
-            null,
-            new DmsLookupService(),
+            tableExtractorService,
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
     }
@@ -504,17 +502,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         Assert.True(truthPaths.Length > 0, $"No .truth.json files found in {GroundTruthFolder}");
 
         var pdfFolder = TestConfig.PdfFolder;
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
+        // An empty stub where a run deliberately has no overlay: the properties cannot express
+        // "no tables", and the parameter separately drives whether the overlay runs at all.
+        var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, lookupTableExtractorService);
 
         // Same extractor for both roles; PdfDataExtractorService throws if either is null and any
         // active label needs it. The baseline passes null to mean "no table overlay", which these
         // properties can't express, so they get an empty stub. The parameter itself stays null -
         // it separately drives whether the orchestrator runs the overlay at all, so coalescing it
         // there would silently turn the no-table baseline into a table-based run.
-        var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
-        lookupConfiguration.StructuredTableExtractorService = lookupTableExtractorService;
-        lookupConfiguration.UnstructuredTableExtractorService = lookupTableExtractorService;
-
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
         var extractionFailures = new List<(string SourceFile, string Error)>();

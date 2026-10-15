@@ -75,7 +75,11 @@ public class FileProcessOrchestrationService(
         var requests = sendable
             .Select(candidate =>
             {
-                var destinationFileName = $"{candidate.PermitNumber!.ToLower()}__{candidate.FileId!.ToLower()}.pdf";
+                // Prefixed, because that is how these are uploaded. An unprefixed key finds
+                // almost nothing in the bucket.
+                var destinationFileName = WrInspectionReportIngressFile.BuildFileName(
+                    candidate.PermitNumber!,
+                    candidate.FileId!);
 
                 return new FileProcessSingleRequest
                 {

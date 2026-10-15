@@ -333,13 +333,13 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         // Not gated on the date failing to parse: the converter's salvage can usually dig a date
         // back out of polluted text, so gating here reports zero while the capture stays wrong.
-        // Cause was the squeezed layout's fallback rule anchoring on "Inspecting Officer"
+        // Cause is the squeezed layout's fallback rule anchoring on "Inspecting Officer"
         // (because "Inspection Date:" wraps across two lines there), which starts the capture
-        // inside the officer's own value. Fixed by value in the converter, not by column: the
-        // column routes were tried and measured - text bounding (774 -> 685), rejecting the
-        // whole row (794 -> 758, which loses dates carried in a further column), and giving the
-        // rule the column-limited default instead of WholeLine, which drops the field entirely
-        // on the 10 documents only this fallback resolves.
+        // inside the officer's own value. Column-side routes are measured dead ends: text
+        // bounding (774 -> 685), rejecting the officer's row (794 -> 758, which loses dates
+        // carried in a further column), and dropping .WholeLine() for the column-limited
+        // default, which loses InspectionDate outright wherever the label wraps (10 of the
+        // tests in Wr51PdfPigNoOcrPdfTests go red).
         var inspectionDateLeaksOfficer = formsList.Count(f =>
             !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
             && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
@@ -579,11 +579,10 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             + "a value - see test output.");
 
         // Separate from the parse ratchet above: these documents do resolve a date, so a capture
-        // regression would otherwise hide behind the salvage that rescues it. Was 38, then 49
-        // once the rulesets were consolidated; RemoveSiblingValue in the converter strips the
-        // officer's name out of the stored RawDate and takes it to 5. Those 5 are the guard's
-        // own exclusion, not leaks: InspectingOfficer there is "2019" or "Time: 10:50", so the
-        // Contains below matches the date's own year and removing it would delete the date.
+        // regression would otherwise hide behind the salvage that rescues it. These are the
+        // guard in RemoveSiblingValue rather than real leaks: InspectingOfficer on those
+        // documents is itself "2019" or "Time: 10:50", so the Contains below matches the date's
+        // own year, and stripping it by value would delete the date.
         const int knownInspectionDateColumnLeaks = 5;
 
         Assert.True(

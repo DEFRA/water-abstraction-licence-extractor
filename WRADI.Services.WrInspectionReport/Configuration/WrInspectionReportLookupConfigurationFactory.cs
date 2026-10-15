@@ -5,9 +5,8 @@ using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
-/// The one construction of a WR51 LookupConfiguration. The pipeline and the accuracy harness both
-/// build through here: when they built their own, they drifted onto different label sets and
-/// different layout values, and the harness scored a pipeline nobody ran.
+/// The one construction of a WR51 LookupConfiguration. The pipeline and the accuracy harness must
+/// both build through here, or the harness scores a configuration the pipeline does not run.
 public static class WrInspectionReportLookupConfigurationFactory
 {
     /// <param name="tableExtractorService">

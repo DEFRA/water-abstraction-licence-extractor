@@ -41,8 +41,6 @@ public static class WrInspectionReportSchemaConverter
 
         var rawInspectionDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionDate);
 
-        // Hoisted: the salvage below, the RawDate clean-up after it and the form itself all need
-        // the same truncated value, and computing it three times let them disagree.
         var inspectingOfficer = TruncateAtKnownSiblingLabel(
             GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
             "Inspection Date:");
@@ -234,11 +232,9 @@ public static class WrInspectionReportSchemaConverter
             }
         }
 
-        // RawDate is exported to the lake and shown as the scraped value for verification, so on
-        // the squeezed layouts it carried the officer's name: the fallback rule there anchors on
-        // "Inspecting Officer" because "Inspection Date:" wraps across two lines, which puts the
-        // capture's start inside the officer's own value. Applied after the parsing above, to the
-        // stored text only, so nothing about date resolution depends on it.
+        // RawDate is exported to the lake and shown as the scraped value during verification, so
+        // it has to be clean in its own right. Must stay after the parsing above: that runs
+        // against the captured text untouched, and no date resolution depends on this.
         rawInspectionDate = RemoveSiblingValue(rawInspectionDate, inspectingOfficer);
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);

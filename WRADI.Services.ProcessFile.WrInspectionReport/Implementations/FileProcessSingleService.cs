@@ -155,7 +155,6 @@ public class FileProcessSingleService(
 
         try
         {
-            // Set by the factory; named here because the overlay below takes it too.
             var tableExtractorService = lookupConfig.UnstructuredTableExtractorService;
 
             // The grid overlay needs the file's own bytes, which the orchestrator reopens with
@@ -172,8 +171,8 @@ public class FileProcessSingleService(
                     processRun.ProcessRunId,
                     pdfDataExtractor,
                     // Resolves the LicenceProvisions grid fields, leaving any it cannot resolve
-                    // with their existing heuristic result. The paid Document Intelligence
-                    // fallback is deliberately not passed.
+                    // with their existing heuristic result. Tabula only - the paid Document
+                    // Intelligence extractor stays behind the orchestrator's cost-optimised path.
                     pdfBytes == null ? null : tableExtractorService,
                     pdfBytes);
 

@@ -10,6 +10,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
+using WALE.ProcessFile.Services.Tabula;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Converters;
@@ -38,7 +39,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         return new LookupConfiguration(
             textBasedConfig
                 ? WrInspectionReportTextBasedLabelConfiguration.GetLabels()
-                : WrInspectionReportLabelConfiguration.GetLabels(),
+                : WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
@@ -92,7 +93,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         Assert.True(files.Count > 0, $"No WR51 PDFs found in {pdfFolder}");
 
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, true, null!);
+        // The consolidated ruleset reads table free text, so an extractor is required.
+        var lookupConfiguration = BuildLookupConfiguration(
+            pdfFolder, true, new TabulaTableExtractorService(CacheService));
 
         var failures = new ConcurrentBag<(string FileName, string Error)>();
         var forms = new ConcurrentBag<global::WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport>();
@@ -330,7 +333,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
 
         // Not gated on the date failing to parse: the converter's salvage can usually dig a date
         // back out of polluted text, so gating here reports zero while the capture stays wrong.
-        // Cause is the squeezed layout's fallback rule anchoring on "Inspecting Officer"
+        // Cause was the squeezed layout's fallback rule anchoring on "Inspecting Officer"
         // (because "Inspection Date:" wraps across two lines there), which starts the capture
         // inside the officer's own value. Fixed by value in the converter, not by column: the
         // column routes were tried and measured - text bounding (774 -> 685), rejecting the
@@ -576,12 +579,12 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             + "a value - see test output.");
 
         // Separate from the parse ratchet above: these documents do resolve a date, so a capture
-        // regression would otherwise hide behind the salvage that rescues it. Was 38 before
-        // RemoveSiblingValue stripped the officer's name out of the stored RawDate. The 6 left
-        // are the guard's own exclusion rather than leaks: InspectingOfficer on those documents
-        // is itself "2019" or "Time: 10:50", so the Contains below matches the date's own year,
-        // and removing it by value would delete the date.
-        const int knownInspectionDateColumnLeaks = 6;
+        // regression would otherwise hide behind the salvage that rescues it. Was 38, then 49
+        // once the rulesets were consolidated; RemoveSiblingValue in the converter strips the
+        // officer's name out of the stored RawDate and takes it to 5. Those 5 are the guard's
+        // own exclusion, not leaks: InspectingOfficer there is "2019" or "Time: 10:50", so the
+        // Contains below matches the date's own year and removing it would delete the date.
+        const int knownInspectionDateColumnLeaks = 5;
 
         Assert.True(
             inspectionDateLeaksOfficer <= knownInspectionDateColumnLeaks,

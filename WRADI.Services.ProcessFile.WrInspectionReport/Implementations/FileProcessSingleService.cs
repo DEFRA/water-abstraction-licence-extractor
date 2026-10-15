@@ -45,21 +45,15 @@ public class FileProcessSingleService(
             throw new ArgumentException($"Could not extract a file id from '{fileProcessSingleRequest.FilePath}'");
         }
 
-        var lookupConfig = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
-            [],
+        // Built through the shared factory so the accuracy harness scores this exact pipeline.
+        var lookupConfig = WrInspectionReportLookupConfigurationFactory.Build(
             fileService,
             cacheService,
             outputService,
-            new NullLicenceNumberService(),
-            null!,
-            null!,
-            new DmsLookupService(),
+            new TabulaTableExtractorService(cacheService),
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
-            fileProcessSingleRequest.LockRetryCount,
-            lineHeight: 6,
-            minimumRowsForDigital: 30);
+            fileProcessSingleRequest.LockRetryCount);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
         var processRun = processRuns.Single(pr => pr.ProcessRunId == fileProcessSingleRequest.ProcessRunId);

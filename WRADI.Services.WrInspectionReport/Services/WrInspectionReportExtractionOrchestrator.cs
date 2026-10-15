@@ -14,7 +14,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 
 /// <summary>
 /// Two-pass extraction: a cheap first pass with only the classification label groups
-/// (WrInspectionReportLabelConfiguration.GetClassificationLabels - 7 groups) decides
+/// (WrInspectionReportTextBasedLabelConfiguration.GetClassificationLabels - 7 groups) decides
 /// Metadata.Template, then a second pass runs GetT1Labels() or GetLabels() depending on that
 /// result. Exists so a T1-specific rule change (once it has real evidence behind it) can be made
 /// in GetT1Labels() alone, with no way to affect any other template's documents, rather than
@@ -58,7 +58,7 @@ public static class WrInspectionReportExtractionOrchestrator
             int minimumFieldsToSkipFallback = 10)
     {
         configuration1 = configuration1.Clone();
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(configuration1);
 
         var originalLabels = configuration1.Labels.ToList();
         

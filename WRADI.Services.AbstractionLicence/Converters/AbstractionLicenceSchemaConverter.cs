@@ -1427,7 +1427,7 @@ public static class AbstractionLicenceSchemaConverter
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
 
-        // Add any that were linked from a linked licence
+        // Add any that were linked from a linked licence (or a deeper level)
         allLicences.AddRange(
             await GetLicenceLinkedFromLinkedLicenceAsync(
                 primaryLicence,
@@ -1472,7 +1472,8 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             var aggregatesWithLinkedLicnces = licence.AbstractionLimits.Aggregates!
-                .Where(agg => agg.LinkedLicences?.Length >= 1);
+                .Where(agg => agg.LinkedLicences?.Length >= 1)
+                .ToList();
 
             foreach (var aggregate in aggregatesWithLinkedLicnces)
             {
@@ -1742,7 +1743,7 @@ public static class AbstractionLicenceSchemaConverter
 
                                 if (missingLinkedLicence == null)
                                 {
-                                    // TODO log in to how this can happen
+                                    // TODO look in to how this can happen / log
                                     return null;
                                 }
                                     
@@ -1853,6 +1854,32 @@ public static class AbstractionLicenceSchemaConverter
                     if (newLicence == null)
                     {
                         continue;
+                    }
+
+                    foreach (var linkedLicenceLevel2 in newLicence.LinkedLicences)
+                    {
+                        alreadyHave = allLicences.Any(l => l.LicenceNumber?.Value == linkedLicenceLevel2.LicenceNumber);
+
+                        if (!alreadyHave)
+                        {
+                            var newLicenceLevel2 = new Licence
+                            {
+                                Status = ScrapeStatus.NotScraped,
+                                LicenceNumber = new ValueWithConfidence<string>
+                                {
+                                    Value = linkedLicenceLevel2.LicenceNumber
+                                },
+                                DmsFileId = linkedLicenceLevel2.DmsFileId,
+                                DmsPermitNumber = linkedLicenceLevel2.DmsPermitNumber,
+                                DmsPath = linkedLicenceLevel2.DmsPath,
+                                NaldStatus = linkedLicenceLevel2.NaldStatus,
+                                RegionId = linkedLicenceLevel2.RegionId,
+                                LicenceType = linkedLicenceLevel2.LicenceType,
+                                LicenceVersion = linkedLicenceLevel2.LicenceVersion
+                            };
+                            
+                            returnList.Add(newLicenceLevel2);
+                        }
                     }
                     
                     returnList.Add(newLicence);

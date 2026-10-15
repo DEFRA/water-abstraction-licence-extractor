@@ -40,6 +40,12 @@ public static class WrInspectionReportSchemaConverter
         }
 
         var rawInspectionDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionDate);
+
+        // Hoisted: the salvage below, the RawDate clean-up after it and the form itself all need
+        // the same truncated value, and computing it three times let them disagree.
+        var inspectingOfficer = TruncateAtKnownSiblingLabel(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
+            "Inspection Date:");
         var rawInspectionTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Time);
 
         var currentDay = DateTime.Today;
@@ -215,10 +221,6 @@ public static class WrInspectionReportSchemaConverter
             // the inspecting officer's name - stripped by value since the label itself is gone.
             if (inspectionDateTime == null)
             {
-                var inspectingOfficer = TruncateAtKnownSiblingLabel(
-                    GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
-                    "Inspection Date:");
-
                 foreach (var salvaged in SalvageDateCandidates(rawInspectionDate, inspectingOfficer))
                 {
                     if (!IsUsableInspectionDate(salvaged, out var tSalvagedDateTime))
@@ -231,6 +233,13 @@ public static class WrInspectionReportSchemaConverter
                 }
             }
         }
+
+        // RawDate is exported to the lake and shown as the scraped value for verification, so on
+        // the squeezed layouts it carried the officer's name: the fallback rule there anchors on
+        // "Inspecting Officer" because "Inspection Date:" wraps across two lines, which puts the
+        // capture's start inside the officer's own value. Applied after the parsing above, to the
+        // stored text only, so nothing about date resolution depends on it.
+        rawInspectionDate = RemoveSiblingValue(rawInspectionDate, inspectingOfficer);
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);
         DateOnly? dateOfCertificateOrRecord = null;
@@ -561,6 +570,37 @@ public static class WrInspectionReportSchemaConverter
     // endText fix that worked for InspectionClass/SiteAddress had zero effect here). A plain
     // string truncation at the known sibling-label marker works regardless of the upstream
     // column structure, since it operates on the final joined text rather than columns.
+    // Companion to TruncateAtKnownSiblingLabel, for when the sibling's own label is absent from
+    // the capture and only its value is there to go on. Skipped when that value is date- or
+    // time-like rather than a name ("2019", "Time: 10:50" both occur in the corpus as
+    // InspectingOfficer): those are defects in InspectingOfficer, and removing one here would
+    // delete the date's own year from the text it was found in.
+    private static string? RemoveSiblingValue(string? text, string? siblingValue)
+    {
+        if (string.IsNullOrWhiteSpace(text)
+            || string.IsNullOrWhiteSpace(siblingValue)
+            || !siblingValue.Any(char.IsLetter)
+            || siblingValue.TrimStart().StartsWith("Time", StringComparison.OrdinalIgnoreCase))
+        {
+            return text;
+        }
+
+        var index = text.IndexOf(siblingValue, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+        {
+            return text;
+        }
+
+        var cleaned = string.Concat(text.AsSpan(0, index), " ", text.AsSpan(index + siblingValue.Length))
+            .Replace("  ", " ")
+            .Trim();
+
+        // The officer's value being the whole capture means there is no date in there to keep -
+        // the original text is more use to a human verifier than an empty cell.
+        return string.IsNullOrWhiteSpace(cleaned) ? text : cleaned;
+    }
+
     private static string? TruncateAtKnownSiblingLabel(string? text, string siblingLabel)
     {
         if (string.IsNullOrEmpty(text))

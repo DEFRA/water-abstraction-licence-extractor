@@ -46,10 +46,12 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
 
     public static TheoryData<string, string, string> Cases => new()
     {
-        // filename, the date the document shows, the time the document shows
-        { "wr51__2673709011r01__03cafb19-9857-1682-db46-7361acb70d1c.pdf", "17.11.2020", "10:00" },
-        { "wr51__2673614008__c95f91ac-e34a-f832-408a-2c7b39eba018.pdf", "04.08.2016", "10:00" },
-        { "wr51__2839220340__e68f3f54-0d3a-4c61-949e-b831b5eb0597.pdf", "14/11/2023", "09.55" },
+        // filename, the inspection date, the time the document shows. Dates are ISO because the
+        // assertion is on the parsed value; the documents themselves render them 17.11.2020,
+        // 04.08.2016 and 14/11/2023 respectively.
+        { "wr51__2673709011r01__03cafb19-9857-1682-db46-7361acb70d1c.pdf", "2020-11-17", "10:00" },
+        { "wr51__2673614008__c95f91ac-e34a-f832-408a-2c7b39eba018.pdf", "2016-08-04", "10:00" },
+        { "wr51__2839220340__e68f3f54-0d3a-4c61-949e-b831b5eb0597.pdf", "2023-11-14", "09.55" },
     };
 
     [Theory]
@@ -63,13 +65,14 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
         var noGrid = await ExtractInspectionDateAsync(fileName, useTabula: false);
 
         testOutputHelper.WriteLine($"{fileName}");
+        testOutputHelper.WriteLine($"  TEMPLATE       {withGrid.MatchedText?.Split(']')[0]}]");
         testOutputHelper.WriteLine($"  document says  date='{expectedDate}' time='{expectedTime}'");
-        testOutputHelper.WriteLine($"  with Tabula    date='{withGrid.RawDate}' time='{withGrid.RawTime}' matcher='{withGrid.MatchedText}'");
-        testOutputHelper.WriteLine($"  no grid        date='{noGrid.RawDate}' time='{noGrid.RawTime}' matcher='{noGrid.MatchedText}'");
+        testOutputHelper.WriteLine($"  with Tabula    date='{withGrid.Date}' time='{withGrid.RawTime}' matcher='{withGrid.MatchedText}'");
+        testOutputHelper.WriteLine($"  no grid        date='{noGrid.Date}' time='{noGrid.RawTime}' matcher='{noGrid.MatchedText}'");
 
         var extracted = withGrid;
 
-        Assert.Equal(expectedDate, extracted.RawDate);
+        Assert.Equal(expectedDate, extracted.Date);
         Assert.Equal(expectedTime, extracted.RawTime);
     }
 
@@ -138,7 +141,7 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
         }
     }
 
-    private static async Task<(string? RawDate, string? RawTime, string? MatchedText)> ExtractInspectionDateAsync(
+    private static async Task<(string? Date, string? RawTime, string? MatchedText)> ExtractInspectionDateAsync(
         string fileName,
         bool useTabula)
     {
@@ -154,7 +157,7 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
         // Mirrors FileProcessSingleService exactly, lineHeight and minimumRowsForDigital
         // included: those drive line grouping, so defaults do not reproduce the pipeline.
         var lookupConfiguration = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
             new LocalFileService(pdfFolder),
             CacheService,
@@ -183,6 +186,8 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
 
         var dmsFileData = new DmsFileData { FileId = fileId!.Value };
 
+        var pdfBytes = await File.ReadAllBytesAsync(path);
+
         var (stopExecution, _, matchesResult, template) =
             await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                 fileName,
@@ -191,7 +196,10 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
                 lookupConfiguration,
                 [fileName],
                 processRunId: -99,
-                pdfDataExtractor);
+                pdfDataExtractor,
+                // Mirrors FileProcessSingleService: the grid overlay on, the paid fallback off.
+                useTabula ? tableExtractorService : null,
+                useTabula ? pdfBytes : null);
 
         Assert.False(stopExecution, $"{fileName} reported StopExecution");
         Assert.NotNull(matchesResult);
@@ -199,11 +207,14 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
         var form = WrInspectionReportSchemaConverter.ToForm(matchesResult!, dmsFileData, template);
 
         // What the matcher captured, before the converter parses it - locates the loss.
-        var matched = FlattenMatchedText(matchesResult!, WrInspectionReportFieldNames.InspectionDate)
+        var matched = $"[template={template}] "
+            + FlattenMatchedText(matchesResult!, WrInspectionReportFieldNames.InspectionDate)
             + "  ||  Time group: "
             + (FlattenMatchedText(matchesResult!, WrInspectionReportFieldNames.Time) ?? "<no match>");
 
-        return (form.InspectionDate.RawDate, form.InspectionDate.RawTime, matched);
+        // The parsed date, not RawDate: a rule that spans a wrapped layout captures surrounding
+        // text by design, so the raw value is an intermediate rather than the result.
+        return (form.InspectionDate.DateTime?.ToString("yyyy-MM-dd"), form.InspectionDate.RawTime, matched);
     }
 
     private static string? FlattenMatchedText(MatchesResult matchesResult, string labelName)

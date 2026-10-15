@@ -60,7 +60,7 @@ app.UseResponseCompression();
 app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
-app.MapHub<ProcessHub>("/hubs/process");
+app.MapHub<ProcessHub>("/notificationshub/process");
 app.Run();
 
 return;

@@ -174,7 +174,7 @@ public class FileProcessSingleService(
             try
             {
                 await outputService
-                    .UpdateLicenceListProcessRunAsync(processRunId);
+                    .UpdateProcessRunListProjectionAsync(processRunId);
             }
             catch
             {

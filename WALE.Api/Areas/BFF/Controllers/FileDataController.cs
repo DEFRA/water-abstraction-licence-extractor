@@ -125,93 +125,43 @@ public class FileDataController(
     {
         var discovery = await GetDiscoveryAsync();
 
-        // The projection already holds every column this list shows, so reading it is one query.
-        // The fallback below is the older path - a result fetch and a conversion per file, which
-        // measured tens of seconds for a 1,700-file run and scales linearly from there.
+        // Written as a run completes, and rebuildable on demand, so every column this list shows
+        // comes back in one query.
         var projected = await wrInspectionReportSummaryReadService.GetForProcessRunAsync(processRunId);
 
-        if (projected.Count > 0)
-        {
-            var rows = projected
-                .Select(summary => (object)new
-                {
-                    fileId = summary.FileId,
-                    originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
-                    template = summary.Template,
-                    date = summary.SortDate?.ToString("yyyy-MM-dd"),
-                    dateSource = summary.DateSource.ToString(),
-                    dateWarning = summary.DateWarning.ToString(),
-                    completeness = summary.Completeness,
-                    isScan = summary.IsScan
-                })
-                .ToList();
-
-            // A file that failed extraction has nothing to project, but its DMS name is known from
-            // discovery - without a row it appears in the list as a blank line.
-            var projectedFileIds = projected.Select(summary => summary.FileId).ToHashSet();
-
-            rows.AddRange((await outputService.GetSimpleMatchResults(processRunId))
-                .Where(result => !projectedFileIds.Contains(result.FileId))
-                .Select(result => (object)new
-                {
-                    fileId = result.FileId,
-                    originalFileName = discovery.GetValueOrDefault(result.FileId.ToString()).FileName,
-                    template = (string?)null,
-                    date = (string?)null,
-                    dateSource = "None",
-                    dateWarning = "None",
-                    completeness = 0,
-                    isScan = false
-                }));
-
-            return rows;
-        }
-
-        var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
-
-        using var semaphore = new SemaphoreSlim(10);
-
-        var tasks = simpleResults.Select(async simpleResult =>
-        {
-            await semaphore.WaitAsync();
-
-            try
+        var rows = projected
+            .Select(summary => (object)new
             {
-                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                fileId = summary.FileId,
+                originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
+                template = summary.Template,
+                date = summary.SortDate?.ToString("yyyy-MM-dd"),
+                dateSource = summary.DateSource.ToString(),
+                dateWarning = summary.DateWarning.ToString(),
+                completeness = summary.Completeness,
+                isScan = summary.IsScan
+            })
+            .ToList();
 
-                if (matchesResult == null)
-                {
-                    return null;
-                }
+        // A file that failed extraction has nothing to project, but its DMS name is known from
+        // discovery - without a row it appears in the list as a blank line.
+        var projectedFileIds = projected.Select(summary => summary.FileId).ToHashSet();
 
-                var discovered = discovery.GetValueOrDefault(simpleResult.FileId.ToString());
-
-                var summary = WrInspectionReportSummaryBuilder.Build(
-                    matchesResult,
-                    simpleResult.FileId,
-                    processRunId,
-                    discovered.PermitNumber,
-                    (WrInspectionReportSummaryBuilder.ParseDmsDate(discovered.DocumentDate),
-                        WrInspectionReportSummaryBuilder.ParseDmsDate(discovered.UploadDate)));
-
-                return (object)new
-                {
-                    fileId = simpleResult.FileId,
-                    originalFileName = discovered.FileName,
-                    template = summary.Template,
-                    date = summary.InspectionDate?.ToString("yyyy-MM-dd"),
-                    dateSource = summary.DateSource.ToString(),
-                    completeness = summary.Completeness,
-                    isScan = summary.IsScan
-                };
-            }
-            finally
+        rows.AddRange((await outputService.GetSimpleMatchResults(processRunId))
+            .Where(result => !projectedFileIds.Contains(result.FileId))
+            .Select(result => (object)new
             {
-                semaphore.Release();
-            }
-        });
+                fileId = result.FileId,
+                originalFileName = discovery.GetValueOrDefault(result.FileId.ToString()).FileName,
+                template = (string?)null,
+                date = (string?)null,
+                dateSource = "None",
+                dateWarning = "None",
+                completeness = 0,
+                isScan = false
+            }));
 
-        return (await Task.WhenAll(tasks)).Where(summary => summary != null).ToList()!;
+        return rows;
     }
 
     /// The list shows the ingress key, which says nothing about the document. The DMS name, the
@@ -237,17 +187,6 @@ public class FileDataController(
         string? PermitNumber,
         string? DocumentDate,
         string? UploadDate);
-
-
-    // Rough completeness proxy - the percentage of the report's top-level sections carrying any
-    // content at all.
-
-    /// <summary>
-    /// DidntMatch means no rule matched the condition, so it is the absence of a finding. It still
-    /// serialises as a non-empty string, which made the provisions section always count and gave
-    /// every document a floor of 10%. Blank still counts: a rule did match, the value was empty.
-    /// </summary>
-
 
 
     [HttpGet]

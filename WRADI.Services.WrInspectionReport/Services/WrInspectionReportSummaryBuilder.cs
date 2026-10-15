@@ -11,7 +11,9 @@ namespace WRADI.DocumentType.WrInspectionReport.Services;
 /// Projects an extracted report onto the handful of fields a list view needs.
 public static class WrInspectionReportSummaryBuilder
 {
-    /// A matched label that found nothing still serialises as this, so it must not count as content.
+    /// A matched label that found nothing still serialises as this non-empty string. Counting it
+    /// made the provisions section always score, giving every document a floor of 10%. A blank
+    /// value does still count: a rule matched and the value was genuinely empty.
     private const string NoFindingEnumValue = "DidntMatch";
 
     /// The abstraction corpus runs from the 1960s, so anything earlier is a misread.
@@ -172,6 +174,7 @@ public static class WrInspectionReportSummaryBuilder
             : null;
     }
 
+    /// A rough proxy: the percentage of the report's top-level sections carrying any content.
     private static int ComputeCompleteness(JsonElement report)
     {
         var withContent = SectionNames.Count(sectionName =>

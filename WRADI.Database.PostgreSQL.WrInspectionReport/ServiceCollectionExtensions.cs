@@ -11,6 +11,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddTransient<IWrInspectionReportSummaryReadService, PostgresWrInspectionReportSummaryReadService>();
         services.AddTransient<IWrInspectionReportSummaryWriteService, PostgresWrInspectionReportSummaryWriteService>();
+        services.AddTransient<IWrInspectionReportProjectionService, PostgresWrInspectionReportProjectionService>();
 
         return services;
     }

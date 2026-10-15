@@ -285,7 +285,7 @@ public async Task<IActionResult> ImportCsvChunk(
                 try
                 {
                     await outputService
-                        .UpdateLicenceListProcessRunAsync(processRunId);
+                        .UpdateProcessRunListProjectionAsync(processRunId);
                 }
                 catch
                 {

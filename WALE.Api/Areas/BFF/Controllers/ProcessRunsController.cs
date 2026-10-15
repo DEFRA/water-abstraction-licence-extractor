@@ -241,8 +241,15 @@ public class ProcessRunsController(
 
                 break;
 
-            default:
+            case DocumentTypes.AbstractionLicence:
                 await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);
+
+                break;
+
+            default:
+                ConsoleHelper.WriteLine($"WARNING - {nameof(ProcessRunsController)} - process run "
+                    + $"{processRunId} has document type '{processRun.DocumentType}', which has no "
+                    + "list projection; nothing rebuilt");
 
                 break;
         }

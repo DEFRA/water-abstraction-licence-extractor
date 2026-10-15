@@ -108,7 +108,7 @@ public static class WrInspectionReportSummaryBuilder
             : null;
     }
 
-    private static (DateOnly? Date, WrInspectionReportDateSource Source) PickSortDate(
+    internal static (DateOnly? Date, WrInspectionReportDateSource Source) PickSortDate(
         DateOnly? inspectionDate,
         DateOnly? formDate,
         (DateOnly? DocumentDate, DateOnly? UploadDate) dmsDates)
@@ -135,7 +135,7 @@ public static class WrInspectionReportSummaryBuilder
 
     /// Checked against today and against the filing date, because a misread year still presents as
     /// a successfully extracted field.
-    private static WrInspectionReportDateWarning CheckDate(
+    internal static WrInspectionReportDateWarning CheckDate(
         DateOnly? inspectionDate,
         DateOnly? dmsDocumentDate)
     {
@@ -175,7 +175,7 @@ public static class WrInspectionReportSummaryBuilder
     }
 
     /// A rough proxy: the percentage of the report's top-level sections carrying any content.
-    private static int ComputeCompleteness(JsonElement report)
+    internal static int ComputeCompleteness(JsonElement report)
     {
         var withContent = SectionNames.Count(sectionName =>
             report.TryGetProperty(sectionName, out var section) && HasContent(section));

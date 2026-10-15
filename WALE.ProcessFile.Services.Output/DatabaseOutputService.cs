@@ -214,7 +214,7 @@ public class DatabaseOutputService(
         throw new NotImplementedException();
     }
 
-    public Task UpdateLicenceListProcessRunAsync(int processRunId)
+    public Task UpdateProcessRunListProjectionAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

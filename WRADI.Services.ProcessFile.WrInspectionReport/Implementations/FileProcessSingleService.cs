@@ -96,10 +96,18 @@ public class FileProcessSingleService(
                 $"INFO - {nameof(FileProcessSingleService)} - Attempted marking batch as completed (if completed) " +
                 $"processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
+            processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
 
             ConsoleHelper.WriteLine(
                 $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+            var processRunCompleted = processRun is { EndDateTimeUtc: not null }
+                && processRun.EndDateTimeUtc > DateTime.MinValue;
+
+            if (processRunCompleted)
+            {
+                FireAndForgetListProjection(processRun.ProcessRunId);
+            }
 
             return true;
         }
@@ -141,6 +149,25 @@ public class FileProcessSingleService(
 
             return null;
         }
+    }
+
+    /// Projects the whole run once, from whichever file turns out to be the last. Detached and
+    /// swallowing, because the file it runs under has already succeeded and a projection failure
+    /// must not fail it - the rebuild tool re-runs this on demand.
+    private void FireAndForgetListProjection(int processRunId)
+    {
+        _ = Task.Run((Func<Task?>)(async () =>
+        {
+            try
+            {
+                await outputService.UpdateProcessRunListProjectionAsync(processRunId);
+            }
+            catch (Exception exception)
+            {
+                ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - could not "
+                    + $"project the list for process run {processRunId}: {exception.Message}");
+            }
+        }));
     }
 
     private async Task<bool> ScrapeDocumentAsync(

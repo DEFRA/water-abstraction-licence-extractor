@@ -30,5 +30,6 @@
       <ProjectReference Include="..\WRADI.Services.ProcessFile.AbstractionLicence\WRADI.Services.ProcessFile.AbstractionLicence.csproj" />
       <ProjectReference Include="..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
       <ProjectReference Include="..\WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj" />
+      <ProjectReference Include="..\WRADI.Database.PostgreSQL.WrInspectionReport\WRADI.Database.PostgreSQL.WrInspectionReport.csproj" />
     </ItemGroup>
 </Project>

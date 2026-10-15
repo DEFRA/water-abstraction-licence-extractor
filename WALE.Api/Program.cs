@@ -14,6 +14,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence;
+using WRADI.Database.PostgreSQL.WrInspectionReport;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Cache.WrInspectionReport;
 using WRADI.Services.Cache.WrInspectionReport.Interfaces;
@@ -129,6 +130,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddAbstractionLicencePostgreSqlServices()
+        .AddWrInspectionReportPostgreSqlServices()
         .AddAwsS3Services(
             awsRegionName,
             s3IngressBucketName,

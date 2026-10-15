@@ -655,10 +655,11 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence2.AbstractionLimits.Aggregates);
         Assert.Single(licence2.AbstractionLimits.Aggregates);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0]);
+        Assert.Equal("1/01/01/003", licence2.AbstractionLimits.Aggregates[0].SourceLicenceNumber);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(3, licence2.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
         Assert.Equal("1/01/01/001", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![0]);
-        Assert.Equal("1/01/01/002", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![1]); // TODO wrong
+        Assert.Equal("1/01/01/002", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![1]);
         Assert.Equal("1/01/01/004", licence2.AbstractionLimits.Aggregates[0].LinkedLicences![2]);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].Limits);
         Assert.Single(licence2.AbstractionLimits.Aggregates[0].Limits);

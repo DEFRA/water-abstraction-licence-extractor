@@ -527,6 +527,10 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         
         var licence2 = licenceSets[1].Licences[1];
         Assert.Equal("1/21/00/001", licence2.LicenceNumber!.Value);
-        Assert.Equal(2, licence2.LinkedLicences.Length);
+        Assert.Equal(ScrapeStatus.NotFound, licence2.Status);
+        
+        var licence3 = licenceSets[1].Licences[2];
+        Assert.Equal("1/21/00/052", licence3.LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.NotFound, licence3.Status);
     }
 }

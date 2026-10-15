@@ -164,7 +164,9 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
                     ColumnIndex = columnIndex,
                     Content = GetCellTextFromWords(cell, pdfPigWords) ?? GetCellText(cell).Trim(),
                     Left = cell.Left,
-                    Top = cell.Top
+                    Top = cell.Top,
+                    Right = cell.Right,
+                    Bottom = cell.Bottom
                 }));
         }
 

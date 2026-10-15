@@ -46,18 +46,24 @@ public static class FindLabelGroupMatchesHelper
                 
                 foreach (var cellLine in cellLines)
                 {
+                    // The cell's own rectangle, so a value matched here can be shown on the page.
+                    // Every word in the cell shares it - a cell-sized region, not a word-tight one,
+                    // because cell content is text and carries no per-word geometry.
+                    var cellCoordinates = cell.ToCoordinates();
+
                     var words = cellLine
                         .Trim()
                         .Split(' ')
                         .Select(w => new DocumentLineWord(
                             w,
                             null,
-                            DocumentLineWordCoordinates.NotKnown(),
+                            cellCoordinates ?? DocumentLineWordCoordinates.NotKnown(),
                             null))
                         .ToList();
-                    
+
                     var psuedoLine = new DocumentLine
                     {
+                        PageNumber = table.PageNumber,
                         Columns = [new DocumentLineColumn(words)]
                     };
                     
@@ -855,7 +861,7 @@ public static class FindLabelGroupMatchesHelper
     /// identifiable field (that field's own label starting the row) rather than being a blank
     /// or genuine continuation row for the label being matched. See
     /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
-    /// WrInspectionReportLabelConfiguration's Calibration/Conformance/FlowVerification/
+    /// WrInspectionReportTextBasedLabelConfiguration's Calibration/Conformance/FlowVerification/
     /// MeterVerification for the real case this exists for: on several real WR51 templates the
     /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
     /// row, with no dedicated value row for these fields in between at all.

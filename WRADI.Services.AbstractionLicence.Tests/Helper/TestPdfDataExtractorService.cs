@@ -17,7 +17,13 @@ public class TestPdfDataExtractorService(Dictionary<string, MatchesResult> data)
         List<string> previouslyParsedFiles,
         int processRunId)
     {
-        var returnItem = (false, (bool?)true, (MatchesResult?)data[pdfFileName]);
+        if (!data.TryGetValue(pdfFileName, out var value))
+        {
+            var errorReturnItem = (true, (bool?)true, (MatchesResult?)null);
+            return Task.FromResult(errorReturnItem);
+        }
+        
+        var returnItem = (false, (bool?)true, (MatchesResult?)value);
         return Task.FromResult(returnItem);
     }
 

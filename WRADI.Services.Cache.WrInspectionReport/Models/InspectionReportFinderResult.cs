@@ -21,8 +21,6 @@ public class InspectionReportFinderResult
 
     public string? DocumentDate { get; set; }
 
-    /// DMS holds one for every file, including those whose DocumentDate is blank. The finder has
-    /// always sent it; until this existed it was dropped when the request bound to this model.
     public string? UploadDate { get; set; }
 
     public string? OtherReference { get; set; }

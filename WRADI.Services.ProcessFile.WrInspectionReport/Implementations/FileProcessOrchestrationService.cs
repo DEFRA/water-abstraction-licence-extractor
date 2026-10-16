@@ -1,3 +1,5 @@
+using WRADI.Services.Cache.WrInspectionReport.Models;
+using WRADI.DocumentType.WrInspectionReport.Services;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -14,8 +16,6 @@ public class FileProcessOrchestrationService(
     IMessageQueueService messageQueueService)
     : IFileProcessOrchestrator
 {
-    private static readonly string[] UnreadableExtensions = [".doc", ".docx"];
-
     public async Task<bool> RunAsync(CancellationToken cancellationToken)
     {
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
@@ -43,10 +43,7 @@ public class FileProcessOrchestrationService(
         // counted every candidate including the ones skipped just below, so a run's own total was
         // already wrong before any send failure.
         var sendable = candidates
-            .Where(candidate => !string.IsNullOrEmpty(candidate.PermitNumber)
-                && !string.IsNullOrEmpty(candidate.FileId)
-                && Guid.TryParse(candidate.FileId, out _)
-                && IsProcessable(candidate.FileName))
+            .Where(WrInspectionReportCandidateSelector.IsSendable)
             .ToList();
 
         if (sendable.Count != candidates.Count)
@@ -54,6 +51,32 @@ public class FileProcessOrchestrationService(
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
                 + $"{candidates.Count - sendable.Count} of {candidates.Count} candidates skipped for a missing "
                 + "permit number, an unparseable file id, or a file type nothing can read yet");
+        }
+
+        // Before MaxFilesPerRun, so a capped run takes its files from the chosen window rather
+        // than from the whole corpus.
+        if (WrInspectionReportCandidateSelector.HasUploadWindow(settings.UploadedFrom, settings.UploadedTo))
+        {
+            var withinWindow = sendable
+                .Where(candidate => WrInspectionReportCandidateSelector.IsWithinUploadWindow(
+                    candidate, settings.UploadedFrom, settings.UploadedTo))
+                .ToList();
+
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
+                + $"{withinWindow.Count} of {sendable.Count} candidates uploaded "
+                + $"{WrInspectionReportCandidateSelector.DescribeUploadWindow(settings.UploadedFrom, settings.UploadedTo)}");
+
+            // Counted separately because a date filter silently drops them: the column is free
+            // text from DMS, so a row whose value will not parse has no date to compare.
+            var undated = WrInspectionReportCandidateSelector.CountWithoutUsableUploadDate(sendable);
+
+            if (undated > 0)
+            {
+                ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessOrchestrationService)} - "
+                    + $"{undated} candidates excluded for having no usable upload date");
+            }
+
+            sendable = withinWindow;
         }
 
         // Applied after filtering, before the run is created, so NumberOfFiles matches what is sent.
@@ -68,7 +91,13 @@ public class FileProcessOrchestrationService(
         var processRun = await outputService.StartProcessRunAsync(
             new ProcessRun
             {
-                Description = "Batch process request for WR51 single file process from inspection_report_finder_result",
+                Description = "Batch process request for WR51 single file process from "
+                    + "inspection_report_finder_result"
+                    + (WrInspectionReportCandidateSelector.HasUploadWindow(
+                            settings.UploadedFrom, settings.UploadedTo)
+                        ? ", uploaded " + WrInspectionReportCandidateSelector.DescribeUploadWindow(
+                            settings.UploadedFrom, settings.UploadedTo)
+                        : string.Empty),
                 StartDateTimeUtc = DateTime.UtcNow,
                 NumberOfFiles = sendable.Count,
                 Status = "Batch",
@@ -131,7 +160,9 @@ public class FileProcessOrchestrationService(
         }
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
-            + $"files sent to the single process file queue, {failed} failed");
+            + $"files sent to the single process file queue, {failed} failed, uploaded "
+            + WrInspectionReportCandidateSelector.DescribeUploadWindow(
+                settings.UploadedFrom, settings.UploadedTo));
 
         // NumberOfFiles is written before sending, because every message needs the run id, so a
         // send failure leaves the row overstating the run. Logged rather than corrected: there is no
@@ -147,13 +178,4 @@ public class FileProcessOrchestrationService(
 
         return true;
     }
-
-    /// Discovery holds the Word-format reports too, and BuildFileName names every ingress key
-    /// ".pdf" regardless, so unfiltered they would each be fetched as a PDF that does not exist.
-    /// An absent file name still passes: the key comes from the permit number and file id, not
-    /// the name, so treating unknown as unreadable would silently shrink runs.
-    private static bool IsProcessable(string? fileName) =>
-        string.IsNullOrWhiteSpace(fileName)
-        || !UnreadableExtensions.Any(extension =>
-            fileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase));
 }

@@ -48,7 +48,7 @@ export function RefreshLicenceListData({
         let disposed = false;
 
         const hubUrl =
-            `/notificationshub/process`;
+            `/notificationsHub/process`;
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {

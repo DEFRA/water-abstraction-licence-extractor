@@ -198,6 +198,16 @@ public static class WrInspectionReportExtractionOrchestrator
             .Where(m => m.LabelGroupName == null || !allMatches.ContainsKey(m.LabelGroupName))
             .Concat(allMatches.Values)
             .ToList();
+
+        // Recorded here rather than where the overlay is requested, so it only ever claims a
+        // service that actually contributed a match: the overlay is skipped for a template
+        // without a grid, for an unreadable file, and whenever it finds nothing. Without this the
+        // table extractor was absent from ServicesUsed on documents where it had resolved the
+        // whole licence provisions grid, so the field could not answer whether it had run.
+        if (!string.IsNullOrEmpty(usedServiceName) && !item.ServicesUsed.Contains(usedServiceName))
+        {
+            item.ServicesUsed.Add(usedServiceName);
+        }
     }
 
     // Failure is treated as "found nothing confident" rather than propagated, so a primary that

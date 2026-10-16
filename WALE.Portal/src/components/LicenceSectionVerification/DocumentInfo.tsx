@@ -18,7 +18,7 @@ export function DocumentInfo({ licence, outputListDataItem }: DocumentInfoProps)
                     <strong>Licence has Nald Aggs:</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
                 </span>
                 <span style={{ whiteSpace: 'nowrap' }}>
-                    <strong>Doc Issue:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
+                    <strong>Doc Issue Date:</strong> {licence.licenceVersion?.issueDate ? new Date(licence.licenceVersion.issueDate).toLocaleDateString() : 'N/A'}
                     {outputListDataItem?.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
                 </span>
                 <span style={{ whiteSpace: 'nowrap' }}>

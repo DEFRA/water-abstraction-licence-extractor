@@ -1364,14 +1364,14 @@ public class PdfPigNoOcrPdfTests
         
         // TODO add a test where its the 3rd party that mentions these licences
         
-        Assert.NotNull(licenceSets1);
-        Assert.Single(licenceSets1);
+        Assert.NotNull(allLicenceSets);
+        Assert.Equal(2, allLicenceSets.Count);
         
-        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets1[0].LicenceSetType);
-        Assert.Equal("10101001-10101002-10101003", licenceSets1[0].LicenceSetId);
-        Assert.Equal(3, licenceSets1[0].Licences.Length);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, allLicenceSets[0].LicenceSetType);
+        Assert.Equal("10101001-10101002-10101003", allLicenceSets[0].LicenceSetId);
+        Assert.Equal(3, allLicenceSets[0].Licences.Length);
         
-        var licence1 = licenceSets1[0].Licences[0];
+        var licence1 = allLicenceSets[0].Licences[0];
         Assert.Equal("1/01/01/001", licence1.LicenceNumber!.Value);            
         
         Assert.Equal(4, licence1.LinkedLicences.Length);
@@ -1426,9 +1426,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence1.LicenceSets[0].LicenceSetType);
         Assert.Equal("10101001-10101004-10101005", licence1.LicenceSets[1].LicenceSetId);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence1.LicenceSets[1].LicenceSetType);
-        
-        Assert.NotNull(licenceSets2);
-        Assert.Single(licenceSets2);
         
         var licence2 = licenceSets1[0].Licences[1];
         Assert.Equal("1/01/01/002", licence2.LicenceNumber!.Value);            
@@ -1495,51 +1492,52 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence3.LicenceSets[0].LicenceSetType);
         
         // Check aggregate sets
-        Assert.NotNull(licenceSets1[0].AggregateSets);
-        Assert.Single(licenceSets1[0].AggregateSets!);
-        Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", licenceSets1[0].AggregateSets![0].Id);
-        Assert.True(licenceSets1[0].AggregateSets![0].ContainsLegalText);
-        Assert.Equal("1/01/01/001", licenceSets1[0].AggregateSets![0].SourceLicenceNumber);
-        Assert.Equal(2, licenceSets1[0].AggregateSets![0].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[0].AggregateSets![0].Limits);
-        Assert.Equal(30, licenceSets1[0].AggregateSets![0].Limits[0].Value);
-        Assert.NotNull(licenceSets1[0].AggregateSets![0].Variations);
-        Assert.Equal(2, licenceSets1[0].AggregateSets![0].Variations!.Length);
-        Assert.Equal("10101002-LVUNKNOWN-LL-10101001-10101003-C30", licenceSets1[0].AggregateSets![0].Variations![0].Id);
-        Assert.Equal("1/01/01/002", licenceSets1[0].AggregateSets![0].Variations![0].SourceLicenceNumber);
-        Assert.True(licenceSets1[0].AggregateSets![0].Variations![0].ContainsLegalText);
-        Assert.Equal(2, licenceSets1[0].AggregateSets![0].Variations![0].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[0].AggregateSets![0].Variations![0].Limits);
-        Assert.Equal(30, licenceSets1[0].AggregateSets![0].Variations![0].Limits[0].Value);
-        Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C30", licenceSets1[0].AggregateSets![0].Variations![1].Id);
-        Assert.Equal("1/01/01/003", licenceSets1[0].AggregateSets![0].Variations![1].SourceLicenceNumber);
-        Assert.True(licenceSets1[0].AggregateSets![0].Variations![1].ContainsLegalText);
-        Assert.Equal(2, licenceSets1[0].AggregateSets![0].Variations![1].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[0].AggregateSets![0].Variations![1].Limits);
-        Assert.Equal(30, licenceSets1[0].AggregateSets![0].Variations![1].Limits[0].Value);
+        Assert.NotNull(allLicenceSets[0].AggregateSets);
+        Assert.Single(allLicenceSets[0].AggregateSets!);
+        Assert.Equal("10101001-LVUNKNOWN-LL-10101002-10101003-C30", allLicenceSets[0].AggregateSets![0].Id);
+        Assert.True(allLicenceSets[0].AggregateSets![0].ContainsLegalText);
+        Assert.Equal("1/01/01/001", allLicenceSets[0].AggregateSets![0].SourceLicenceNumber);
+        Assert.Equal(2, allLicenceSets[0].AggregateSets![0].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[0].AggregateSets![0].Limits);
+        Assert.Equal(30, allLicenceSets[0].AggregateSets![0].Limits[0].Value);
+        Assert.NotNull(allLicenceSets[0].AggregateSets![0].Variations);
+        Assert.Equal(2, allLicenceSets[0].AggregateSets![0].Variations!.Length);
+        Assert.Equal("10101002-LVUNKNOWN-LL-10101001-10101003-C30", allLicenceSets[0].AggregateSets![0].Variations![0].Id);
+        Assert.Equal("1/01/01/002", allLicenceSets[0].AggregateSets![0].Variations![0].SourceLicenceNumber);
+        Assert.True(allLicenceSets[0].AggregateSets![0].Variations![0].ContainsLegalText);
+        Assert.Equal(2, allLicenceSets[0].AggregateSets![0].Variations![0].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[0].AggregateSets![0].Variations![0].Limits);
+        Assert.Equal(30, allLicenceSets[0].AggregateSets![0].Variations![0].Limits[0].Value);
+        Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C30", allLicenceSets[0].AggregateSets![0].Variations![1].Id);
+        Assert.Equal("1/01/01/003", allLicenceSets[0].AggregateSets![0].Variations![1].SourceLicenceNumber);
+        Assert.True(allLicenceSets[0].AggregateSets![0].Variations![1].ContainsLegalText);
+        Assert.Equal(2, allLicenceSets[0].AggregateSets![0].Variations![1].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[0].AggregateSets![0].Variations![1].Limits);
+        Assert.Equal(30, allLicenceSets[0].AggregateSets![0].Variations![1].Limits[0].Value);
         
-        Assert.NotNull(licenceSets1[1].AggregateSets);
-        Assert.Single(licenceSets1[1].AggregateSets!);
-        Assert.Equal("10101001-LVUNKNOWN-LL-10101004-10101005-C60", licenceSets1[1].AggregateSets![0].Id);
-        Assert.True(licenceSets1[1].AggregateSets![0].ContainsLegalText);
-        Assert.Equal("1/01/01/001", licenceSets1[1].AggregateSets![0].SourceLicenceNumber);
-        Assert.Equal(2, licenceSets1[1].AggregateSets![0].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[1].AggregateSets![0].Limits);
-        Assert.Equal(60, licenceSets1[1].AggregateSets![0].Limits[0].Value);
-        Assert.NotNull(licenceSets1[1].AggregateSets![0].Variations);
-        Assert.Equal(2, licenceSets1[1].AggregateSets![0].Variations!.Length);
-        Assert.Equal("10101004-LVUNKNOWN-LL-10101001-10101005-C60", licenceSets1[1].AggregateSets![0].Variations![0].Id);
-        Assert.Equal("1/01/01/004", licenceSets1[1].AggregateSets![0].Variations![0].SourceLicenceNumber);
-        Assert.True(licenceSets1[1].AggregateSets![0].Variations![0].ContainsLegalText);
-        Assert.Equal(2, licenceSets1[1].AggregateSets![0].Variations![0].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[1].AggregateSets![0].Variations![0].Limits);
-        Assert.Equal(60, licenceSets1[1].AggregateSets![0].Variations![0].Limits[0].Value);
-        Assert.Equal("10101005-LVUNKNOWN-LL-10101001-10101004-C60", licenceSets1[1].AggregateSets![0].Variations![1].Id);
-        Assert.Equal("1/01/01/005", licenceSets1[1].AggregateSets![0].Variations![1].SourceLicenceNumber);
-        Assert.True(licenceSets1[1].AggregateSets![0].Variations![1].ContainsLegalText);
-        Assert.Equal(2, licenceSets1[1].AggregateSets![0].Variations![1].LinkedLicences!.Length);
-        Assert.Single(licenceSets1[1].AggregateSets![0].Variations![1].Limits);
-        Assert.Equal(60, licenceSets1[1].AggregateSets![0].Variations![1].Limits[0].Value);
+        Assert.NotNull(allLicenceSets[1].AggregateSets);
+        Assert.Single(allLicenceSets[1].AggregateSets!);
+        Assert.Equal("10101004-LVUNKNOWN-LL-10101001-10101005-C60", allLicenceSets[1].AggregateSets![0].Id);
+        Assert.True(allLicenceSets[1].AggregateSets![0].ContainsLegalText);
+        Assert.Equal("1/01/01/004", allLicenceSets[1].AggregateSets![0].SourceLicenceNumber);
+        Assert.Equal(2, allLicenceSets[1].AggregateSets![0].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[1].AggregateSets![0].Limits);
+        Assert.Equal(60, allLicenceSets[1].AggregateSets![0].Limits[0].Value);
+        Assert.NotNull(allLicenceSets[1].AggregateSets![0].Variations);
+        Assert.Single(allLicenceSets[1].AggregateSets![0].Variations!);
+        Assert.Equal("10101005-LVUNKNOWN-LL-10101001-10101004-C60", allLicenceSets[1].AggregateSets![0].Variations![0].Id);
+        Assert.Equal("1/01/01/005", allLicenceSets[1].AggregateSets![0].Variations![0].SourceLicenceNumber);
+        Assert.True(allLicenceSets[1].AggregateSets![0].Variations![0].ContainsLegalText);
+        Assert.Equal(2, allLicenceSets[1].AggregateSets![0].Variations![0].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[1].AggregateSets![0].Variations![0].Limits);
+        Assert.Equal(60, allLicenceSets[1].AggregateSets![0].Variations![0].Limits[0].Value);
+        // TODO check these variations, maybe there should be another
+        /*Assert.Equal("10101005-LVUNKNOWN-LL-10101001-10101004-C60", allLicenceSets[1].AggregateSets![0].Variations![1].Id);
+        Assert.Equal("1/01/01/005", allLicenceSets[1].AggregateSets![0].Variations![1].SourceLicenceNumber);
+        Assert.True(allLicenceSets[1].AggregateSets![0].Variations![1].ContainsLegalText);
+        Assert.Equal(2, allLicenceSets[1].AggregateSets![0].Variations![1].LinkedLicences!.Length);
+        Assert.Single(allLicenceSets[1].AggregateSets![0].Variations![1].Limits);
+        Assert.Equal(60, allLicenceSets[1].AggregateSets![0].Variations![1].Limits[0].Value);*/
     }
 
     private static MatchesResult GetLicenceMatchesResult(

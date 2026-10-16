@@ -111,8 +111,8 @@ public class WrTemplateCombinedTextAndTablesTests
         var meansOfAbstraction = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.MeansOfAbstraction);
         Assert.NotNull(meansOfAbstraction);
         Assert.Equal(WrInspectionReportFieldNames.MeansOfAbstraction, meansOfAbstraction.LabelGroupName);
-        // The document reads "Means of abstraction:In Order". It was asserted as "Not" while the
-        // extractor merged the cell with the wrapped "Order" of the row above it.
+        // The document reads "Means of abstraction:In Order". A "Not" here means the cell has
+        // been merged with the wrapped "Order" of the row above it again.
         Assert.Equal("In", meansOfAbstraction.Text[0].Text);
         
         var purposes = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.Purposes);

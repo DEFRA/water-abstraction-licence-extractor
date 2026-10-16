@@ -53,8 +53,6 @@ public class KeyValueTableHelperTests
     [Fact]
     public void WhenTheSameKeyAppearsTwice_ThenTheRegionComesFromTheCopyWhoseTextWon()
     {
-        // The real shape: an extractor reports the same region as both a 7x2 and an 18x2 table,
-        // one holding a wrapped value whole where the other has truncated it.
         var pairs = KeyValueTableHelper.ReadPairs(
         [
             Table(Cell(0, 0, "Site address"), Cell(0, 1, "The Farm", left: 50)),
@@ -116,8 +114,8 @@ public class KeyValueTableHelperTests
     [Fact]
     public void WhenOverlappingTablesRepeatAGroup_ThenTheMergeKeepsTheWinningCopysRegion()
     {
-        // Five boreholes came out as ten records before the merge existed; the copies disagree,
-        // so the merge takes the longer value per key - and must take its region with it.
+        // Overlapping tables report the same borehole twice, disagreeing on how much of each
+        // value they captured.
         var groups = KeyValueTableHelper.ReadRepeatingGroups(
         [
             Table(

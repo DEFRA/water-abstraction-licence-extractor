@@ -25,9 +25,9 @@ public class TableMatcherHelperTests
         Content = content
     };
 
-    /// A cell that reports a rectangle, which the fixtures above deliberately do not: a value
-    /// matched out of a cell carries that cell's region so the portal can outline it, and with no
-    /// rectangle anywhere in a fixture every region reads as unknown and the assertion is vacuous.
+    /// A cell that reports a rectangle. Cell() above sets none, and
+    /// DocumentTableCell.ToCoordinates() returns null unless all four edges are set, so a region
+    /// can only be asserted against a cell built here.
     private static DocumentTableCell CellAt(int row, int col, string content, double left) => new()
     {
         RowIndex = row,

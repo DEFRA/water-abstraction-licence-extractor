@@ -4,10 +4,8 @@ using WALE.ProcessFile.Services.Helpers;
 namespace WALE.ProcessFile.Services.Tests.UnitTests;
 
 /// <summary>
-/// The headered-grid reader, covering the copy-selection rule and the cell regions it now returns.
-/// Its text is deliberately not the cell's own content - it normalises whitespace and blanks a
-/// placeholder - which is why a value carries its region alongside the text rather than callers
-/// being handed the cell.
+/// The headered-grid reader: the rule that picks between duplicate copies of a grid, and the cell
+/// regions it returns.
 /// </summary>
 public class HeaderedTableHelperTests
 {

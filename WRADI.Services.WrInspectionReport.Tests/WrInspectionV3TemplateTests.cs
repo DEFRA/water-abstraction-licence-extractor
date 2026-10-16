@@ -196,15 +196,12 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             .ToList();
 
     /// <summary>
-    /// Asserts on the MatchesResult itself rather than through ToForm, which is the whole point:
-    /// the result is saved before anything renders it, so a check made through the converter
-    /// passes while a stored document carries nothing the portal can resolve.
+    /// Asserts on the MatchesResult rather than through ToForm: the result is saved before
+    /// anything renders it, so a check made through the converter passes while the stored document
+    /// carries nothing the portal can resolve.
     ///
-    /// Two separate regressions are in scope. A shared name going missing means the alias pass has
-    /// stopped running before the save. A present name with no region means a reader has gone back
-    /// to discarding the cell it read a value from - the bug this replaced, where every one of
-    /// these fields was stored with UnknownCoordinates and the portal reported each property
-    /// unmatched. Neither is visible in a value-only assertion.
+    /// A missing shared name means the alias pass has stopped running before the save. A present
+    /// name with no region means a reader has gone back to discarding the cell it read from.
     /// </summary>
     [Fact]
     public async Task WhenV3Document_ThenSharedFieldsAreStoredWithTheirCellRegions()

@@ -38,6 +38,10 @@ public static class WrInspectionReportSchemaConverter
         }
 
         var rawInspectionDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionDate);
+
+        var inspectingOfficer = TruncateAtKnownSiblingLabel(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
+            "Inspection Date:");
         var rawInspectionTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Time);
 
         var currentDay = DateTime.Today;
@@ -199,27 +203,7 @@ public static class WrInspectionReportSchemaConverter
             
             foreach (var potentialDate in potentialDates)
             {
-                if (!DateTime.TryParse(potentialDate, out var tInspectionDateTime))
-                {
-                    continue;
-                }
-                
-                // If we pulled a date that wasn't the current year, we must have contained a year
-                var year = tInspectionDateTime.Year.ToString();
-                var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
-                var containsYear = potentialDate.Contains($"/{year2Digits}")
-                    || potentialDate.Contains($"/{year}")
-                    || potentialDate.Contains($".{year2Digits}")
-                    || potentialDate.Contains($".{year}")
-                    || potentialDate.Contains($":{year2Digits}")
-                    || potentialDate.Contains($":{year}")
-                    || potentialDate.Contains($"-{year2Digits}")
-                    || potentialDate.Contains($"-{year}")
-                    || potentialDate.Contains($" {year2Digits}")
-                    || potentialDate.Contains($" {year}");
-                        
-                // Needs to contain a year and should never be today
-                if (!containsYear || tInspectionDateTime.Date == DateTime.Today)
+                if (!IsUsableInspectionDate(potentialDate, out var tInspectionDateTime))
                 {
                     continue;
                 }
@@ -227,7 +211,29 @@ public static class WrInspectionReportSchemaConverter
                 inspectionDateTime = tInspectionDateTime;
                 break;
             }
+
+            // Gated on everything above having failed, so it can't change a document that
+            // already resolves. Two-column layouts leak the neighbouring column in here, usually
+            // the inspecting officer's name - stripped by value since the label itself is gone.
+            if (inspectionDateTime == null)
+            {
+                foreach (var salvaged in SalvageDateCandidates(rawInspectionDate, inspectingOfficer))
+                {
+                    if (!IsUsableInspectionDate(salvaged, out var tSalvagedDateTime))
+                    {
+                        continue;
+                    }
+
+                    inspectionDateTime = tSalvagedDateTime;
+                    break;
+                }
+            }
         }
+
+        // RawDate is exported to the lake and shown as the scraped value during verification, so
+        // it has to be clean in its own right. Must stay after the parsing above: that runs
+        // against the captured text untouched, and no date resolution depends on this.
+        rawInspectionDate = RemoveSiblingValue(rawInspectionDate, inspectingOfficer);
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);
         DateOnly? dateOfCertificateOrRecord = null;
@@ -494,6 +500,77 @@ public static class WrInspectionReportSchemaConverter
             .Trim();
     }
 
+    /// <summary>
+    /// Must parse, must carry its own year (a bare "24 March" would otherwise become the current
+    /// year), and must not be today (TryParse falls back to today for a time-only string).
+    /// </summary>
+    private static bool IsUsableInspectionDate(string potentialDate, out DateTime parsed)
+    {
+        if (!DateTime.TryParse(potentialDate, out parsed))
+        {
+            return false;
+        }
+
+        var year = parsed.Year.ToString();
+        var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
+
+        var containsYear = potentialDate.Contains($"/{year2Digits}")
+            || potentialDate.Contains($"/{year}")
+            || potentialDate.Contains($".{year2Digits}")
+            || potentialDate.Contains($".{year}")
+            || potentialDate.Contains($":{year2Digits}")
+            || potentialDate.Contains($":{year}")
+            || potentialDate.Contains($"-{year2Digits}")
+            || potentialDate.Contains($"-{year}")
+            || potentialDate.Contains($" {year2Digits}")
+            || potentialDate.Contains($" {year}");
+
+        return containsYear && parsed.Date != DateTime.Today;
+    }
+
+    /// <summary>
+    /// Date candidates from a raw capture the normal parsing couldn't resolve. Most-specific
+    /// first - a full numeric date beats a day/month needing a year from elsewhere in the text.
+    /// </summary>
+    private static IEnumerable<string> SalvageDateCandidates(string rawInspectionDate, string? inspectingOfficer)
+    {
+        var text = RemoveSpecialCharacters(rawInspectionDate) ?? rawInspectionDate;
+
+        if (!string.IsNullOrWhiteSpace(inspectingOfficer) && text.Contains(inspectingOfficer))
+        {
+            text = text.Replace(inspectingOfficer, " ");
+        }
+
+        text = text.Replace('\n', ' ').Replace("  ", " ").Trim();
+
+        // ':' is a real separator typo in the corpus ("27.02:26"), normalised toward '.'
+        // because "27:02:26" reads as a time.
+        foreach (Match m in Regex.Matches(text, @"\b\d{1,2}[/.\-:]\d{1,2}[/.\-:]\d{2,4}\b"))
+        {
+            yield return m.Value.Replace(':', '.');
+        }
+
+        // The year often wraps onto a different line of the capture, so pair a bare day/month
+        // with any year found anywhere in the remaining text.
+        var dayMonth = Regex.Match(
+            text,
+            @"\b\d{1,2}\s*(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b",
+            RegexOptions.IgnoreCase);
+
+        if (!dayMonth.Success)
+        {
+            yield break;
+        }
+
+        var cleanedDayMonth = Regex.Replace(dayMonth.Value, @"(?<=\d)\s*(?:st|nd|rd|th)", string.Empty, RegexOptions.IgnoreCase);
+        var year = Regex.Match(text, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+        if (year.Success)
+        {
+            yield return $"{cleanedDayMonth} {year.Value}";
+        }
+    }
+
     // MetWith/InspectingOfficer share a row with a sibling field ("Position:"/"Inspection
     // Date:" respectively) on some real documents. The usual fix for this shape
     // (additionalSameLineEndTexts, bounding WalkSameLineColumns to exclude the sibling's own
@@ -504,6 +581,37 @@ public static class WrInspectionReportSchemaConverter
     // endText fix that worked for InspectionClass/SiteAddress had zero effect here). A plain
     // string truncation at the known sibling-label marker works regardless of the upstream
     // column structure, since it operates on the final joined text rather than columns.
+    // Companion to TruncateAtKnownSiblingLabel, for when the sibling's own label is absent from
+    // the capture and only its value is there to go on. Skipped when that value is date- or
+    // time-like rather than a name ("2019", "Time: 10:50" both occur in the corpus as
+    // InspectingOfficer): those are defects in InspectingOfficer, and removing one here would
+    // delete the date's own year from the text it was found in.
+    private static string? RemoveSiblingValue(string? text, string? siblingValue)
+    {
+        if (string.IsNullOrWhiteSpace(text)
+            || string.IsNullOrWhiteSpace(siblingValue)
+            || !siblingValue.Any(char.IsLetter)
+            || siblingValue.TrimStart().StartsWith("Time", StringComparison.OrdinalIgnoreCase))
+        {
+            return text;
+        }
+
+        var index = text.IndexOf(siblingValue, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+        {
+            return text;
+        }
+
+        var cleaned = string.Concat(text.AsSpan(0, index), " ", text.AsSpan(index + siblingValue.Length))
+            .Replace("  ", " ")
+            .Trim();
+
+        // The officer's value being the whole capture means there is no date in there to keep -
+        // the original text is more use to a human verifier than an empty cell.
+        return string.IsNullOrWhiteSpace(cleaned) ? text : cleaned;
+    }
+
     private static string? TruncateAtKnownSiblingLabel(string? text, string siblingLabel)
     {
         if (string.IsNullOrEmpty(text))

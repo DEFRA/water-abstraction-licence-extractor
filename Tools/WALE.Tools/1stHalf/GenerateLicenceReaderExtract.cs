@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
@@ -294,7 +295,8 @@ public static class GenerateLicenceReaderExtract
             var skip = take * loopIdx++;
             ConsoleHelper.WriteLine($"Getting dms extracts - starting at {skip}");
             
-            dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
+            dmsExtractPartial = await cacheService.GetDmsExtractAsync(
+                skip, take, DocumentTypes.AbstractionLicence);
             dmsExtractInfoRaw.AddRange(dmsExtractPartial);
         }
         

@@ -98,4 +98,11 @@ public class LocalFileService(string folderPath) : IFileService
     {
         return Task.FromResult($"/BFF/Files/GetRaw?filename={Uri.EscapeDataString(filename)}");
     }
+
+    // No durable address for a local file, so this stays the relative BFF path - callers that need
+    // an absolute URL resolve it against their own request.
+    public string GetHttpsUrl(string filename, StorageFolder folder)
+    {
+        return $"/BFF/Files/GetRaw?filename={Uri.EscapeDataString(filename)}";
+    }
 }

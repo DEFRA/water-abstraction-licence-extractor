@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -127,6 +128,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                    JOIN public.dms_extract de
                        ON lower(lfr.permit_number) like CONCAT(lower(de.permit_number), '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
                        AND de.file_id = lfr.file_id
+                       AND de.extract_type = @ExtractType
                    WHERE
                        lfr.license_number = @LicenceNumber
                    LIMIT 1;
@@ -136,7 +138,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { LicenceNumber = licenceNumber });
+            new { LicenceNumber = licenceNumber, ExtractType = DocumentTypes.AbstractionLicence });
     }
     
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
@@ -635,7 +637,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return matchesResult;
     }
     
-    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -664,6 +666,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                modified_date,
                                file_id
                            FROM public.dms_extract
+                           WHERE extract_type = @ExtractType
                            ORDER BY
                                site_collection,
                                library_name,
@@ -680,7 +683,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Skip = skip,
-                Take = take
+                Take = take,
+                ExtractType = extractType
             });
 
         return results.ToList();
@@ -773,6 +777,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            select
                                file_id,
+                               matches_result_id,
                                filename,
                                status
                            FROM public.matches_result

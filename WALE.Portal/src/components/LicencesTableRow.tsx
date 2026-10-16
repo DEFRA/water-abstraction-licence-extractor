@@ -4,6 +4,7 @@ import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZe
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
+import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
@@ -26,7 +27,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                        onOpenReport(item.fileId!, item.licenceId!, item.matchesResultId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
-                {item.isLicenceNumberFlagged && <span title={item.licenceNumberFlagReason || undefined}> 🚩</span>}
+                {item.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={item.licenceNumberFlagReason}/>}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>

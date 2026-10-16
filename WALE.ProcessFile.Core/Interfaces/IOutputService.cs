@@ -87,7 +87,9 @@ public interface IOutputService
         int processRunId,
         string[] licenceNumbers);
 
-    Task UpdateLicenceListProcessRunAsync(
+    /// Reprojects whatever list view the run's document type feeds. Which projection that is
+    /// follows from the run's own DocumentType, so a caller does not need to know.
+    Task UpdateProcessRunListProjectionAsync(
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);

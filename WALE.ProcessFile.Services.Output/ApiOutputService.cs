@@ -537,9 +537,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task UpdateLicenceListProcessRunAsync(int processRunId)
+    public async Task UpdateProcessRunListProjectionAsync(int processRunId)
     {
-        var path = $"/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
+        var path = $"/BFF/ProcessRuns/UpdateProcessRunListProjection/{processRunId}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

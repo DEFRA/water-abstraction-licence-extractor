@@ -107,7 +107,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             DateTime.Now,
             useLockExclusivity: false);
 
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
 

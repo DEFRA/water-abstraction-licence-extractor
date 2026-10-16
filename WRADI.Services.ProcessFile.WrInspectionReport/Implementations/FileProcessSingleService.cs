@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.Services;
+using WALE.ProcessFile.Services.Tabula;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Services;
 
@@ -44,21 +45,15 @@ public class FileProcessSingleService(
             throw new ArgumentException($"Could not extract a file id from '{fileProcessSingleRequest.FilePath}'");
         }
 
-        var lookupConfig = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
-            [],
+        // Built through the shared factory so the accuracy harness scores this exact pipeline.
+        var lookupConfig = WrInspectionReportLookupConfigurationFactory.Build(
             fileService,
             cacheService,
             outputService,
-            new NullLicenceNumberService(),
-            null!,
-            null!,
-            new DmsLookupService(),
+            new TabulaTableExtractorService(cacheService),
             fileProcessSingleRequest.RegionId,
             fileProcessSingleRequest.RequestedAt,
-            fileProcessSingleRequest.LockRetryCount,
-            lineHeight: 6,
-            minimumRowsForDigital: 30);
+            fileProcessSingleRequest.LockRetryCount);
 
         var processRuns = await outputService.GetAllProcessRunsAsync();
         var processRun = processRuns.Single(pr => pr.ProcessRunId == fileProcessSingleRequest.ProcessRunId);
@@ -101,10 +96,18 @@ public class FileProcessSingleService(
                 $"INFO - {nameof(FileProcessSingleService)} - Attempted marking batch as completed (if completed) " +
                 $"processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
+            processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
 
             ConsoleHelper.WriteLine(
                 $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+
+            var processRunCompleted = processRun is { EndDateTimeUtc: not null }
+                && processRun.EndDateTimeUtc > DateTime.MinValue;
+
+            if (processRunCompleted)
+            {
+                FireAndForgetListProjection(processRun.ProcessRunId);
+            }
 
             return true;
         }
@@ -121,6 +124,52 @@ public class FileProcessSingleService(
         }
     }
 
+    /// Null when the file cannot be read, which leaves the overlay off for that document rather
+    /// than failing the whole extraction.
+    private async Task<byte[]?> GetPdfBytesAsync(string pdfFilename)
+    {
+        try
+        {
+            await using var stream = await fileService.GetFileAsStreamAsync(pdfFilename);
+
+            if (stream == null)
+            {
+                return null;
+            }
+
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            return memoryStream.ToArray();
+        }
+        catch (Exception exception)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - could not read "
+                + $"{pdfFilename} for the table overlay, continuing without it: {exception.Message}");
+
+            return null;
+        }
+    }
+
+    /// Projects the whole run once, from whichever file turns out to be the last. Detached and
+    /// swallowing, because the file it runs under has already succeeded and a projection failure
+    /// must not fail it - the rebuild tool re-runs this on demand.
+    private void FireAndForgetListProjection(int processRunId)
+    {
+        _ = Task.Run((Func<Task?>)(async () =>
+        {
+            try
+            {
+                await outputService.UpdateProcessRunListProjectionAsync(processRunId);
+            }
+            catch (Exception exception)
+            {
+                ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - could not "
+                    + $"project the list for process run {processRunId}: {exception.Message}");
+            }
+        }));
+    }
+
     private async Task<bool> ScrapeDocumentAsync(
         string pdfFilename,
         LookupConfiguration lookupConfig,
@@ -133,6 +182,12 @@ public class FileProcessSingleService(
 
         try
         {
+            var tableExtractorService = lookupConfig.UnstructuredTableExtractorService;
+
+            // The grid overlay needs the file's own bytes, which the orchestrator reopens with
+            // PdfClown rather than reusing the extractor's PdfPig document.
+            var pdfBytes = await GetPdfBytesAsync(pdfFilename);
+
             var (stopExecution, alreadySaved, item, _) =
                 await WrInspectionReportExtractionOrchestrator.ExtractAsync(
                     pdfFilename,
@@ -141,7 +196,12 @@ public class FileProcessSingleService(
                     lookupConfig,
                     [pdfFilename],
                     processRun.ProcessRunId,
-                    pdfDataExtractor);
+                    pdfDataExtractor,
+                    // Resolves the LicenceProvisions grid fields, leaving any it cannot resolve
+                    // with their existing heuristic result. Tabula only - the paid Document
+                    // Intelligence extractor stays behind the orchestrator's cost-optimised path.
+                    pdfBytes == null ? null : tableExtractorService,
+                    pdfBytes);
 
             if (stopExecution)
             {

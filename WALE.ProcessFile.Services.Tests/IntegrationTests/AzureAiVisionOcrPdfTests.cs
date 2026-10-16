@@ -831,8 +831,8 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -944,7 +944,8 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-
+        Assert.Equal(4, agreedSchemaLicenceGroup.Last().Licences.Length);
+        
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -1002,8 +1003,8 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -1099,8 +1100,8 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("8/36/19/S/101", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
@@ -1708,7 +1709,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
         Assert.Equal("2/27/12/254", agreedSchemaLicence.LicenceNumber?.Value);

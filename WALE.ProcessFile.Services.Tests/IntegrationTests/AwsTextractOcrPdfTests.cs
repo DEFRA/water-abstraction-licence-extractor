@@ -285,7 +285,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             await LookupConfigurationAsync(2, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
         Assert.Equal("2/27/12/254", agreedSchemaLicence.LicenceNumber?.Value);

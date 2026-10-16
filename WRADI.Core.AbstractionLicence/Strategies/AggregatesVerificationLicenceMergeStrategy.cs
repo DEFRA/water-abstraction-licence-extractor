@@ -19,10 +19,11 @@ public class AggregatesVerificationLicenceMergeStrategy : IVerificationLicenceMe
         var merged = AggregateVerificationMergeHelper.MergeAggregates(
             licence.AbstractionLimits.Aggregates, aggregateVerifications);
 
-        return licence.CloneWithAbstractionLimits(new AbstractionLimits
-        {
-            Individual = licence.AbstractionLimits.Individual,
-            Aggregates = merged.ToArray()
-        });
+        return licence.CloneWithAbstractionLimits(
+            new AbstractionLimits
+            {
+                Individual = licence.AbstractionLimits.Individual,
+                Aggregates = merged.ToArray()
+            });
     }
 }

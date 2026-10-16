@@ -4,7 +4,7 @@ public class AbstractionLimits
 {
     public AbstractionLimitGroup[]? Individual { get; init; } = [];
     
-    public Aggregate[]? Aggregates { get; init; } = [];
+    public Aggregate[]? Aggregates { get; set; } = [];
 
     public static AbstractionLimits Template = new()
     {

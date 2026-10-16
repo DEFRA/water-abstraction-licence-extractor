@@ -77,12 +77,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        .Where(x => x.Key.Contains("22723032s__5f2cfe7d-1151-4310-8780-794b33093c35.pdf", StringComparison.OrdinalIgnoreCase))
+        //.Where(x => x.Key.Contains("22723032s__5f2cfe7d-1151-4310-8780-794b33093c35.pdf", StringComparison.OrdinalIgnoreCase))
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(10)
+        //.Take(200)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -222,7 +222,6 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
-        abstractionLicenceCacheService,
         services.NaldDataLookupService!);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");

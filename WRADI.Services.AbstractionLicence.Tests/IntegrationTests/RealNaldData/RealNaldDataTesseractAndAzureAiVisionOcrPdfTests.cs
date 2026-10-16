@@ -21,6 +21,7 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
+using WRADI.Services.AbstractionLicence.Tests.Config;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -384,8 +385,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(2, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("2/27/22/395", licence.LicenceNumber!.Value);
@@ -470,6 +471,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         
         Assert.Equal(2, abstractionLicence.Count);
         Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(4, abstractionLicence.Last().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("2/27/10/112", licence.LicenceNumber!.Value);
@@ -478,5 +480,57 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("2/27/10/031", licence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("2/27/10/049", licence.LinkedLicences[1].LicenceNumber);
         Assert.Equal("2/27/10/076", licence.LinkedLicences[2].LicenceNumber);
+    }
+    
+    [Fact]
+    public async Task ComplicatedLicenceSet_12203007()
+    {
+        // Arrange
+        const string fileName = "12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b__Application type unknown Licence Issued - 06061984.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(fileName, regionCode: 3);
+        
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            await LookupConfigurationAsync(1, TestConfig.PdfFolder),
+            AbsLicCacheService,
+            NaldDataLookupService);
+
+        Assert.Equal("12203007", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
+        
+        Assert.Equal("12100001-12100052-12203007", licenceSets[1].LicenceSetId);
+        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
+        Assert.Equal(3, licenceSets[1].Licences.Length);
+        Assert.Equal("1/22/03/007", licenceSets[1].Licences[0].LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.Ok, licenceSets[1].Licences[0].Status);
+        Assert.Equal("1/21/00/001", licenceSets[1].Licences[1].LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.NotFound, licenceSets[1].Licences[1].Status);
+        Assert.Equal("1/21/00/052", licenceSets[1].Licences[2].LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.NotFound, licenceSets[1].Licences[2].Status);
+        
+        var primaryLicence = licenceSets[0].Licences[0];
+        Assert.Equal("1/22/03/007", primaryLicence.LicenceNumber!.Value);
+        
+        Assert.Equal(2, primaryLicence.LinkedLicences.Length);
+        Assert.Equal("1/21/00/001", primaryLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("1/21/00/052", primaryLicence.LinkedLicences[1].LicenceNumber);
+        
+        Assert.Equal(2, primaryLicence.LicenceSets.Length);
+        Assert.Equal("12203007", primaryLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, primaryLicence.LicenceSets[0].LicenceSetType);
+        Assert.Equal("12100001-12100052-12203007", primaryLicence.LicenceSets[1].LicenceSetId);
+        Assert.Equal(LicenceSetType.Others, primaryLicence.LicenceSets[1].LicenceSetType);
+        
+        var licence2 = licenceSets[1].Licences[1];
+        Assert.Equal("1/21/00/001", licence2.LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.NotFound, licence2.Status);
+        
+        var licence3 = licenceSets[1].Licences[2];
+        Assert.Equal("1/21/00/052", licence3.LicenceNumber!.Value);
+        Assert.Equal(ScrapeStatus.NotFound, licence3.Status);
     }
 }

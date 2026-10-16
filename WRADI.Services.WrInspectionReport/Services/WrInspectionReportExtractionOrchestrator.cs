@@ -186,6 +186,16 @@ public static class WrInspectionReportExtractionOrchestrator
         scrapeResult.AdditionalInformation[WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey]
             = template.ToString();
 
+        // Also applied in ToForm, but that only ever fixed up the rendered form: the result is
+        // saved before anything renders it, so a stored v3 document carried only its V3-prefixed
+        // groups. Anything reading the matches back looks them up by the shared name and found
+        // nothing - the portal's field highlighting reported every property as unmatched. The
+        // mapper is additive and idempotent, so applying it twice costs nothing.
+        if (template == WrTemplateType.V3)
+        {
+            WrInspectionV3SharedFieldMapper.Apply(scrapeResult);
+        }
+
         return (stopExecution, alreadySaved, scrapeResult, template);
     }
 

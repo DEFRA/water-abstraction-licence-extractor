@@ -25,6 +25,23 @@ public class TableMatcherHelperTests
         Content = content
     };
 
+    /// A cell that reports a rectangle, which the fixtures above deliberately do not: a value
+    /// matched out of a cell carries that cell's region so the portal can outline it, and with no
+    /// rectangle anywhere in a fixture every region reads as unknown and the assertion is vacuous.
+    private static DocumentTableCell CellAt(int row, int col, string content, double left) => new()
+    {
+        RowIndex = row,
+        ColumnIndex = col,
+        Content = content,
+        Left = left,
+        Top = 10,
+        Right = left + 40,
+        Bottom = 20
+    };
+
+    private static DocumentLineWordCoordinates RegionOf(LabelGroupResult result) =>
+        result.Text!.Single().Columns!.First().Words!.First().Coordinates;
+
     [Fact]
     public void WhenLabelAndValueAreMergedInOneCell_ThenValueIsExtracted()
     {
@@ -335,5 +352,71 @@ public class TableMatcherHelperTests
             [table], Labels, "TestTableService");
 
         Assert.Equal("07794218297", results[WrInspectionReportFieldNames.TelephoneNumber].Text!.Single().Text);
+    }
+
+    [Fact]
+    public void WhenGridLabelAndValueShareACell_ThenTheMatchCarriesThatCellsRegion()
+    {
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Where(c => c.RowIndex != 0 || c.ColumnIndex != 0)
+            .Append(CellAt(0, 0, "Source of supply: ✓", left: 300))
+            .ToList();
+
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+
+        var results = TableMatcherHelper.MatchToPossibilities(
+            [table], Labels, "TestTableService",
+            TickHelper.GetTickedOrAcceptedStatus);
+
+        Assert.Equal(300, RegionOf(results[WrInspectionReportFieldNames.SourceOfSupply]).Left);
+    }
+
+    [Fact]
+    public void WhenGridLabelAndValueAreSplit_ThenTheRegionIsTheValueCellsNotTheLabelCells()
+    {
+        // The label cell is the one iterated to find the field, so taking its region instead would
+        // outline the printed question rather than the answer a verifier is being asked to check.
+        var cells = BuildFullGridTable(specialConditionsValue: string.Empty).Cells
+            .Where(c => !(c.RowIndex == 4 && c.ColumnIndex == 1))
+            .Append(CellAt(4, 1, "Special conditions:", left: 300))
+            .Append(CellAt(4, 2, "N/A", left: 600))
+            .ToList();
+
+        var table = new DocumentTable { RowCount = 5, ColumnCount = 3, Cells = cells };
+
+        var results = TableMatcherHelper.MatchToPossibilities(
+            [table], Labels, "TestTableService",
+            TickHelper.GetTickedOrAcceptedStatus);
+
+        Assert.Equal(600, RegionOf(results[WrInspectionReportFieldNames.SpecialConditions]).Left);
+    }
+
+    [Fact]
+    public void WhenTextFieldLabelAndValueShareACell_ThenTheMatchCarriesThatCellsRegion()
+    {
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Append(CellAt(5, 0, "Telephone No:   02380891203", left: 120))
+            .ToList();
+
+        var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+
+        var results = TableMatcherHelper.MatchTextFields([table], Labels, "TestTableService");
+
+        Assert.Equal(120, RegionOf(results[WrInspectionReportFieldNames.TelephoneNumber]).Left);
+    }
+
+    [Fact]
+    public void WhenTextFieldLabelAndValueAreSplit_ThenTheRegionIsTheValueCellsNotTheLabelCells()
+    {
+        var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
+            .Append(CellAt(5, 0, "Telephone No:", left: 120))
+            .Append(CellAt(5, 1, "07794218297", left: 480))
+            .ToList();
+
+        var table = new DocumentTable { RowCount = 6, ColumnCount = 3, Cells = cells };
+
+        var results = TableMatcherHelper.MatchTextFields([table], Labels, "TestTableService");
+
+        Assert.Equal(480, RegionOf(results[WrInspectionReportFieldNames.TelephoneNumber]).Left);
     }
 }

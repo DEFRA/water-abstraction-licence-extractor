@@ -27,10 +27,20 @@ public static class GenerateS3Thumbnails
         var fileIds = await GetFileIdsAsync(processRunId);
 
         ConsoleHelper.WriteLine($"{fileIds.Count} need setting");
+        var idx = 1;
         
         foreach (var fileId in fileIds)
         {
-            await OutputService.SaveThumbnailAsync(fileId);
+            ConsoleHelper.WriteLine($"Generating thumbnail {idx++} of {fileIds.Count}");
+            
+            try
+            {
+                await OutputService.SaveThumbnailAsync(fileId);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
     

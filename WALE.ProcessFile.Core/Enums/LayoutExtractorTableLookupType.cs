@@ -4,5 +4,8 @@ public enum LayoutExtractorTableLookupType
 {
     Default, // Default is Grid
     Grid,
-    FreeText
+    FreeText,
+
+    // Two columns, the label cell naming the field and the cell beside it holding the value.
+    KeyValue
 }

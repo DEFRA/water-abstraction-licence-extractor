@@ -517,8 +517,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
             config,
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
         
@@ -541,7 +541,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         var licenceSetGroups = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups1,
             config,
-            AbsLicCacheService, NaldDataLookupService);
+            NaldDataLookupService);
         
         AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(licenceSetGroups);
         
@@ -978,8 +978,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         
         Assert.Single(licenceSets);
         
-        Assert.Equal("22630082-LV20081212", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22630082", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -1010,8 +1010,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         
         Assert.Single(licenceSets);
         
-        Assert.Equal("22728008-LV20070501", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("22728008", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -1043,8 +1043,8 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         
         Assert.Single(licenceSets);
         
-        Assert.Equal("12202087-LV20011126", licenceSets[0].LicenceSetId);
-        Assert.Equal([LicenceSetType.SingleLicenceOnly], licenceSets[0].LicenceSetTypes);
+        Assert.Equal("12202087", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
 
         var agreedSchemaLicenceGroup = licenceSets[0];
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
@@ -1138,7 +1138,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12203045-LV19660523", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
         Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);

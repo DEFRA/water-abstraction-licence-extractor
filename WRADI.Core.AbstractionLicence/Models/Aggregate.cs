@@ -53,11 +53,27 @@ public class Aggregate : AbstractionLimitGroup
                 outputSb.Append($"-{DocumentIdentifier.Replace(".", "_")}");
             }
             
+            outputSb.Append($"-C{GetCombinedLimitValue()}");
             return outputSb.ToString();
         }
     }
     
-    public string? AggregateSetId { get; set; }
+    public int GetCombinedLimitValue()
+    {
+        var combinedValue = 0.0;
+        
+        foreach (var limit in Limits)
+        {
+            if (limit.Value == null)
+            {
+                continue;
+            }
+
+            combinedValue += limit.Value!.Value;
+        }
+
+        return (int)combinedValue;
+    }
     
     public string? SourceLicenceNumber { get; set; }
     
@@ -66,18 +82,45 @@ public class Aggregate : AbstractionLimitGroup
     public bool? IsExplicitlyAggregate { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public PrimaryType PrimaryType { get; init; }
+    public PrimaryType PrimaryType { get; set; }
     
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public SubType? SubType { get; set; }
     
     public string? NaldType { get; set; }
     
-    public string[]? LinkedLicences { get; init; } = [];
+    public string[]? LinkedLicences { get; set; } = [];
+    
+    public AggregateVariation[]? Variations { get; set; }
 
+    public Aggregate Clone()
+    {
+        var returnItem = new Aggregate();
+        CloneProperties(this, returnItem);
+        
+        return returnItem;
+    }
+    
+    public static void CloneProperties(
+        Aggregate sourceAggregate,
+        Aggregate destinationAggregate)
+    {
+        destinationAggregate.SourceLicenceNumber = sourceAggregate.SourceLicenceNumber;
+        destinationAggregate.SourceLicenceVersionId = sourceAggregate.SourceLicenceVersionId;
+        destinationAggregate.IsExplicitlyAggregate = sourceAggregate.IsExplicitlyAggregate;
+        destinationAggregate.PrimaryType = sourceAggregate.PrimaryType;
+        destinationAggregate.SubType = sourceAggregate.SubType;
+        destinationAggregate.NaldType = sourceAggregate.NaldType;
+        destinationAggregate.LinkedLicences = sourceAggregate.LinkedLicences;
+        destinationAggregate.Variations = sourceAggregate.Variations;
+        
+        AbstractionLimitGroup.CloneProperties(
+            sourceAggregate,
+            destinationAggregate);
+    }
+    
     public new static Aggregate Template => new()
     {
-        AggregateSetId = string.Empty,
         NaldType = null,
         PrimaryType = PrimaryType.NotSet,
         SubType = Enums.SubType.NotSet,

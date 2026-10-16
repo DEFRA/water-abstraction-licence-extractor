@@ -1,4 +1,6 @@
 using System.Text;
+using System.Text.Json.Serialization;
+using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Enums;
 
 namespace WRADI.Core.AbstractionLicence.Models;
@@ -19,7 +21,10 @@ public class LicenceSet
                     outputSb.Append('-');
                 }
 
-                outputSb.Append(licence.Id);
+                var licenceNumberNoSeperators =
+                    FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
+
+                outputSb.Append(licenceNumberNoSeperators);
             }
 
             return outputSb.ToString();
@@ -59,9 +64,10 @@ public class LicenceSet
         }
     }
 
-    public LicenceSetType[] LicenceSetTypes { get; set; } = [];
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public LicenceSetType LicenceSetType { get; set; }
     
-    public AggregateSet[]? AggregateSets { get; set; } = [];
+    public Aggregate[]? AggregateSets { get; set; }
     
     public Licence[] Licences { get; set; } = [];
 }

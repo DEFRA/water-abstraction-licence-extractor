@@ -128,6 +128,20 @@ public sealed class WrFluentRule
         return this;
     }
     
+    /// <summary>
+    /// Declares the field as living in a two-column key/value table, with the rule's own start
+    /// text as the key. Pairs with the letter-based read so the label rules still apply when no
+    /// table extractor is available or the table is not found.
+    /// </summary>
+    public WrFluentRule FromLetterAndKeyValueTable()
+    {
+        _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
+        _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.KeyValue;
+        _layoutExtractorTableShape = LayoutExtractorTableShape.Unstructured;
+
+        return this;
+    }
+
     public WrFluentRule FromText()
     {
         _layoutExtractor = LayoutExtractor.LetterBased;

@@ -49,6 +49,7 @@ public static class WrInspectionReportFieldNames
     public const string DocumentTemplateVersion = nameof(DocumentTemplateVersion);
     public const string DocumentHeader = nameof(DocumentHeader);
 
+    public const string TemplateMarkerV3 = nameof(TemplateMarkerV3);
     public const string TemplateMarkerT4 = nameof(TemplateMarkerT4);
     public const string TemplateMarkerT6 = nameof(TemplateMarkerT6);
     public const string TemplateMarkerT7 = nameof(TemplateMarkerT7);
@@ -73,4 +74,41 @@ public static class WrInspectionReportFieldNames
     public const string ReadingsTakenLineReadingsTakenNo = ReadingsTakenLine + "ReadingsTakenNo";
     public const string ReadingsTakenLineFrequency = ReadingsTakenLine + "Frequency";
     public const string ReadingsTakenLineByWhom = ReadingsTakenLine + "ByWhom";
+
+    public const string V3LicenceNumber = nameof(V3LicenceNumber);
+    public const string V3LicenceCriticality = nameof(V3LicenceCriticality);
+    public const string V3LicenceHolderName = nameof(V3LicenceHolderName);
+    public const string V3LicenceHolderAddress = nameof(V3LicenceHolderAddress);
+    public const string V3SiteContactNumber = nameof(V3SiteContactNumber);
+    public const string V3SiteContactEmail = nameof(V3SiteContactEmail);
+    public const string V3SiteAddress = nameof(V3SiteAddress);
+
+    public const string V3AssessmentType = nameof(V3AssessmentType);
+    public const string V3PersonMetWith = nameof(V3PersonMetWith);
+    public const string V3JobTitleOrRole = nameof(V3JobTitleOrRole);
+    public const string V3AssessmentDate = nameof(V3AssessmentDate);
+    public const string V3InspectionStartTime = nameof(V3InspectionStartTime);
+    public const string V3InspectionEndTime = nameof(V3InspectionEndTime);
+    public const string V3InspectingOfficers = nameof(V3InspectingOfficers);
+
+    public const string V3MeterDetailsBlock = nameof(V3MeterDetailsBlock);
+    public const string V3LicenceConditionsBlock = nameof(V3LicenceConditionsBlock);
+    public const string V3NonCompliancesBlock = nameof(V3NonCompliancesBlock);
+    public const string V3EnforcementResponse = nameof(V3EnforcementResponse);
+    public const string V3ActionsBlock = nameof(V3ActionsBlock);
+    public const string V3GeneralComments = nameof(V3GeneralComments);
+    public const string V3DocumentTemplateVersion = nameof(V3DocumentTemplateVersion);
+
+    // The conditions v3 assesses that v1 never printed, so they have no shared provision slot.
+    public const string V3ConditionHandsOffFlow = nameof(V3ConditionHandsOffFlow);
+    public const string V3ConditionCompensationOrAugmentation = nameof(V3ConditionCompensationOrAugmentation);
+    public const string V3ConditionFishAndEelScreening = nameof(V3ConditionFishAndEelScreening);
+
+    public const string ActionReference = nameof(ActionReference);
+    public const string ActionType = nameof(ActionType);
+    public const string ActionDescription = nameof(ActionDescription);
+    public const string ActionCompleteBy = nameof(ActionCompleteBy);
+
+    public const string MaintenanceRecords = nameof(MaintenanceRecords);
+    public const string VerificationCertificate = nameof(VerificationCertificate);
 }

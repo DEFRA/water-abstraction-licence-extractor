@@ -7,5 +7,6 @@ public enum ScrapeStatus
     PathMissing,
     FileIdMissing,
     InProgress,
-    Error
+    Error,
+    NotScraped
 }

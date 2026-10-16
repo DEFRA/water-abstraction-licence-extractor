@@ -2,11 +2,8 @@ namespace WRADI.Core.AbstractionLicence.Enums;
 
 public enum LicenceSetType
 {
+    Unknown,
     SingleLicenceOnly,
-    AllLicencesExplicitlyReferencedAnywhere,
-    AllLicencesExplicitlyReferencedInLimits,
-    AllLicencesImplicitlyReferencedInLimits,
-    AllLicencesIncludingImplicitlyReferenced,
-    FullyEncompassedIn,
-    PartiallyEncompassedIn
+    LicencesGroupedByAbstractionLimits,
+    Others
 }

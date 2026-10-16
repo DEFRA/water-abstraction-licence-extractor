@@ -38,11 +38,17 @@ public static class WrInspectionReportExtractionOrchestrator
             List<string> previouslyParsedFiles,
             int processRunId,
             IPdfDataExtractorService pdfDataExtractor,
-            // Opt-in overlay, off by default (both null) - see WrInspectionReportTableMatcher.
-            // Passing a non-null tableExtractorService AND pdfBytesForTableExtraction attempts the
-            // table-based lookup for the LicenceProvisions grid fields; any field it can't
-            // confidently resolve keeps its existing heuristic result unchanged. Not yet wired into
-            // any production caller.
+            // Pass both of these together or neither. What they mean depends on the template:
+            //
+            //   T1  - optional. An overlay for the LicenceProvisions grid fields; any field it
+            //         cannot confidently resolve keeps its existing heuristic result. Omitting
+            //         them leaves a result that is merely less good. See
+            //         WrInspectionReportTableMatcher.
+            //   V3  - required. Its fields are two-column key/value grids, so this IS how the
+            //         document is read; the V3 block below throws without it rather than
+            //         returning a quietly truncated result.
+            //
+            // Any other template ignores them.
             ITableExtractorService? tableExtractorService = null,
             byte[]? pdfBytesForTableExtraction = null,
             // Two-tier: a free/local primary (Tabula) and a paid/cloud fallback (Azure DI) here.
@@ -88,9 +94,13 @@ public static class WrInspectionReportExtractionOrchestrator
             documentHeader);
 
         configuration1 = configuration1.Clone();
-        configuration1.Labels = template == WrTemplateType.T1
-            ? WrInspectionT1LabelConfiguration.FilterFrom(originalLabels)
-            : originalLabels;
+
+        configuration1.Labels = template switch
+        {
+            WrTemplateType.V3 => WrInspectionV3LabelConfiguration.GetLabels(),
+            WrTemplateType.T1 => WrInspectionT1LabelConfiguration.FilterFrom(originalLabels),
+            _ => originalLabels
+        };
 
         var (stopExecution, alreadySaved, scrapeResult) = await pdfDataExtractor.GetMatchesAsync(
             pdfFileName,
@@ -129,6 +139,47 @@ public static class WrInspectionReportExtractionOrchestrator
                 
                 // Never discard an already-good result, so carry on
             }
+        }
+
+        // V3's fields live in two-column key/value grids, and reading them as cells is the only
+        // way its multi-line values (the licence holder name and address) come out whole - a line
+        // rule truncates them at the first line, and a document with five meters collapses to one.
+        //
+        // REQUIRED for V3, unlike the opt-in T1 overlay above. Without it a v3 document still
+        // produces a result, and that result looks healthy while being quietly wrong - which is
+        // precisely the failure WRADI-392 existed to stamp out. Better to refuse the file than to
+        // save a plausible-looking truncation. A free local extractor resolves the whole form, so
+        // this costs nothing to satisfy and the paid fallback is deliberately never consulted.
+        if (template == WrTemplateType.V3)
+        {
+            if (tableExtractorService == null || pdfBytesForTableExtraction == null)
+            {
+                throw new InvalidOperationException(
+                    $"A {nameof(ITableExtractorService)} and the document bytes are required to " +
+                    $"extract a {nameof(WrTemplateType.V3)} document ({pdfFileName}). Its fields " +
+                    "are two-column key/value grids, and without them the multi-line values are " +
+                    "truncated and multiple meters collapse into one.");
+            }
+
+            // Fetched once and shared, so a document costs a single GetTablesAsync call whether
+            // one field or every field is resolved from it.
+            var tables = await tableExtractorService.GetTablesAsync(
+                BuildTableLookupDocument(pdfBytesForTableExtraction, dmsDataForFile.FileId),
+                dmsDataForFile.FileId,
+                processRunId);
+
+            // Deliberately not wrapped in a try/catch, unlike the T1 overlay. There the table pass
+            // is an enhancement, so losing it leaves a result that is merely less good; here it is
+            // how the document is read, so swallowing a failure would ship the truncation this
+            // whole mechanism exists to avoid.
+            WrInspectionV3KeyValueMatcher.Apply(
+                scrapeResult, tables, configuration1.Labels, tableExtractorService.Name);
+
+            WrInspectionV3KeyValueMatcher.ApplyMeters(
+                scrapeResult, tables, tableExtractorService.Name);
+
+            WrInspectionV3KeyValueMatcher.ApplyActions(
+                scrapeResult, tables, tableExtractorService.Name);
         }
 
         scrapeResult.AdditionalInformation ??= [];
@@ -210,6 +261,32 @@ public static class WrInspectionReportExtractionOrchestrator
         }
     }
 
+    /// <summary>
+    /// The minimal PdfDocument a table extractor needs: it only reads the bytes, so everything
+    /// else is left unset rather than loading the document twice.
+    /// </summary>
+    private static PdfDocument BuildTableLookupDocument(byte[] pdfBytes, Guid fileId) =>
+        new(
+            null!,
+            fileId,
+            false,
+            pdfBytes,
+            pdfBytes.Length,
+            null!,
+            null!,
+            null!,
+            new LookupConfiguration(
+                [],
+                [],
+                null!,
+                null!, null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                -1,
+                DateTime.UtcNow));
+
     // Failure is treated as "found nothing confident" rather than propagated, so a primary that
     // throws on a malformed PDF still leaves the fallback its chance. Tables/serviceName come back
     // with the matches so free-text fields resolve from the same fetch, with no second (for a paid
@@ -228,26 +305,7 @@ public static class WrInspectionReportExtractionOrchestrator
         try
         {
             var tables = await tableExtractorService.GetTablesAsync(
-                new PdfDocument(
-                    null!,
-                    fileId,
-                    false,
-                    pdfBytes,
-                    pdfBytes.Length,
-                    null!,
-                    null!, 
-                    null!, 
-                    new LookupConfiguration(
-                        [],
-                        [],
-                        null!,
-                        null!, null!,
-                        null!,
-                        null!,
-                        null!,
-                        null!,
-                        -1,
-                        DateTime.UtcNow)),
+                BuildTableLookupDocument(pdfBytes, fileId),
                 fileId,
                 processRunId);
 

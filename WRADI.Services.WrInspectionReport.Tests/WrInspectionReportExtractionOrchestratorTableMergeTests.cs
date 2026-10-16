@@ -126,6 +126,60 @@ public class WrInspectionReportExtractionOrchestratorTableMergeTests
         Assert.Single(item.Matches!, m => m.LabelGroupName == WrInspectionReportFieldNames.SpecialConditions);
     }
 
+    /// <summary>
+    /// ServicesUsed is how anyone asks whether the table overlay ran on a document. It listed only
+    /// the text extractors, so a document whose whole licence provisions grid came from a table
+    /// still reported the overlay as absent.
+    /// </summary>
+    [Fact]
+    public async Task WhenTableResolvesAField_ThenItsServiceIsRecordedAsUsed()
+    {
+        var item = new MatchesResult
+        {
+            ServicesUsed = ["PdfPigNoOcr"],
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SpecialConditions, "X")]
+        };
+
+        var gridTable = new DocumentTable
+        {
+            RowCount = 1,
+            ColumnCount = 1,
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Special conditions: N/A" }]
+        };
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, new FakeTableExtractorService([gridTable]), [1, 2, 3], Guid.NewGuid(), processRunId: 1);
+
+        Assert.Contains("FakeTableExtractorService", item.ServicesUsed);
+        Assert.Contains("PdfPigNoOcr", item.ServicesUsed);
+    }
+
+    /// <summary>
+    /// The counterpart: claiming a service that resolved nothing would make the field useless for
+    /// telling whether the overlay contributed.
+    /// </summary>
+    [Fact]
+    public async Task WhenTheTableResolvesNothing_ThenItsServiceIsNotRecordedAsUsed()
+    {
+        var item = new MatchesResult
+        {
+            ServicesUsed = ["PdfPigNoOcr"],
+            Matches = [HeuristicResult(WrInspectionReportFieldNames.SpecialConditions, "X")]
+        };
+
+        var unrelatedTable = new DocumentTable
+        {
+            RowCount = 1,
+            ColumnCount = 1,
+            Cells = [new DocumentTableCell { RowIndex = 0, ColumnIndex = 0, Content = "Nothing resembling the grid" }]
+        };
+
+        await WrInspectionReportExtractionOrchestrator.ApplyTableBasedGridMatchesAsync(
+            item, Labels, new FakeTableExtractorService([unrelatedTable]), [1, 2, 3], Guid.NewGuid(), processRunId: 1);
+
+        Assert.DoesNotContain("FakeTableExtractorService", item.ServicesUsed);
+    }
+
     [Fact]
     public async Task WhenNoTableResemblesTheGrid_ThenAllHeuristicResultsSurviveUnchanged()
     {

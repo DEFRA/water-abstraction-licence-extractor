@@ -777,6 +777,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            select
                                file_id,
+                               matches_result_id,
                                filename,
                                status
                            FROM public.matches_result

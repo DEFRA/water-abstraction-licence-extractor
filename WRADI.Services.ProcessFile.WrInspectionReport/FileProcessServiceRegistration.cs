@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,20 @@ namespace WRADI.Services.ProcessFile.WrInspectionReport;
 
 public static class FileProcessServiceRegistration
 {
+    private static DateOnly? ParseOptionalDate(IConfiguration configuration, string key)
+    {
+        var value = configuration[key];
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return DateOnly.TryParse(value, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : throw new InvalidOperationException($"{key} is not a date: '{value}'");
+    }
+
     public static IServiceCollection AddWrInspectionReportFileProcessServices(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -60,6 +75,9 @@ public static class FileProcessServiceRegistration
 
             // Local/dev cap on files per orchestration; unset in deployed environments.
             options.MaxFilesPerRun = ConfigHelper.GetOptionalInt(configuration, "MaxFilesPerRun");
+
+            options.UploadedFrom = ParseOptionalDate(configuration, "UploadedFrom");
+            options.UploadedTo = ParseOptionalDate(configuration, "UploadedTo");
         });
 
         services.AddSingleton(sp =>

@@ -29,11 +29,21 @@ namespace WALE.ProcessFile.Services.Tabula;
 // SimpleNurminenDetectionAlgorithm (region detection) + BasicExtractionAlgorithm (the actual cell
 // split) is the Stream-mode pairing tabula-sharp's own README documents.
 //
-// No caching - unlike the cloud-based implementations of this interface, there's no API cost to
-// avoid on a repeat call, only CPU time, which is fast (local PDF parsing, no network round trip).
+// Cached like the cloud-based implementations of this interface, though there is no API cost to
+// avoid here - only CPU time on a repeat parse.
 public class TabulaTableExtractorService(ICacheService cacheService) : ITableExtractorService
 {
     public string Name => "TabulaSharp";
+
+    /// Cached payloads are keyed by this rather than by Name, so changing what a cell carries can
+    /// invalidate the cache without renaming the service in the provenance stored on every match.
+    ///
+    /// v2 carries the cell rectangle. v1 entries hold only Left and Top, so DocumentTableCell
+    /// cannot produce coordinates from one and every value matched from a table came back with no
+    /// region to highlight - the cache key has no component describing the payload's shape, so
+    /// without this the pre-rectangle entries would be reused indefinitely.
+    private const string CacheServiceName = "TabulaSharp-v2";
+
     private const int SharedPageNumber = 1;
 
     public async Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
@@ -46,7 +56,7 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             PageNumber = SharedPageNumber,
             ImageNumber = 0,
             FileId = fileId,
-            OcrServiceName = Name,
+            OcrServiceName = CacheServiceName,
             ProcessRunId = processRunId
         };
         

@@ -22,9 +22,21 @@ namespace WRADI.DocumentType.WrInspectionReport.Enums;
 // no_telephone_field, compliance_only, temporal_meter_change, struck_through_measurement_section)
 // are deliberately NOT treated as anomalies here - they're just content variation within a
 // genuinely T1-shaped document, not a different comments-section structure.
+// V3: the redesigned "Assessment report" form (Document Template Version 2026_08_04_V3),
+// structurally a different document from every value above rather than another family within the
+// same form. It drops the "Form WR - 51" header for "Form WR51", renames nearly every field
+// ("Person met with/contacted" for MetWith, "Assessment date" for InspectionDate), splits the old
+// combined name-and-address into two fields, and replaces the provisions grid with a
+// condition-to-outcome list. Its rules live in their own standalone configuration.
+//
+// Of the fields it adds, only Licence criticality has no v1 counterpart: Site contact
+// number/email and Job title or role land on v1's own TelephoneNumber, Email and Position, and
+// the separate start and end times on v1's single Time plus one new slot. See
+// WrInspectionV3SharedFieldMapper for the full projection onto the shared model.
 public enum WrTemplateType
 {
     Unknown,
+    V3,
     T1,
     T4,
     T6,

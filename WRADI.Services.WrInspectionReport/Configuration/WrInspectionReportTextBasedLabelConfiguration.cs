@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
@@ -6,7 +7,7 @@ using WRADI.DocumentType.WrInspectionReport.Models.Configuration;
 
 namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
-public static class WrInspectionReportTextBasedLabelConfiguration
+public static partial class WrInspectionReportTextBasedLabelConfiguration
 {
     public static void ConfigurationPropertiesToSet(LookupConfiguration lookupConfiguration)
     {
@@ -61,6 +62,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
         RuleDate(),
         RuleDocumentTemplateVersion(),
         RuleDocumentHeader(),
+        RuleTemplateMarkerV3(),
         RuleTemplateMarkerT4(),
         RuleTemplateMarkerT6(),
         RuleTemplateMarkerT7(),
@@ -773,6 +775,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
 
     // ---- Template-family markers (presence checks, not value extraction) ----
 
+    private static (string, List<LabelToMatch>) RuleTemplateMarkerV3() =>
+        (WrInspectionReportFieldNames.TemplateMarkerV3,
+            TemplateMarker(
+                "Document Template Version",
+                WrInspectionReportFieldNames.TemplateMarkerV3,
+                regex: DocumentTemplateVersionV3Regex()));
+
+    // Two forms occur in the v3-era templates: "2026_08_04_V3" and "2026_10_06", the newer one
+    // having dropped the V3 suffix. Matching a bare date is safe because this marker appears
+    // nowhere in the legacy corpus - 0 of 15,262 documents carry the line at all - so a date here
+    // can only be a v3-era template.
+    [GeneratedRegex(@"Document Template Version\s+(?:\S*[Vv]3\b|\d{4}_\d{2}_\d{2})")]
+    private static partial Regex DocumentTemplateVersionV3Regex();
+
     private static (string, List<LabelToMatch>) RuleTemplateMarkerT4() =>
         (WrInspectionReportFieldNames.TemplateMarkerT4, TemplateMarker("Permit holder name and address", WrInspectionReportFieldNames.TemplateMarkerT4));
 
@@ -891,13 +907,16 @@ public static class WrInspectionReportTextBasedLabelConfiguration
     private static List<LabelToMatch> TemplateMarker(
         string text,
         string labelName,
-        List<string>? additionalTextStarts = null)
+        List<string>? additionalTextStarts = null,
+        Regex? regex = null)
     {
         return
         [
             new LabelToMatch
             {
-                TextStart =
+                TextStart = regex != null
+                    ? [new TextToMatch(text) { Regex = regex }]
+                    :
                 [
                     new(text) { ColumnMustStartWith = true },
                     ..(additionalTextStarts ?? []).Select(t => new TextToMatch(t) { ColumnMustStartWith = true })

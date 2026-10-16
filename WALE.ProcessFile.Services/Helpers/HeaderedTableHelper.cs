@@ -17,7 +17,7 @@ public static class HeaderedTableHelper
     /// unfilled form row does not become a record. Values matching a placeholder are returned
     /// empty.
     /// </summary>
-    public static List<Dictionary<string, string>> ReadRows(
+    public static List<Dictionary<string, DocumentTableValue>> ReadRows(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<string> headers,
         IReadOnlyCollection<string>? placeholders = null)
@@ -47,21 +47,23 @@ public static class HeaderedTableHelper
             }
         }
 
-        var result = new List<Dictionary<string, string>>();
+        var result = new List<Dictionary<string, DocumentTableValue>>();
 
         foreach (var row in rows.Skip(1))
         {
-            var record = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var record = new Dictionary<string, DocumentTableValue>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var (header, columnIndex) in columnOfHeader)
             {
-                var value = Normalise(
-                    row.FirstOrDefault(cell => cell.ColumnIndex == columnIndex)?.Content);
+                var cell = row.FirstOrDefault(cell => cell.ColumnIndex == columnIndex);
+                var value = Normalise(cell?.Content);
 
-                record[header] = IsPlaceholder(value, placeholders) ? string.Empty : value;
+                record[header] = DocumentTableValue.From(
+                    cell,
+                    IsPlaceholder(value, placeholders) ? string.Empty : value);
             }
 
-            if (record.Values.Any(value => !string.IsNullOrWhiteSpace(value)))
+            if (record.Values.Any(value => !string.IsNullOrWhiteSpace(value.Text)))
             {
                 result.Add(record);
             }

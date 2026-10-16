@@ -163,6 +163,113 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
     private static string? ValueOf(MatchesResult result, string fieldName) =>
         WrInspectionReportSchemaConverter.GetMultilineText(result, fieldName);
 
+    /// <summary>
+    /// Shared-named fields a v3 document resolves from its key/value cells, which is what the
+    /// portal looks a property up by. Split by route: the first group is renamed onto the shared
+    /// model by WrInspectionV3SharedFieldMapper, the meter group is written to the shared names
+    /// directly by ApplyMeters. Both were measured present on all 41 documents.
+    /// </summary>
+    private static readonly string[] SharedFieldsFromKeyValueCells =
+    [
+        WrInspectionReportFieldNames.LicenceNumber,
+        WrInspectionReportFieldNames.InspectionClass,
+        WrInspectionReportFieldNames.InspectionDate,
+        WrInspectionReportFieldNames.MetWith,
+        WrInspectionReportFieldNames.Position,
+        WrInspectionReportFieldNames.TelephoneNumber,
+        WrInspectionReportFieldNames.Time,
+        WrInspectionReportFieldNames.NameAndAddress,
+        WrInspectionReportFieldNames.SiteAddress,
+        WrInspectionReportFieldNames.MeterName,
+        WrInspectionReportFieldNames.MeterMake,
+        WrInspectionReportFieldNames.SerialNumber,
+        WrInspectionReportFieldNames.Reading,
+        WrInspectionReportFieldNames.Units
+    ];
+
+    private static List<DocumentLineWord> WordsOf(MatchesResult result, string fieldName) =>
+        (result.Matches ?? [])
+            .Where(group => group.MatchedLabelName == fieldName)
+            .SelectMany(group => group.Text ?? [])
+            .SelectMany(line => line.Columns ?? [])
+            .SelectMany(column => column.Words ?? [])
+            .ToList();
+
+    /// <summary>
+    /// Asserts on the MatchesResult rather than through ToForm: the result is saved before
+    /// anything renders it, so a check made through the converter passes while the stored document
+    /// carries nothing the portal can resolve.
+    ///
+    /// A missing shared name means the alias pass has stopped running before the save. A present
+    /// name with no region means a reader has gone back to discarding the cell it read from.
+    /// </summary>
+    [Fact]
+    public async Task WhenV3Document_ThenSharedFieldsAreStoredWithTheirCellRegions()
+    {
+        // Arrange
+        if (!Directory.Exists(V3Folder))
+        {
+            testOutputHelper.WriteLine($"Skipped - no v3 documents at {V3Folder}");
+            return;
+        }
+
+        var files = Directory.GetFiles(V3Folder, "*.pdf")
+            .Select(Path.GetFileName)
+            .Where(name => name != null)
+            .Select(name => name!)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (files.Count == 0)
+        {
+            testOutputHelper.WriteLine($"Skipped - no PDFs under {V3Folder}");
+            return;
+        }
+
+        var missingField = new List<string>();
+        var missingRegion = new List<string>();
+        var documents = 0;
+
+        // Act
+        foreach (var filename in files)
+        {
+            var (result, template) = await ExtractAsync(filename);
+
+            if (result == null || template != WrTemplateType.V3)
+            {
+                continue;
+            }
+
+            documents++;
+
+            foreach (var field in SharedFieldsFromKeyValueCells)
+            {
+                var words = WordsOf(result, field);
+
+                if (words.Count == 0)
+                {
+                    missingField.Add($"{filename} {field}");
+                    continue;
+                }
+
+                // Any rather than All: a repeating group holds an absent value as an empty line to
+                // keep its position, and that line has no cell behind it to take a region from.
+                if (words.All(word => word.Coordinates.Left < 0))
+                {
+                    missingRegion.Add($"{filename} {field}");
+                }
+            }
+        }
+
+        // Assert
+        testOutputHelper.WriteLine($"{documents} v3 documents, "
+            + $"{SharedFieldsFromKeyValueCells.Length} shared fields each");
+
+        Assert.NotEqual(0, documents);
+        Assert.Empty(missingField);
+        Assert.Empty(missingRegion);
+    }
+
     [Fact]
     public async Task WhenV3ConsultationDocuments_ThenClassifiedAsV3AndFieldsAreFound()
     {

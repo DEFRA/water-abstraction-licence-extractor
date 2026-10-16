@@ -15,25 +15,26 @@ public static class KeyValueTableHelper
     /// Every pair across the supplied tables, longest value kept per key. Only two-column tables
     /// contribute.
     /// </summary>
-    public static Dictionary<string, string> ReadPairs(IReadOnlyList<DocumentTable> tables)
+    public static Dictionary<string, DocumentTableValue> ReadPairs(IReadOnlyList<DocumentTable> tables)
     {
-        var pairs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var pairs = new Dictionary<string, DocumentTableValue>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var table in tables.Where(table => table.ColumnCount == 2))
         {
             foreach (var row in table.Cells.GroupBy(cell => cell.RowIndex))
             {
                 var key = Normalise(row.FirstOrDefault(cell => cell.ColumnIndex == 0)?.Content);
-                var value = row.FirstOrDefault(cell => cell.ColumnIndex == 1)?.Content?.Trim();
+                var cell = row.FirstOrDefault(cell => cell.ColumnIndex == 1);
+                var value = cell?.Content?.Trim();
 
                 if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
                 {
                     continue;
                 }
 
-                if (!pairs.TryGetValue(key, out var existing) || value.Length > existing.Length)
+                if (!pairs.TryGetValue(key, out var existing) || value.Length > existing.Text.Length)
                 {
-                    pairs[key] = value;
+                    pairs[key] = DocumentTableValue.From(cell, value);
                 }
             }
         }
@@ -45,7 +46,7 @@ public static class KeyValueTableHelper
     /// Matched on the key's stem, so "Site address" finds "Site address (if different)". An exact
     /// match wins over a stem match, so a short key cannot shadow a longer one starting with it.
     /// </summary>
-    public static string? FindValue(Dictionary<string, string> pairs, string key)
+    public static DocumentTableValue? FindValue(Dictionary<string, DocumentTableValue> pairs, string key)
     {
         if (pairs.TryGetValue(key, out var exact))
         {
@@ -64,19 +65,20 @@ public static class KeyValueTableHelper
     /// One set of pairs per occurrence, a new group starting each time
     /// <paramref name="firstKeyOfGroup"/> is seen again. Rows are taken in document order.
     /// </summary>
-    public static List<Dictionary<string, string>> ReadRepeatingGroups(
+    public static List<Dictionary<string, DocumentTableValue>> ReadRepeatingGroups(
         IReadOnlyList<DocumentTable> tables,
         string firstKeyOfGroup)
     {
-        var groups = new List<Dictionary<string, string>>();
-        Dictionary<string, string>? current = null;
+        var groups = new List<Dictionary<string, DocumentTableValue>>();
+        Dictionary<string, DocumentTableValue>? current = null;
 
         foreach (var table in tables.Where(table => table.ColumnCount == 2))
         {
             foreach (var row in table.Cells.GroupBy(cell => cell.RowIndex).OrderBy(row => row.Key))
             {
                 var key = Normalise(row.FirstOrDefault(cell => cell.ColumnIndex == 0)?.Content);
-                var value = row.FirstOrDefault(cell => cell.ColumnIndex == 1)?.Content?.Trim();
+                var cell = row.FirstOrDefault(cell => cell.ColumnIndex == 1);
+                var value = cell?.Content?.Trim();
 
                 if (string.IsNullOrWhiteSpace(key))
                 {
@@ -85,7 +87,7 @@ public static class KeyValueTableHelper
 
                 if (key.StartsWith(firstKeyOfGroup, StringComparison.OrdinalIgnoreCase))
                 {
-                    current = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    current = new Dictionary<string, DocumentTableValue>(StringComparer.OrdinalIgnoreCase);
                     groups.Add(current);
                 }
 
@@ -94,7 +96,7 @@ public static class KeyValueTableHelper
                     continue;
                 }
 
-                current.TryAdd(key, value);
+                current.TryAdd(key, DocumentTableValue.From(cell, value));
             }
         }
 
@@ -103,16 +105,18 @@ public static class KeyValueTableHelper
         return MergeByGroupKey(groups, firstKeyOfGroup);
     }
 
-    private static List<Dictionary<string, string>> MergeByGroupKey(
-        List<Dictionary<string, string>> groups,
+    private static List<Dictionary<string, DocumentTableValue>> MergeByGroupKey(
+        List<Dictionary<string, DocumentTableValue>> groups,
         string firstKeyOfGroup)
     {
-        var merged = new List<Dictionary<string, string>>();
-        var byIdentity = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        var merged = new List<Dictionary<string, DocumentTableValue>>();
+
+        var byIdentity = new Dictionary<string, Dictionary<string, DocumentTableValue>>(
+            StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in groups)
         {
-            var identity = FindValue(group, firstKeyOfGroup);
+            var identity = FindValue(group, firstKeyOfGroup)?.Text;
 
             if (string.IsNullOrWhiteSpace(identity))
             {
@@ -129,7 +133,7 @@ public static class KeyValueTableHelper
 
             foreach (var (key, value) in group)
             {
-                if (!existing.TryGetValue(key, out var held) || value.Length > held.Length)
+                if (!existing.TryGetValue(key, out var held) || value.Text.Length > held.Text.Length)
                 {
                     existing[key] = value;
                 }

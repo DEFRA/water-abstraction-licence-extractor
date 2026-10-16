@@ -57,9 +57,9 @@ public static class WrInspectionV3KeyValueMatcher
 
             var value = label.TextStart
                 .Select(textStart => KeyValueTableHelper.FindValue(pairs, textStart.Text))
-                .FirstOrDefault(found => !string.IsNullOrWhiteSpace(found));
+                .FirstOrDefault(found => !string.IsNullOrWhiteSpace(found?.Text));
 
-            if (string.IsNullOrWhiteSpace(value))
+            if (value == null)
             {
                 continue;
             }
@@ -125,10 +125,10 @@ public static class WrInspectionV3KeyValueMatcher
         foreach (var (key, fieldName) in MeterKeys)
         {
             var perMeter = meters
-                .Select(meter => KeyValueTableHelper.FindValue(meter, key) ?? string.Empty)
+                .Select(meter => KeyValueTableHelper.FindValue(meter, key) ?? Blank)
                 .ToList();
 
-            if (perMeter.All(string.IsNullOrWhiteSpace))
+            if (perMeter.All(meter => string.IsNullOrWhiteSpace(meter.Text)))
             {
                 continue;
             }
@@ -182,13 +182,13 @@ public static class WrInspectionV3KeyValueMatcher
         foreach (var (header, fieldName) in ActionKeys)
         {
             var perAction = actions
-                .Select(action => action.GetValueOrDefault(header, string.Empty))
+                .Select(action => action.GetValueOrDefault(header, Blank))
                 .Select(value => fieldName == WrInspectionReportFieldNames.ActionType
-                    ? RejoinHyphenatedWrap(value)
+                    ? value with { Text = RejoinHyphenatedWrap(value.Text) }
                     : value)
                 .ToList();
 
-            if (perAction.All(string.IsNullOrWhiteSpace))
+            if (perAction.All(action => string.IsNullOrWhiteSpace(action.Text)))
             {
                 continue;
             }
@@ -214,11 +214,22 @@ public static class WrInspectionV3KeyValueMatcher
     /// </summary>
     private static string RejoinHyphenatedWrap(string value) => value.Replace("- ", "-");
 
-    private static LabelGroupResult BuildResult(string fieldName, string value, string serviceName)
+    /// <summary>A value no cell produced, holding a position in a repeating group.</summary>
+    private static readonly DocumentTableValue Blank = new(string.Empty, null);
+
+    /// <summary>
+    /// Every line of a wrapped cell carries that whole cell's region, which is as fine as a table
+    /// extractor reports: it gives no per-line rectangle to split it by.
+    /// </summary>
+    private static LabelGroupResult BuildResult(
+        string fieldName,
+        DocumentTableValue value,
+        string serviceName)
     {
-        var lines = value
+        var lines = value.Text
             .ReplaceLineEndings("\n")
             .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => value with { Text = line })
             .ToList();
 
         return BuildResultFromLines(fieldName, lines, serviceName);
@@ -230,13 +241,17 @@ public static class WrInspectionV3KeyValueMatcher
     /// </summary>
     private static LabelGroupResult BuildResultFromLines(
         string fieldName,
-        IReadOnlyList<string> values,
+        IReadOnlyList<DocumentTableValue> values,
         string serviceName)
     {
         var lines = values
             .Select(line => new DocumentLine
             {
-                Columns = [new DocumentLineColumn(DocumentLineColumn.TextToWords(line.Trim(), null))]
+                Columns =
+                [
+                    new DocumentLineColumn(
+                        DocumentLineColumn.TextToWords(line.Text.Trim(), null, line.Coordinates))
+                ]
             })
             .ToList();
 

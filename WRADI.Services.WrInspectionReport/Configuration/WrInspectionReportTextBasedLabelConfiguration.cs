@@ -782,7 +782,11 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                 WrInspectionReportFieldNames.TemplateMarkerV3,
                 regex: DocumentTemplateVersionV3Regex()));
 
-    [GeneratedRegex(@"Document Template Version\s+\S*[Vv]3\b")]
+    // Two forms occur in the v3-era templates: "2026_08_04_V3" and "2026_10_06", the newer one
+    // having dropped the V3 suffix. Matching a bare date is safe because this marker appears
+    // nowhere in the legacy corpus - 0 of 15,262 documents carry the line at all - so a date here
+    // can only be a v3-era template.
+    [GeneratedRegex(@"Document Template Version\s+(?:\S*[Vv]3\b|\d{4}_\d{2}_\d{2})")]
     private static partial Regex DocumentTemplateVersionV3Regex();
 
     private static (string, List<LabelToMatch>) RuleTemplateMarkerT4() =>

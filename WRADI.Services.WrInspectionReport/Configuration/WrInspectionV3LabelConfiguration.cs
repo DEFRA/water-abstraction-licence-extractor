@@ -142,6 +142,10 @@ public static class WrInspectionV3LabelConfiguration
         (WrInspectionReportFieldNames.V3InspectingOfficers, [
             WrFluentRule
                 .After("Inspecting officer(s)")
+                // The consultation documents label this singular. Plural stays first so that
+                // where "(s)" is present it is consumed as part of the label rather than left on
+                // the front of the officer's name.
+                .AlsoStartsWith("Inspecting officer")
                 .Named(WrInspectionReportFieldNames.V3InspectingOfficers)
                 .FromLetterAndKeyValueTable()
                 .NextLines(2)
@@ -224,6 +228,13 @@ public static class WrInspectionV3LabelConfiguration
         (WrInspectionReportFieldNames.V3GeneralComments, [
             WrFluentRule
                 .After("General comments, details / dates of occupation changes, actions required")
+                // The heading is long enough to wrap, and the break lands in different places
+                // depending on the content above it: 40 of the 41 sample documents break after
+                // "actions required", one after "actions". Anchoring on the shorter form as well
+                // catches both, and the leftover "required etc." is stripped from the value
+                // because capture begins on the line after the heading.
+                .AlsoStartsWith("General comments, details / dates of occupation changes, actions")
+                .Remove([new TextToMatch("required etc.")])
                 .Named(WrInspectionReportFieldNames.V3GeneralComments)
                 .WholeLine()
                 .NextLines(60)

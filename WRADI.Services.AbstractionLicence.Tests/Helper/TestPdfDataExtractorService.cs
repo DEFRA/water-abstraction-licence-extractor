@@ -1,7 +1,10 @@
 using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
+using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 namespace WRADI.Services.AbstractionLicence.Tests.Helper;
 
@@ -19,7 +22,21 @@ public class TestPdfDataExtractorService(Dictionary<string, MatchesResult> data)
     {
         if (!data.TryGetValue(pdfFileName, out var value))
         {
-            var errorReturnItem = (true, (bool?)true, (MatchesResult?)null);
+            var matchesResult = new MatchesResult
+            {
+                Status = nameof(ScrapeStatus.Ok),
+                Filename = pdfFileName,
+                Matches = [
+                    new()
+                    {
+                        LabelGroupName = "LicenceNumber",
+                        MatchedLabelName = "DocumentLicenceNumber",
+                        Text = PdfPigNoOcrPdfTests.TextToLines(pdfFileName)
+                    }
+                ]
+            };
+            
+            var errorReturnItem = (false, (bool?)true, (MatchesResult?)matchesResult);
             return Task.FromResult(errorReturnItem);
         }
         

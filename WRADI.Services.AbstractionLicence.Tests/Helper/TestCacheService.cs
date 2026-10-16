@@ -157,6 +157,11 @@ public class TestCacheService : ICacheService
         return Task.CompletedTask;
     }
 
+    public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
     {
         throw new NotImplementedException();

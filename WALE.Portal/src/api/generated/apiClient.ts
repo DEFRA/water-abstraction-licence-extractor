@@ -467,7 +467,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getExtract(skip: number | undefined, take: number | undefined): Promise<void> {
+    getExtract(skip: number | undefined, take: number | undefined, extractType: string): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Dms/GetExtract?";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
@@ -477,6 +477,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'take' cannot be null.");
         else if (take !== undefined)
             url_ += "take=" + encodeURIComponent("" + take) + "&";
+        if (extractType === undefined || extractType === null)
+            throw new globalThis.Error("The parameter 'extractType' must be defined and cannot be null.");
+        else
+            url_ += "extractType=" + encodeURIComponent("" + extractType) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3493,6 +3497,64 @@ export class Client {
     }
 
     /**
+     * @param from (optional) 
+     * @param to (optional) 
+     * @param template (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getWrInspectionReportsByDate(from: Date | undefined, to: Date | undefined, template: string | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetWrInspectionReportsByDate?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (template === null)
+            throw new globalThis.Error("The parameter 'template' cannot be null.");
+        else if (template !== undefined)
+            url_ += "template=" + encodeURIComponent("" + template) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWrInspectionReportsByDate(_response);
+        });
+    }
+
+    protected processGetWrInspectionReportsByDate(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param processRunId (optional) 
      * @return OK
      */
@@ -3677,6 +3739,44 @@ export class Client {
             });
         }
         return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getWrInspectionReportSummaries(processRunId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetWrInspectionReportSummaries?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWrInspectionReportSummaries(_response);
+        });
+    }
+
+    protected processGetWrInspectionReportSummaries(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -5889,6 +5989,42 @@ export class Client {
     /**
      * @return OK
      */
+    updateProcessRunListProjection(processRunId: number): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateProcessRunListProjection/{processRunId}";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProcessRunListProjection(_response);
+        });
+    }
+
+    protected processUpdateProcessRunListProjection(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     updateLicenceListProcessRun(processRunId: number): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
         if (processRunId === undefined || processRunId === null)
@@ -6615,7 +6751,6 @@ export interface IAddDocumentNaldPurposeMatchRequest {
 
 export class Aggregate implements IAggregate {
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6651,7 +6786,6 @@ export class Aggregate implements IAggregate {
                     this[property] = _data[property];
             }
             this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
             this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
             this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
@@ -6709,7 +6843,6 @@ export class Aggregate implements IAggregate {
                 data[property] = this[property];
         }
         data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
         data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
         data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
@@ -6756,7 +6889,6 @@ export class Aggregate implements IAggregate {
 
 export interface IAggregate {
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6780,7 +6912,6 @@ export interface IAggregate {
 export class AggregateVariation implements IAggregateVariation {
     difference?: string | undefined;
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6817,7 +6948,6 @@ export class AggregateVariation implements IAggregateVariation {
             }
             this.difference = _data["difference"];
             this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
             this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
             this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
@@ -6876,7 +7006,6 @@ export class AggregateVariation implements IAggregateVariation {
         }
         data["difference"] = this.difference;
         data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
         data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
         data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
@@ -6924,7 +7053,6 @@ export class AggregateVariation implements IAggregateVariation {
 export interface IAggregateVariation {
     difference?: string | undefined;
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -7922,6 +8050,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
     fileSize?: string | undefined;
     fileId?: string | undefined;
     documentDate?: string | undefined;
+    uploadDate?: string | undefined;
     otherReference?: string | undefined;
     disclosureStatus?: string | undefined;
     processRunId?: number;
@@ -7951,6 +8080,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
             this.fileSize = _data["fileSize"];
             this.fileId = _data["fileId"];
             this.documentDate = _data["documentDate"];
+            this.uploadDate = _data["uploadDate"];
             this.otherReference = _data["otherReference"];
             this.disclosureStatus = _data["disclosureStatus"];
             this.processRunId = _data["processRunId"];
@@ -7978,6 +8108,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
         data["fileSize"] = this.fileSize;
         data["fileId"] = this.fileId;
         data["documentDate"] = this.documentDate;
+        data["uploadDate"] = this.uploadDate;
         data["otherReference"] = this.otherReference;
         data["disclosureStatus"] = this.disclosureStatus;
         data["processRunId"] = this.processRunId;
@@ -7994,6 +8125,7 @@ export interface IInspectionReportFinderResult {
     fileSize?: string | undefined;
     fileId?: string | undefined;
     documentDate?: string | undefined;
+    uploadDate?: string | undefined;
     otherReference?: string | undefined;
     disclosureStatus?: string | undefined;
     processRunId?: number;
@@ -12080,6 +12212,7 @@ export enum ScrapeStatus {
     FileIdMissing = "FileIdMissing",
     InProgress = "InProgress",
     Error = "Error",
+    NotScraped = "NotScraped",
 }
 
 export class SendFileProcessSingleMessagesResponse implements ISendFileProcessSingleMessagesResponse {

@@ -161,6 +161,24 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
         }
     }
 
+    // Awaited here rather than left to FileProcessSingleService, which fires the same projection
+    // detached when it sees the run complete. That works in a Lambda, which lives on afterwards,
+    // but this is a console app: it returns from Main and the detached task dies with it, leaving
+    // the run's list rows empty. Projecting is idempotent, so doing it again costs nothing.
+    try
+    {
+        await outputService.UpdateProcessRunListProjectionAsync(processRun.ProcessRunId);
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Projected the list for ProcessRun {processRun.ProcessRunId}");
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelper.WriteLine(
+            $"WARNING - WRADI.ProcessFile.Cmd.WrInspectionReport - could not project the list for "
+            + $"ProcessRun {processRun.ProcessRunId}, run the RebuildWrInspectionReportSummaries tool: {ex.Message}");
+    }
+
     ConsoleHelper.WriteLine(
         $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Finished at {DateTime.Now:yyyy-MM-dd HH:mm:ss}. ProcessRunId: {processRun.ProcessRunId}");
 }

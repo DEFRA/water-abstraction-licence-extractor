@@ -45,7 +45,7 @@ public interface IDatabaseReadService
 
     Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
     
-    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType);
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
     

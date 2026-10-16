@@ -67,7 +67,7 @@ public class WrTemplateCombinedTextAndTablesTests
             CacheService);
         
         var config = new LookupConfiguration(
-            WrInspectionReportLabelConfiguration.GetLabels(),
+            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             await CompanyNameHelper.GetFirstNamesCsvFromFileAsync(),
             new LocalFileService(pdfFolder),
             CacheService,
@@ -80,7 +80,7 @@ public class WrTemplateCombinedTextAndTablesTests
             DateTime.Now,
             useLockExclusivity: false);
         
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
     
@@ -96,8 +96,7 @@ public class WrTemplateCombinedTextAndTablesTests
         
         var resultList = resultFull.Matches!;
 
-        // Assert
-        Assert.Equal(42, resultList.Count);
+        Assert.Equal(43, resultList.Count);
         
         var sourceOfSupply = resultFull.Matches!.First(m => m.LabelGroupName == WrInspectionReportFieldNames.SourceOfSupply);
         Assert.NotNull(sourceOfSupply);

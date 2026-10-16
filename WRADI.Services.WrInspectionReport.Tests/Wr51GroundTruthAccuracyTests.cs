@@ -6,6 +6,7 @@ using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence;
 using WALE.ProcessFile.Services.Cache;
@@ -59,18 +60,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         PropertyNameCaseInsensitive = true
     };
 
-    private static LookupConfiguration BuildLookupConfiguration(string pdfFolder)
+    /// The pipeline's own construction, so the scores describe what actually runs.
+    private static LookupConfiguration BuildLookupConfiguration(
+        string pdfFolder,
+        ITableExtractorService tableExtractorService)
     {
-        return new LookupConfiguration(
-            WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
-            [],
+        return WrInspectionReportLookupConfigurationFactory.Build(
             new LocalFileService(pdfFolder),
             CacheService,
             OutputService,
-            new NullLicenceNumberService(),
-            null,
-            null,
-            new DmsLookupService(),
+            tableExtractorService,
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
     }
@@ -469,6 +468,20 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
     }
 
+    /// <summary>
+    /// Satisfies PdfDataExtractorService's non-null requirement on the baseline run without
+    /// enabling any actual table matching. Mirrors the stub of the same name in
+    /// Wr51PdfPigNoOcrPdfTests, which exists for the same reason.
+    /// </summary>
+    private class EmptyTableExtractorService : ITableExtractorService
+    {
+        public string Name => "Empty";
+
+        public Task<IReadOnlyList<DocumentTable>> GetTablesAsync(
+            PdfDocument pdfDocument, Guid fileId, int processRunId) =>
+            Task.FromResult<IReadOnlyList<DocumentTable>>([]);
+    }
+
     private async Task RunHarnessAsync(
         ITableExtractorService? tableExtractorService,
         string outputSuffix,
@@ -489,9 +502,16 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         Assert.True(truthPaths.Length > 0, $"No .truth.json files found in {GroundTruthFolder}");
 
         var pdfFolder = TestConfig.PdfFolder;
-        var lookupConfiguration = BuildLookupConfiguration(pdfFolder);
-        lookupConfiguration.StructuredTableExtractorService = tableExtractorService!;
+        // An empty stub where a run deliberately has no overlay: the properties cannot express
+        // "no tables", and the parameter separately drives whether the overlay runs at all.
+        var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
+        var lookupConfiguration = BuildLookupConfiguration(pdfFolder, lookupTableExtractorService);
 
+        // Same extractor for both roles; PdfDataExtractorService throws if either is null and any
+        // active label needs it. The baseline passes null to mean "no table overlay", which these
+        // properties can't express, so they get an empty stub. The parameter itself stays null -
+        // it separately drives whether the orchestrator runs the overlay at all, so coalescing it
+        // there would silently turn the no-table baseline into a table-based run.
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
         var extractionFailures = new List<(string SourceFile, string Error)>();
@@ -714,5 +734,18 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
+
+        // A partial run is the dangerous case: recall is computed over whatever survived, so a
+        // bug that kills most of the golden set still reports a plausible percentage over a
+        // quietly smaller denominator, and only a total wipeout trips the assert above. Missing
+        // PDFs are environmental and excluded; anything else means the numbers aren't comparable.
+        var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
+
+        Assert.True(
+            scoredDocumentCount == expectedDocumentCount,
+            $"Only {scoredDocumentCount} of {expectedDocumentCount} available golden-set documents were scored - "
+            + "the accuracy numbers above are computed over an incomplete set and are not comparable to other runs. "
+            + $"Failures:{Environment.NewLine}"
+            + string.Join(Environment.NewLine, extractionFailures.Select(f => $"  {f.SourceFile}: {f.Error}")));
     }
 }

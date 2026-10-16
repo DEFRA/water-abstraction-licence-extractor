@@ -106,7 +106,7 @@ public interface ICacheService
 
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 
-    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
 

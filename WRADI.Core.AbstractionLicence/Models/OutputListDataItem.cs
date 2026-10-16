@@ -32,11 +32,21 @@ public class OutputListDataItem
     
     public string? issueDate { get; set; }
     
+    public string? naldOrigSignatureDate { get; set; }
+    
+    public string? naldSignatureDate { get; set; }
+    
+    public bool isIssueDateFlagged { get; set; }
+    
     public string? issuer { get; set; }
     
     public bool meansFound { get; set; }
     
     public string? status{ get; set; }
+    
+    public bool isLicenceNumberFlagged { get; set; }
+    
+    public string? licenceNumberFlagReason { get; set; }
     
     public string? thumbnailUrl { get; set; }
     

@@ -118,6 +118,11 @@ public class DatabaseAbstractionLicenceOutputService(
         return Task.CompletedTask;
     }
 
+    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        return await databaseReadService.GetLicenceNumberFileIdMapAsync();
+    }
+
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         // Fix up missing LicenceIds in LicenceSetList
@@ -261,7 +266,7 @@ public class DatabaseAbstractionLicenceOutputService(
         return databaseReadService.GetExportVerificationsAsync(skip, take);
     }
 
-    public async Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public async Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         return await databaseReadService.GetCurrentVerificationsBackupVersionAsync();
     }
@@ -317,6 +322,11 @@ public class DatabaseAbstractionLicenceOutputService(
     public Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
     {
         return databaseWriteService.DeleteLicenceSectionVerificationAsync(licenceSectionVerificationId);
+    }
+
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        return databaseWriteService.DeleteLicenceSectionVerificationsAsync(licenceSectionVerificationIds);
     }
 
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
@@ -525,6 +535,11 @@ public class DatabaseAbstractionLicenceOutputService(
     public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {
         return databaseReadService.GetLicenceFileIdsAsync(processRunId);
+    }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
+    {
+        return databaseReadService.GetLicenceNumberFlagReasonsAsync(processRunId);
     }
     
     public async Task<long> UpsertLicenceListItemAsync(

@@ -10,6 +10,8 @@ export type ProcessRunQuery = {
     ocrScan?: boolean;
     issueYear?: number;
     meansFound?: boolean;
+    isLicenceNumberFlagged?: boolean;
+    isIssueDateFlagged?: boolean;
     ShortLicenceSetId?: string;
     linkedLicencesType?: string;
     verificationType?: string;

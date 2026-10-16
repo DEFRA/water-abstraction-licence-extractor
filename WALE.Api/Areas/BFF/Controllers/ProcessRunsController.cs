@@ -1,3 +1,5 @@
+using WRADI.DocumentType.WrInspectionReport.Interfaces;
+using WALE.ProcessFile.Core.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
@@ -8,6 +10,7 @@ using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
 
@@ -22,6 +25,7 @@ public class ProcessRunsController(
     ILicenceListItemModelService licenceListItemModelService,
     ILicenceListRepository licenceListRepository,
     IUiProcessRunService uiProcessRunService,
+    IWrInspectionReportProjectionService wrInspectionReportProjectionService,
     IFileService fileService,
     IMemoryCache memoryCache) : Controller
 {
@@ -121,6 +125,12 @@ public class ProcessRunsController(
             processRunId,
             query);
 
+        var queryTake = query.Take;
+        var querySkip = query.Skip;
+
+        query.Skip = 0;
+        query.Take = int.MaxValue;
+        
         var licenceListItemsTask = licenceListRepository.GetLicencesListSearchAsync(
             processRunId,
             query);
@@ -128,17 +138,18 @@ public class ProcessRunsController(
         var issuersTask = GetDistinctListIssuers(processRunId);
         var licenceSetIdsTask = GetDistinctListLicenceSetIds(processRunId);
         var issueDatesTask = GetDistinctListDates(processRunId);
-
+        
         var outputList = licenceListItemModelService.ConvertToOutputListDataItems(
             await licenceListItemsTask);
 
         var processRun = new ProcessRunResponse
         {
             TotalRecords = await countTask,
-            Records = outputList.ToList(),
+            Records = outputList.Skip(querySkip).Take(queryTake).ToList(),
             Issuers = await issuersTask,
             LicenceSetIds = await licenceSetIdsTask,
-            IssueDates = await issueDatesTask
+            IssueDates = await issueDatesTask,
+            CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType)
         };
         
         var thumbnailPaths = await GetThumbnailPathsAsync(
@@ -161,7 +172,202 @@ public class ProcessRunsController(
 
         return Ok(processRun);
     }
+    
+    [HttpPost("{processRunId:int}")]
+    public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
+        [FromRoute] int processRunId,
+        [FromBody] string[] licenceNumbers)
+    {
+        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
+            processRunId,
+            licenceNumbers);
+        
+        return Ok(result);
+    }
 
+    [HttpGet("{processRunId:int}")]
+    public ActionResult UpdateProcessRunListProjectionAsync(
+        [FromRoute] int processRunId)
+    {
+        if (processRunId != 0)
+        {
+            _ = Task.Run((Func<Task?>)(async () =>
+            {
+                try
+                {
+                    await ProjectProcessRunListAsync(processRunId);
+                }
+                catch
+                {
+                    // intentionally swallowed
+                }
+            }));
+        }
+        
+        return Ok();
+    }
+
+    /// The route this replaced. Kept because the call is fire-and-forget on both sides: a Lambda
+    /// still running the previous build would get a 404 here and nothing anywhere would report it,
+    /// so the licence list would quietly stop updating. Removable once every caller is rolled.
+    [HttpGet("{processRunId:int}")]
+    public ActionResult UpdateLicenceListProcessRunAsync(
+        [FromRoute] int processRunId) =>
+        UpdateProcessRunListProjectionAsync(processRunId);
+
+    private async Task ProjectProcessRunListAsync(int processRunId)
+    {
+        var processRuns = await outputService.GetAllProcessRunsAsync();
+        var processRun = processRuns.SingleOrDefault(run => run.ProcessRunId == processRunId);
+
+        if (processRun == null)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(ProcessRunsController)} - no process run "
+                + $"{processRunId}, nothing projected");
+
+            return;
+        }
+
+        switch (processRun.DocumentType)
+        {
+            case DocumentTypes.WrInspectionReport:
+                var outcome = await wrInspectionReportProjectionService.ProjectProcessRunAsync(processRunId);
+
+                ConsoleHelper.WriteLine($"INFO - {nameof(ProcessRunsController)} - projected "
+                    + $"{outcome.Written} WR51 summary rows for process run {processRunId}"
+                    + (outcome.SkippedUndeserializable > 0
+                        ? $", {outcome.SkippedUndeserializable} skipped as undeserializable"
+                        : string.Empty));
+
+                break;
+
+            case DocumentTypes.AbstractionLicence:
+                await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);
+
+                break;
+
+            default:
+                ConsoleHelper.WriteLine($"WARNING - {nameof(ProcessRunsController)} - process run "
+                    + $"{processRunId} has document type '{processRun.DocumentType}', which has no "
+                    + "list projection; nothing rebuilt");
+
+                break;
+        }
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
+    {
+        var total = await abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+            processRunId,
+            new ProcessRunQuery());
+
+        return Ok(total);
+    }
+    
+     private static CumulativeFilterCounts GetCumulativeFilterCounts(
+        IReadOnlyList<OutputListDataItem> filteredData,
+        string? sectionVerification)
+    {
+        var data = filteredData.ToList();
+
+        return new CumulativeFilterCounts
+        {
+            LicenceNumbers = data.Count(x =>
+                !string.IsNullOrEmpty(x.licenceNumber)),
+
+            Purposes = data.Sum(x =>
+                x.purposes?.Length ?? 0),
+
+            Points = data.Sum(x =>
+                x.points?.Length ?? 0),
+
+            AbsLimits = data.Count(x =>
+                x.limitsCount != 0),
+
+            Aggregates = data.Count(x =>
+                x.aggregatesCount > 0),
+
+            Scans = data.Count(x =>
+                x.ocr),
+
+            IssueDates = data.Count(x =>
+                !string.IsNullOrEmpty(x.issueDate)),
+
+            Issuers = data.Count(x =>
+                !string.IsNullOrEmpty(x.issuer)),
+
+            MeansOfAbs = data.Count(x =>
+                x.meansFound),
+
+            LinkedLicences = data.Sum(x =>
+                x.linkedLicences?.Length ?? 0),
+
+            LicenceSectionVerifications = CountNonEmptyVerificationTypes(
+                data,
+                sectionVerification),
+            
+            LicenceSets = CountNonEmptyLicenceSets(
+                data),
+            
+            Status = data.Count,
+            
+            Ocr =  data.Count(x =>
+                 x.ocr)
+        };
+    }
+    
+    
+    private static int CountNonEmptyLicenceSets(
+        IEnumerable<OutputListDataItem> data)
+    {
+        return data.Count(item =>
+            item.licenceSets != null &&
+            item.licenceSets.Length > 1);
+    }
+    
+    private static int CountNonEmptyVerificationTypes(
+        IEnumerable<OutputListDataItem> data,
+        string? verificationType)
+    {
+        var count = 0;
+
+        foreach (var item in data)
+        {
+            if (item.licenceSectionVerifications == null ||
+                item.licenceSectionVerifications.Length == 0)
+            {
+                continue;
+            }
+
+            foreach (var section in item.licenceSectionVerifications)
+            {
+                var sectionItems = section.LicenceSectionItems
+                                   ?? [];
+
+                if (string.IsNullOrEmpty(verificationType))
+                {
+                    count += sectionItems.Length;
+                }
+                else if (verificationType.Equals(
+                             "Flagged",
+                             StringComparison.OrdinalIgnoreCase))
+                {
+                    count += sectionItems.Count(x => x.IsFlagged);
+                }
+                else
+                {
+                    count += sectionItems.Count(x =>
+                        x.VerificationTypes.Contains(
+                            verificationType,
+                            StringComparer.OrdinalIgnoreCase));
+                }
+            }
+        }
+
+        return count;
+    }
+    
     private async Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(List<Guid> fileIds)
     {
         var templateUrl = "thumbnail_{0}.jpg";
@@ -225,36 +431,6 @@ public class ProcessRunsController(
             .ToList();
 
         return uniqueFileIds;
-    }
-    
-    [HttpPost("{processRunId:int}")]
-    public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
-        [FromRoute] int processRunId,
-        [FromBody] string[] licenceNumbers)
-    {
-        var result = await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(
-            processRunId,
-            licenceNumbers);
-        
-        return Ok(result);
-    }
-
-    [HttpGet("{processRunId:int}")]
-    public async Task<ActionResult> UpdateLicenceListProcessRunAsync(
-        [FromRoute] int processRunId)
-    {
-        var result = await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);  
-        return Ok(result);
-    }
-
-    [HttpGet]
-    public async Task<ActionResult<int>> GetTotalLicenceCountAsync([FromQuery] int processRunId)
-    {
-        var total = await abstractionLicenceOutputService.GetTotalLicenceCountAsync(
-            processRunId,
-            new ProcessRunQuery());
-
-        return Ok(total);
     }
 
     private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)

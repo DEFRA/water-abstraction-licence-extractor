@@ -32,6 +32,12 @@ public sealed class LicenceListItem
 
     public short? IssueYear { get; set; }
 
+    public DateOnly? NaldOrigSignatureDate { get; set; }
+
+    public DateOnly? NaldSignatureDate { get; set; }
+
+    public bool IsIssueDateFlagged { get; set; }
+
     public string? Issuer { get; set; }
 
     public bool MeansFound { get; set; }
@@ -55,6 +61,10 @@ public sealed class LicenceListItem
     public int VerificationItemsCount { get; set; }
 
     public bool HasVerifications { get; set; }
+
+    public bool IsLicenceNumberFlagged { get; set; }
+
+    public string? LicenceNumberFlagReason { get; set; }
 
     public string? SearchText { get; set; }
 

@@ -71,9 +71,14 @@ public class LicenceListItemModelService
             AggregateIds = source.aggregateIds ?? [],
             Ocr = source.ocr,
             IssueDate = ParseDateOnly(source.issueDate),
+            NaldOrigSignatureDate = ParseDateOnly(source.naldOrigSignatureDate),
+            NaldSignatureDate = ParseDateOnly(source.naldSignatureDate),
+            IsIssueDateFlagged = source.isIssueDateFlagged,
             Issuer = source.issuer,
             MeansFound = source.meansFound,
             Status = source.status,
+            IsLicenceNumberFlagged = source.isLicenceNumberFlagged,
+            LicenceNumberFlagReason = source.licenceNumberFlagReason,
 
             LinkedLicences = source.linkedLicences?
                 .Select(ToUpsertLinkedLicence)
@@ -114,9 +119,14 @@ public class LicenceListItemModelService
             naldHasAggregateCondition = licence.NaldAggregate,
             ocr = licence.Ocr,
             issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
+            naldOrigSignatureDate = licence.NaldOrigSignatureDate?.ToString("yyyy-MM-dd"),
+            naldSignatureDate = licence.NaldSignatureDate?.ToString("yyyy-MM-dd"),
+            isIssueDateFlagged = licence.IsIssueDateFlagged,
             issuer = licence.Issuer,
             meansFound = licence.MeansFound,
             status = licence.Status,
+            isLicenceNumberFlagged = licence.IsLicenceNumberFlagged,
+            licenceNumberFlagReason = licence.LicenceNumberFlagReason,
 
             linkedLicences = source.LinkedLicences
                 .Select(ToOutputLinkedLicence)

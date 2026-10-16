@@ -54,6 +54,13 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
         const [originalItem, setOriginalItem] = useState<Aggregate | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
+        const [frozenOrder, setFrozenOrder] = useState<number[] | null>(null);
+
+        const getSortedIndices = () => aggregates
+            .map((_, i) => i)
+            .sort((a, b) =>
+                compareAlphanumeric(aggregates[a].documentIdentifier, aggregates[b].documentIdentifier)
+                || compareAlphanumeric(aggregateIds[a], aggregateIds[b]));
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
@@ -173,6 +180,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 limits: [new AbstractionLimit({points: [], purposes: []})]
             });
             const newList = [...aggregates, newAggregate];
+            setFrozenOrder([...getSortedIndices(), newList.length - 1]);
             setAggregates(newList);
             setEditingIndex(newList.length - 1);
             setIsAddingNew(true);
@@ -193,7 +201,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 setEditingIndex(null);
                 setIsAddingNew(false);
                 setOriginalItem(null);
-            } else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(null);
+            } else {
+                if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(prev => prev && prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+            }
         };
 
         const handleDiscard = () => {
@@ -211,12 +223,22 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 setEditingIndex(null);
             }
             setIsAddingNew(false);
+            setFrozenOrder(null);
         };
 
         const linkedLicenceOptions = (currentLicence?.linkedLicences ?? [])
             .filter(ll => hasAnyOutgoingSections(ll.containedIn))
             .map(ll => ll.licenceNumber)
             .filter((n): n is string => !!n);
+
+        // Aggregate points/purposes carry only ids; descriptions live on the licence's top-level lists.
+        const sourceLicence = scrapedView ? licence : currentLicence;
+        const pointDescriptions = new Map((sourceLicence?.points ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+        const purposeDescriptions = new Map((sourceLicence?.purposes ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
 
         return (
             <div className="aggregates-container" style={{padding: '8px'}}>
@@ -260,9 +282,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                             <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && aggregates
-                        .map((_, i) => i)
-                        .sort((a, b) => compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
+                    {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                         .map((index) => {
                             const aggregate = aggregates[index];
                             const itemId = aggregateIds[index];
@@ -272,6 +292,8 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     aggregate={aggregate}
                                     itemId={itemId}
                                     linkedLicenceOptions={linkedLicenceOptions}
+                                    pointDescriptions={pointDescriptions}
+                                    purposeDescriptions={purposeDescriptions}
                                     isEditing={editingIndex === index && !isWaitingForVerification}
                                     isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                     onUpdate={(updated) => handleUpdateAggregate(index, updated)}
@@ -288,6 +310,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                             const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
                                             onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
                                         } else {
+                                            setFrozenOrder(getSortedIndices());
                                             setEditingIndex(index);
                                             setIsAddingNew(false);
                                             setOriginalItem(Aggregate.fromJS(aggregate));

@@ -45,7 +45,15 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
         const [originalItem, setOriginalItem] = useState<LinkedLicence | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
+        const [frozenOrder, setFrozenOrder] = useState<number[] | null>(null);
         const naldLookupRequestRef = useRef(0);
+
+        const getSortedIndices = () => linkedLicences
+            .map((_, i) => i)
+            .sort((a, b) => compareAlphanumeric(
+                linkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
+                linkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
+            ));
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
@@ -166,6 +174,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 ]
             });
             const newList = [...linkedLicences, newLicence];
+            setFrozenOrder([...getSortedIndices(), newList.length - 1]);
             setLinkedLicences(newList);
             setEditingIndex(newList.length - 1);
             setIsAddingNew(true);
@@ -186,7 +195,11 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setEditingIndex(null);
                 setIsAddingNew(false);
                 setOriginalItem(null);
-            } else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(null);
+            } else {
+                if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(prev => prev && prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+            }
         };
 
         const handleDiscard = () => {
@@ -204,6 +217,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setEditingIndex(null);
             }
             setIsAddingNew(false);
+            setFrozenOrder(null);
         };
 
         return (
@@ -286,12 +300,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             <LicenceSectionVerificationInfo verification={noneOutgoingVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && linkedLicences
-                        .map((_, i) => i)
-                        .sort((a, b) => compareAlphanumeric(
-                            linkedLicences[a].licenceNumber || linkedLicences[a].permitNumber,
-                            linkedLicences[b].licenceNumber || linkedLicences[b].permitNumber
-                        ))
+                    {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                         .map((index) => {
                             const ll = linkedLicences[index];
                             return (
@@ -318,6 +327,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                             setIsWaitingForVerification(true);
                                             onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', (ll.licenceNumber || ll.permitNumber || `item-${index}`));
                                         } else {
+                                            setFrozenOrder(getSortedIndices());
                                             setEditingIndex(index);
                                             setIsAddingNew(false);
                                             setOriginalItem(LinkedLicence.fromJS(ll));

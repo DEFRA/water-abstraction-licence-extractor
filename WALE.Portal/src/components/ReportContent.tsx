@@ -7,6 +7,7 @@ import {getImageUrl, getPdfUrl} from "../utils/images.ts";
 import {waleApiClient} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
+import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 
 interface ReportContentProps {
     fileId: string;
@@ -142,6 +143,7 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
                                     Licence Number {reportData2.licenceNumber.value}
                                 </span>
+                                {outputListDataItem?.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={outputListDataItem.licenceNumberFlagReason}/>}
                             </div>
                         )}
                         {/* Tab Navigation */}

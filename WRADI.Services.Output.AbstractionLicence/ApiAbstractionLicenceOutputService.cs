@@ -99,6 +99,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
@@ -402,7 +407,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         throw new NotImplementedException();
     }
@@ -448,6 +453,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";
@@ -475,6 +485,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     }
 
     public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

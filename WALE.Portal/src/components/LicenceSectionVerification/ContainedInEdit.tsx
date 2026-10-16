@@ -94,7 +94,7 @@ export const ContainedInEdit = ({
                                 <div style={{flex: 1, minWidth: 0}}>
                                     <label style={labelStyle}>Link Reason:</label>
                                     <select
-                                        value={section.linkReason || ''}
+                                        value={section.linkReason || 'N/A'}
                                         onChange={(e) => onChange(idx, 'linkReason', e.target.value)}
                                         style={{
                                             ...inputStyle,

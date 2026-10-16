@@ -24,6 +24,7 @@ public class DatabaseInspectionReportFinderCacheService(INpgsqlDataSourceProvide
                                file_size,
                                file_id,
                                document_date,
+                               upload_date,
                                other_reference,
                                disclosure_status,
                                process_run_id
@@ -69,6 +70,7 @@ public class DatabaseInspectionReportFinderCacheService(INpgsqlDataSourceProvide
                                     file_size,
                                     file_id,
                                     document_date,
+                                    upload_date,
                                     other_reference,
                                     disclosure_status,
                                     process_run_id)
@@ -81,6 +83,7 @@ public class DatabaseInspectionReportFinderCacheService(INpgsqlDataSourceProvide
                                     @FileSize,
                                     @FileId,
                                     @DocumentDate,
+                                    @UploadDate,
                                     @OtherReference,
                                     @DisclosureStatus,
                                     @ProcessRunId);
@@ -100,6 +103,7 @@ public class DatabaseInspectionReportFinderCacheService(INpgsqlDataSourceProvide
                 result.FileSize,
                 result.FileId,
                 result.DocumentDate,
+                result.UploadDate,
                 result.OtherReference,
                 result.DisclosureStatus,
                 result.ProcessRunId

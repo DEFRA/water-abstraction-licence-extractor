@@ -29,6 +29,7 @@ public sealed class WrFluentRule
     private int _leewayBefore;
     private List<string>? _ignoreBlockIfContains;
     private List<string>? _excludeNextLineIfFirstColumnStartsWith;
+    private List<string>? _excludeColumnStartingWith;
     private LayoutExtractor _layoutExtractor = LayoutExtractor.Default;
     private LayoutExtractorTableLookupType _layoutExtractorTableBasedExtractorType = LayoutExtractorTableLookupType.Default;
     private LayoutExtractorTableShape _layoutExtractorTableShape = LayoutExtractorTableShape.Default;
@@ -201,6 +202,12 @@ public sealed class WrFluentRule
         return this;
     }
 
+    public WrFluentRule SkipColumnWhenStartsWith(params string[] terms)
+    {
+        _excludeColumnStartingWith = terms.ToList();
+        return this;
+    }
+
     // For the After() shape only - a single same-line bound.
     public WrFluentRule EndsAt(string text)
     {
@@ -294,6 +301,7 @@ public sealed class WrFluentRule
         RequireCompleteDateToClaimGroup = _requireCompleteDateToClaimGroup,
         IgnoreBlockIfContains = _ignoreBlockIfContains,
         LimitToExcludeNextLineIfFirstColumnStartsWith = _excludeNextLineIfFirstColumnStartsWith,
+        LimitToExcludeColumnStartingWith = _excludeColumnStartingWith,
         BoundSameLineWalkByOtherLabelPositions = _boundSameLineWalkByOtherLabelPositions,
         LayoutExtractor = _layoutExtractor,
         LayoutExtractorTableLookupType = _layoutExtractorTableBasedExtractorType,

@@ -451,6 +451,31 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
+    public async Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           WITH deleted AS (
+                               UPDATE licence_section_verification
+                               SET deleted_date_time_utc = @DeletedDateTimeUtc
+                               WHERE licence_section_verification_id = ANY(@LicenceSectionVerificationIds)
+                                 AND deleted_date_time_utc IS NULL
+                               RETURNING licence_section_verification_id
+                           )
+                           SELECT COUNT(*)::int FROM deleted
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSectionVerificationIds = licenceSectionVerificationIds.ToArray(),
+                DeletedDateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task<long> UpsertLicenceListItemAsync(
         UpsertLicenceListItem item,
         CancellationToken cancellationToken = default)
@@ -888,6 +913,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 ocr,
                 issue_date,
                 issue_year,
+                nald_orig_signature_date,
+                nald_signature_date,
+                is_issue_date_flagged,
                 issuer,
                 means_found,
                 status,
@@ -900,6 +928,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_sections_count,
                 verification_items_count,
                 has_verifications,
+                is_licence_number_flagged,
+                licence_number_flag_reason,
                 search_text,
                 source_data,
                 created_date_time_utc,
@@ -921,6 +951,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @Ocr,
                 @IssueDate,
                 @IssueYear,
+                @NaldOrigSignatureDate,
+                @NaldSignatureDate,
+                @IsIssueDateFlagged,
                 @Issuer,
                 @MeansFound,
                 @Status,
@@ -933,6 +966,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @VerificationSectionsCount,
                 @VerificationItemsCount,
                 @HasVerifications,
+                @IsLicenceNumberFlagged,
+                @LicenceNumberFlagReason,
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
@@ -956,6 +991,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 ocr = EXCLUDED.ocr,
                 issue_date = EXCLUDED.issue_date,
                 issue_year = EXCLUDED.issue_year,
+                nald_orig_signature_date = EXCLUDED.nald_orig_signature_date,
+                nald_signature_date = EXCLUDED.nald_signature_date,
+                is_issue_date_flagged = EXCLUDED.is_issue_date_flagged,
                 issuer = EXCLUDED.issuer,
                 means_found = EXCLUDED.means_found,
                 status = EXCLUDED.status,
@@ -973,6 +1011,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.verification_items_count,
                 has_verifications =
                     EXCLUDED.has_verifications,
+                is_licence_number_flagged =
+                    EXCLUDED.is_licence_number_flagged,
+                licence_number_flag_reason =
+                    EXCLUDED.licence_number_flag_reason,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
                 updated_date_time_utc = NOW()
@@ -995,6 +1037,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.Ocr,
             IssueDate = ToDateTime(item.IssueDate),
             IssueYear = item.IssueDate?.Year,
+            NaldOrigSignatureDate = ToDateTime(item.NaldOrigSignatureDate),
+            NaldSignatureDate = ToDateTime(item.NaldSignatureDate),
+            item.IsIssueDateFlagged,
             item.Issuer,
             item.MeansFound,
             item.Status,
@@ -1007,6 +1052,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             summary.VerificationSectionsCount,
             summary.VerificationItemsCount,
             summary.HasVerifications,
+            item.IsLicenceNumberFlagged,
+            item.LicenceNumberFlagReason,
             summary.SearchText,
             SourceData = NullIfWhiteSpace(item.SourceData)
         };

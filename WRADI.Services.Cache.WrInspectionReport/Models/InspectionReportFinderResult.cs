@@ -21,6 +21,8 @@ public class InspectionReportFinderResult
 
     public string? DocumentDate { get; set; }
 
+    public string? UploadDate { get; set; }
+
     public string? OtherReference { get; set; }
 
     public string? DisclosureStatus { get; set; }

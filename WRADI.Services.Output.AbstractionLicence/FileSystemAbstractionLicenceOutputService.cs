@@ -64,7 +64,12 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return File.WriteAllTextAsync(jsListFilePath, "var data = " +
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
-    
+
+    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
@@ -161,7 +166,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<int> GetCurrentVerificationsBackupVersionAsync()
+    public Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
     {
         throw new NotImplementedException();
     }
@@ -207,6 +212,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return Task.FromResult(0);
     }
 
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        return Task.FromResult(0);
+    }
+
     public Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         throw new NotImplementedException();
@@ -223,6 +233,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
     }
 
     public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

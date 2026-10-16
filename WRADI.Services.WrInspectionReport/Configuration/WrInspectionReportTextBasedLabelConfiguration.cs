@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -7,6 +8,14 @@ namespace WRADI.DocumentType.WrInspectionReport.Configuration;
 
 public static class WrInspectionReportTextBasedLabelConfiguration
 {
+    public static void ConfigurationPropertiesToSet(LookupConfiguration lookupConfiguration)
+    {
+        lookupConfiguration.LineHeight = 6;
+        lookupConfiguration.MinimumRowsForDigital = 30;
+        lookupConfiguration.HorizontalGapBetweenColumns = 15;
+        lookupConfiguration.InferMissingColumns = true;
+    }
+
     public static List<(string LabelGroupName, List<LabelToMatch> Labels)> GetLabels() =>
     [
         RuleSourceOfSupply(),
@@ -288,7 +297,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                     new("(or Application No. or GIC No)"),
                     new("(or Application No. or GIC No.")
                 ])
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build() // Short form ("Licence No." / "Licence No:")
         ]);
 
@@ -305,7 +314,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 // Guards a document where "Met with" is already complete but the next row's
                 // first column happens to be "Inspecting Officer: ..." at the same left margin.
                 .SkipNextLineWhenStartsWith("Inspecting Officer")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleInspectingOfficer() =>
@@ -313,7 +322,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .After("Inspecting Officer")
                 .Named(WrInspectionReportFieldNames.InspectingOfficer)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleSiteAddress() =>
@@ -337,7 +346,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .AlsoEndsAt(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "Email")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()
         ]);
 
@@ -350,7 +359,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .AlsoStartsWith(
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(),
             // Plain "Tel No" is a genuinely distinct label wording, not just an OCR-spaced
             // variant of "Telephone No" (see AlsoStartsWith above), so it needs its own
@@ -360,7 +369,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Tel No", "Site address")
                 .Named(WrInspectionReportFieldNames.TelephoneNumber)
                 .NextLines(0)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()
         ]);
 
@@ -370,7 +379,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Position", "Inspection Date")
                 .Named(WrInspectionReportFieldNames.Position)
                 .NextLines(1)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleTime() =>
@@ -378,8 +387,11 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .After("Time")
                 .Named(WrInspectionReportFieldNames.Time)
+                // Some forms put the labels on one row and the values on the row beneath, where a
+                // same-line match finds nothing at all.
+                .NextLines(1)
                 .AlsoStartsWithLoose("Time:")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()
         ]);
 
@@ -393,24 +405,24 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                     "Telephone No", "Email",
                     "T e l e p h o n e N o", "T e l e p h o n e No", "T e le p h o n e No",
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .After("Name / address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Water Company template
             WrFluentRule
                 .After("Name & address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Water Company template
             WrFluentRule
                 .After("Permit holder name and address")
                 .Named(WrInspectionReportFieldNames.NameAndAddress)
                 .NextLines(1)
                 .Remove([new("Telephone No:")])
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Permit holder template
         ]);
 
@@ -429,7 +441,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Meter Name", "Meter Make")
                 .Named(WrInspectionReportFieldNames.MeterName)
                 .NextLines(MeterTableNextLines)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleMeterMake() =>
@@ -462,21 +474,21 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .RequireTextToClaimGroup()
                 .AlsoStartsWithLoose("Serial number")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Meter Serial Number", "Meter Asset Number")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // T6 template
             WrFluentRule
                 .Between("Serial number", "Units")
                 .Named(WrInspectionReportFieldNames.SerialNumber)
                 .NextLines(MeterTableNextLines)
                 .RequireTextToClaimGroup()
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Baseline two-column table
         ]);
 
@@ -486,17 +498,17 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Meter Asset Number", "Meter Reading")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
                 .NextLines(MeterTableNextLines)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // T6 template
             WrFluentRule
                 .After("Asset no:")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build(), // Existing template
             WrFluentRule
                 .After("Asset number:")
                 .Named(WrInspectionReportFieldNames.MeterAssetNumber)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build() // Existing template
         ]);
 
@@ -537,7 +549,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Flow Rate", "Calibration")
                 .Named(WrInspectionReportFieldNames.FlowRate)
                 .NextLines(MeterTableNextLines)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]); // T6 template only
 
     private static (string, List<LabelToMatch>) RuleUnits() =>
@@ -564,7 +576,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
             WrFluentRule
                 .After("Other:")
                 .Named(WrInspectionReportFieldNames.Other)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleCertificatesOfRecords() =>
@@ -576,7 +588,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 // label, wrapped mid-phrase by the same-line column split) sits in the very next
                 // column and was being accepted as this field's own value.
                 .EndsAt("Date of certificate")
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     private static (string, List<LabelToMatch>) RuleDateOfCertification() =>
@@ -600,20 +612,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .NextLines(1)
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")]).EndsAt("Conformance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrFluentRule
                 .Between("Calibration", "Conformance").Named(WrInspectionReportFieldNames.Calibration).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Calibration", "Verification").Named(WrInspectionReportFieldNames.Calibration).NextLines(1).RequireTextToClaimGroup()
                 .AlsoEndsAt("Conformance")
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms, "Certificate"])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build() // T6 / Grid template
         ]);
 
@@ -646,7 +658,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Flow verification")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrFluentRule
                 .Between("Conformance", "Flow verification")
@@ -654,7 +666,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Conformance", "Flow verification")
@@ -663,7 +675,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -676,20 +688,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Meter verification")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrFluentRule
                 .Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Flow verification", "Meter verification").Named(WrInspectionReportFieldNames.FlowVerification).NextLines(1)
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -701,20 +713,20 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .RequireTextToClaimGroup()
                 .Possibilities([new("Yes"), new("No")])
                 .EndsAt("Maintenance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // New template
             WrFluentRule
                 .Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).WholeLine()
                 .RequireTextToClaimGroup()
                 .Possibilities(CheckboxMarkPossibilities)
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build(), // Existing template
             WrFluentRule
                 .Between("Meter verification", "record").Named(WrInspectionReportFieldNames.MeterVerification).NextLines(1)
                 .RequireTextToClaimGroup()
                 .IgnoreIfContains([..VerificationGridSiblingLeakTerms])
                 .SkipNextLineWhenStartsWith("Maintenance")
-                .FromText()
+                .FromLetterAndTableGrid()
                 .Build() // Grid template
         ]);
 
@@ -839,6 +851,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Named(WrInspectionReportFieldNames.InspectionDate)
                 .NextLines(2)
                 .AlsoEndsAt("Time:", "Inspecting Officer")
+                .SkipColumnWhenStartsWith("Time:", "Inspecting Officer")
                 .RequireTextToClaimGroup()
                 .RequireCompleteDateToClaimGroup()
                 .FromText()
@@ -868,7 +881,7 @@ public static class WrInspectionReportTextBasedLabelConfiguration
                 .Between("Email", "Position:")
                 .Named(WrInspectionReportFieldNames.Email)
                 .NextLines(1)
-                .FromText()
+                .FromLetterAndTableFreeText()
                 .Build()]);
 
     // A pure presence check, not a value extraction - used for the WrTemplateType marker

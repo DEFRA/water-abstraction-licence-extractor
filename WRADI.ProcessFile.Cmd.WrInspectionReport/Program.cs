@@ -22,6 +22,9 @@ using WRADI.Services.ProcessFile.WrInspectionReport;
 //   "s3"       - every wr51__-prefixed key already sitting in the shared ingress bucket, so this
 //                only ever processes files confirmed to actually exist, at the cost of skipping
 //                anything the finder knows about but nobody's uploaded yet.
+//
+// An extra integer arg (e.g. "s3 51") resumes that ProcessRun instead of starting a new one,
+// filtering out candidates that already have a MatchesResult for it.
 
 var configuration = new ConfigurationBuilder()
     .AddUserSecrets<Program>(optional: true)
@@ -37,6 +40,9 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
     var startDateTimeUtc = DateTime.UtcNow;
 
     var useS3Source = programArgs.Any(a => string.Equals(a, "s3", StringComparison.OrdinalIgnoreCase));
+    var resumeProcessRunId = programArgs
+        .Select(a => int.TryParse(a, out var id) ? (int?)id : null)
+        .FirstOrDefault(id => id.HasValue);
 
     var serviceProvider = new ServiceCollection()
         .AddWrInspectionReportFileProcessServices(configurationItem)
@@ -53,9 +59,16 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
         ? await GetCandidatesFromS3Async(serviceProvider)
         : await GetCandidatesFromFinderAsync(serviceProvider);
 
-    var description = useS3Source
-        ? "Local batch run from S3 wr51_ prefix"
-        : "Local batch run from inspection_report_finder_result";
+    var settingsForDescription = serviceProvider.GetRequiredService<FileProcessAppSettings>();
+
+    var description = (useS3Source
+            ? "Local batch run from S3 wr51_ prefix"
+            : "Local batch run from inspection_report_finder_result")
+        + (!useS3Source && WrInspectionReportCandidateSelector.HasUploadWindow(
+            settingsForDescription.UploadedFrom, settingsForDescription.UploadedTo)
+            ? ", uploaded " + WrInspectionReportCandidateSelector.DescribeUploadWindow(
+                settingsForDescription.UploadedFrom, settingsForDescription.UploadedTo)
+            : string.Empty);
 
     if (candidates.Count == 0)
     {
@@ -63,18 +76,68 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
         return;
     }
 
-    var processRun = await outputService.StartProcessRunAsync(
-        new ProcessRun
-        {
-            Description = description,
-            StartDateTimeUtc = startDateTimeUtc,
-            NumberOfFiles = candidates.Count,
-            Status = "Batch",
-            DocumentType = "WrInspectionReport"
-        });
+    ProcessRun processRun;
 
-    ConsoleHelper.WriteLine(
-        $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Created ProcessRun {processRun.ProcessRunId} for {candidates.Count} files");
+    if (resumeProcessRunId.HasValue)
+    {
+        var existingRun = (await outputService.GetAllProcessRunsAsync())
+            .FirstOrDefault(pr => pr.ProcessRunId == resumeProcessRunId.Value);
+
+        if (existingRun == null)
+        {
+            ConsoleHelper.WriteLine(
+                $"ERROR - WRADI.ProcessFile.Cmd.WrInspectionReport - ProcessRunId {resumeProcessRunId.Value} not found, cannot resume");
+            return;
+        }
+
+        processRun = existingRun;
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Resuming ProcessRun {processRun.ProcessRunId}, checking {candidates.Count} candidates for ones already done...");
+
+        var remainingCandidates = new List<(string FilePath, string PermitNumber, Guid FileId, string? DmsPath)>();
+
+        foreach (var candidate in candidates)
+        {
+            var existingResult = await outputService.GetMatchesResultAsync(candidate.FileId, processRun.ProcessRunId);
+
+            // "Done" means a real result, not just a row - an Error row (e.g. from a bug since
+            // fixed) should be retried, not treated as complete.
+            if (existingResult == null || string.Equals(existingResult.Status, "Error", StringComparison.OrdinalIgnoreCase))
+            {
+                remainingCandidates.Add(candidate);
+            }
+        }
+
+        candidates = remainingCandidates;
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - {candidates.Count} candidates remaining to process");
+
+        if (candidates.Count == 0)
+        {
+            ConsoleHelper.WriteLine("INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Nothing left to do, ProcessRun already complete");
+            return;
+        }
+    }
+    else
+    {
+        processRun = await outputService.StartProcessRunAsync(
+            new ProcessRun
+            {
+                Description = description,
+                StartDateTimeUtc = startDateTimeUtc,
+                NumberOfFiles = candidates.Count,
+                Status = "Batch",
+                DocumentType = "WrInspectionReport"
+            });
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Created ProcessRun "
+            + $"{processRun.ProcessRunId} for {candidates.Count} files, uploaded "
+            + WrInspectionReportCandidateSelector.DescribeUploadWindow(
+                settingsForDescription.UploadedFrom, settingsForDescription.UploadedTo));
+    }
 
     var fileNumber = 0;
 
@@ -108,6 +171,24 @@ async Task ProgramAsync(IConfiguration configurationItem, string[] programArgs)
         }
     }
 
+    // Awaited here rather than left to FileProcessSingleService, which fires the same projection
+    // detached when it sees the run complete. That works in a Lambda, which lives on afterwards,
+    // but this is a console app: it returns from Main and the detached task dies with it, leaving
+    // the run's list rows empty. Projecting is idempotent, so doing it again costs nothing.
+    try
+    {
+        await outputService.UpdateProcessRunListProjectionAsync(processRun.ProcessRunId);
+
+        ConsoleHelper.WriteLine(
+            $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Projected the list for ProcessRun {processRun.ProcessRunId}");
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelper.WriteLine(
+            $"WARNING - WRADI.ProcessFile.Cmd.WrInspectionReport - could not project the list for "
+            + $"ProcessRun {processRun.ProcessRunId}, run the RebuildWrInspectionReportSummaries tool: {ex.Message}");
+    }
+
     ConsoleHelper.WriteLine(
         $"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - Finished at {DateTime.Now:yyyy-MM-dd HH:mm:ss}. ProcessRunId: {processRun.ProcessRunId}");
 }
@@ -117,14 +198,45 @@ async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsP
 {
     var inspectionReportFinderCacheService = serviceProvider.GetRequiredService<IInspectionReportFinderCacheService>();
 
-    return (await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue))
-        .Where(candidate =>
-            !string.IsNullOrEmpty(candidate.PermitNumber)
-            && !string.IsNullOrEmpty(candidate.FileId)
-            && Guid.TryParse(candidate.FileId, out _))
+    var settings = serviceProvider.GetRequiredService<FileProcessAppSettings>();
+
+    var candidates = (await inspectionReportFinderCacheService
+            .GetInspectionReportFinderResultsAsync(0, int.MaxValue))
+        .Where(WrInspectionReportCandidateSelector.IsSendable)
+        .ToList();
+
+    if (WrInspectionReportCandidateSelector.HasUploadWindow(settings.UploadedFrom, settings.UploadedTo))
+    {
+        var window = WrInspectionReportCandidateSelector.DescribeUploadWindow(
+            settings.UploadedFrom, settings.UploadedTo);
+
+        var withinWindow = candidates
+            .Where(candidate => WrInspectionReportCandidateSelector.IsWithinUploadWindow(
+                candidate, settings.UploadedFrom, settings.UploadedTo))
+            .ToList();
+
+        ConsoleHelper.WriteLine($"INFO - WRADI.ProcessFile.Cmd.WrInspectionReport - "
+            + $"{withinWindow.Count} of {candidates.Count} candidates uploaded {window}");
+
+        var undated = WrInspectionReportCandidateSelector.CountWithoutUsableUploadDate(candidates);
+
+        if (undated > 0)
+        {
+            ConsoleHelper.WriteLine($"WARNING - WRADI.ProcessFile.Cmd.WrInspectionReport - "
+                + $"{undated} candidates excluded for having no usable upload date");
+        }
+
+        candidates = withinWindow;
+    }
+
+    return candidates
         .Select(candidate =>
         {
-            var destinationFileName = $"{candidate.PermitNumber!.ToLower()}__{candidate.FileId!.ToLower()}.pdf";
+            // Prefixed, as WrInspectionReportIngressFile describes. Without it this source asked
+            // for keys that do not exist, leaving the "s3" source below the only one that worked.
+            var destinationFileName = WrInspectionReportIngressFile.BuildFileName(
+                candidate.PermitNumber!,
+                candidate.FileId!);
 
             return (
                 FilePath: destinationFileName,
@@ -138,7 +250,7 @@ async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsP
 async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsPath)>> GetCandidatesFromS3Async(
     IServiceProvider serviceProvider)
 {
-    const string wr51Prefix = "wr51__";
+    const string wr51Prefix = WrInspectionReportIngressFile.Prefix;
 
     var fileService = serviceProvider.GetRequiredService<IFileService>();
     var allFiles = await fileService.GetAllFilesAsync();

@@ -3,6 +3,11 @@ import { LicenceSectionVerification, OutputListDataItem } from '../../api/genera
 import { waleApiClient } from '../../api/apiClient';
 import { CollapsibleItem } from './CollapsibleItem';
 
+// This ensures that all known properties are included in the JSON string.
+const stringifyVerificationValue = (data: any): string | undefined => data === undefined
+    ? undefined
+    : JSON.stringify(data, (_key, value) => value === undefined ? null : value);
+
 /**
  * Interface that all licence section body components must implement.
  * This allows the parent LicenceSection to control view/edit mode and get edited data.
@@ -150,9 +155,9 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             licenceFileId: licenceFileId,
                             processRunId: processRunId,
                             licenceSectionName: title,
-                            licenceSectionScrapedValue: req.scrapedData ? JSON.stringify(req.scrapedData) : undefined,
-                            licenceSectionSnapshotValue: req.verificationType === 'Added' ? undefined : (req.snapshotData ? JSON.stringify(req.snapshotData) : undefined),
-                            licenceSectionOverrideValue: (req.verificationType === 'Edited' || req.verificationType === 'Added') ? JSON.stringify(req.data) : undefined,
+                            licenceSectionScrapedValue: req.scrapedData ? stringifyVerificationValue(req.scrapedData) : undefined,
+                            licenceSectionSnapshotValue: req.verificationType === 'Added' ? undefined : (req.snapshotData ? stringifyVerificationValue(req.snapshotData) : undefined),
+                            licenceSectionOverrideValue: (req.verificationType === 'Edited' || req.verificationType === 'Added') ? stringifyVerificationValue(req.data) : undefined,
                             verificationType: req.verificationType,
                             licenceSectionItemId: req.itemId,
                             notes: verificationNotes
@@ -165,9 +170,9 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                         licenceFileId: licenceFileId,
                         processRunId: processRunId,
                         licenceSectionName: title,
-                        licenceSectionScrapedValue: scrapedData ? JSON.stringify(scrapedData) : undefined,
-                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isRequestBusinessReview) ? undefined : JSON.stringify(snapshotData),
-                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isRequestBusinessReview) ? JSON.stringify(data) : undefined,
+                        licenceSectionScrapedValue: scrapedData ? stringifyVerificationValue(scrapedData) : undefined,
+                        licenceSectionSnapshotValue: (verificationType === 'Added' || isConfirmNone || isRequestBusinessReview) ? undefined : stringifyVerificationValue(snapshotData),
+                        licenceSectionOverrideValue: ((verificationType === 'Edited' || verificationType === 'Added') && !isConfirmNone && !isRequestBusinessReview) ? stringifyVerificationValue(data) : undefined,
                         verificationType: verificationType,
                         licenceSectionItemId: pendingVerificationItemId,
                         notes: verificationNotes

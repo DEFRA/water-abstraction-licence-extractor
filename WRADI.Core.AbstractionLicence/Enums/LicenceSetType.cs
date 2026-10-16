@@ -5,5 +5,13 @@ public enum LicenceSetType
     Unknown,
     SingleLicenceOnly,
     LicencesGroupedByAbstractionLimits,
-    Others
+    Others,
+    
+    // Oldies for serialisation
+    AllLicencesExplicitlyReferencedAnywhere,
+    AllLicencesExplicitlyReferencedInLimits,
+    AllLicencesImplicitlyReferencedInLimits,
+    AllLicencesIncludingImplicitlyReferenced,
+    FullyEncompassedIn,
+    PartiallyEncompassedIn
 }

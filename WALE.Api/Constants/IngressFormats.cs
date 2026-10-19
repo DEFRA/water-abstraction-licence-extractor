@@ -7,9 +7,8 @@ namespace WALE.Api.Constants;
 /// ConvertWordInspectionReportsToPdf - the people holding them cannot run a converter themselves,
 /// so the bucket is where the Word file and its PDF meet.
 ///
-/// Shared by the upload and download endpoints, which sit in different areas: before this, both
-/// download paths named every file "application/pdf", so accepting Word would have served a .doc as
-/// a PDF to anything reading the response type.
+/// Shared by the upload and download endpoints, which sit in different areas and have to agree:
+/// what a file is stored as is what it has to be served back as.
 /// </summary>
 public static class IngressFormats
 {
@@ -30,9 +29,9 @@ public static class IngressFormats
 
     /// <summary>
     /// The type to store an accepted upload as. Taken from the extension rather than the request: a
-    /// browser sends application/msword for one .doc and application/octet-stream for the next, and
-    /// rejecting on that is what silently dropped a batch of 476 files. The extension is both the
-    /// reliable signal and the one the pipeline itself keys on.
+    /// browser sends application/msword for one .doc and application/octet-stream for the next, so the
+    /// request's own type rejects valid files. The extension is both the reliable signal and the one
+    /// the pipeline itself keys on.
     /// </summary>
     public static bool TryGetContentType(string? extension, out string contentType)
     {

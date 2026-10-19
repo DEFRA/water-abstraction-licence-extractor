@@ -306,6 +306,31 @@ public static class KeyConfig
         }
     }
     
+    private static string? _libreOfficePath;
+
+    /// <summary>
+    /// The soffice binary, used by ConvertWordInspectionReportsToPdf. On macOS this is inside the
+    /// app bundle (/Applications/LibreOffice.app/Contents/MacOS/soffice), not on the PATH.
+    /// </summary>
+    public static string LibreOfficePath
+    {
+        get
+        {
+            if (_libreOfficePath != null)
+            {
+                return _libreOfficePath;
+            }
+
+            _libreOfficePath = Config["LibreOfficePath"]
+                ?? throw new InvalidOperationException(
+                    "LibreOfficePath user secret not set. Run: dotnet user-secrets set "
+                    + "LibreOfficePath \"/Applications/LibreOffice.app/Contents/MacOS/soffice\" "
+                    + "--project Tools/WALE.Tools");
+
+            return _libreOfficePath;
+        }
+    }
+
     private static string? _tesseractExeName;
 
     public static string TesseractExeName

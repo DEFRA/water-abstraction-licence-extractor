@@ -200,10 +200,22 @@ async Task<List<(string FilePath, string PermitNumber, Guid FileId, string? DmsP
 
     var settings = serviceProvider.GetRequiredService<FileProcessAppSettings>();
 
-    var candidates = (await inspectionReportFinderCacheService
-            .GetInspectionReportFinderResultsAsync(0, int.MaxValue))
-        .Where(WrInspectionReportCandidateSelector.IsSendable)
-        .ToList();
+    var fileService = serviceProvider.GetRequiredService<IFileService>();
+
+    var ingressFileNames = WrInspectionReportCandidateSelector.ToIngressFileNameSet(
+        await fileService.GetAllFilesAsync());
+
+    var selection = WrInspectionReportCandidateSelector.Select(
+        await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue),
+        ingressFileNames);
+
+    if (selection.NotInIngress > 0)
+    {
+        ConsoleHelper.WriteLine($"{selection.NotInIngress} candidates skipped because the ingress bucket "
+            + "has no object for them yet - not collected, or a Word document not yet converted");
+    }
+
+    var candidates = selection.Sendable.ToList();
 
     if (WrInspectionReportCandidateSelector.HasUploadWindow(settings.UploadedFrom, settings.UploadedTo))
     {

@@ -8,26 +8,76 @@ namespace WRADI.Services.ProcessFile.WrInspectionReport;
 /// two different answers, so a local run and a deployed run covered different files.
 public static class WrInspectionReportCandidateSelector
 {
-    /// The formats discovery finds that the extraction pipeline has no reader for. Rejecting only
-    /// what is positively identifiable: a candidate whose file name is absent still passes, since
-    /// the ingress key is built from the permit number and file id rather than the name, and
-    /// treating unknown as unreadable would silently shrink runs.
-    private static readonly string[] UnreadableExtensions = [".doc", ".docx"];
+    /// <summary>
+    /// What became of a set of candidates. The two rejection reasons are counted separately
+    /// because they mean different things to whoever reads the log: one is a discovery record
+    /// nothing can be done with, the other is a document waiting to be collected or converted.
+    /// </summary>
+    public readonly record struct CandidateSelection(
+        IReadOnlyList<InspectionReportFinderResult> Sendable,
+        int WithoutIdentity,
+        int NotInIngress);
 
-    /// A candidate the pipeline can act on at all: enough identity to build an ingress key, and a
-    /// file something can read. WrInspectionReportIngressFile.BuildFileName names every key
-    /// ".pdf" regardless of the source, so without the format check a Word document would be
-    /// fetched as a PDF that does not exist and fail per file.
-    public static bool IsSendable(InspectionReportFinderResult candidate) =>
+    /// <summary>
+    /// Enough identity to build an ingress key: the key is built from the permit number and file
+    /// id, and nothing else about the discovery record is required.
+    /// </summary>
+    public static bool HasIdentity(InspectionReportFinderResult candidate) =>
         !string.IsNullOrEmpty(candidate.PermitNumber)
         && !string.IsNullOrEmpty(candidate.FileId)
-        && Guid.TryParse(candidate.FileId, out _)
-        && IsProcessable(candidate.FileName);
+        && Guid.TryParse(candidate.FileId, out _);
 
-    public static bool IsProcessable(string? fileName) =>
-        string.IsNullOrWhiteSpace(fileName)
-        || !UnreadableExtensions.Any(extension =>
-            fileName.EndsWith(extension, StringComparison.OrdinalIgnoreCase));
+    /// <summary>
+    /// Whether the object this candidate resolves to is in the ingress bucket. The DMS file name
+    /// is deliberately not consulted - it is a .doc for a report that has since been converted, and
+    /// a .pdf for one nobody ever uploaded. This is also what excludes the latter, which are
+    /// otherwise queued and fail one per file.
+    /// </summary>
+    private static bool IsInIngress(
+        InspectionReportFinderResult candidate,
+        IReadOnlySet<string> ingressFileNames) =>
+        HasIdentity(candidate)
+        && ingressFileNames.Contains(
+            WrInspectionReportIngressFile.BuildFileName(candidate.PermitNumber!, candidate.FileId!));
+
+    /// <summary>
+    /// Partitions candidates into those a run can act on - enough identity to build an ingress key,
+    /// and an object at it - and the two reasons the rest were left out.
+    /// </summary>
+    public static CandidateSelection Select(
+        IReadOnlyList<InspectionReportFinderResult> candidates,
+        IReadOnlySet<string> ingressFileNames)
+    {
+        var sendable = new List<InspectionReportFinderResult>();
+        var withoutIdentity = 0;
+        var notInIngress = 0;
+
+        foreach (var candidate in candidates)
+        {
+            if (!HasIdentity(candidate))
+            {
+                withoutIdentity++;
+            }
+            else if (!IsInIngress(candidate, ingressFileNames))
+            {
+                notInIngress++;
+            }
+            else
+            {
+                sendable.Add(candidate);
+            }
+        }
+
+        return new CandidateSelection(sendable, withoutIdentity, notInIngress);
+    }
+
+    /// <summary>
+    /// The ingress keys as the selector needs them: a set, compared without case. The bucket is
+    /// keyed in lowercase and BuildFileName lowercases, but a key that slipped in with its original
+    /// casing would otherwise read as absent and silently drop the document from every run.
+    /// </summary>
+    public static IReadOnlySet<string> ToIngressFileNameSet(IEnumerable<string> fileNames) =>
+        new HashSet<string>(fileNames, StringComparer.OrdinalIgnoreCase);
 
     /// Selects on what DMS recorded, so a row whose upload_date will not parse has no date to
     /// compare and is left out. The column is free text from the extract.

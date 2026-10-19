@@ -13,7 +13,8 @@ public class FileProcessOrchestrationService(
     ICacheService cacheService,
     IInspectionReportFinderCacheService inspectionReportFinderCacheService,
     IOutputService outputService,
-    IMessageQueueService messageQueueService)
+    IMessageQueueService messageQueueService,
+    IFileService fileService)
     : IFileProcessOrchestrator
 {
     public async Task<bool> RunAsync(CancellationToken cancellationToken)
@@ -42,15 +43,26 @@ public class FileProcessOrchestrationService(
         // Filtered before the run is created, not during the send loop: NumberOfFiles previously
         // counted every candidate including the ones skipped just below, so a run's own total was
         // already wrong before any send failure.
-        var sendable = candidates
-            .Where(WrInspectionReportCandidateSelector.IsSendable)
-            .ToList();
+        // One listing rather than a HEAD per candidate: the bucket holds ~130,000 objects and reads
+        // in about twelve seconds, against thousands of round trips.
+        var ingressFileNames = WrInspectionReportCandidateSelector.ToIngressFileNameSet(
+            await fileService.GetAllFilesAsync());
 
-        if (sendable.Count != candidates.Count)
+        var selection = WrInspectionReportCandidateSelector.Select(candidates, ingressFileNames);
+        var sendable = selection.Sendable;
+
+        if (selection.WithoutIdentity > 0)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
-                + $"{candidates.Count - sendable.Count} of {candidates.Count} candidates skipped for a missing "
-                + "permit number, an unparseable file id, or a file type nothing can read yet");
+                + $"{selection.WithoutIdentity} of {candidates.Count} candidates skipped for a missing "
+                + "permit number or an unparseable file id");
+        }
+
+        if (selection.NotInIngress > 0)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
+                + $"{selection.NotInIngress} of {candidates.Count} candidates skipped because the ingress "
+                + "bucket has no object for them yet - not collected, or a Word document not yet converted");
         }
 
         // Before MaxFilesPerRun, so a capped run takes its files from the chosen window rather

@@ -10,6 +10,34 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 
 public class FileProcessOrchestrationServiceTests
 {
+    /// <summary>
+    /// A file service whose bucket contains exactly the keys these candidates resolve to. The
+    /// orchestrator now selects on what is in ingress, so a fake that lists nothing filters every
+    /// candidate out and a test asserting a send would fail for the wrong reason.
+    /// </summary>
+    private static IFileService FileServiceHolding(params InspectionReportFinderResult[] candidates)
+    {
+        var fileService = A.Fake<IFileService>();
+
+        var keys = candidates
+            .Where(WrInspectionReportCandidateSelector.HasIdentity)
+            .Select(candidate => WrInspectionReportIngressFile.BuildFileName(
+                candidate.PermitNumber!, candidate.FileId!))
+            .ToList();
+
+        A.CallTo(() => fileService.GetAllFilesAsync()).Returns(keys);
+
+        return fileService;
+    }
+
+    private static IFileService FileServiceHoldingNothing()
+    {
+        var fileService = A.Fake<IFileService>();
+        A.CallTo(() => fileService.GetAllFilesAsync()).Returns(new List<string>());
+
+        return fileService;
+    }
+
     [Fact]
     public async Task WhenCandidatesExist_ThenEnqueuedRequestsAreStampedWithWrInspectionReportDocumentType()
     {
@@ -53,7 +81,8 @@ public class FileProcessOrchestrationServiceTests
             cacheService,
             inspectionReportFinderCacheService,
             outputService,
-            messageQueueService);
+            messageQueueService,
+            FileServiceHolding(candidate));
 
         // Act
         var result = await service.RunAsync(CancellationToken.None);
@@ -217,7 +246,8 @@ public class FileProcessOrchestrationServiceTests
             A.Fake<ICacheService>(),
             inspectionReportFinderCacheService,
             outputService,
-            messageQueueService);
+            messageQueueService,
+            FileServiceHolding(candidates.ToArray()));
 
         await service.RunAsync(CancellationToken.None);
 
@@ -229,12 +259,16 @@ public class FileProcessOrchestrationServiceTests
     /// since the count is written before anything is sent.
     /// </summary>
     [Theory]
-    [InlineData("Compliance Inspection WR51 - 032842002.docx", false)]
-    [InlineData("Compliance Inspection WR51 - 032842002.doc", false)]
-    [InlineData("Compliance Inspection WR51 - 032842002.pdf", true)]
-    [InlineData("", true)]
-    public async Task WhenACandidateIsNotReadable_ThenItIsNeitherSentNorCounted(
+    // The DMS file name does not decide this: a .doc whose PDF has been converted into the bucket
+    // is sendable, and a .pdf that was never collected is not.
+    [InlineData("Compliance Inspection WR51 - 032842002.docx", true, true)]
+    [InlineData("Compliance Inspection WR51 - 032842002.docx", false, false)]
+    [InlineData("Compliance Inspection WR51 - 032842002.pdf", true, true)]
+    [InlineData("Compliance Inspection WR51 - 032842002.pdf", false, false)]
+    [InlineData("", true, true)]
+    public async Task WhenNoIngressObjectExists_ThenTheCandidateIsNeitherSentNorCounted(
         string fileName,
+        bool inIngress,
         bool expectSent)
     {
         // Arrange
@@ -243,15 +277,15 @@ public class FileProcessOrchestrationServiceTests
         var outputService = A.Fake<IOutputService>();
         var messageQueueService = A.Fake<IMessageQueueService>();
 
+        var candidate = new InspectionReportFinderResult
+        {
+            PermitNumber = "PERMIT-1",
+            FileId = Guid.NewGuid().ToString(),
+            FileName = fileName
+        };
+
         A.CallTo(() => inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue))
-            .Returns([
-                new InspectionReportFinderResult
-                {
-                    PermitNumber = "PERMIT-1",
-                    FileId = Guid.NewGuid().ToString(),
-                    FileName = fileName
-                }
-            ]);
+            .Returns([candidate]);
 
         ProcessRun? startedProcessRun = null;
 
@@ -283,7 +317,8 @@ public class FileProcessOrchestrationServiceTests
             A.Fake<ICacheService>(),
             inspectionReportFinderCacheService,
             outputService,
-            messageQueueService);
+            messageQueueService,
+            inIngress ? FileServiceHolding(candidate) : FileServiceHoldingNothing());
 
         // Act
         await service.RunAsync(CancellationToken.None);
@@ -351,7 +386,8 @@ public class FileProcessOrchestrationServiceTests
             cacheService,
             inspectionReportFinderCacheService,
             outputService,
-            messageQueueService);
+            messageQueueService,
+            FileServiceHolding(candidates.ToArray()));
 
         // Act
         var result = await service.RunAsync(CancellationToken.None);

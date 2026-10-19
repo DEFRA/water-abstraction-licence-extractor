@@ -261,6 +261,8 @@ function InspectionReportPage() {
                     }}>
                     Actions
                 </a>
+                {' | '}
+                <a href="/inspectionReportVerification">Verification</a>
             </h1>
 
             {activeTab === 'actions' && (

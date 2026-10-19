@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.Api.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -12,6 +13,7 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class FilesController(IFileService fileService) : Controller
 {
+
     [HttpGet]
     public async Task<ActionResult> GetAsync(
         [FromQuery] string filename,
@@ -73,7 +75,7 @@ public class FilesController(IFileService fileService) : Controller
     }
     
     /// <summary>
-    /// Only PDFs reach the ingress bucket, matching UploadChunkAsync. A file this refuses is
+    /// Accepts the formats in IngressFormats, matching UploadChunkAsync. A file this refuses is
     /// reported as a refusal rather than skipped: the caller sends one file per request and reads
     /// nothing but the status code, so a 200 on a file that was never stored cannot be told apart
     /// from a successful upload.
@@ -99,8 +101,7 @@ public class FilesController(IFileService fileService) : Controller
             var lowercaseFileName = file.FileName.ToLowerInvariant();
             var fileExtension = Path.GetExtension(lowercaseFileName);
 
-            if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)
-                || !file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
+            if (!IngressFormats.TryGetContentType(fileExtension, out var storedContentType))
             {
                 refused.Add(file.FileName);
                 continue;
@@ -118,7 +119,7 @@ public class FilesController(IFileService fileService) : Controller
             await fileService.UploadFileAsStreamAsync(
                 lowercaseFileName,
                 stream,
-                "application/pdf",
+                storedContentType,
                 StorageFolder.Ingress);
 
             uploaded.Add(file.FileName);
@@ -155,7 +156,7 @@ public class FilesController(IFileService fileService) : Controller
 
         if (refused.Count > 0)
         {
-            description.Append($", {refused.Count} not a PDF and refused: ")
+            description.Append($", {refused.Count} of an unsupported format and refused: ")
                 .Append(string.Join(", ", refused));
         }
 
@@ -183,9 +184,12 @@ public class FilesController(IFileService fileService) : Controller
         }
 
         var fileExtension = Path.GetExtension(filename);
-        if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+
+        if (!IngressFormats.IsAccepted(fileExtension))
         {
-            return BadRequest("Only PDF files are allowed.");
+            return BadRequest(
+                $"{fileExtension} files are not accepted. Allowed: "
+                + string.Join(", ", IngressFormats.AcceptedExtensions));
         }
 
         using MemoryStream stream = new();

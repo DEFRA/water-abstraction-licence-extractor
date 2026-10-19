@@ -45,4 +45,10 @@ public static class IngressFormats
         return false;
     }
 
+    /// <summary>
+    /// The type to serve a stored file back as, by file name. Falls back rather than refusing: a
+    /// download is not the place to start rejecting a key that is already in the bucket.
+    /// </summary>
+    public static string ContentTypeForFile(string fileName) =>
+        ContentTypes.GetValueOrDefault(Path.GetExtension(fileName), Fallback);
 }

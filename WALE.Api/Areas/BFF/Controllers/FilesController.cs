@@ -37,7 +37,7 @@ public class FilesController(IFileService fileService) : Controller
         var stream = await fileService.GetFileAsStreamAsync(filename);
         if (stream == null) return NotFound();
 
-        return File(stream, "application/pdf", filename);
+        return File(stream, IngressFormats.ContentTypeForFile(filename), filename);
     }
 
     [HttpGet]

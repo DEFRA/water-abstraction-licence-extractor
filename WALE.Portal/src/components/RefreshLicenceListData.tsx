@@ -47,15 +47,12 @@ export function RefreshLicenceListData({
 
         let disposed = false;
 
-        const hubUrl = `/notificationsHub/process`;
+        const hubUrl =
+            `${waleApiBaseUrl}/notificationsHub/process`.replace("-api-", "-portal-");
 
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl, {
-                transport: signalR.HttpTransportType.WebSockets,
-                skipNegotiation: true,
-                withCredentials: false
-            })
-            .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+            .withUrl(hubUrl)
+            .withAutomaticReconnect()
             .configureLogging(signalR.LogLevel.Information)
             .build();
 

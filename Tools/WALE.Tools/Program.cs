@@ -42,6 +42,10 @@ switch (workflow)
         // Second argument is the required extract type: "ImportDmsData WrInspectionReport".
         return await ImportDmsData.ImportAsync(args.Length > 1 ? args[1] : null);
 
+    case "ConvertWordInspectionReportsToPdf": // FREQUENT - Convert the Word-format WR51 reports
+        // already in the ingress bucket to PDF, in place, so a run can read them
+        return await ConvertWordInspectionReportsToPdf.RunAsync();
+
     case "RebuildWrInspectionReportSummaries": // FREQUENT - Project a WR51 process run's results into
         // wr_inspection_report_summary, which the date-driven report list reads. Derived data, so
         // re-running is safe, including against a run that is still in progress.

@@ -138,7 +138,7 @@ public class FilesController(IFileService fileService) : Controller
 
     /// <summary>
     /// What became of each file. Names the refused ones, since a count alone does not say which
-    /// file to go and convert.
+    /// file to go and look at.
     /// </summary>
     private static string Describe(
         IReadOnlyCollection<string> uploaded,
@@ -183,7 +183,8 @@ public class FilesController(IFileService fileService) : Controller
             return BadRequest("Expects binary stream.");
         }
 
-        var fileExtension = Path.GetExtension(filename);
+        var lowercaseFileName = filename.ToLowerInvariant();
+        var fileExtension = Path.GetExtension(lowercaseFileName);
 
         if (!IngressFormats.IsAccepted(fileExtension))
         {
@@ -196,8 +197,10 @@ public class FilesController(IFileService fileService) : Controller
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        var resultUploadId = await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks, uploadId);
+        var resultUploadId = await fileService.UploadFileChunkAsync(
+            lowercaseFileName, stream, chunkIndex, totalChunks, uploadId);
 
-        return Ok(resultUploadId ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
+        return Ok(resultUploadId
+            ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {lowercaseFileName} has been uploaded.");
     }
 }

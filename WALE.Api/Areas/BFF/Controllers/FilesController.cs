@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.Api.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -12,6 +13,7 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class FilesController(IFileService fileService) : Controller
 {
+
     [HttpGet]
     public async Task<ActionResult> GetAsync(
         [FromQuery] string filename,
@@ -35,7 +37,7 @@ public class FilesController(IFileService fileService) : Controller
         var stream = await fileService.GetFileAsStreamAsync(filename);
         if (stream == null) return NotFound();
 
-        return File(stream, "application/pdf", filename);
+        return File(stream, IngressFormats.ContentTypeForFile(filename), filename);
     }
 
     [HttpGet]
@@ -72,6 +74,12 @@ public class FilesController(IFileService fileService) : Controller
         return Ok();
     }
     
+    /// <summary>
+    /// Accepts the formats in IngressFormats, matching UploadChunkAsync. A file this refuses is
+    /// reported as a refusal rather than skipped: the caller sends one file per request and reads
+    /// nothing but the status code, so a 200 on a file that was never stored cannot be told apart
+    /// from a successful upload.
+    /// </summary>
     [HttpPut]
     [DisableRequestSizeLimit]
     [RequestFormLimits(
@@ -81,47 +89,78 @@ public class FilesController(IFileService fileService) : Controller
     {
         if (!Request.Form.Files.Any())
         {
-            return BadRequest();
+            return BadRequest("No file in request.");
         }
 
-        var resultSb = new StringBuilder();
-        
+        var uploaded = new List<string>();
+        var alreadyPresent = new List<string>();
+        var refused = new List<string>();
+
         foreach (var file in Request.Form.Files)
         {
-            if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-         
             var lowercaseFileName = file.FileName.ToLowerInvariant();
             var fileExtension = Path.GetExtension(lowercaseFileName);
-            
-            if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+
+            if (!IngressFormats.TryGetContentType(fileExtension, out var storedContentType))
             {
+                refused.Add(file.FileName);
                 continue;
             }
-            
+
             if (await fileService.ExistsAsync(lowercaseFileName, StorageFolder.Ingress))
             {
+                alreadyPresent.Add(file.FileName);
                 continue;
             }
-            
+
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
-            
+
             await fileService.UploadFileAsStreamAsync(
                 lowercaseFileName,
                 stream,
-                "application/pdf",
+                storedContentType,
                 StorageFolder.Ingress);
+
+            uploaded.Add(file.FileName);
         }
 
-        if (resultSb.Length == 0)
+        // Nothing stored and something refused is a failed request, so the caller's status check
+        // catches it. A file already in the bucket is not a refusal - re-uploading is a no-op, not
+        // an error.
+        if (uploaded.Count == 0 && refused.Count > 0)
         {
-            resultSb.Append("No files were uploaded.");
+            return BadRequest(Describe(uploaded, alreadyPresent, refused));
         }
-        
-        return Ok(resultSb.ToString());
+
+        return Ok(Describe(uploaded, alreadyPresent, refused));
+    }
+
+    /// <summary>
+    /// What became of each file. Names the refused ones, since a count alone does not say which
+    /// file to go and look at.
+    /// </summary>
+    private static string Describe(
+        IReadOnlyCollection<string> uploaded,
+        IReadOnlyCollection<string> alreadyPresent,
+        IReadOnlyCollection<string> refused)
+    {
+        var description = new StringBuilder();
+
+        description.Append($"{uploaded.Count} uploaded");
+
+        if (alreadyPresent.Count > 0)
+        {
+            description.Append($", {alreadyPresent.Count} already present");
+        }
+
+        if (refused.Count > 0)
+        {
+            description.Append($", {refused.Count} of an unsupported format and refused: ")
+                .Append(string.Join(", ", refused));
+        }
+
+        return description.Append('.').ToString();
     }
 
     [HttpPut]
@@ -144,18 +183,24 @@ public class FilesController(IFileService fileService) : Controller
             return BadRequest("Expects binary stream.");
         }
 
-        var fileExtension = Path.GetExtension(filename);
-        if (!fileExtension.Equals(".pdf", StringComparison.OrdinalIgnoreCase))
+        var lowercaseFileName = filename.ToLowerInvariant();
+        var fileExtension = Path.GetExtension(lowercaseFileName);
+
+        if (!IngressFormats.IsAccepted(fileExtension))
         {
-            return BadRequest("Only PDF files are allowed.");
+            return BadRequest(
+                $"{fileExtension} files are not accepted. Allowed: "
+                + string.Join(", ", IngressFormats.AcceptedExtensions));
         }
 
         using MemoryStream stream = new();
         await file.CopyToAsync(stream);
         stream.Position = 0;
 
-        var resultUploadId = await fileService.UploadFileChunkAsync(filename, stream, chunkIndex, totalChunks, uploadId);
+        var resultUploadId = await fileService.UploadFileChunkAsync(
+            lowercaseFileName, stream, chunkIndex, totalChunks, uploadId);
 
-        return Ok(resultUploadId ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {filename} has been uploaded.");
+        return Ok(resultUploadId
+            ?? $"Chunk {chunkIndex + 1}/{totalChunks} of {lowercaseFileName} has been uploaded.");
     }
 }

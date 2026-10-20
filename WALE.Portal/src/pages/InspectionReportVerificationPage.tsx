@@ -2,6 +2,7 @@ import {Fragment, useEffect, useMemo, useState} from 'react';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import InspectionReportVerificationModal from '../components/InspectionReportVerificationModal';
+import {ExportLatestReports} from '../components/ExportLatestReports';
 import {
     buildSectionsFromForm,
     fetchInspectionRecords,
@@ -221,6 +222,7 @@ function InspectionReportVerificationPage() {
 
     const groupedFileCount = documentGroups.reduce((total, group) => total + group.length, 0);
 
+
     const visible = useMemo(
         () => [...(bucketed.get(activeQueue as QueueKey) ?? [])].sort((left, right) =>
             (right.inspectionDate ?? '').localeCompare(left.inspectionDate ?? '')),
@@ -337,6 +339,7 @@ function InspectionReportVerificationPage() {
                     </select>
                 </label>
 
+
                 {SHOW_RE_RUN_CONTROLS && (
                     <>
                         <button
@@ -352,6 +355,8 @@ function InspectionReportVerificationPage() {
                     </>
                 )}
             </div>
+
+            <ExportLatestReports template={templateFilter}/>
 
             <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '10px 0'}}>
                 {[...ACTIVE_QUEUES,

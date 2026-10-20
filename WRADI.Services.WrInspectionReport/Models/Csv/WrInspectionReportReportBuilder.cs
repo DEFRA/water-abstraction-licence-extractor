@@ -11,8 +11,6 @@ public static class WrInspectionReportReportBuilder
     private static readonly HashSet<string> InternalColumnNames = new(StringComparer.Ordinal)
     {
         nameof(WrInspectionReportCsvLine.Images),
-        // Opt-in: about 2Kb a row, and an analyst cannot pivot on it. It is the escape hatch for
-        // what the flattened columns cannot hold, not something to read by default.
         nameof(WrInspectionReportCsvLine.ExtractedJson),
         nameof(WrInspectionReportCsvLine.Metadata__Date__RawDate),
         nameof(WrInspectionReportCsvLine.InspectionDate__RawDate),

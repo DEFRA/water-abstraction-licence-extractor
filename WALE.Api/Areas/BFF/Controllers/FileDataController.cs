@@ -208,17 +208,9 @@ public class FileDataController(
     }
 
     /// <summary>
-    /// The current state of the corpus rather than one run's snapshot: the summary projection
-    /// already takes the highest process run per file, so this exports the newest extraction of
-    /// every document, optionally narrowed by date and template.
-    ///
-    /// The dates bound sort_date, which is the inspection date falling back through the form and
-    /// DMS dates - not the upload date a process run is scoped by, so the same calendar window
-    /// gives a different count here than the run that produced the records.
-    ///
-    /// Both are optional, and leaving them off is the only way to reach a document with no date at
-    /// all: the query drops those whenever a bound is given. Each document costs one read by
-    /// matches result id, which is a key lookup, so the whole corpus is about six seconds.
+    /// The dates bound sort_date, not the upload date a process run is scoped by, so the same
+    /// window gives a different count here. Omitting both is the only way to reach a document with
+    /// no date, which the query drops whenever a bound is given.
     /// </summary>
     [HttpGet]
     public async Task<ActionResult> ExportWrInspectionReportLatestCsvAsync(
@@ -547,14 +539,8 @@ public class FileDataController(
     }
 
     /// <summary>
-    /// The newest extraction of every document in the window. Reads by matches result id, which the
-    /// projection already carries, so the DISTINCT ON that picks the highest run per file is not
-    /// repeated here.
-    /// </summary>
-    /// <summary>
-    /// One row per meter rather than per document. The flattened export keeps a document's first
-    /// meter and drops the rest, which in a sampled run was 45% of all meters - a WR51 exists to
-    /// record readings, so that is the half of the data an analyst most needs.
+    /// The flattened export keeps a document's first meter and drops the rest - 45% of meters in a
+    /// sampled run.
     /// </summary>
     [HttpGet]
     public async Task<ActionResult> ExportWrInspectionReportLatestMetersCsvAsync(
@@ -571,9 +557,6 @@ public class FileDataController(
             $"WR51-Latest-Meters-{DescribeWindow(from, to)}.csv");
     }
 
-    /// <summary>
-    /// One row per action. Same reason as the meters, for the v3 template's actions grid.
-    /// </summary>
     [HttpGet]
     public async Task<ActionResult> ExportWrInspectionReportLatestActionsCsvAsync(
         [FromQuery] DateOnly? from = null,
@@ -589,10 +572,6 @@ public class FileDataController(
             $"WR51-Latest-Actions-{DescribeWindow(from, to)}.csv");
     }
 
-    /// <summary>
-    /// Names the window in the file name, so a download is identifiable once it is sitting in
-    /// somebody's folder beside three others.
-    /// </summary>
     private static string DescribeWindow(DateOnly? from, DateOnly? to) =>
         (from, to) switch
         {
@@ -616,10 +595,6 @@ public class FileDataController(
                 () => outputService.GetMatchesResultAsync(summary.MatchesResultId)));
     }
 
-    /// <summary>
-    /// The extracted forms themselves, for the exports that shape them per meter or per action
-    /// rather than per document.
-    /// </summary>
     private async Task<List<WrInspectionReport>> BuildLatestFormsAsync(
         DateOnly? from,
         DateOnly? to,
@@ -657,9 +632,7 @@ public class FileDataController(
     }
 
     /// <summary>
-    /// Shared by both exports: one matches-result read per document, turned into the same flattened
-    /// line. Ten at a time because each is a round trip, and a document whose result has gone is
-    /// dropped rather than failing the whole export.
+    /// A document whose matches result has gone is dropped rather than failing the whole export.
     /// </summary>
     private async Task<List<WrInspectionReportCsvLine>> BuildCsvLinesAsync(
         int count,

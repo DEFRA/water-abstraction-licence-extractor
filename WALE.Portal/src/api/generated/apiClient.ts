@@ -4495,14 +4495,19 @@ export class Client {
 
     /**
      * @param licenceFileId (optional) 
+     * @param sourceLicenceNumber (optional) 
      * @return OK
      */
-    licenceSectionVerifications(licenceFileId: string | undefined): Promise<LicenceSectionVerification[]> {
+    licenceSectionVerifications(licenceFileId: string | undefined, sourceLicenceNumber: string | undefined): Promise<LicenceSectionVerification[]> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceSectionVerifications?";
         if (licenceFileId === null)
             throw new globalThis.Error("The parameter 'licenceFileId' cannot be null.");
         else if (licenceFileId !== undefined)
             url_ += "licenceFileId=" + encodeURIComponent("" + licenceFileId) + "&";
+        if (sourceLicenceNumber === null)
+            throw new globalThis.Error("The parameter 'sourceLicenceNumber' cannot be null.");
+        else if (sourceLicenceNumber !== undefined)
+            url_ += "sourceLicenceNumber=" + encodeURIComponent("" + sourceLicenceNumber) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -8903,6 +8908,7 @@ export interface ILicenceSectionItemSummary {
 export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
+    sourceLicenceNumber?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
@@ -8933,6 +8939,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             }
             this.licenceSectionVerificationId = _data["licenceSectionVerificationId"];
             this.licenceFileId = _data["licenceFileId"];
+            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.processRunId = _data["processRunId"];
             this.licenceSectionName = _data["licenceSectionName"];
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
@@ -8961,6 +8968,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         }
         data["licenceSectionVerificationId"] = this.licenceSectionVerificationId;
         data["licenceFileId"] = this.licenceFileId;
+        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["processRunId"] = this.processRunId;
         data["licenceSectionName"] = this.licenceSectionName;
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
@@ -8978,6 +8986,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
 export interface ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
+    sourceLicenceNumber?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
@@ -9192,6 +9201,12 @@ export enum LicenceSetType {
     SingleLicenceOnly = "SingleLicenceOnly",
     LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
     Others = "Others",
+    AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
+    AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
+    AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
+    AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
+    FullyEncompassedIn = "FullyEncompassedIn",
+    PartiallyEncompassedIn = "PartiallyEncompassedIn",
 }
 
 export enum LicenceType {

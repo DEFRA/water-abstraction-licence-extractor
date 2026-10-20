@@ -9,12 +9,13 @@ public class LinkedLicencesVerificationLicenceMergeStrategy : IVerificationLicen
     public string SectionName => "Linked Licences";
 
     public Licence ApplyVerifications(Licence licence, LicenceVerificationLookups sectionVerificationLookups,
-        Guid fileId, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
+        Guid fileId)
     {
-        var hasOutgoingVerifications =
-            sectionVerificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
-
         var licenceNumber = licence.LicenceNumber?.Value ?? string.Empty;
+
+        var hasOutgoingVerifications =
+            sectionVerificationLookups.BySourceLicence.TryGetValue((fileId, licenceNumber), out var outgoingVerifications);
+
         var hasIncomingVerifications =
             sectionVerificationLookups.ByItemId.TryGetValue(licenceNumber, out var incomingVerifications);
 
@@ -33,8 +34,7 @@ public class LinkedLicencesVerificationLicenceMergeStrategy : IVerificationLicen
 
         if (hasIncomingVerifications)
         {
-            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!,
-                fileIdToLicenceNumberMapping);
+            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!);
         }
 
         licence.LinkedLicences = linkedLicences.Where(ll => ll.ContainedIn?.Length > 0).ToArray();

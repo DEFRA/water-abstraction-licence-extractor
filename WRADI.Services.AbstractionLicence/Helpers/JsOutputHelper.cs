@@ -91,8 +91,7 @@ public static class JsOutputHelper
 
     public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
         int processRunId,
-        Dictionary<string, LicenceVerificationLookups> verificationLookups,
-        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
+        Dictionary<string, LicenceVerificationLookups> verificationLookups)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -171,7 +170,7 @@ public static class JsOutputHelper
                     strategy.SectionName, new LicenceVerificationLookups());
 
                 strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
-                    outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);
+                    outputLine.LicenceNumber!);
             }
 
             listData.Add(listRow);

@@ -153,28 +153,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .ToList()!;
     }
 
-    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
-    {
-        await using var connection = GetPostgresConnection();
-
-        const string sql = """
-                           SELECT distinct 
-                               licence_number,
-                               file_id
-                           FROM licence
-                           WHERE
-                                 licence_number IS NOT NULL
-                                AND file_id IS NOT NULL;
-                           """;
-
-        var results = await QueryAsync<LicenceNumberFileIdMapEntry>(
-            connection,
-            sql,
-            0);
-        
-        return results;
-    }
-
     public async Task<List<string>> GetDistinctIssuersAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -1718,6 +1696,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            SELECT
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
+                               source_licence_number AS SourceLicenceNumber,
                                process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
@@ -1731,6 +1710,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            FROM licence_section_verification
                            ORDER BY
                                licence_file_id,
+                               source_licence_number,
                                licence_section_name,
                                created_date_time_utc DESC,
                                licence_section_verification_id DESC
@@ -2525,13 +2505,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return result.Value;
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
+                               source_licence_number AS SourceLicenceNumber,
                                process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
@@ -2544,6 +2525,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                deleted_date_time_utc AS DeletedDateTimeUtc
                            FROM licence_section_verification
                            WHERE licence_file_id = @LicenceFileId
+                             AND source_licence_number = @SourceLicenceNumber
                            ORDER BY created_date_time_utc DESC
                            """;
 
@@ -2551,7 +2533,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             connection,
             sql,
             0,
-            new { LicenceFileId = licenceFileId });
+            new { LicenceFileId = licenceFileId, SourceLicenceNumber = sourceLicenceNumber });
     }
 
     public async Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
@@ -2561,6 +2543,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                            SELECT
                                licence_section_verification_id AS LicenceSectionVerificationId,
                                licence_file_id AS LicenceFileId,
+                               source_licence_number AS SourceLicenceNumber,
                                process_run_id AS ProcessRunId,
                                licence_section_name AS LicenceSectionName,
                                licence_section_scraped_value AS LicenceSectionScrapedValue,
@@ -2576,6 +2559,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                              AND deleted_date_time_utc IS NULL
                            ORDER BY
                                licence_file_id,
+                               source_licence_number,
                                licence_section_name,
                                created_date_time_utc DESC,
                                licence_section_verification_id DESC

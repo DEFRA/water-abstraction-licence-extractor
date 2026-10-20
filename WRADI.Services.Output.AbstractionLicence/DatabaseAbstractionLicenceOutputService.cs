@@ -118,11 +118,6 @@ public class DatabaseAbstractionLicenceOutputService(
         return Task.CompletedTask;
     }
 
-    public async Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
-    {
-        return await databaseReadService.GetLicenceNumberFileIdMapAsync();
-    }
-
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         // Fix up missing LicenceIds in LicenceSetList
@@ -232,13 +227,12 @@ public class DatabaseAbstractionLicenceOutputService(
             }.ToDictionary(s => s.SectionName);
 
         var verificationsBySection = await GetVerificationLookupsBySectionNameAsync(processRunId);
-        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
 
         foreach (var (sectionName, strategy) in verificationLicenceMergeStrategies)
         {
             if (verificationsBySection.TryGetValue(sectionName, out var sectionVerificationLookups))
             {
-                licence = strategy.ApplyVerifications(licence, sectionVerificationLookups, fileId, fileIdToLicenceNumberMapping);
+                licence = strategy.ApplyVerifications(licence, sectionVerificationLookups, fileId);
             }
         }
 
@@ -251,9 +245,9 @@ public class DatabaseAbstractionLicenceOutputService(
         return licence?.LinkedLicences;
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
-        return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId);
+        return databaseReadService.GetLicenceSectionVerificationsAsync(licenceFileId, sourceLicenceNumber);
     }
 
     public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
@@ -306,7 +300,7 @@ public class DatabaseAbstractionLicenceOutputService(
                 .ToDictionary(g => g.Key!, g =>
                     new LicenceVerificationLookups
                     {
-                        ByFileId = g.GroupBy(v => v.LicenceFileId)
+                        BySourceLicence = g.GroupBy(v => (v.LicenceFileId, v.SourceLicenceNumber))
                             .ToDictionary(gf => gf.Key, gf => gf.ToList()),
                         ByItemId = g.GroupBy(v => v.LicenceSectionItemId)
                             .Where(gi => gi.Key != null)

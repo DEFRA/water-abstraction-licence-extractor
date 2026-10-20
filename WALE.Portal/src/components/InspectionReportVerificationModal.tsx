@@ -183,9 +183,14 @@ export function InspectionReportVerificationModal(
     };
 
     useEffect(() => {
-        if (activeSection) selectProperty(activeSection.name);
+        if (!activeSection) {
+            return;
+        }
+
+        selectProperty(activeSection.name);
+        highlightJsonRowFor(activeSection.name);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSectionName, fieldBoxes]);
+    }, [activeSectionName, fieldBoxes, form]);
 
     const getPropertyRows = () => {
         if (!jsonContainerRef.current) return [];
@@ -194,7 +199,9 @@ export function InspectionReportVerificationModal(
             .filter(row => row.querySelector(':scope > .json-view--property, :scope > .json-view--index'));
     };
 
-    const selectRow = (row: HTMLElement, index: number) => {
+    /// The outline only. Separate from selectRow so the rail can mark a row without re-deriving
+    /// the property from it, which would call back into the rail and loop.
+    const highlightRow = (row: HTMLElement, index: number) => {
         if (selectedRowRef.current) {
             selectedRowRef.current.style.outline = '';
             selectedRowRef.current.style.backgroundColor = '';
@@ -206,9 +213,30 @@ export function InspectionReportVerificationModal(
 
         selectedRowRef.current = row;
         selectedIndexRef.current = index;
+    };
+
+    const selectRow = (row: HTMLElement, index: number) => {
+        highlightRow(row, index);
 
         const span = row.querySelector(':scope > .json-view--property, :scope > .json-view--index');
         selectProperty(span?.textContent?.replace(/"/g, '') ?? '');
+    };
+
+    /// The other direction: a section picked in the rail marks its own node in the JSON. A node is
+    /// only found when react18-json-view has rendered it, so a property nested inside a collapsed
+    /// object - the three that live under "metadata" - has no row to mark, and the existing
+    /// highlight is left where it is rather than being cleared to nothing.
+    const highlightJsonRowFor = (propertyName: string) => {
+        const rows = getPropertyRows();
+
+        const index = rows.findIndex(row => row
+            .querySelector(':scope > .json-view--property')
+            ?.textContent
+            ?.replace(/"/g, '') === propertyName);
+
+        if (index !== -1) {
+            highlightRow(rows[index], index);
+        }
     };
 
     const handleJsonClick = (event: React.MouseEvent) => {

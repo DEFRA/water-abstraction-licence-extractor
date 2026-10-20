@@ -1,3 +1,6 @@
+using System.Text.Json;
+using WALE.ProcessFile.Core.Helpers;
+
 namespace WRADI.DocumentType.WrInspectionReport.Models.Csv;
 
 public class WrInspectionReportCsvLine
@@ -77,6 +80,18 @@ public class WrInspectionReportCsvLine
     public string? LicenceProvisions__CompensationOrAugmentation { get; set; }
     public string? LicenceProvisions__FishAndEelScreening { get; set; }
 
+    /// <summary>
+    /// The whole extracted form, as the portal sees it. Last in the class on purpose: the column
+    /// order is reflection declaration order, so an earlier insertion shifts every column after it
+    /// for anyone already reading these files.
+    ///
+    /// Needed because the flattening is lossy on repeating groups - the meter columns above take
+    /// the first meter and drop the rest, and 45% of meters in a sampled run belong to documents
+    /// with more than one. The per-meter and per-action exports carry those properly; this is the
+    /// catch-all for anything else the flattening cannot express.
+    /// </summary>
+    public string? ExtractedJson { get; set; }
+
     public static WrInspectionReportCsvLine FromForm(Models.WrInspectionReport form)
     {
         return new WrInspectionReportCsvLine
@@ -152,7 +167,8 @@ public class WrInspectionReportCsvLine
             LicenceProvisions__HandsOffFlow = form.LicenceProvisions.HandsOffFlow.ToString(),
             LicenceProvisions__CompensationOrAugmentation =
                 form.LicenceProvisions.CompensationOrAugmentation.ToString(),
-            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString()
+            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString(),
+            ExtractedJson = JsonSerializer.Serialize(form, JsonHelper.GetSerializerOptions())
         };
     }
 }

@@ -17,22 +17,16 @@ import {
     type VerificationType,
 } from '../api/wrInspectionReportVerificationModel';
 
-// The whole run: the projection serves it in one query, and the queues are only meaningful
-// over the full corpus.
 const FETCH_LIMIT = 20000;
 
-// Rendered per queue. The counts are over everything; this caps the DOM, not the data.
+// Caps the DOM, not the data: the counts are over everything.
 const MAX_ROWS_RENDERED = 200;
 
-/// Caps the DOM the way MAX_ROWS_RENDERED does, counted in groups because a group is the unit a
-/// reviewer reads here.
 const MAX_GROUPS_RENDERED = 100;
 
-/// Two documents in a group whose names match once the extension, case and punctuation are taken
-/// off are the same report filed twice - "H Hey & Sons  WR51.pdf" against "H Hey & Sons WR51.pdf"
-/// differs only by a double space, and a .doc against its own .pdf is the same document in two
-/// formats. Names that all differ are the common case and usually mean several abstraction points
-/// inspected on one day, so only the collision is worth marking.
+/// A collision after normalising is the same report filed twice - "H Hey & Sons  WR51.pdf" against
+/// "H Hey & Sons WR51.pdf" differs only by a double space. Names that all differ are the common
+/// case and usually mean several abstraction points, so only the collision is marked.
 function hasRepeatedName(group: InspectionRecord[]) {
     const stems = new Set(group.map(record => (record.originalFileName ?? '')
         .replace(/\.(pdf|docx?)$/i, '')
@@ -42,10 +36,8 @@ function hasRepeatedName(group: InspectionRecord[]) {
     return stems.size < group.length;
 }
 
-/// Designed but not built, and each blocked on the same thing: somewhere for a decision or a rules
-/// version to live. Kept out of the page rather than shown inert, because a control that can never
-/// do anything reads as a defect. The code behind each is intact - flip a flag when its backing
-/// lands.
+/// Kept out of the page rather than shown inert: a control that can never act reads as a defect.
+/// The code behind each is intact.
 ///
 /// Nothing dispatches a re-extraction, so the re-run queue only ever accumulated ids in memory.
 const SHOW_RE_RUN_CONTROLS = false;
@@ -67,11 +59,9 @@ const MultipleDocumentsView = 'multiple';
 
 type ViewKey = QueueKey | typeof MultipleDocumentsView;
 
-/// A verified record a later run now reads differently.
 const disagrees = (record: InspectionRecord) =>
     record.sections.some(section => section.reExtracted !== null);
 
-/// Re-running only earns its place when the rules have moved on.
 const staleRules = (record: InspectionRecord) =>
     record.extractedWithRulesVersion !== CURRENT_RULES_VERSION;
 
@@ -161,10 +151,8 @@ function InspectionReportVerificationPage() {
         return buckets;
     }, [filtered]);
 
-    /// The filter offers the templates the loaded records actually carry. A hardcoded list had
-    /// drifted from the corpus in both directions: it offered t2, t3 and v3, which no record on the
-    /// local run has, and omitted t6, t7 and impounding - making 2,089 of 15,080 records
-    /// unreachable by the filter.
+    /// Built from the records rather than hardcoded: the hardcoded list had drifted both ways,
+    /// offering three templates no record has and omitting three that 2,089 records carry.
     const templates = useMemo(
         () => [...new Set(records.map(record => record.template))]
             .filter((template): template is string => template !== null && template !== '')
@@ -172,9 +160,8 @@ function InspectionReportVerificationPage() {
         [records]
     );
 
-    /// Which queue opens. Whether any given queue has records depends on the corpus - "No date
-    /// extracted" is empty on the whole local run - and landing on an empty one reads as a page
-    /// that failed to load, so the first queue holding anything wins until a reviewer picks one.
+    /// Landing on an empty queue reads as a page that failed to load - "No date extracted" holds
+    /// nothing on the local run - so the first queue with records wins until a reviewer picks one.
     /// Derived rather than set from an effect, which this project's lint rules disallow.
     const defaultQueue = useMemo<QueueKey>(
         () => ACTIVE_QUEUES.find(queue => (bucketed.get(queue.key) ?? []).length > 0)?.key ?? 'ready',
@@ -183,12 +170,8 @@ function InspectionReportVerificationPage() {
 
     const activeQueue: ViewKey = chosenQueue ?? defaultQueue;
 
-    /// Inspections carrying more than one document, keyed on permit and the extracted inspection
-    /// date. Deliberately not called duplicates: six documents can share a licence and a day and be
-    /// six different abstraction points - permit 1041122001 on 2025-11-20 is Ten Acre Ghyll, The
-    /// Pound, Burnt Barn, Henleys Bridge, The Park and Towerhouse, all legitimate. Telling those
-    /// apart needs the site address, which the list query does not carry, so this shows the group
-    /// and leaves the judgement to whoever reads the names.
+    /// Not duplicates: one licence can have several abstraction points inspected on the same day,
+    /// and telling those apart needs the site address, which the list query does not carry.
     ///
     /// Keyed on the extracted date rather than sortDate, which falls back to DMS dates and would
     /// group documents that merely share an upload day.
@@ -300,7 +283,6 @@ function InspectionReportVerificationPage() {
         openRecordById(null);
     };
 
-    // Straight into the next record in the same queue, which is the point of a queue.
     const openNextInQueue = () => {
         const index = visible.findIndex(record => record.fileId === openFileId);
         const next = visible.slice(index + 1).find(record => record.state !== 'Verified');

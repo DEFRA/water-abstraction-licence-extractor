@@ -26,14 +26,9 @@ interface ApiRow {
     isScan: boolean;
 }
 
-/// The verifiable properties of WrInspectionReport, in the order they appear on the form, with
-/// the labels the rail shows. Driven by a declared list rather than the form's own key order so a
-/// reviewer meets the fields consistently whatever the template produced.
-///
-/// What is deliberately absent: "images" (a list of rendered page files, not an answer), and the
-/// provenance half of "metadata" - filename, template and isScan describe the file rather than
-/// anything read off it, and the modal header already shows them. The three answers nested under
-/// metadata are included by path.
+/// Declared rather than taken from the form's key order, so a reviewer meets the fields in the
+/// same order whatever the template produced. Excludes "images" and the provenance half of
+/// "metadata"; the three answers nested under metadata are included by path.
 interface SectionDefinition {
     /// Must be the extracted field's own name: the modal resolves a section's highlight boxes by
     /// capitalising this and looking it up against matchedLabelName, so a renamed section silently
@@ -48,12 +43,9 @@ interface SectionDefinition {
     isAbsent?: (value: unknown) => boolean;
 }
 
-/// A provisions block always arrives with all thirteen keys, and a provision no rule matched reads
-/// "DidntMatch" - a real string, so the generic test counts the block as populated even where
-/// nothing was extracted at all. Measured on the local corpus: 6 of 21 sampled documents have a
-/// block that is nothing but DidntMatch, and for the two scoring 0% completeness it was the only
-/// section the rail called populated. "Blank" is left counting as present: it is the extractor's
-/// verdict that a tick field was genuinely empty, not a failure to read it.
+/// A provisions block always arrives with all thirteen keys, and an unmatched provision reads
+/// "DidntMatch" - a real string the generic test counts as populated. 6 of 21 sampled documents
+/// are nothing but DidntMatch. "Blank" still counts as present: that is a verdict, not a failure.
 function provisionsAreAbsent(value: unknown): boolean {
     if (value === null || typeof value !== 'object' || Array.isArray(value)) {
         return true;
@@ -115,8 +107,8 @@ function buildSection(definition: SectionDefinition, scraped: unknown): Verified
     };
 }
 
-/// The sections a record has before its form is fetched. Every record carries the same set, so the
-/// list can show a real denominator; the values arrive on open.
+/// Every record carries the same set, so the list can show a real denominator before any form is
+/// fetched.
 function placeholderSections(): VerifiedSection[] {
     return SECTION_DEFINITIONS.map(definition => buildSection(definition, null));
 }

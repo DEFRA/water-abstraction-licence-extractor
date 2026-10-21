@@ -17,7 +17,6 @@ export interface VerifiedSection {
     /// property of the extracted form, and those are variously a string, an array and a nested
     /// object.
     scraped: unknown;
-    /// What a human put right, when they did.
     override: unknown;
     verificationType: VerificationType;
     /// What a later run produced, held only when it disagrees with the verified value. Re-running a

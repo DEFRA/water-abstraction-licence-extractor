@@ -59,7 +59,7 @@ function toRect(coordinates: IDocumentLineWordCoordinates | undefined): FieldRec
     return left >= 0 && right >= 0 ? {left, right, top, bottom} : null;
 }
 
-/// Mirrors InspectionReportModal: a label's matched words give the region to outline.
+/// Mirrors InspectionReportModal.
 function buildFieldBoxes(matches: ILabelGroupResult[] | undefined): Map<string, FieldBox[]> {
     const map = new Map<string, FieldBox[]>();
 
@@ -222,10 +222,8 @@ export function InspectionReportVerificationModal(
         selectProperty(span?.textContent?.replace(/"/g, '') ?? '');
     };
 
-    /// The other direction: a section picked in the rail marks its own node in the JSON. A node is
-    /// only found when react18-json-view has rendered it, so a property nested inside a collapsed
-    /// object - the three that live under "metadata" - has no row to mark, and the existing
-    /// highlight is left where it is rather than being cleared to nothing.
+    /// A property nested inside a collapsed object - the three under "metadata" - has no rendered
+    /// row to mark, so the existing highlight is left alone rather than cleared to nothing.
     const highlightJsonRowFor = (propertyName: string) => {
         const rows = getPropertyRows();
 
@@ -275,7 +273,6 @@ export function InspectionReportVerificationModal(
     const outstanding = record.sections.filter(section => section.verificationType === 'Unverified');
     const verifiedCount = record.sections.length - outstanding.length;
 
-    // Confirming moves to the next section still needing a decision.
     const advance = () => {
         const next = record.sections.find(section =>
             section.verificationType === 'Unverified' && section.name !== activeSectionName);

@@ -1,6 +1,3 @@
-// The record list comes from the projection; a record's sections are the properties of its
-// extracted form, which the projection does not carry, so they are loaded when a record is opened.
-// Verification state does not persist yet, so every section arrives Unverified.
 import {waleApiBaseUrl} from './apiClient';
 import type {
     DateSource,
@@ -26,26 +23,18 @@ interface ApiRow {
     isScan: boolean;
 }
 
-/// Declared rather than taken from the form's key order, so a reviewer meets the fields in the
-/// same order whatever the template produced. Excludes "images" and the provenance half of
-/// "metadata"; the three answers nested under metadata are included by path.
 interface SectionDefinition {
-    /// Must be the extracted field's own name: the modal resolves a section's highlight boxes by
-    /// capitalising this and looking it up against matchedLabelName, so a renamed section silently
-    /// loses its page region. These are the leaf names even where the value is nested.
+    /// Must be the extracted field's own name: the modal capitalises this and matches it against
+    /// matchedLabelName, so a renamed section silently loses its highlight boxes.
     name: string;
     label: string;
-    /// Where the value sits in the form, defaulting to a top-level property of the same name.
-    /// Given explicitly for the answers the converter nests under "metadata".
     path?: string[];
     isRepeating?: boolean;
-    /// Replaces the generic emptiness test where a property has its own idea of "nothing found".
     isAbsent?: (value: unknown) => boolean;
 }
 
-/// A provisions block always arrives with all thirteen keys, and an unmatched provision reads
-/// "DidntMatch" - a real string the generic test counts as populated. 6 of 21 sampled documents
-/// are nothing but DidntMatch. "Blank" still counts as present: that is a verdict, not a failure.
+/// An unmatched provision reads "DidntMatch", which the generic test counts as populated - 6 of 21
+/// sampled documents are nothing but DidntMatch. "Blank" is a verdict, so it still counts as present.
 function provisionsAreAbsent(value: unknown): boolean {
     if (value === null || typeof value !== 'object' || Array.isArray(value)) {
         return true;
@@ -56,6 +45,7 @@ function provisionsAreAbsent(value: unknown): boolean {
     return verdicts.length === 0 || verdicts.every(verdict => verdict === 'DidntMatch');
 }
 
+/// Declared order, not the form's key order. Excludes "images" and the provenance half of "metadata".
 const SECTION_DEFINITIONS: SectionDefinition[] = [
     {name: 'documentHeader', label: 'Document header', path: ['metadata', 'documentHeader']},
     {name: 'licenceNumber', label: 'Licence number'},
@@ -66,19 +56,14 @@ const SECTION_DEFINITIONS: SectionDefinition[] = [
     {name: 'metWith', label: 'Met with'},
     {name: 'inspectingOfficer', label: 'Inspecting officer'},
     {name: 'licenceProvisions', label: 'Licence provisions', isAbsent: provisionsAreAbsent},
-    // meters is a list of records, so a later per-row diff cannot align them positionally.
     {name: 'measurementDetails', label: 'Measurement details', isRepeating: true},
     {name: 'generalComments', label: 'General comments'},
-    // The form's footer: who it was sent to and the date it was completed, which is a separate
-    // field from the inspection date and regularly misread - "24/8/017" parses to the year 17.
     {name: 'formSentTo', label: 'Form sent to', path: ['metadata', 'formSentTo']},
     {name: 'date', label: 'Form date', path: ['metadata', 'date']},
 ];
 
-/// Absence has four shapes in the serialised form, and the nested ones are why this recurses: a
-/// missing scalar is omitted entirely, an unmatched object is "{}", an unmatched list is "[]", and
-/// measurementDetails of a document nothing matched is {..., meters: [{}]} - populated-looking at
-/// the top level and empty all the way down.
+/// Recurses because the nested cases are the ones that lie: measurementDetails of a document nothing
+/// matched is {..., meters: [{}]}, populated-looking at the top level and empty all the way down.
 function isEmptyValue(value: unknown): boolean {
     if (value === null || value === undefined || value === '') {
         return true;
@@ -107,14 +92,11 @@ function buildSection(definition: SectionDefinition, scraped: unknown): Verified
     };
 }
 
-/// Every record carries the same set, so the list can show a real denominator before any form is
-/// fetched.
 function placeholderSections(): VerifiedSection[] {
     return SECTION_DEFINITIONS.map(definition => buildSection(definition, null));
 }
 
-/// Walks a definition's path, stopping at the first step that is not an object so a form missing
-/// the whole of "metadata" reads as an absent value rather than throwing.
+/// Stops at the first step that is not an object, so a form missing all of "metadata" reads as absent.
 function readPath(form: Record<string, unknown>, path: string[]): unknown {
     return path.reduce<unknown>(
         (value, key) => value === null || typeof value !== 'object'
@@ -132,8 +114,7 @@ export function buildSectionsFromForm(form: Record<string, unknown>): VerifiedSe
     });
 }
 
-/// Re-opening a record rebuilds its sections from the form, so decisions taken in this session -
-/// which live only in memory until there is a store - are carried across by section name.
+/// Decisions live only in memory until there is a store, so re-opening a record carries them by name.
 export function mergeSectionDecisions(
     fresh: VerifiedSection[],
     existing: VerifiedSection[]
@@ -185,7 +166,6 @@ export async function fetchInspectionRecords(take = 500): Promise<InspectionReco
         completeness: row.completeness,
         isScan: row.isScan,
         state: 'Unverified',
-        // Carried through so the queue can bucket on it rather than recomputing from the date.
         dateWarning: row.dateWarning,
         extractedWithRulesVersion: 'rules-2026.10',
         sections: placeholderSections(),

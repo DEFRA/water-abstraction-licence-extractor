@@ -17,7 +17,6 @@ import type {
 
 interface Props {
     record: InspectionRecord;
-    /// The extracted report, fetched by the page because the record's sections are built from it.
     form: Record<string, unknown> | null;
     formLoading: boolean;
     formError: string | null;
@@ -46,9 +45,8 @@ const TYPE_COLOURS: Record<VerificationType, string> = {
     BusinessReview: '#c62828',
 };
 
-/// Every edge of a word's rectangle, with the optionality of the generated model resolved. A word
-/// missing any edge is dropped rather than defaulted: a zero would outline the page corner, which
-/// reads as a located value. The negative check is the extractor's own "not known" marker.
+/// A word missing any edge is dropped rather than defaulted: a zero would outline the page corner,
+/// which reads as a located value. Negative is the extractor's own "not known" marker.
 function toRect(coordinates: IDocumentLineWordCoordinates | undefined): FieldRect | null {
     const {left, right, top, bottom} = coordinates ?? {};
 
@@ -136,7 +134,6 @@ export function InspectionReportVerificationModal(
     const [position, setPosition] = useState({top: 40, left: 40});
     const [size, setSize] = useState({width: 'calc(100% - 80px)', height: 'calc(100% - 80px)'});
 
-    // Only the matched words are read here; they drive the page overlay, nothing else uses them.
     useEffect(() => {
         setMatchesLoading(true);
         setReportData(null);
@@ -152,12 +149,10 @@ export function InspectionReportVerificationModal(
 
     const fieldBoxes = useMemo(() => buildFieldBoxes(reportData?.matches), [reportData]);
 
-    // The rail's section names are the form's own property names; the matched label is the same
-    // name capitalised, as InspectionReportModal derives it from a clicked JSON row.
     const pages = reportData?.pages;
 
-    /// Shared by a rail click and a JSON row click: a property name maps to the label of the same
-    /// name capitalised, which is how the report modal resolves a clicked row.
+    /// A property name resolves to the label of the same name capitalised, as InspectionReportModal
+    /// derives it from a clicked JSON row.
     const selectProperty = (propertyName: string) => {
         if (!propertyName) {
             setHighlightBoxes([]);
@@ -199,8 +194,7 @@ export function InspectionReportVerificationModal(
             .filter(row => row.querySelector(':scope > .json-view--property, :scope > .json-view--index'));
     };
 
-    /// The outline only. Separate from selectRow so the rail can mark a row without re-deriving
-    /// the property from it, which would call back into the rail and loop.
+    /// Separate from selectRow so marking a row does not re-derive the property and loop back.
     const highlightRow = (row: HTMLElement, index: number) => {
         if (selectedRowRef.current) {
             selectedRowRef.current.style.outline = '';
@@ -222,8 +216,7 @@ export function InspectionReportVerificationModal(
         selectProperty(span?.textContent?.replace(/"/g, '') ?? '');
     };
 
-    /// A property nested inside a collapsed object - the three under "metadata" - has no rendered
-    /// row to mark, so the existing highlight is left alone rather than cleared to nothing.
+    /// A property inside a collapsed object has no rendered row, so the highlight is left alone.
     const highlightJsonRowFor = (propertyName: string) => {
         const rows = getPropertyRows();
 

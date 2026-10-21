@@ -1,6 +1,4 @@
-// The shape a verification decision is held in, and the record it belongs to. Named for the
-// licence side's own vocabulary (LicenceSection.tsx) rather than a new one, so the two agree on
-// what Confirmed and ConfirmNone mean.
+// Vocabulary matches the licence side (LicenceSection.tsx): Confirmed and ConfirmNone mean the same.
 
 export type DateSource = 'Extracted' | 'Metadata' | 'DmsDocument' | 'DmsUpload' | 'None';
 
@@ -11,16 +9,11 @@ export type RecordState = 'Unverified' | 'InReview' | 'Verified' | 'BusinessRevi
 export interface VerifiedSection {
     name: string;
     label: string;
-    /// Repeating sections cannot be diffed positionally, so their rows carry their own ids.
     isRepeating: boolean;
-    /// What extraction produced, null when nothing was. Not narrowed to an object: a section is a
-    /// property of the extracted form, and those are variously a string, an array and a nested
-    /// object.
     scraped: unknown;
     override: unknown;
     verificationType: VerificationType;
-    /// What a later run produced, held only when it disagrees with the verified value. Re-running a
-    /// verified record scores the rules against human truth; it never replaces the verified value.
+    /// Held only when a later run disagrees; it never replaces the verified value.
     reExtracted: unknown;
 }
 
@@ -36,21 +29,15 @@ export interface InspectionRecord {
     completeness: number;
     isScan: boolean;
     state: RecordState;
-    /// The projection's own plausibility verdict, so the queue does not recompute it.
     dateWarning?: string;
 
-    /// The rules this record was last extracted with. A run only revisits a verified record when
-    /// this differs from the current rules.
     extractedWithRulesVersion: string;
     sections: VerifiedSection[];
 }
 
-/// Stands in for whatever stamps the compiled rule set today. Nothing does, which is why the page
-/// hides the comparison rather than showing every record as current.
+/// Nothing stamps the compiled rule set yet, which is why the page hides the comparison.
 export const CURRENT_RULES_VERSION = 'rules-2026.10';
 
-/// The record as it would reach the lake: verified values, the extraction they came from, and
-/// enough provenance to recompute accuracy later.
 export function buildLakeRecord(record: InspectionRecord) {
     return {
         fileId: record.fileId,
@@ -59,7 +46,7 @@ export function buildLakeRecord(record: InspectionRecord) {
         inspectionDate: record.inspectionDate,
         inspectionDateSource: record.dateSource,
         verifiedAt: new Date().toISOString(),
-        // Fixed until a signed-in identity reaches the portal; there is no auth on it today.
+        // Fixed until the portal has a signed-in identity.
         verifiedBy: 'edward.butler@environment-agency.gov.uk',
         provenance: {
             processRunId: record.processRunId,

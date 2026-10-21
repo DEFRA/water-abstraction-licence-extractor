@@ -25,8 +25,7 @@ const MAX_ROWS_RENDERED = 200;
 const MAX_GROUPS_RENDERED = 100;
 
 /// A collision after normalising is the same report filed twice - "H Hey & Sons  WR51.pdf" against
-/// "H Hey & Sons WR51.pdf" differs only by a double space. Names that all differ are the common
-/// case and usually mean several abstraction points, so only the collision is marked.
+/// "H Hey & Sons WR51.pdf" differs only by a double space.
 function hasRepeatedName(group: InspectionRecord[]) {
     const stems = new Set(group.map(record => (record.originalFileName ?? '')
         .replace(/\.(pdf|docx?)$/i, '')
@@ -36,8 +35,7 @@ function hasRepeatedName(group: InspectionRecord[]) {
     return stems.size < group.length;
 }
 
-/// Kept out of the page rather than shown inert: a control that can never act reads as a defect.
-/// The code behind each is intact.
+/// Hidden rather than shown inert; the code behind each is intact.
 ///
 /// Nothing dispatches a re-extraction, so the re-run queue only ever accumulated ids in memory.
 const SHOW_RE_RUN_CONTROLS = false;
@@ -52,9 +50,7 @@ const LOW_CONFIDENCE_TEMPLATES = new Set(['unknown', 'nonStandardNarrative']);
 
 type QueueKey = 'disagreement' | 'noDate' | 'implausibleDate' | 'unknownTemplate' | 'lowCompleteness' | 'dmsDateOnly' | 'ready' | 'verified';
 
-/// Sits alongside the queues rather than among them: a record with siblings still belongs in
-/// whichever queue its own state puts it in, and removing it from there to put it here would hide
-/// it from the reviewer working that queue.
+/// A view, not a queue: a record with siblings stays in whichever queue its own state puts it in.
 const MultipleDocumentsView = 'multiple';
 
 type ViewKey = QueueKey | typeof MultipleDocumentsView;
@@ -71,8 +67,7 @@ interface Queue {
     matches: (record: InspectionRecord) => boolean;
 }
 
-// Ordered worst-first: a record appears in the first bucket it qualifies for, so a reviewer is
-// never shown the same document under two reasons.
+// Ordered worst-first: a record lands in the first bucket it qualifies for and no other.
 const QUEUES: Queue[] = [
     {key: 'disagreement', label: 'Re-run disagrees', matches: disagrees},
     {key: 'noDate', label: 'No date extracted', matches: r => r.dateSource === 'None'},
@@ -127,7 +122,6 @@ function InspectionReportVerificationPage() {
             .finally(() => setLoading(false));
     }, []);
 
-    // Each record lands in exactly one bucket, verified ones out of the work queues entirely.
     const filtered = useMemo(
         () => templateFilter === ''
             ? records
@@ -151,8 +145,8 @@ function InspectionReportVerificationPage() {
         return buckets;
     }, [filtered]);
 
-    /// Built from the records rather than hardcoded: the hardcoded list had drifted both ways,
-    /// offering three templates no record has and omitting three that 2,089 records carry.
+    /// The hardcoded list had drifted both ways: three templates no record has, three missing that
+    /// 2,089 records carry.
     const templates = useMemo(
         () => [...new Set(records.map(record => record.template))]
             .filter((template): template is string => template !== null && template !== '')
@@ -160,8 +154,7 @@ function InspectionReportVerificationPage() {
         [records]
     );
 
-    /// Landing on an empty queue reads as a page that failed to load - "No date extracted" holds
-    /// nothing on the local run - so the first queue with records wins until a reviewer picks one.
+    /// First queue with records wins, so the page does not open on an empty one and read as failed.
     /// Derived rather than set from an effect, which this project's lint rules disallow.
     const defaultQueue = useMemo<QueueKey>(
         () => ACTIVE_QUEUES.find(queue => (bucketed.get(queue.key) ?? []).length > 0)?.key ?? 'ready',
@@ -170,11 +163,10 @@ function InspectionReportVerificationPage() {
 
     const activeQueue: ViewKey = chosenQueue ?? defaultQueue;
 
-    /// Not duplicates: one licence can have several abstraction points inspected on the same day,
-    /// and telling those apart needs the site address, which the list query does not carry.
-    ///
-    /// Keyed on the extracted date rather than sortDate, which falls back to DMS dates and would
-    /// group documents that merely share an upload day.
+    /// Mostly not duplicates: one licence can have several abstraction points inspected the same
+    /// day, and telling those apart needs the site address, which the list query does not carry.
+    /// Keyed on the extracted date, not sortDate, which falls back to DMS dates and would group on
+    /// a shared upload day.
     const documentGroups = useMemo(() => {
         const byKey = new Map<string, InspectionRecord[]>();
 
@@ -195,8 +187,7 @@ function InspectionReportVerificationPage() {
 
         return [...byKey.values()]
             .filter(group => group.length > 1)
-            // Repeated names first: those are the groups a reviewer can act on without needing the
-            // site address to tell the documents apart.
+            // Repeated names first: the groups a reviewer can act on without the site address.
             .sort((left, right) =>
                 Number(hasRepeatedName(right)) - Number(hasRepeatedName(left))
                 || right.length - left.length
@@ -214,9 +205,8 @@ function InspectionReportVerificationPage() {
 
     const openRecord = records.find(record => record.fileId === openFileId) ?? null;
 
-    /// A record's sections are the properties of its extracted form, which the list query does not
-    /// carry, so opening one fetches it. Every open goes through here - the row button and
-    /// "Verify & next" alike - or a record would open with an empty rail.
+    /// Every open goes through here - the row button and "Verify & next" alike - or a record opens
+    /// with an empty rail.
     const openRecordById = (fileId: string | null) => {
         setOpenFileId(fileId);
         setOpenForm(null);
@@ -265,8 +255,7 @@ function InspectionReportVerificationPage() {
                 ? {
                     ...section,
                     verificationType,
-                    // The extraction is kept whatever the correction, so the pair stays available
-                    // as ground truth.
+                    // The extraction is kept whatever the correction, so the pair stays as truth.
                     override: verificationType === 'Edited' ? (override ?? section.override) : null,
                 }
                 : section);

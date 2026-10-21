@@ -1,3 +1,6 @@
+using System.Text.Json;
+using WALE.ProcessFile.Core.Helpers;
+
 namespace WRADI.DocumentType.WrInspectionReport.Models.Csv;
 
 public class WrInspectionReportCsvLine
@@ -77,6 +80,12 @@ public class WrInspectionReportCsvLine
     public string? LicenceProvisions__CompensationOrAugmentation { get; set; }
     public string? LicenceProvisions__FishAndEelScreening { get; set; }
 
+    /// <summary>
+    /// Must stay last: column order is reflection declaration order, so an earlier insertion shifts
+    /// every column after it for anyone already reading these files.
+    /// </summary>
+    public string? ExtractedJson { get; set; }
+
     public static WrInspectionReportCsvLine FromForm(Models.WrInspectionReport form)
     {
         return new WrInspectionReportCsvLine
@@ -152,7 +161,8 @@ public class WrInspectionReportCsvLine
             LicenceProvisions__HandsOffFlow = form.LicenceProvisions.HandsOffFlow.ToString(),
             LicenceProvisions__CompensationOrAugmentation =
                 form.LicenceProvisions.CompensationOrAugmentation.ToString(),
-            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString()
+            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString(),
+            ExtractedJson = JsonSerializer.Serialize(form, JsonHelper.GetSerializerOptions())
         };
     }
 }

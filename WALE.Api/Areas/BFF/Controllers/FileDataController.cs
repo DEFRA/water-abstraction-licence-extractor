@@ -15,6 +15,7 @@ using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Interfaces;
 using WRADI.DocumentType.WrInspectionReport.Services;
 using WRADI.Services.Cache.WrInspectionReport.Interfaces;
+using WRADI.DocumentType.WrInspectionReport.Models;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -204,6 +205,40 @@ public class FileDataController(
     {
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    /// <summary>
+    /// The dates bound sort_date, not the upload date a process run is scoped by, so the same
+    /// window gives a different count here. Omitting both is the only way to reach a document with
+    /// no date, which the query drops whenever a bound is given.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildLatestWrInspectionReportCsvLinesAsync(from, to, template);
+        var bytes = WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns);
+
+        return File(bytes, "text/csv", $"WR51-Latest-{DescribeWindow(from, to)}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestXlsxAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildLatestWrInspectionReportCsvLinesAsync(from, to, template);
+        var bytes = WrInspectionReportReportBuilder.BuildXlsx(lines, excludeInternalColumns);
+
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"WR51-Latest-{DescribeWindow(from, to)}.xlsx");
     }
 
     [HttpGet]
@@ -525,15 +560,121 @@ public class FileDataController(
     {
         var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
 
+        return await BuildCsvLinesAsync(
+            simpleResults.Count,
+            simpleResults.Select(Func<Task<MatchesResult?>> (result) =>
+                () => outputService.GetMatchesResultAsync(result.FileId, processRunId)));
+    }
+
+    /// <summary>
+    /// The flattened export keeps a document's first meter and drops the rest - 45% of meters in a
+    /// sampled run.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestMetersCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null)
+    {
+        var forms = await BuildLatestFormsAsync(from, to, template);
+        var lines = forms.SelectMany(WrInspectionReportMeterCsvLine.FromForm).ToList();
+
+        return File(
+            WrInspectionReportReportBuilder.BuildCsv(lines),
+            "text/csv",
+            $"WR51-Latest-Meters-{DescribeWindow(from, to)}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestActionsCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null)
+    {
+        var forms = await BuildLatestFormsAsync(from, to, template);
+        var lines = forms.SelectMany(WrInspectionReportActionCsvLine.FromForm).ToList();
+
+        return File(
+            WrInspectionReportReportBuilder.BuildCsv(lines),
+            "text/csv",
+            $"WR51-Latest-Actions-{DescribeWindow(from, to)}.csv");
+    }
+
+    private static string DescribeWindow(DateOnly? from, DateOnly? to) =>
+        (from, to) switch
+        {
+            ({ } start, { } end) => $"{start:yyyyMMdd}-{end:yyyyMMdd}",
+            ({ } start, null) => $"from-{start:yyyyMMdd}",
+            (null, { } end) => $"to-{end:yyyyMMdd}",
+            _ => "all"
+        };
+
+    private async Task<List<WrInspectionReportCsvLine>> BuildLatestWrInspectionReportCsvLinesAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? template)
+    {
+        var summaries = await wrInspectionReportSummaryReadService.GetLatestPerFileAsync(
+            from, to, template, 0, int.MaxValue);
+
+        return await BuildCsvLinesAsync(
+            summaries.Count,
+            summaries.Select(Func<Task<MatchesResult?>> (summary) =>
+                () => outputService.GetMatchesResultAsync(summary.MatchesResultId)));
+    }
+
+    private async Task<List<WrInspectionReport>> BuildLatestFormsAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? template)
+    {
+        var summaries = await wrInspectionReportSummaryReadService.GetLatestPerFileAsync(
+            from, to, template, 0, int.MaxValue);
+
         using var semaphore = new SemaphoreSlim(10);
 
-        var tasks = simpleResults.Select(async simpleResult =>
+        var tasks = summaries.Select(async summary =>
         {
             await semaphore.WaitAsync();
 
             try
             {
-                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                var matchesResult = await outputService.GetMatchesResultAsync(summary.MatchesResultId);
+
+                return matchesResult == null
+                    ? null
+                    : WrInspectionReportSchemaConverter.ToForm(
+                        matchesResult,
+                        null,
+                        WrInspectionReportSummaryBuilder.GetKnownTemplate(matchesResult));
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var forms = await Task.WhenAll(tasks);
+
+        return forms.Where(form => form != null).Cast<WrInspectionReport>().ToList();
+    }
+
+    /// <summary>
+    /// A document whose matches result has gone is dropped rather than failing the whole export.
+    /// </summary>
+    private async Task<List<WrInspectionReportCsvLine>> BuildCsvLinesAsync(
+        int count,
+        IEnumerable<Func<Task<MatchesResult?>>> readers)
+    {
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = readers.Select(async read =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await read();
                 if (matchesResult == null)
                 {
                     return null;

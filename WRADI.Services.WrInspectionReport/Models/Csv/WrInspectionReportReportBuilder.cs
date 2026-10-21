@@ -11,6 +11,7 @@ public static class WrInspectionReportReportBuilder
     private static readonly HashSet<string> InternalColumnNames = new(StringComparer.Ordinal)
     {
         nameof(WrInspectionReportCsvLine.Images),
+        nameof(WrInspectionReportCsvLine.ExtractedJson),
         nameof(WrInspectionReportCsvLine.Metadata__Date__RawDate),
         nameof(WrInspectionReportCsvLine.InspectionDate__RawDate),
         nameof(WrInspectionReportCsvLine.InspectionDate__RawTime),

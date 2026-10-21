@@ -405,8 +405,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_snapshot_value, licence_section_override_value, verification_type, licence_section_item_id, notes, created_date_time_utc)
-                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionSnapshotValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @LicenceSectionItemId, @Notes, @CreatedDateTimeUtc)
+                           INSERT INTO licence_section_verification (licence_file_id, source_licence_number, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_snapshot_value, licence_section_override_value, verification_type, licence_section_item_id, notes, created_date_time_utc)
+                           VALUES (@LicenceFileId, @SourceLicenceNumber, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionSnapshotValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @LicenceSectionItemId, @Notes, @CreatedDateTimeUtc)
                            RETURNING licence_section_verification_id
                            """;
 
@@ -417,6 +417,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             new
             {
                 verification.LicenceFileId,
+                verification.SourceLicenceNumber,
                 verification.ProcessRunId,
                 verification.LicenceSectionName,
                 verification.LicenceSectionScrapedValue,
@@ -724,6 +725,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                            INSERT INTO licence_section_verification
                            (
                                licence_file_id,
+                               source_licence_number,
                                process_run_id,
                                licence_section_name,
                                verification_type,
@@ -738,6 +740,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                            VALUES
                            (
                                @LicenceFileId,
+                               @SourceLicenceNumber,
                                @ProcessRunId,
                                @LicenceSectionName,
                                @VerificationType,

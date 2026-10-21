@@ -38,7 +38,7 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     
@@ -115,6 +115,4 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<int> GetCurrentBackupVerificationsCount();
     
     Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
-    
-    Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync();
 }

@@ -61,6 +61,7 @@ interface LicenceSectionProps {
     children: ReactElement<LicenceSectionBodyProps>;
     initialOpen?: boolean;
     licenceFileId: string;
+    sourceLicenceNumber: string;
     processRunId: number;
     onRefresh?: () => void;
     onVerified?: () => void;
@@ -68,7 +69,7 @@ interface LicenceSectionProps {
     onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
-export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, processRunId, onRefresh, onVerified, outputListDataItem, onOpenReport }: LicenceSectionProps) {
+export function LicenceSection({ title, itemType, children, initialOpen = false, licenceFileId, sourceLicenceNumber, processRunId, onRefresh, onVerified, outputListDataItem, onOpenReport }: LicenceSectionProps) {
     const [resetKey, setResetKey] = useState(0);
     const bodyRef = useRef<ILicenceSectionBody>(null);
 
@@ -153,6 +154,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                     for (const req of overrideRequests) {
                         const verification = new LicenceSectionVerification({
                             licenceFileId: licenceFileId,
+                            sourceLicenceNumber: sourceLicenceNumber,
                             processRunId: processRunId,
                             licenceSectionName: title,
                             licenceSectionScrapedValue: req.scrapedData ? stringifyVerificationValue(req.scrapedData) : undefined,
@@ -168,6 +170,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                 } else {
                     const verification = new LicenceSectionVerification({
                         licenceFileId: licenceFileId,
+                        sourceLicenceNumber: sourceLicenceNumber,
                         processRunId: processRunId,
                         licenceSectionName: title,
                         licenceSectionScrapedValue: scrapedData ? stringifyVerificationValue(scrapedData) : undefined,

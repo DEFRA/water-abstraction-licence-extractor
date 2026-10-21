@@ -3,7 +3,6 @@ using System.Text;
 using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Interfaces;
@@ -20,7 +19,6 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class VerificationController(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IOptions<VerificationConfig> verificationConfig,
-    IMemoryCache memoryCache,
     IOutputService outputService) : Controller
 {
     [HttpGet]
@@ -48,11 +46,9 @@ public class VerificationController(
                 .Take(chunkSize)
                 .ToList();
  
-        var outputVerificationChunk = await MapVerifications(verificationChunk);
-
         var file =
             await ToolHelper.CreateCsvAsync(
-                outputVerificationChunk);
+                verificationChunk);
 
         var csv =
             Encoding.UTF8.GetString(file);
@@ -230,48 +226,6 @@ public async Task<IActionResult> ImportCsvChunk(
         }
     }
 
-    private async Task<List<LicenceSectionVerificationOutput>> MapVerifications(
-        List<LicenceSectionVerification> records)
-    {
-        var map = await GetLicenceNumberFileIdMapEntries();
-
-        return (from record in records
-            let sourceLicenceNumber = map.FirstOrDefault(x => x.FileId == record.LicenceFileId)?.LicenceNumber
-            select new LicenceSectionVerificationOutput
-            {
-                LicenceSectionVerificationId = record.LicenceSectionVerificationId,
-                LicenceFileId = record.LicenceFileId,
-                ProcessRunId = record.ProcessRunId,
-                LicenceSectionName = record.LicenceSectionName,
-                LicenceSectionScrapedValue = record.LicenceSectionScrapedValue,
-                LicenceSectionSnapshotValue = record.LicenceSectionSnapshotValue,
-                LicenceSectionOverrideValue = record.LicenceSectionOverrideValue,
-                VerificationType = record.VerificationType,
-                LicenceSectionItemId = record.LicenceSectionItemId,
-                Notes = record.Notes,
-                CreatedDateTimeUtc = record.CreatedDateTimeUtc,
-                DeletedDateTimeUtc = record.DeletedDateTimeUtc,
-                SourceLicenceNumber = sourceLicenceNumber
-            }).ToList();
-    }
-    
-    private async Task<List<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapEntries()
-    {
-        const string cacheKey = "licence-number-file-ids";
-
-        return await memoryCache.GetOrCreateAsync(
-            cacheKey,
-            async cacheEntry =>
-            {
-                cacheEntry.AbsoluteExpirationRelativeToNow =
-                    TimeSpan.FromMinutes(10);
-
-                var map = await abstractionLicenceOutputService.GetLicenceNumberFileIdMapAsync();
-
-                return map.ToList();
-            }) ?? [];
-    }
-    
     private async Task FireAndForgetDataRefresh()
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();

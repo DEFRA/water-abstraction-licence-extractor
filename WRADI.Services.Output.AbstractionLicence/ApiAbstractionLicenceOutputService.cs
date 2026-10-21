@@ -99,11 +99,6 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
@@ -364,9 +359,9 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
-        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}";
+        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}&sourceLicenceNumber={Uri.EscapeDataString(sourceLicenceNumber)}";
         
         var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();

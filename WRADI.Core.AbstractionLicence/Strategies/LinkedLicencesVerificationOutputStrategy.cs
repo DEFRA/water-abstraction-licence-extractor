@@ -10,10 +10,10 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     public string SectionName => "Linked Licences";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
+        Guid fileId, string licenceNumber)
     {
         var hasOutgoingVerifications =
-            verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
+            verificationLookups.BySourceLicence.TryGetValue((fileId, licenceNumber), out var outgoingVerifications);
 
         var hasIncomingVerifications =
             verificationLookups.ByItemId.TryGetValue(licenceNumber, out var incomingVerifications);
@@ -27,8 +27,7 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
 
         if (hasIncomingVerifications)
         {
-            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!,
-                fileIdToLicenceNumberMapping);
+            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!);
         }
 
         if (hasOutgoingVerifications || hasIncomingVerifications)

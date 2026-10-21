@@ -401,9 +401,11 @@ public class FileDataController(
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> LicenceSectionVerifications(
-        [FromQuery] Guid licenceFileId)
+        [FromQuery] Guid licenceFileId,
+        [FromQuery] string sourceLicenceNumber)
     {
-        var results = await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(licenceFileId);
+        var results = await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(
+            licenceFileId, sourceLicenceNumber);
         return Ok(results);
     }
 
@@ -491,7 +493,7 @@ public class FileDataController(
 
     private async Task RefreshCurrentProcessRunLicenceListData(LicenceSectionVerification verification)
     {
-        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
+        var mainLicence = verification.SourceLicenceNumber;
 
         if (!string.IsNullOrWhiteSpace(mainLicence))
         {
@@ -535,8 +537,8 @@ public class FileDataController(
             return;
         }
         
-        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
-        
+        var mainLicence = verification.SourceLicenceNumber;
+
         if (!string.IsNullOrWhiteSpace(mainLicence))
         {
             var licenceList = new List<string> { mainLicence };
@@ -709,12 +711,6 @@ public class FileDataController(
         return lines.Where(line => line != null).Cast<WrInspectionReportCsvLine>().ToList();
     }
 
-
-    private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)
-    {
-        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
-        return fileIdToLicenceNumberMapping[fileId][0].LicenceNumber!;
-    }
 
     private async Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {

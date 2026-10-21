@@ -80,7 +80,6 @@ public class UiProcessRunService(
         
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
-        var fileIdTask = abstractionLicenceOutputService.GetLicenceFileIdsAsync(processRunId);
         var licenceNumberFlagReasonsTask =
             abstractionLicenceOutputService.GetLicenceNumberFlagReasonsAsync(processRunId);
         
@@ -89,7 +88,6 @@ public class UiProcessRunService(
             await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
         
         var verificationsBySection = await verificationsBySectionTask;
-        var fileIdToLicenceNumberMapping = await fileIdTask;
         var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
         
         var paginationOutputLines = licences
@@ -105,8 +103,7 @@ public class UiProcessRunService(
         var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
             processRunId,
-            verificationsBySection,
-            fileIdToLicenceNumberMapping);
+            verificationsBySection);
 
         foreach (var listDataItem in paginationListData)
         {

@@ -4,6 +4,7 @@ public class LicenceSectionVerification
 {
     public int LicenceSectionVerificationId { get; set; }
     public Guid LicenceFileId { get; set; }
+    public string SourceLicenceNumber { get; set; } = string.Empty;
     public int ProcessRunId { get; set; }
     public string? LicenceSectionName { get; set; }
     public string? LicenceSectionScrapedValue { get; set; }

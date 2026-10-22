@@ -1,3 +1,4 @@
+using System.Globalization;
 using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 
@@ -29,6 +30,98 @@ public class WrInspectionReportSchemaConverterTests
                 }
             ]
         };
+    }
+
+    private static MatchesResult BuildMatchesResultWithInspectionDate(string rawDate)
+    {
+        var documentLine = new DocumentLine(
+            0,
+            0,
+            [new DocumentLineColumn(DocumentLineColumn.TextToWords(rawDate, null))],
+            0,
+            0,
+            0,
+            0);
+
+        return new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    Text = [documentLine],
+                    LabelGroupName = "InspectionDate",
+                    MatchedLabelName = "InspectionDate"
+                }
+            ]
+        };
+    }
+
+    /// The cases below pass on a UK machine whether or not the parse names a format provider, so
+    /// they only mean anything under the culture the API container actually runs.
+    private static T UnderInvariantCulture<T>(Func<T> act)
+    {
+        var original = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+        try
+        {
+            return act();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
+    }
+
+    [Theory]
+    // 433501 and the other v3 UAT documents: a day past the 12th failed to parse at all and the
+    // summary fell back to the DMS upload date, and a day of 12 or less parsed transposed -
+    // "12/06/2026" was stored as 6 December.
+    [InlineData("20/07/2026", 2026, 7, 20)]
+    [InlineData("12/06/2026", 2026, 6, 12)]
+    [InlineData("07/05/2026", 2026, 5, 7)]
+    [InlineData("03.08.2028", 2028, 8, 3)]
+    [InlineData("11/06/26", 2026, 6, 11)]
+    [InlineData("25 August 2026", 2026, 8, 25)]
+    public void WhenInspectionDateIsDayFirst_ThenParsesDayFirstUnderAnyCulture(
+        string rawDate,
+        int expectedYear,
+        int expectedMonth,
+        int expectedDay)
+    {
+        // Arrange
+        var matchesResult = BuildMatchesResultWithInspectionDate(rawDate);
+
+        // Act
+        var form = UnderInvariantCulture(
+            () => WrInspectionReportSchemaConverter.ToForm(matchesResult, null));
+
+        // Assert
+        Assert.NotNull(form.InspectionDate.DateTime);
+        Assert.Equal(
+            new DateTime(expectedYear, expectedMonth, expectedDay),
+            form.InspectionDate.DateTime!.Value.Date);
+    }
+
+    [Theory]
+    [InlineData("20/07/2026", 2026, 7, 20)]
+    [InlineData("12/06/2026", 2026, 6, 12)]
+    public void WhenFormDateIsDayFirst_ThenParsesDayFirstUnderAnyCulture(
+        string rawDate,
+        int expectedYear,
+        int expectedMonth,
+        int expectedDay)
+    {
+        // Arrange
+        var matchesResult = BuildMatchesResultWithFormDate(rawDate);
+
+        // Act
+        var form = UnderInvariantCulture(
+            () => WrInspectionReportSchemaConverter.ToForm(matchesResult, null));
+
+        // Assert
+        Assert.Equal(new DateOnly(expectedYear, expectedMonth, expectedDay), form.Metadata.Date.Date);
     }
 
     [Theory]

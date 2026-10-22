@@ -215,6 +215,7 @@ public static class WrInspectionV3KeyValueMatcher
         var lines = values
             .Select(line => new DocumentLine
             {
+                PageNumber = line.PageNumber,
                 Columns =
                 [
                     new DocumentLineColumn(

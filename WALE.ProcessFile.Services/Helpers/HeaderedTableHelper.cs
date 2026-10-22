@@ -51,7 +51,8 @@ public static class HeaderedTableHelper
 
                 record[header] = DocumentTableValue.From(
                     cell,
-                    IsPlaceholder(value, placeholders) ? string.Empty : value);
+                    IsPlaceholder(value, placeholders) ? string.Empty : value,
+                    table.PageNumber);
             }
 
             if (record.Values.Any(value => !string.IsNullOrWhiteSpace(value.Text)))

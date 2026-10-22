@@ -169,7 +169,8 @@ public static class WrInspectionReportSummaryBuilder
 
         var value = GetStringOrNull(section, propertyName);
 
-        return !string.IsNullOrWhiteSpace(value) && DateOnly.TryParse(value.Split('T')[0], out var date)
+        return !string.IsNullOrWhiteSpace(value)
+               && DateOnly.TryParse(value.Split('T')[0], CultureInfo.InvariantCulture, out var date)
             ? date
             : null;
     }

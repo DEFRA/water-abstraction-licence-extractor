@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
@@ -12,6 +13,10 @@ namespace WRADI.DocumentType.WrInspectionReport.Converters;
 public static class WrInspectionReportSchemaConverter
 {
     public const string AdditionalInformationTemplateKey = "WrInspectionReportTemplate";
+
+    /// Constructed, not a named "en-GB": the container's ambient culture is InvariantCulture, and a
+    /// named culture throws under globalization-invariant mode.
+    private static readonly DateTimeFormatInfo DayFirst = new() { ShortDatePattern = "dd/MM/yyyy" };
 
     /// <param name="knownTemplate">Supplied when the caller already classified the document, so
     /// the TemplateMarker* fields can be left out of whichever ruleset ran without losing
@@ -31,7 +36,7 @@ public static class WrInspectionReportSchemaConverter
         var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
 
         DateOnly? formDate = null;
-        if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), out var tFormDate))
+        if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), DayFirst, out var tFormDate))
         {
             formDate = tFormDate;
         }
@@ -223,7 +228,7 @@ public static class WrInspectionReportSchemaConverter
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);
         DateOnly? dateOfCertificateOrRecord = null;
-        if (DateOnly.TryParse(rawDateOfCertificateOrRecord, out var tDateOfCertificateOrRecord))
+        if (DateOnly.TryParse(rawDateOfCertificateOrRecord, DayFirst, out var tDateOfCertificateOrRecord))
         {
             dateOfCertificateOrRecord = tDateOfCertificateOrRecord;
         }
@@ -479,7 +484,7 @@ public static class WrInspectionReportSchemaConverter
     /// </summary>
     private static bool IsUsableInspectionDate(string potentialDate, out DateTime parsed)
     {
-        if (!DateTime.TryParse(potentialDate, out parsed))
+        if (!DateTime.TryParse(potentialDate, DayFirst, DateTimeStyles.None, out parsed))
         {
             return false;
         }

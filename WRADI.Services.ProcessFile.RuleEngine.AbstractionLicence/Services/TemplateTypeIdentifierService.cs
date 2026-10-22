@@ -3,6 +3,7 @@ using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Engine;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Interfaces;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Models;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Rules;
+using TemplateFinderResult = WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Models.TemplateFinderResult;
 
 namespace WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Services;
 

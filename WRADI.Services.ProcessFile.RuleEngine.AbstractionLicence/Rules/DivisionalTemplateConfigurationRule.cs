@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Interfaces;
 using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Models;
+using TemplateFinderResult = WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Models.TemplateFinderResult;
 
 namespace WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Rules;
 

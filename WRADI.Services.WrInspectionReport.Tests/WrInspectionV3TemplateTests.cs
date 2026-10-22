@@ -20,24 +20,12 @@ using Xunit.Abstractions;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-/// <summary>
-/// WRADI-418. Measures the v3 "Assessment report" ruleset against the six consultation documents
-/// in ~/Documents/TestLicences/wr51-t3, and checks that a v3 document classifies as
-/// <see cref="WrTemplateType.V3"/> rather than falling through to Unknown.
+/// The v3 "Assessment report" ruleset against the consultation documents in
+/// ~/Documents/TestLicences/wr51-t3. Skips with a message when that folder is absent.
 ///
-/// Coverage, not accuracy: there is no ground truth for these yet. The real test files for phase
-/// 1.1 (20 standard plus 5 with amended tables) do not exist, so this says which fields the rules
-/// find, not whether the values are right. Treat a 100% here as "the label matched", nothing more.
-///
-/// The documents are consultation drafts, so unfilled Word dropdowns read as the literal text
-/// "Choose an item." - a placeholder rather than a value. The test counts those separately so they
-/// cannot flatter the coverage figure.
-///
-/// Skips with a message when the folder is absent, so an ordinary test run is unaffected.
-///
-/// WhenV3ConsultationDocuments_ThenWriteCsv is the one test here that produces a deliverable
-/// rather than a measurement.
-/// </summary>
+/// Coverage, not accuracy - there is no ground truth yet, so a 100% here means "the label
+/// matched", nothing more. Unfilled Word dropdowns read as the literal "Choose an item." and are
+/// counted separately so they cannot flatter the figure.
 public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 {
     private static string V3Folder => Path.Combine(
@@ -61,11 +49,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
     private static readonly ITableExtractorService UnstructuredTableExtractorService =
         new TabulaTableExtractorService(CacheService);
 
-    /// <summary>
-    /// The fields a v3 document should always carry. The section blocks are deliberately excluded:
-    /// two of the three tables are empty in every consultation sample, so requiring them would be
-    /// asserting against a draft artefact.
-    /// </summary>
+    /// The section blocks are excluded: two of the three tables are empty in every sample, so
+    /// requiring them asserts against a draft artefact.
     private static readonly string[] AlwaysExpectedFields =
     [
         WrInspectionReportFieldNames.V3DocumentTemplateVersion,
@@ -92,15 +77,13 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         var config = new LookupConfiguration(
             WrInspectionReportTextBasedLabelConfiguration.GetLabels(),
             [],
-            // LocalFileService concatenates the folder and filename directly, so the separator
-            // has to be there.
+            // LocalFileService concatenates folder and filename directly.
             new LocalFileService(pdfFolder.EndsWith('/') ? pdfFolder : pdfFolder + "/"),
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
             null,
-            // FromLetterAndTableGrid needs an unstructured table extractor. Tabula is the
-            // free/local one the real-document WR51 test uses, so this costs nothing.
+            // FromLetterAndTableGrid needs a table extractor; Tabula is free and local.
             UnstructuredTableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
@@ -121,11 +104,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             DocnetAlternativeDocumentService,
             MessageQueueService);
 
-    /// <summary>
-    /// Goes through the orchestrator rather than calling the v3 rules directly, so the
-    /// classification pass is exercised too. If classification regressed, a v3 document would be
-    /// read with v1 rules and the coverage here would collapse, which is the point.
-    /// </summary>
+    /// Through the orchestrator, not the v3 rules directly, so classification is exercised: if it
+    /// regressed, a v3 document would be read with v1 rules and this coverage would collapse.
     private static async Task<(MatchesResult? Result, WrTemplateType Template)> ExtractAsync(string filename)
     {
         var pdfDataExtractor = BuildPdfDataExtractor();
@@ -136,9 +116,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
             var fileId = GuidHelper.GetConsistentFileIdFromFilename(filename);
 
-            // Through the orchestrator with the table extractor supplied, which is the production
-            // path: classification, the v3 ruleset, and the key/value overlay that reads the
-            // two-column grids as cells. Passing the bytes is what opts the overlay in.
+            // Passing the bytes is what opts the key/value overlay in.
             var pdfBytes = await File.ReadAllBytesAsync(Path.Combine(V3Folder, filename));
 
             var (_, _, result, template) = await WrInspectionReportExtractionOrchestrator.ExtractAsync(
@@ -163,12 +141,9 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
     private static string? ValueOf(MatchesResult result, string fieldName) =>
         WrInspectionReportSchemaConverter.GetMultilineText(result, fieldName);
 
-    /// <summary>
-    /// Shared-named fields a v3 document resolves from its key/value cells, which is what the
-    /// portal looks a property up by. Split by route: the first group is renamed onto the shared
-    /// model by WrInspectionV3SharedFieldMapper, the meter group is written to the shared names
-    /// directly by ApplyMeters. Both were measured present on all 41 documents.
-    /// </summary>
+    /// The shared names the portal looks a property up by, split by route: the first group is
+    /// renamed by WrInspectionV3SharedFieldMapper, the meter group written directly by ApplyMeters.
+    /// Both measured present on all 41 documents.
     private static readonly string[] SharedFieldsFromKeyValueCells =
     [
         WrInspectionReportFieldNames.LicenceNumber,
@@ -195,14 +170,10 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             .SelectMany(column => column.Words ?? [])
             .ToList();
 
-    /// <summary>
-    /// Asserts on the MatchesResult rather than through ToForm: the result is saved before
-    /// anything renders it, so a check made through the converter passes while the stored document
-    /// carries nothing the portal can resolve.
-    ///
-    /// A missing shared name means the alias pass has stopped running before the save. A present
-    /// name with no region means a reader has gone back to discarding the cell it read from.
-    /// </summary>
+    /// On the MatchesResult, not through ToForm: the result is saved before anything renders it, so
+    /// a check through the converter passes while the stored document carries nothing the portal
+    /// can resolve. A missing shared name means the alias pass stopped running before the save; a
+    /// present name with no region means a reader is discarding the cell again.
     [Fact]
     public async Task WhenV3Document_ThenSharedFieldsAreStoredWithTheirCellRegions()
     {
@@ -341,9 +312,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         // Assert
         testOutputHelper.WriteLine($"Classified as V3: {classifiedV3} of {files.Count}\n");
 
-        // Coverage alone only says a label matched. Printing one document's values makes it
-        // possible to see at a glance that a field has not over-captured into its neighbour,
-        // which a count can never show.
+        // Printing one document's values shows over-capture into a neighbour, which a count cannot.
         var (sample, _) = await ExtractAsync(files[0]);
 
         if (sample != null)
@@ -397,12 +366,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         Assert.True(missing.Count == 0, string.Join("; ", missing));
     }
 
-    /// <summary>
-    /// A v3 document must be refused outright when no table extractor is supplied, rather than
-    /// returning a result that looks healthy while its multi-line fields are truncated and its
-    /// meters collapsed into one. A silently-degraded result is worse than no result, because
-    /// nothing downstream can tell it apart from a good one.
-    /// </summary>
+    /// Refused outright with no table extractor: nothing downstream can tell a truncated result
+    /// from a good one.
     [Fact]
     public async Task WhenNoTableExtractorSupplied_ThenV3ExtractionIsRefused()
     {
@@ -448,11 +413,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    /// <summary>
-    /// The point of the key/value overlay for meters: the converter must end up with one record
-    /// per meter, not one merged record. The filenames state the borehole count, which is an
-    /// external label the rules never see, so it is a fair expectation to assert against.
-    /// </summary>
+    /// One record per meter, not one merged record. The filenames state the borehole count, an
+    /// external label the rules never see, so it is fair to assert against.
     [Fact]
     public async Task WhenMultipleMeters_ThenConverterProducesOneRecordPerMeter()
     {
@@ -506,14 +468,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         Assert.Empty(failures);
     }
 
-    /// <summary>
-    /// WRADI-418 feasibility probe, not an assertion about behaviour. The v3 form is mostly
-    /// two-column key/value grids, and the two fields the line-based rules truncate
-    /// (V3LicenceHolderName, V3LicenceHolderAddress) are both multi-line cells - something a
-    /// cell-based read would get right by construction, since DocumentTableCell.Content holds the
-    /// whole cell. This dumps what the table extractor actually finds, to say whether that
-    /// approach is available at all before anything is built on it.
-    /// </summary>
+    /// A probe, not an assertion about behaviour: dumps what the table extractor finds, to say
+    /// whether a cell-based read of the multi-line holder name and address is available at all.
     [Fact]
     public async Task WhenV3Document_ThenReportWhatTheTableExtractorFinds()
     {
@@ -585,11 +541,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         testOutputHelper.WriteLine($"\nTwo-column tables among those shown: {twoColumn}");
     }
 
-    /// <summary>
-    /// The meter block has to hold every meter, not just the first. The sample set is named by
-    /// borehole count, so the count in the filename is the expected number of repeats - each one
-    /// anchored by its own "Meter location or reference" label.
-    /// </summary>
+    /// The filename's borehole count is the expected number of repeats, each anchored by its own
+    /// "Meter location or reference" label.
     [Fact]
     public async Task WhenMultipleMeters_ThenEveryMeterBlockIsCaptured()
     {
@@ -632,14 +585,9 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    /// <summary>
-    /// WRADI-418 deliverable: the inspection data from the v3 test documents as a CSV, to be
-    /// checked against the forms by hand.
-    ///
-    /// Writes three files: the full column set, the one with diagnostic columns dropped which is
-    /// the shape the portal's own export produces, and a per-meter file. The first two are one row
-    /// per document and so show only the first meter, which the multi-borehole documents exceed.
-    /// </summary>
+    /// A deliverable rather than a measurement: the v3 data as CSV, to be checked against the forms
+    /// by hand. Three files - the full column set, the portal export's shape with diagnostic
+    /// columns dropped, and a per-meter file, since the first two show only the first meter.
     [Fact]
     public async Task WhenV3ConsultationDocuments_ThenWriteCsv()
     {
@@ -734,8 +682,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
         Assert.Empty(unmapped);
 
-        // The meter file exists because the per-document one truncates to the first meter, so the
-        // thing worth asserting is that it holds more rows than there are documents.
+        // More rows than documents, since the per-document file truncates to the first meter.
         Assert.True(
             meterLines.Count > lines.Count,
             $"Expected more meter rows than documents, got {meterLines.Count} for {lines.Count}");
@@ -745,9 +692,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             Assert.Equal(group.First().MeterCount, group.Count());
         }
 
-        // The condition outcomes were read and discarded before the provision rules existed, so
-        // every v3 row showed DidntMatch across the board. Asserting on the value, not just
-        // presence: a regression here reads as a licence being out of order.
+        // On the value, not just presence: a regression here reads as a licence being out of order.
         var unresolvedProvisions = lines
             .Where(line => line.LicenceProvisions__SourceOfSupply != nameof(InOrderStatus.InOrder)
                 || line.LicenceProvisions__Records == nameof(InOrderStatus.DidntMatch)
@@ -757,9 +702,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
         Assert.Empty(unresolvedProvisions);
 
-        // Only the documents with a filled action contribute rows, the rest being unfilled
-        // dropdowns. Asserting the text survives whole is the point: the fragmented copy of this
-        // same grid splits one action across a row per line.
+        // Only documents with a filled action contribute rows. The text must survive whole: the
+        // fragmented copy of this grid splits one action across a row per line.
         Assert.NotEmpty(actionLines);
 
         foreach (var line in actionLines)

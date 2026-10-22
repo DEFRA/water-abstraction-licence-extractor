@@ -4,18 +4,12 @@ using WALE.ProcessFile.Services.Helpers;
 
 namespace WALE.ProcessFile.Services.Tests.UnitTests;
 
-/// <summary>
-/// The LimitTo.SameColumn/SpecifiedColumn column-matching logic - only reachable for WR51
-/// rules (no licence rule sets LimitTo), and only ever exercised end-to-end through real
-/// PDFs otherwise. These build DocumentLine/DocumentLineColumn objects by hand so the two
-/// steps (find the label's own column on its line, then find the matching column on a
-/// following line) can be checked in isolation, in milliseconds.
-/// </summary>
+/// LimitTo.SameColumn and SpecifiedColumn are only reachable for WR51 rules - no licence rule sets
+/// LimitTo - and otherwise only run end-to-end through real PDFs.
 public class FindLabelGroupMatchesHelperColumnTests
 {
-    // DocumentLineWord.Text rejects internal spaces (a "word" is one token) - a column's
-    // Text is the space-joined concatenation of its words, so a multi-word phrase here is
-    // split into individual single-token words to build a realistic column.
+    // DocumentLineWord.Text rejects internal spaces, so a phrase has to be split into one word
+    // per token to build a realistic column.
     private static DocumentLineColumn Column(params string[] phrases) =>
         new(phrases
             .SelectMany(p => p.Split(' '))
@@ -48,8 +42,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void IncludesAdjacentColumns_UntilEndMarkerColumnFound()
         {
-            // "Source of supply: ✓ Quantities: ✓" - value sits in the column right after the
-            // label, and the walk must stop before sweeping the next field's label in too.
+            // "Source of supply: ✓ Quantities: ✓" - the walk must stop before the next label.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Source of supply:"),
@@ -108,8 +101,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void FindsLabelColumn_ByContainsNotJustExactMatch()
         {
-            // The label's own column is found via Contains, not an exact/prefix match -
-            // separate from whatever TextStart matching decided further upstream.
+            // The label's own column is found via Contains, not an exact or prefix match.
             var columns = new List<DocumentLineColumn> { Column("Prefix Calibration: Suffix") };
 
             var (result, columnIndex) = FindLabelGroupMatchesHelper.WalkSameLineColumns(
@@ -167,12 +159,8 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void DoesNotStop_WhenColumnContainsEndMarkerButDoesNotStartWithIt()
         {
-            // This is the real bug found in the WR51 documents: a column whose text is
-            // "record: January 2026" CONTAINS no end marker text here, but more generally,
-            // an end marker occurring mid-column (not at its start) must not be treated as
-            // the next field starting - only a column that genuinely STARTS a new field
-            // should stop the walk. A column that merely mentions the end marker text
-            // further in is swept up as part of the value instead.
+            // An end marker mid-column must not stop the walk: only a column that starts a new
+            // field does. One merely mentioning the marker is swept up as part of the value.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Calibration:"),
@@ -196,12 +184,9 @@ public class FindLabelGroupMatchesHelperColumnTests
             Assert.Equal(["Calibration:", "x"], result.Select(c => c.Text));
         }
 
-        // LabelToMatch.BoundSameLineWalkByOtherLabelPositions: bounds the walk by the
-        // X-position of a known sibling field's own column, for the case where no TextEnd
-        // marker exists to stop it otherwise. This is the mechanism an earlier rewrite silently
-        // stopped wiring in (the caller still built nextFieldBoundaryX, but WalkSameLineColumns
-        // itself had lost the parameter) - restored, and covered here so a repeat drops back to
-        // a compile error instead of a silent behaviour change.
+        // Bounds the walk by a sibling field's X-position where no TextEnd marker exists. An
+        // earlier rewrite silently dropped the parameter while the caller still built the value,
+        // so this is covered to make a repeat a compile error instead of a behaviour change.
 
         [Fact]
         public void StopsAtNextFieldBoundaryX_EvenWithNoMatchingTextEndMarker()
@@ -236,8 +221,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void StopsAtNextFieldBoundaryX_WhenColumnLeftIsExactlyOnTheBoundary()
         {
-            // >=, not > - a column starting exactly at the next known field's own position is
-            // treated as belonging to that field, not this one.
+            // >=, not >: a column starting exactly at the next field's position belongs to it.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Special conditions:"),
@@ -253,9 +237,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void NeverStopsOnPosition_WhenNextFieldBoundaryXIsNull()
         {
-            // Opt-in, no-op by default - every rule that doesn't set
-            // BoundSameLineWalkByOtherLabelPositions must behave exactly as if this
-            // parameter didn't exist.
+            // A rule that does not set the flag must behave as if the parameter did not exist.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Special conditions:"),
@@ -271,8 +253,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void DoesNotStopAtBoundary_WhenCandidateColumnHasNoWords()
         {
-            // A column with no words has no position to compare, so it falls through to being
-            // included rather than treated as having reached the boundary.
+            // No words means no position to compare, so the column is included, not a boundary.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Special conditions:"),
@@ -288,9 +269,7 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void TextEndMarkerStillStops_EvenWhenNextFieldBoundaryXIsFurtherAway()
         {
-            // The two stop conditions are independent (isNextFieldStart || isPastKnownFieldBoundary)
-            // - a real TextEnd marker match stops the walk even before the position-based
-            // boundary would have been reached.
+            // The two stop conditions are independent: a TextEnd match stops the walk early.
             var columns = new List<DocumentLineColumn>
             {
                 Column("Special conditions:"),
@@ -321,11 +300,9 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void WhenFirstColumnStartsWithAnExcludedText_ThenExcludes()
         {
-            // The real case: "Maintenance: Y: N: Frequency: By whom:" is Maintenance's own
-            // row, immediately below Calibration/Conformance/FlowVerification/
-            // MeterVerification's shared label row on several real WR51 templates - its "Y:"/
-            // "N:" columns must not be picked up as if they were one of those four fields'
-            // own values, however close they sit in X to that field's own label.
+            // "Maintenance: Y: N: Frequency: By whom:" sits immediately below the shared
+            // Calibration/Conformance/FlowVerification/MeterVerification label row, so its "Y:"
+            // and "N:" must not be taken as one of those four fields' values.
             var nextLine = LineOf(Column("Maintenance:"), Column("Y:"), Column("N:"));
 
             var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
@@ -346,8 +323,8 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void WhenExcludedTextAppearsButNotInTheFirstColumn_ThenDoesNotExclude()
         {
-            // Only the row's OWN leading column counts - a genuine value row that happens to
-            // mention an excluded field name somewhere else must not be rejected.
+            // Only the row's leading column counts, or a real value row mentioning the name is
+            // rejected.
             var nextLine = LineOf(Column("✓"), Column("Maintenance:"));
 
             var result = FindLabelGroupMatchesHelper.ShouldExcludeNextLine(nextLine, ["Maintenance"]);
@@ -392,9 +369,8 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void SameColumn_FindsSingleColumnLine_EvenThoughLabelLineHadMoreColumns()
         {
-            // The exact shape of the real InspectionDate bug: the label's own line had 3
-            // columns, but the date value sits alone on the next line as a single column.
-            // Matching by raw column index would have missed this entirely.
+            // The InspectionDate shape: three columns on the label's line, the value alone on the
+            // next. Matching by raw column index misses it.
             var nextLine = LineOf(ColumnAt(338, "05/06/2026"));
 
             var result = FindLabelGroupMatchesHelper.FindNextLineColumnByPosition(
@@ -462,10 +438,8 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void SpecifiedColumn_UsesFixedIndex_IgnoringPosition()
         {
-            // Even though "Close" (index 0) is nearer to the anchor than index 1, a
-            // SpecifiedColumn label asked for a specific ordinal column and gets it
-            // regardless of position (both stay within the +-100 tolerance of the anchor so
-            // this test isolates the index-vs-position selection, not the tolerance check).
+            // SpecifiedColumn gets the ordinal it asked for even though index 0 is nearer the
+            // anchor. Both are inside the tolerance, so only index-vs-position is under test.
             var nextLine = LineOf(ColumnAt(338, "Close"), ColumnAt(380, "RequestedIndexNotClosest"));
 
             var result = FindLabelGroupMatchesHelper.FindNextLineColumnByPosition(
@@ -488,14 +462,9 @@ public class FindLabelGroupMatchesHelperColumnTests
         [Fact]
         public void SameColumn_NullAnchorPosition_RejectsRatherThanAcceptingAnyDistance()
         {
-            // Stale test corrected: an earlier version of this comparison used nullable
-            // arithmetic ("> anchor + 100" with anchor == null), which is always false in C#
-            // and so could never reject a match - whichever column was nearest to 0 got
-            // accepted no matter how far away it actually was. That was tightened up (this
-            // session, alongside the near-miss-gap fallback below) to explicitly return null
-            // when the anchor itself is unknown, rather than silently accepting an arbitrary
-            // column - a genuinely unknown anchor position must not pretend everything is in
-            // tolerance.
+            // An unknown anchor returns null rather than accepting the nearest column. Nullable
+            // arithmetic ("> anchor + 100" with a null anchor) is always false in C#, so the
+            // earlier comparison could never reject anything.
             var nextLine = LineOf(ColumnAt(5000, "VeryFarAndNowCorrectlyRejected"));
 
             var result = FindLabelGroupMatchesHelper.FindNextLineColumnByPosition(

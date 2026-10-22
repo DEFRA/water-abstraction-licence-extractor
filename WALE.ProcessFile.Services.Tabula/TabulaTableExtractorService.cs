@@ -17,31 +17,22 @@ namespace WALE.ProcessFile.Services.Tabula;
 // pages that have a real text layer. A genuinely scanned page (no text/vector content at all)
 // yields nothing here and still needs OCR.
 //
-// Runs BOTH algorithms per page and returns every candidate table from either - not "try Lattice,
-// fall back to Stream only if Lattice found nothing". WrInspectionReportTableMatcher.
-// FindBestGridTable already scores every candidate by how many grid field labels it actually
-// contains and picks the highest-scoring one past a majority threshold, so handing it more
-// candidates only ever helps: a genuine Lattice table (real ruled borders) still wins outright
-// against Stream's coarser output whenever both are present, and Stream is the only one of the
-// two that can find anything at all on documents with no ruled borders around the grid at all
-// (e.g. wr51__114222355, confirmed via the golden-set harness run that motivated adding this -
-// each LicenceProvisions field sits on its own paragraph line there, no drawn table).
-// SimpleNurminenDetectionAlgorithm (region detection) + BasicExtractionAlgorithm (the actual cell
-// split) is the Stream-mode pairing tabula-sharp's own README documents.
+// Both algorithms run per page and every candidate is returned, rather than falling back to
+// Stream only when Lattice finds nothing: FindBestGridTable already scores candidates by how many
+// grid labels they contain, and Stream is the only one that finds anything where the grid has no
+// ruled borders at all (wr51__114222355, each field on its own paragraph line).
+// SimpleNurminenDetectionAlgorithm plus BasicExtractionAlgorithm is tabula-sharp's own documented
+// Stream-mode pairing.
 //
-// Cached like the cloud-based implementations of this interface, though there is no API cost to
-// avoid here - only CPU time on a repeat parse.
+// Cached like the cloud implementations, though only CPU time is saved here, not API cost.
 public class TabulaTableExtractorService(ICacheService cacheService) : ITableExtractorService
 {
     public string Name => "TabulaSharp";
 
-    /// Cached payloads are keyed by this rather than by Name, so changing what a cell carries can
-    /// invalidate the cache without renaming the service in the provenance stored on every match.
-    ///
-    /// v2 carries the cell rectangle. v1 entries hold only Left and Top, so DocumentTableCell
-    /// cannot produce coordinates from one and every value matched from a table came back with no
-    /// region to highlight - the cache key has no component describing the payload's shape, so
-    /// without this the pre-rectangle entries would be reused indefinitely.
+    /// Cached payloads are keyed by this, not by Name, so a change to what a cell carries can
+    /// invalidate the cache without renaming the service in every match's stored provenance. v1
+    /// entries hold only Left and Top, which yields no coordinates to highlight, and the cache key
+    /// has no component for the payload's shape - so they would be reused indefinitely.
     private const string CacheServiceName = "TabulaSharp-v2";
 
     private const int SharedPageNumber = 1;
@@ -87,14 +78,11 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         {
             var page = ObjectExtractor.Extract(document, pageNumber);
 
-            // tabula-sharp's own text extraction drops the second of two identical adjacent
-            // characters ("Officer" -> "Of icer", "17.11.2020" -> "17.1 .202"). Its cell geometry
-            // is sound, so the rectangles are kept and the text is taken from PdfPig instead.
+            // tabula-sharp drops the second of two identical adjacent characters ("Officer" ->
+            // "Of icer"). Its geometry is sound, so rectangles are kept and text comes from PdfPig.
             var pdfPigWords = document.GetPage(pageNumber).GetWords().ToList();
 
-            // Two independent algorithms against the same page - a crash in one (a PDF's own
-            // malformed content confusing one algorithm's assumptions, not the other's) mustn't
-            // lose the other's otherwise-good result for this page.
+            // A crash in one algorithm must not lose the other's good result for this page.
             try
             {
                 tables.AddRange(latticeAlgorithm
@@ -103,8 +91,7 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
             }
             catch (Exception ex)
             {
-                // Falls through to Stream mode below for this page; the caller's own try/catch
-                // around the whole overlay covers the case where even that isn't enough.
+                // Falls through to Stream mode below for this page.
                 
                 Console.WriteLine($"INFO - {nameof(TabulaTableExtractorService)} - Lattice, exception {ex.Message}, continuing");
             }
@@ -189,9 +176,8 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         };
     }
     
-    /// A word belongs to the cell containing its centre, which stays unambiguous when a bounding
-    /// box overlaps a border by a point or two. Null when no word lands in the cell, so the
-    /// caller keeps Tabula's own text rather than blanking a cell that had content.
+    /// A word belongs to the cell containing its centre, which stays unambiguous where a bounding
+    /// box overlaps a border. Null when no word lands in it, so the caller keeps Tabula's own text.
     private static string? GetCellTextFromWords(Cell cell, IReadOnlyList<Word> pdfPigWords)
     {
         var contained = pdfPigWords
@@ -244,11 +230,8 @@ public class TabulaTableExtractorService(ICacheService cacheService) : ITableExt
         
         foreach (var line in lines)
         {
-            // Sorting each chunk's own letters and relying on the chunks' insertion order isn't
-            // enough - GroupIntoLines only orders by Top (grouping into rows), so two chunks on
-            // the same row aren't guaranteed to already be left-to-right, and if they overlap in
-            // X a per-chunk sort can't fix that anyway. Flatten first, then sort every letter on
-            // the line globally by its own Left.
+            // GroupIntoLines orders only by Top, so two chunks on a row are not necessarily
+            // left-to-right and may overlap in X. Flatten first, then sort every letter by Left.
             var letters = line
                 .SelectMany(word => word.TextElements)
                 .Where(letter => !string.IsNullOrWhiteSpace(letter.Letter.Value))

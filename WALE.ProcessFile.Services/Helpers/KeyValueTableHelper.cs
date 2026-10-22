@@ -2,19 +2,12 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
-/// <summary>
-/// Reads two-column key/value tables - a label cell on the left, its value on the right.
-///
-/// Extractors report the same region at more than one granularity: a v3 permit yields both a 7x2
-/// and an 18x2 table starting at the same key, and the copies disagree, one holding a wrapped
-/// value complete where the other has it truncated. Hence longest-value-wins throughout.
-/// </summary>
+/// Extractors report the same region at more than one granularity - a v3 permit yields both a 7x2
+/// and an 18x2 table from the same key, and the copies disagree, one holding a wrapped value whole
+/// where the other truncates it. Hence longest-value-wins throughout.
 public static class KeyValueTableHelper
 {
-    /// <summary>
-    /// Every pair across the supplied tables, longest value kept per key. Only two-column tables
-    /// contribute.
-    /// </summary>
+    /// Only two-column tables contribute.
     public static Dictionary<string, DocumentTableValue> ReadPairs(IReadOnlyList<DocumentTable> tables)
     {
         var pairs = new Dictionary<string, DocumentTableValue>(StringComparer.OrdinalIgnoreCase);
@@ -42,10 +35,8 @@ public static class KeyValueTableHelper
         return pairs;
     }
 
-    /// <summary>
     /// Matched on the key's stem, so "Site address" finds "Site address (if different)". An exact
-    /// match wins over a stem match, so a short key cannot shadow a longer one starting with it.
-    /// </summary>
+    /// match wins, so a short key cannot shadow a longer one starting with it.
     public static DocumentTableValue? FindValue(Dictionary<string, DocumentTableValue> pairs, string key)
     {
         if (pairs.TryGetValue(key, out var exact))
@@ -61,10 +52,7 @@ public static class KeyValueTableHelper
         return candidates.Count > 0 ? candidates[0].Value : null;
     }
 
-    /// <summary>
-    /// One set of pairs per occurrence, a new group starting each time
-    /// <paramref name="firstKeyOfGroup"/> is seen again. Rows are taken in document order.
-    /// </summary>
+    /// A new group each time <paramref name="firstKeyOfGroup"/> is seen again, in document order.
     public static List<Dictionary<string, DocumentTableValue>> ReadRepeatingGroups(
         IReadOnlyList<DocumentTable> tables,
         string firstKeyOfGroup)

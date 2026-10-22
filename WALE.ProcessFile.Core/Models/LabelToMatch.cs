@@ -113,39 +113,27 @@ public class LabelToMatch
 
     public int LimitToColumnIndex { get; set; }
     
-    // A next-line candidate is rejected outright
-    // (not narrowed to a column at all) when its own first/leftmost column starts with one of
-    // these texts - i.e. that whole row visibly belongs to a different, identifiable field
-    // (its own leading label), not a genuine continuation of this one. Distinct from
-    // IgnoreBlockIfContains, which rejects based on the already-narrowed picked column's own
-    // content and so can't tell "this field's genuine compound answer happens to contain the
-    // rejected text" apart from "this is really a different field's row" - checking the row's
-    // own leading label first avoids that ambiguity
+    // Rejects the whole next-line candidate, un-narrowed, when its leftmost column starts with one
+    // of these: that row belongs to another field. IgnoreBlockIfContains judges the already-picked
+    // column instead, so it cannot tell a compound answer containing the text from a different
+    // field's row.
     public IReadOnlyList<string>? LimitToExcludeNextLineIfFirstColumnStartsWith { get; init; }
 
-    // Rejects a single column on a following line whose text starts with one of these - that
-    // column is a different field's cell. Column-level where
-    // LimitToExcludeNextLineIfFirstColumnStartsWith is row-level: a row can carry both an
-    // intruding field and this one's value in different columns ("Inspecting Officer: X |
-    // 11/03/2026 | Time: 11:00"), so rejecting the row loses the value. Needed because the
-    // nearest-column search's 100-unit tolerance is wide enough to admit a neighbouring cell.
+    // Column-level, where LimitToExcludeNextLineIfFirstColumnStartsWith is row-level: a row can
+    // carry both an intruding field and this one's value in different columns ("Inspecting
+    // Officer: X | 11/03/2026 | Time: 11:00"), so rejecting the whole row loses the value.
     public IReadOnlyList<string>? LimitToExcludeColumnStartingWith { get; init; }
 
-    // Bounds WalkSameLineColumns' same-line walk by the X-position of the nearest other known
-    // field's own column, built once per document (see PdfDataExtractorService.
-    // BuildLabelPositionIndex) - stops the walk wandering into a sibling field's column when
-    // nothing else bounds it. Opt-in (defaults to false/no-op): depends on the caller supplying
-    // that per-document position index.
+    // Bounds the same-line walk by the nearest other known field's X-position, so it cannot wander
+    // into a sibling's column. Opt-in: it needs the caller's per-document position index.
     public bool BoundSameLineWalkByOtherLabelPositions { get; init; }
 
     // When a label group has multiple sibling labels and a match returns empty text, allow
     // the engine to try the next alternate instead of settings the group as matched.
     public bool RequireTextToBePresent { get; init; }
 
-    // Like RequireTextToBePresent, but requires a genuinely complete date (day, month and
-    // year) rather than any non-blank text, so an incomplete date fragment (e.g. a bare day
-    // number, textually indistinguishable from a bare 2-digit year) doesn't permanently block
-    // a later, more complete alternate.
+    // Requires a complete date rather than any non-blank text, so a bare day number - textually
+    // indistinguishable from a 2-digit year - cannot block a later, more complete alternate.
     public bool RequireCompleteDateToClaimGroup { get; init; }
 
     public LayoutExtractor LayoutExtractor { get; init; } = LayoutExtractor.Default;
@@ -155,19 +143,13 @@ public class LabelToMatch
 
     public LayoutExtractorTableShape LayoutExtractorTableShape { get; init; } = LayoutExtractorTableShape.Default;
 
-    // ApplicableToMost's Format=="Text" branch builds its result purely from the label's own
-    // line - NextLines(n) alone has no effect there, since nextLines is fetched upstream but
-    // never consulted. Opt in to append the already-fetched nextLines onto the result, for a
-    // value that continues on the line below with no other field sharing that row.
+    // ApplicableToMost's Format=="Text" branch fetches nextLines upstream and never consults them,
+    // so NextLines(n) alone has no effect there. This appends them.
     public bool AllowValueToWrapToNextLine { get; init; }
 
-    // GetTextBetween stops at its end-tag on the label's own first line (e.g. a same-row
-    // "Meter make: <value> Serial number: <value>" layout) - correct when nothing past the
-    // end-tag belongs to the field, but wrong when the value genuinely wraps onto a further
-    // line with no signal telling it apart from an unrelated field's row. Opt in to keep
-    // scanning past that first-line match instead, relying on TextEnd to find the real boundary
-    // further down. Left off by default: a blanket version of this broke most other fields, for
-    // which stopping at the first line is the common, correct shape.
+    // GetTextBetween stops at its end-tag on the label's own first line, which is wrong where the
+    // value wraps further down. This keeps scanning, relying on TextEnd for the real boundary.
+    // Off by default: a blanket version broke most other fields, where stopping first is correct.
     public bool AllowValueToWrapPastSameLineEndTag { get; init; }
     
     public bool UseColonEndLogic { get; set; }

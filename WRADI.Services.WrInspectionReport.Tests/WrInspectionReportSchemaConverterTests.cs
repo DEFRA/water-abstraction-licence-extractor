@@ -3,11 +3,7 @@ using WRADI.DocumentType.WrInspectionReport.Converters;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-/// <summary>
-/// Direct unit tests for WrInspectionReportSchemaConverter.ToForm's date parsing, isolated
-/// from PDF extraction - a MatchesResult with a single "Date" match is enough to exercise the
-/// NormaliseOrdinalDateSuffixes fix without needing a real or dummy PDF fixture.
-/// </summary>
+/// A MatchesResult with a single "Date" match is enough; no PDF fixture needed.
 public class WrInspectionReportSchemaConverterTests
 {
     private static MatchesResult BuildMatchesResultWithFormDate(string rawDate)
@@ -36,9 +32,7 @@ public class WrInspectionReportSchemaConverterTests
     }
 
     [Theory]
-    // Real values from the WR51 CSV - a PDF kerning/export artefact renders a
-    // stray space before the ordinal suffix ("10 th" instead of "10th"), which neither form
-    // (glued or spaced) parses via DateOnly.TryParse until the whole suffix is stripped.
+    // Real values from the WR51 CSV.
     [InlineData("10 th February 2026", 2026, 2, 10)]
     [InlineData("20 th January 2026", 2026, 1, 20)]
     [InlineData("6 th March 2026", 2026, 3, 6)]
@@ -66,8 +60,7 @@ public class WrInspectionReportSchemaConverterTests
     }
 
     [Theory]
-    // Formats that already worked, or that the fix also happens to normalise without a space
-    // present - either way, the ordinal-suffix stripping must not disturb the correct result.
+    // The ordinal stripping must not disturb a format that already parsed.
     [InlineData("10th February 2026", 2026, 2, 10)] // glued ordinal - "th" still gets stripped
     [InlineData("10/02/2026", 2026, 2, 10)]
     [InlineData("13.5.98", 1998, 5, 13)]
@@ -90,8 +83,7 @@ public class WrInspectionReportSchemaConverterTests
     [Fact]
     public void WhenFormDateIsJustAYear_ThenStillDoesNotParse()
     {
-        // A bare year ("2026", no day/month) is a genuinely incomplete date - the ordinal-suffix
-        // fix must not paper over this by making it parse to some arbitrary day/month.
+        // A bare year is incomplete; the fix must not make it parse to an arbitrary day/month.
         // Arrange
         var matchesResult = BuildMatchesResultWithFormDate("2026");
 

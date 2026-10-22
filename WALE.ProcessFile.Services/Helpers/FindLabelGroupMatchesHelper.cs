@@ -46,9 +46,8 @@ public static class FindLabelGroupMatchesHelper
                 
                 foreach (var cellLine in cellLines)
                 {
-                    // The cell's own rectangle, so a value matched here can be shown on the page.
-                    // Every word in the cell shares it - a cell-sized region, not a word-tight one,
-                    // because cell content is text and carries no per-word geometry.
+                    // Every word shares the cell's rectangle: cell content is text and carries no
+                    // per-word geometry, so the region is cell-sized rather than word-tight.
                     var cellCoordinates = cell.ToCoordinates();
 
                     var words = cellLine
@@ -501,11 +500,9 @@ public static class FindLabelGroupMatchesHelper
             var clonedPartialLine = partialLine.Clone();
             var matchedText = matchedLabel.Text?.FirstOrDefault()?.Text;
 
-            // LabelToMatch.BoundSameLineWalkByOtherLabelPositions - X-position of the
-            // nearest other known field's column, restricted to this field's own section (via
-            // FindSectionEndTop) so an unrelated field in a different section can't
-            // coincidentally bound it. Skipped if the section end can't be found, rather than
-            // falling back to an unbounded document-wide search.
+            // Restricted to this field's own section, so a field in a different section cannot
+            // coincidentally bound it. Skipped where the section end is not found, rather than
+            // falling back to a document-wide search.
             double? nextFieldBoundaryX = null;
 
             if (label.BoundSameLineWalkByOtherLabelPositions
@@ -730,14 +727,10 @@ public static class FindLabelGroupMatchesHelper
             returnList);
     }
 
-    /// <summary>
-    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - the Y (top) of the first line
-    /// starting with one of the field's own real TextEnd markers (skips the "[END_OF_BLOCK]"
-    /// sentinel). Reuses the field's own already-correct section boundary rather than an
-    /// arbitrary Y-distance tolerance, which can't reliably separate "the real next field in
-    /// this grid" from "an unrelated field in the next section down" - on real documents these
-    /// have sat as little as ~20 units apart.
-    /// </summary>
+    /// The Y of the first line starting with one of the field's own TextEnd markers, skipping the
+    /// "[END_OF_BLOCK]" sentinel. Reuses the field's section boundary rather than a Y-distance
+    /// tolerance: the next field in this grid and one in the next section down have sat as little
+    /// as ~20 units apart.
     private static double? FindSectionEndTop(
         IReadOnlyList<DocumentLineWrapped> lines,
         IReadOnlyList<TextToMatch>? textEnd)
@@ -771,21 +764,12 @@ public static class FindLabelGroupMatchesHelper
         return null;
     }
 
-    /// <summary>
-    /// For a LimitTo.SameColumn/SpecifiedColumn label, finds the column on this line whose
-    /// text contains the label's own matched text, then keeps walking forward through
-    /// subsequent columns on the SAME line - the value may sit in an adjacent column
-    /// rather than on a following line (e.g. a grid row like "Source of supply: [tick]
-    /// Quantities: [tick]"). The walk stops at the first column that starts with one of the
-    /// label's own end markers (the next field), or runs out of columns.
-    /// Returns the columns to keep, and the 0-based index of the label's own column (used by
-    /// <see cref="FindNextLineColumnByPosition"/> for LimitTo.SpecifiedColumn).
+    /// The value may sit in an adjacent column rather than on a following line, as in a grid row
+    /// "Source of supply: [tick] Quantities: [tick]", so the walk continues along the same line
+    /// until a column starts with one of the label's end markers or the columns run out. Returns
+    /// the columns to keep plus the 0-based index of the label's own.
     ///
-    /// nextFieldBoundaryX (LabelToMatch.BoundSameLineWalkByOtherLabelPositions) also
-    /// stops the walk once a candidate column reaches or passes it - a position-based bound
-    /// alongside the textEnd check, for intruding content that isn't itself another field's
-    /// label text.
-    /// </summary>
+    /// nextFieldBoundaryX also stops the walk, for intruding content that is not itself a label.
     internal static (List<DocumentLineColumn> Columns, int ColumnIndex) WalkSameLineColumns(
         IReadOnlyList<DocumentLineColumn> columns,
         string? matchedText,
@@ -805,14 +789,10 @@ public static class FindLabelGroupMatchesHelper
                     continue;
                 }
 
-                // A loose (not column-start) match - e.g. LabelToMatch.AlsoStartsWithLoose, for a
-                // label sitting mid-column instead of at a real column boundary (confirmed on
-                // wr51__SO0420031002__..., "Meter make: <value> Serial number: N/A" as one
-                // undifferentiated column) - lands matchedText somewhere other than the start of
-                // column.Text. Without trimming, the whole column (including whatever precedes
-                // matchedText) would wrongly become the captured value. No-op when the column
-                // already starts with matchedText (every existing ColumnMustStartWith-only rule),
-                // so this can only fix a previously-broken case, never change a working one.
+                // A loose match lands matchedText mid-column, as on wr51__SO0420031002 where
+                // "Meter make: <value> Serial number: N/A" is one undifferentiated column, so
+                // without trimming everything before it becomes the value. A no-op where the
+                // column already starts with matchedText.
                 var columnToAdd = column;
 
                 if (!column.Text.StartsWith(matchedText))
@@ -855,22 +835,13 @@ public static class FindLabelGroupMatchesHelper
         return (newColumns, columnIndex);
     }
 
-    /// <summary>
-    /// Whether a next-line candidate should be rejected outright, before any column is even
-    /// picked from it, because its own leading column visibly belongs to a different,
-    /// identifiable field (that field's own label starting the row) rather than being a blank
-    /// or genuine continuation row for the label being matched. See
-    /// LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith and
-    /// WrInspectionReportTextBasedLabelConfiguration's Calibration/Conformance/FlowVerification/
-    /// MeterVerification for the real case this exists for: on several real WR51 templates the
-    /// row immediately below their shared "grid" label row is consistently "Maintenance:"'s own
-    /// row, with no dedicated value row for these fields in between at all.
+    /// Rejects a next-line candidate before any column is picked, where its leading column is
+    /// another field's own label. The case it exists for: on several templates the row below
+    /// Calibration/Conformance/FlowVerification/MeterVerification's shared label row is
+    /// "Maintenance:"'s own, with no value row in between at all.
     ///
-    /// Deliberately only checks the row's first column, not the specific column that will end
-    /// up selected for this field - rejecting the whole row on a multi-column line risks
-    /// discarding a legitimate answer sitting in a later column just because the row's own
-    /// first column happens to resemble something else.
-    /// </summary>
+    /// Only the row's first column is checked - rejecting on a later one would discard a
+    /// legitimate answer sitting further along the row.
     internal static bool ShouldExcludeNextLine(DocumentLine nextLine, IReadOnlyList<string>? excludeIfFirstColumnStartsWith)
     {
         if (excludeIfFirstColumnStartsWith?.Any() != true)
@@ -885,17 +856,10 @@ public static class FindLabelGroupMatchesHelper
                 firstColumnText.StartsWith(excluded, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>
-    /// Finds the column on a following line that corresponds to the label's own column.
-    /// LimitTo.SpecifiedColumn uses a fixed ordinal index (the caller asked for column N
-    /// specifically, regardless of position). LimitTo.SameColumn matches by X-position
-    /// proximity instead - a following line can have fewer or more columns than the
-    /// label's own line (e.g. a value sitting alone on its own single-column row, directly
-    /// beneath a label that shares its row with other fields), so indexing by ordinal
-    /// position would silently miss it. Either way, the match is rejected if it's more
-    /// than 100 units away from the label's own column - a same-column value that's
-    /// genuinely absent from this line must not fall back to an unrelated column.
-    /// </summary>
+    /// SpecifiedColumn takes a fixed ordinal, SameColumn matches by X-position: a following line
+    /// can hold fewer or more columns than the label's own - a value alone on its row beneath a
+    /// shared label row - so an ordinal would miss it. Either way a match more than 100 units away
+    /// is rejected, so an absent value cannot fall back to an unrelated column.
     internal static DocumentLineColumn? FindNextLineColumnByPosition(
         DocumentLine nextLine,
         LimitTo limitTo,
@@ -935,15 +899,11 @@ public static class FindLabelGroupMatchesHelper
             return null;
         }
 
-        // The label's own column didn't line up with any whole column on this line - it may
-        // still be here, glued onto an unrelated field's text because the gap between them
-        // fell just under the column-splitting X-gap threshold (e.g. an address ending and a
-        // same-row value starting ~17pt later, just short of the ~18pt split point - see the
-        // xDiff >= 18 check in PdfPigNoOcrDataExtractorService's row builder). Only treat a
-        // word as a candidate split point if the gap immediately before it is itself close to
-        // that threshold (clearly wider than an ordinary inter-word space, roughly 2-5pt) -
-        // otherwise any word from an unrelated sentence that happens to drift within 100 units
-        // of the anchor would be picked up as if it were this field's value.
+        // The value may still be on this line, glued to an unrelated field because the gap fell
+        // just under the ~18pt column split (xDiff >= 18 in PdfPigNoOcrDataExtractorService's row
+        // builder) - an address ending and a value starting ~17pt later. A word only counts as a
+        // split point if the gap before it is near that threshold, well wider than an ordinary
+        // space.
         const double minimumNearMissGap = 10;
 
         var nearestWord = candidateColumns

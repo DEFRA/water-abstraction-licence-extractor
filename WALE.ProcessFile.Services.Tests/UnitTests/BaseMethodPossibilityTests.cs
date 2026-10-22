@@ -4,16 +4,9 @@ using WALE.ProcessFile.Services.Models;
 
 namespace WALE.ProcessFile.Services.Tests.UnitTests;
 
-/// <summary>
-/// BaseMethod.RestrictToPossibility - the generic "does this captured value match one of the
-/// label's expected answers" filter used by every Format="Text" label with a Possibilities
-/// list. Covers the "" catch-all fix: a field with genuinely no answer on the page produces
-/// zero captured lines, not one line with empty text, so the existing Contains("") check
-/// (FirstOrDefault() on an empty list is null) never got a chance to recognise a deliberately
-/// blank field as a match - it silently vanished instead of surviving as Blank. Found via the
-/// real WR51 documents reporting DidntMatch instead of Blank for 77% of OtherProvisions and 53%
-/// of SpecialConditions.
-/// </summary>
+/// A field with no answer on the page produces zero captured lines, not one empty line, so a
+/// Contains("") check never sees it and a deliberately blank field vanishes instead of surviving
+/// as Blank. It read DidntMatch for 77% of OtherProvisions and 53% of SpecialConditions.
 public class BaseMethodPossibilityTests
 {
     private static DocumentLineColumn Column(string text) =>
@@ -67,8 +60,7 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenTextIsNull_AndPossibilitiesIncludeEmptyStringCatchAll_ThenReturnsMatchWithEmptyText()
     {
-        // The exact fix: a genuinely blank field (no captured lines at all) must still count
-        // as a match when "" is one of the label's Possibilities - not vanish entirely.
+        // No captured lines at all must still match when "" is one of the Possibilities.
         var request = Request("N/A", "Not", "In", "");
         var result = new LabelGroupResult { Text = null };
 
@@ -95,10 +87,8 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenTextIsNull_AndPossibilitiesDoNotIncludeEmptyStringCatchAll_ThenReturnsNull()
     {
-        // Regression guard: this must stay scoped to labels that explicitly opted into "" as
-        // a valid answer (e.g. GetInOrderField) - not become a general "empty text always
-        // matches" rule for every Possibilities-restricted label (e.g. the checkbox-mark
-        // fields, which have no "" entry and must keep failing to match when blank).
+        // Scoped to labels that opted into "": the checkbox-mark fields have no "" entry and must
+        // keep failing to match when blank.
         var request = Request("Y", "N", "X", "x");
         var result = new LabelGroupResult { Text = null };
 
@@ -121,9 +111,7 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenTextIsOneLineWithEmptyString_ThenMatchesViaThePrimaryPathNotTheFallback()
     {
-        // Pre-existing behaviour: FirstOrDefault() finds a real (if empty) line here, so the
-        // original Contains("") check already handles this - confirms the new fallback isn't
-        // needed (or reached) for this shape, only for the genuinely-zero-lines case.
+        // One empty line is already handled by Contains(""); the fallback is for zero lines.
         var request = Request("N/A", "In", "Not", "");
         var result = new LabelGroupResult { Text = [LineOf("")] };
 
@@ -137,10 +125,8 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenExceptWhenInsideWord_AndPossibilityIsEmbeddedInALongerWord_ThenDoesNotMatch()
     {
-        // The exact real bug: "Point of abstraction:" was wrongly captured (a separate,
-        // unrelated column-matching bug) as SourceOfSupply's value, and coincidentally
-        // contains "in" inside "Point" - which a plain Contains check accepted as if it were
-        // a genuine "In Order" answer.
+        // "Point of abstraction:" landed in SourceOfSupply by a separate bug, and a plain Contains
+        // took the "in" inside "Point" for an "In Order" answer.
         var request = RequestExceptWhenInsideWord("N/A", "Not", "In");
         var result = new LabelGroupResult { Text = [LineOf("Point of abstraction:")] };
 
@@ -164,19 +150,10 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenExceptWhenInsideWord_AndPossibilityAppearsBothEmbeddedAndStandalone_ThenStillCountsAsAMatch()
     {
-        // "abstraction" contains "n" (as does most English text) but this field also genuinely
-        // has a standalone "N" later - MatchesPossibility must not stop searching at the first
-        // (embedded, invalid) occurrence and wrongly reject the whole match.
-        //
-        // Known separate limitation, not fixed here: which WORD gets extracted as "the answer"
-        // is decided afterwards by DocumentLineColumn.FilterWordsFromText, a different, widely-
-        // shared function with its own independent (and boundary-unaware) Contains-based word
-        // search - it can still pick "abstraction" over the real standalone "N" when a text
-        // like this has both. That's a pre-existing gap in a much more broadly-used function,
-        // out of scope for this fix - it doesn't affect the actual bug this fix targets (there,
-        // no standalone occurrence ever exists, so MatchesPossibility correctly rejects the
-        // whole match and extraction never runs at all). This test only asserts that a match is
-        // found, not which word is extracted.
+        // "abstraction" contains an "n" and this field has a standalone "N" later, so the search
+        // must not stop at the embedded one. Which word is then extracted is decided by
+        // FilterWordsFromText, which is boundary-unaware and can still pick "abstraction" - a gap
+        // left open, so this asserts only that a match is found.
         var request = RequestExceptWhenInsideWord("N");
         var result = new LabelGroupResult { Text = [LineOf("Means of abstraction: N")] };
 
@@ -188,10 +165,8 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenExceptWhenInsideWord_AndPossibilityIsGluedToPunctuation_ThenStillMatches()
     {
-        // Boundary is letter/digit adjacency, not whitespace adjacency - punctuation (a colon,
-        // a full stop) counts as a valid boundary either side, only another letter or digit
-        // counts as "inside a word". A value glued directly to trailing punctuation with no
-        // space (very common - see the real regression below) must still be recognised.
+        // The boundary is letter/digit adjacency, not whitespace: punctuation either side counts
+        // as a boundary, so a value glued to a trailing colon is still recognised.
         var request = RequestExceptWhenInsideWord("Y");
         var result = new LabelGroupResult { Text = [LineOf("Y:")] };
 
@@ -214,12 +189,8 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenExceptWhenInsideWord_AndLabelsOwnColonIsGluedDirectlyToTheValue_ThenStillMatches()
     {
-        // The regression this exact scoping caught before it shipped: several real WR51
-        // fixtures render a field's own label and value with no space at all -
-        // "Source of supply:In Order" is a single PDF word token "supply:In" - so the answer
-        // sits immediately after the label's own trailing colon, not whitespace-separated.
-        // An earlier version of this fix used whitespace adjacency (matching
-        // DataHelper.RemoveExcludes' existing semantics) and wrongly rejected this.
+        // "Source of supply:In Order" is the single token "supply:In", so the answer sits against
+        // the colon. An earlier version used whitespace adjacency and rejected it.
         var request = RequestExceptWhenInsideWord("In");
         var result = new LabelGroupResult { Text = [LineOf("supply:In Order")] };
 
@@ -231,8 +202,7 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenNotExceptWhenInsideWord_ThenEmbeddedMatchStillCountsAsBefore()
     {
-        // Confirms the fix is opt-in per-possibility - existing behaviour (e.g.
-        // CheckboxMarkPossibilities, which has no ExceptWhenInsideWord entries) is untouched.
+        // Opt-in per possibility, so CheckboxMarkPossibilities is untouched.
         var request = Request("In");
         var result = new LabelGroupResult { Text = [LineOf("Point of abstraction:")] };
 
@@ -243,12 +213,8 @@ public class BaseMethodPossibilityTests
     [Fact]
     public void WhenValueIsAStandaloneTickMarkAtTheEndOfTheLine_ThenExtractsIt()
     {
-        // End-to-end regression test for the FormattingHelper.TrimFormatting fix (checkbox
-        // glyphs are char.IsSymbol and were being trimmed away as the last "word" of the
-        // line before this fix - see FormattingHelperTrimFormattingTests in
-        // WALE.ProcessFile.Core.Tests). Goes through the real extraction path
-        // (DocumentLineColumn.FilterWordsFromText), not just TrimFormatting in isolation, so a
-        // regression in either place would be caught here.
+        // Checkbox glyphs are char.IsSymbol and were trimmed away as the line's last word. Runs
+        // the real extraction path, so a regression in either place is caught.
         var request = RequestExceptWhenInsideWord("✓");
         var result = new LabelGroupResult { Text = [LineOf("Source of supply: ✓")] };
 

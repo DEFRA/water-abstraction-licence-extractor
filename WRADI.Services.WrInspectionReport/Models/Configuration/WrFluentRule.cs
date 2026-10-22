@@ -3,19 +3,13 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WRADI.DocumentType.WrInspectionReport.Models.Configuration;
 
-// Fluent construction of a single LabelToMatch. One shared vocabulary (an entry point per
-// rule shape, then chained modifiers) instead of three factory functions each with their own
-// inconsistent parameter surface.
-//
-// Accumulates into plain fields rather than mutating a LabelToMatch in place - several of
-// its properties (Name, NextLinesToFetch, RequireTextToClaimGroup, IgnoreBlockIfContains,
-// ExcludeNextLineIfFirstColumnStartsWith, BoundSameLineWalkByOtherLabelPositions) are
+// Accumulates into plain fields rather than mutating a LabelToMatch: several of its properties are
 // init-only, so the real object can only be assembled once, in Build().
 public sealed class WrFluentRule
 {
     private IReadOnlyList<TextToMatch>? _textStart;
-    // Null (not an empty list) when unset - a rule with no end bound serialises the same way
-    // regardless of which entry point built it, rather than differing null-vs-empty-list.
+    // Null, not an empty list, so a rule with no end bound serialises the same whichever entry
+    // point built it.
     private List<TextToMatch>? _textEnd;
     private LabelPosition _position;
     private LimitTo _limitTo = LimitTo.SameColumn;
@@ -51,8 +45,7 @@ public sealed class WrFluentRule
         return rule;
     }
 
-    // "Text"/LabelIsBeforeTextToFind - the same TextStart property backs both (LabelToMatch's
-    // Text property is a plain alias for TextStart), so this needs no separate field.
+    // LabelToMatch.Text is an alias for TextStart, so this needs no separate field.
     public static WrFluentRule After(string text)
     {
         var rule = new WrFluentRule
@@ -66,10 +59,8 @@ public sealed class WrFluentRule
         return rule;
     }
 
-    // The LicenceProvisions grid's tick/cross/In/Not shape. Routed via
-    // TextToFindIsBetweenLabels (not LabelIsBeforeTextToFind) - the generic-text path used
-    // by After() discards the whole result if nothing is left after removing the label
-    // text, which would silently swallow every genuinely-blank tick field.
+    // Routed via TextToFindIsBetweenLabels, not LabelIsBeforeTextToFind: After()'s generic-text
+    // path discards a result with nothing left after the label, swallowing every blank tick field.
     public static WrFluentRule InOrder(string text, List<TextToMatch>? inOrderPossibilities, string? endText = null)
     {
         var rule = new WrFluentRule
@@ -128,11 +119,8 @@ public sealed class WrFluentRule
         return this;
     }
     
-    /// <summary>
-    /// Declares the field as living in a two-column key/value table, with the rule's own start
-    /// text as the key. Pairs with the letter-based read so the label rules still apply when no
-    /// table extractor is available or the table is not found.
-    /// </summary>
+    /// The rule's own start text is the key. Paired with the letter-based read, so the label rules
+    /// still apply with no table extractor or no table found.
     public WrFluentRule FromLetterAndKeyValueTable()
     {
         _layoutExtractor = LayoutExtractor.LetterBasedAndTableBased;
@@ -173,9 +161,7 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // Pulls the N line(s) immediately before the matched start label into the captured value -
-    // for a Between()-shaped rule whose real value starts on a physical line above its own
-    // label. Wires into TextToFindIsBetweenLabels' LeewayBefore/PreviousLinesToFetch mechanism.
+    // For a Between()-shaped rule whose value starts on a physical line above its own label.
     public WrFluentRule PreviousLines(int n)
     {
         _previousLinesToFetch = n;
@@ -189,9 +175,7 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag for the full explanation - opt-in
-    // only, use for a field whose real value is confirmed to wrap onto a further physical line
-    // with no reusable position/content signal distinguishing it from an unrelated field's row.
+    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag.
     public WrFluentRule AllowValueToWrapPastSameLineEndTag()
     {
         _allowValueToWrapPastSameLineEndTag = true;
@@ -229,9 +213,8 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // For the Between()/InOrder() shapes - appends before the trailing [END_OF_BLOCK]
-    // sentinel. Plain TextToMatch, no positional flag - use this when the extra end marker
-    // only needs to bound the same-line/same-row walk.
+    // For the Between()/InOrder() shapes, appended before the trailing [END_OF_BLOCK] sentinel.
+    // No positional flag, so it only bounds the same-row walk.
     public WrFluentRule AlsoEndsAt(params string[] texts)
     {
         var sentinel = _textEnd![^1];
@@ -240,9 +223,8 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // Same idea as AlsoEndsAt but with LineMustStartWith: true - for an extra end marker that
-    // must anchor a whole line, not just bound a same-line walk. Only MeansOfAbstraction
-    // needs this one (its "Records" end marker requires the stricter check).
+    // AlsoEndsAt with LineMustStartWith, for a marker that must anchor a whole line. Only
+    // MeansOfAbstraction needs it, for its "Records" end marker.
     public WrFluentRule AlsoEndsAtLineStart(params string[] texts)
     {
         var sentinel = _textEnd![^1];
@@ -259,13 +241,10 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // Additive fallback alongside AlsoStartsWith (which still requires a column start): a
-    // start text matched anywhere on the line, for cases where the value genuinely doesn't
-    // land at a column boundary - e.g. "Time" sharing a row with "Inspection Date" as
-    // "...Inspection Date: 26/1/2026 Time: 3pm" all in one column. Use specific-enough text
-    // (a trailing colon, say) to avoid matching an ordinary word inside narrative prose.
-    // Purely additive - existing column-start matches are untouched, so this can only add
-    // new matches, never remove one.
+    // Matched anywhere on the line, where AlsoStartsWith requires a column start - for a value
+    // that does not land at a column boundary, e.g. "...Inspection Date: 26/1/2026 Time: 3pm" all
+    // in one column. Keep the text specific (a trailing colon) so it misses ordinary prose.
+    // Additive only: it can add matches, never remove one.
     public WrFluentRule AlsoStartsWithLoose(params string[] texts)
     {
         _textStart = [.._textStart!, ..texts.Select(t => new TextToMatch(t))];
@@ -274,9 +253,7 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // See LabelToMatch.AllowValueToWrapToNextLine - pair with NextLines(n) (this alone doesn't
-    // fetch anything further; it only tells ApplicableToMost's Text-format winner to append what
-    // NextLines already fetched and narrowed).
+    // Pair with NextLines(n): this fetches nothing itself, it only appends what NextLines got.
     public WrFluentRule AllowValueToWrapToNextLine()
     {
         _allowValueToWrapToNextLine = true;
@@ -289,9 +266,8 @@ public sealed class WrFluentRule
         return this;
     }
 
-    // GeneralComments' own special case: "Actions"/"Summary" are valid additionalTextStarts
-    // (so they must stay in TextStart) but must NOT be stripped from the captured value
-    // when they recur mid-block as a genuine sub-heading - see RuleGeneralComments().
+    // "Actions"/"Summary" are valid additionalTextStarts, so they stay in TextStart, but must not
+    // be stripped from the value when they recur mid-block as a genuine sub-heading.
     public WrFluentRule ExceptFromRemove(params string[] texts)
     {
         _remove.RemoveAll(r => texts.Contains(r.Text));

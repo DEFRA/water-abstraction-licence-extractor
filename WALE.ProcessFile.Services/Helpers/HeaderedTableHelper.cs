@@ -2,21 +2,12 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Helpers;
 
-/// <summary>
-/// Reads a table that names its columns in a header row, returning the body rows keyed by column
-/// name. For the grids that hold a list of records rather than label/value pairs, which
-/// <see cref="KeyValueTableHelper"/> cannot read because it only considers two-column tables.
-/// </summary>
+/// For grids holding a list of records rather than label/value pairs, which
+/// <see cref="KeyValueTableHelper"/> cannot read: it only considers two-column tables.
 public static class HeaderedTableHelper
 {
-    /// <summary>
-    /// Body rows of the best copy of the table whose header row carries every name in
-    /// <paramref name="headers"/>.
-    ///
     /// Rows holding nothing but blanks and <paramref name="placeholders"/> are dropped, so an
-    /// unfilled form row does not become a record. Values matching a placeholder are returned
-    /// empty.
-    /// </summary>
+    /// unfilled form row does not become a record. A value matching a placeholder returns empty.
     public static List<Dictionary<string, DocumentTableValue>> ReadRows(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<string> headers,
@@ -72,12 +63,9 @@ public static class HeaderedTableHelper
         return result;
     }
 
-    /// <summary>
-    /// Extractors emit the same grid more than once at different granularities. Requiring the
-    /// whole header text is what separates them: where a column name wraps, the usable copy holds
-    /// it whole in one cell while the fragmented copy has split it across rows and keeps only the
-    /// first part. Fewest rows breaks any remaining tie, a fragmented copy always having more.
-    /// </summary>
+    /// Requiring the whole header text is what separates the duplicate copies of a grid: where a
+    /// column name wraps, the usable copy holds it whole in one cell while the fragmented copy
+    /// keeps only the first part. Fewest rows breaks any tie, a fragmented copy always having more.
     private static DocumentTable? SelectTable(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<string> headers) =>

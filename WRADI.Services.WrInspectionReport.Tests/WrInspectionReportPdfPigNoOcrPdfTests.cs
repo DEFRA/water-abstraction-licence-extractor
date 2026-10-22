@@ -67,22 +67,15 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             MessageQueueService);
     }
 
-    /// <summary>
-    /// Smoke/coverage test against the real WR51 documents. There's no hand-verified ground truth
-    /// for these files, so this doesn't assert exact field values - it proves the ported label
-    /// DSL (including the new LimitTo column-restriction behaviour) runs end-to-end against real
-    /// documents without exceptions, and reports basic field-coverage stats.
-    /// </summary>
+    /// No hand-verified ground truth for these files, so no exact values are asserted: this proves
+    /// the label DSL runs end-to-end without exceptions and reports field coverage.
     [Fact]
     public async Task WhenExtractingRealWr51Documents_ThenNoExceptionsAndReasonableFieldCoverage()
     {
         var pdfFolder = TestConfig.PdfFolder;
 
-        // TestLicences is shared with the licence pipeline's own integration tests, so
-        // filter to just the WR51 documents rather than picking up every licence PDF too.
-        // The handful of hand-verified "dummy" fixtures (WR51__<licence>__dummy.pdf, no
-        // real DMS GUID in the filename) belong to Wr51PdfPigNoOcrPdfTests instead, which
-        // derives a stable id via GuidHelper rather than relying on a real one.
+        // TestLicences is shared with the licence pipeline's tests, so this filters to WR51 only.
+        // The hand-verified "dummy" fixtures belong to Wr51PdfPigNoOcrPdfTests instead.
         var files = Directory.GetFiles(pdfFolder, "*.pdf")
             .Select(Path.GetFileName)
             .Where(f => f != null)
@@ -203,19 +196,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         await ReportCoverage(formsList, testOutputHelper, failures, total);
     }
 
-    /// <summary>
-    /// The same real documents, with the cost-optimised table extraction overlay enabled (Tabula
-    /// primary, free; Azure DI fallback, paid, only on documents where Tabula resolves fewer than
-    /// WrInspectionReportExtractionOrchestrator's default minimumFieldsToSkipFallback (10) of the
-    /// 13 grid fields - see that class for how that default was tuned against the golden set).
-    /// No ground truth exists at this scale, so this
-    /// reports coverage (field presence), not accuracy - compare against
-    /// WhenExtractingRealWr51Documents_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
-    /// hand for the LicenceProvisions.*/meter fields the overlay targets. Real Azure DI cost is
-    /// incurred here (once per T1 document where the fallback fires) - this is NOT a free test to
-    /// re-run casually; each first run against a given document is billed, further runs hit that
-    /// document's cache.
-    /// </summary>
+    /// The same documents with the cost-optimised overlay: Tabula first, Azure DI only where
+    /// Tabula resolves fewer than minimumFieldsToSkipFallback of the 13 grid fields. Reports
+    /// coverage, not accuracy.
+    ///
+    /// Azure DI is billed on each document's first run here, cached after. Not free to re-run.
     [Fact]
     public async Task WhenExtractingRealWr51DocumentsWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
     {
@@ -255,10 +240,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             async (fileName, _) =>
             {
                 var pdfDataExtractor = BuildPdfDataExtractor();
-                // TabulaTableExtractorService is free/local; AzureAiServicesDocumentIntelligenceTableExtractorService
-                // is the paid fallback, invoked by the orchestrator only when Tabula resolves too
-                // little - a fresh instance per document mirrors how a real per-message Lambda
-                // invocation would construct these, and both are stateless.
+                // A fresh instance per document mirrors a per-message Lambda invocation, and both
+                // extractors are stateless.
                 var fallbackTableExtractorService = new WALE.ProcessFile.Services.AzureAiServicesDocumentIntelligence.AzureAiServicesDocumentIntelligenceTableExtractorService(
                     TestConfig.AiServicesEndpoint!,
                     TestConfig.AiServicesKey!,
@@ -361,15 +344,11 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var inspectionDateUnparsed = formsList.Count(f =>
             f.InspectionDate.DateTime == null && !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate));
 
-        // Not gated on the date failing to parse: the converter's salvage can usually dig a date
-        // back out of polluted text, so gating here reports zero while the capture stays wrong.
-        // Cause is the squeezed layout's fallback rule anchoring on "Inspecting Officer"
-        // (because "Inspection Date:" wraps across two lines there), which starts the capture
-        // inside the officer's own value. Column-side routes are measured dead ends: text
-        // bounding (774 -> 685), rejecting the officer's row (794 -> 758, which loses dates
-        // carried in a further column), and dropping .WholeLine() for the column-limited
-        // default, which loses InspectionDate outright wherever the label wraps (10 of the
-        // tests in Wr51PdfPigNoOcrPdfTests go red).
+        // Not gated on the parse failing: the converter's salvage usually digs a date back out, so
+        // gating reports zero while the capture stays wrong. The cause is the squeezed-layout
+        // fallback anchoring on "Inspecting Officer". Column-side routes are measured dead ends -
+        // text bounding 774 -> 685, rejecting the officer's row 794 -> 758, and dropping
+        // .WholeLine() turns 10 of Wr51PdfPigNoOcrPdfTests red.
         var inspectionDateLeaksOfficer = formsList.Count(f =>
             !string.IsNullOrWhiteSpace(f.InspectionDate.RawDate)
             && !string.IsNullOrWhiteSpace(f.InspectingOfficer)
@@ -380,15 +359,12 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         var spotCheckResultFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.SpotCheckResult));
         var meterMakeFound = formsList.Count(f => !string.IsNullOrWhiteSpace(f.MeasurementDetails.Meters?.FirstOrDefault()?.MeterMake));
 
-        // Regression guards for data-quality fixes: a neighbouring field's own label leaking
-        // into these values, rather than a real answer.
+        // Guards against a neighbouring field's label leaking in as the value.
         var siteAddressLeaksEmailLabel = formsList.Count(f =>
             f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
 
-        // The next-line same-column fetch swept the "Name and address:" row in as a second
-        // line of the licence number on 197 of 789 real files - additionalSameLineEndTexts
-        // fix. A handful of newline-separated values remain (wrapped labels, genuine
-        // multi-licence inspections) - this only guards against the dominant leak returning.
+        // The next-line same-column fetch swept "Name and address:" in as a second line of the
+        // licence number on 197 of 789 files. A handful of genuine multi-licence values remain.
         var licenceNumberLeaksNameAndAddress = formsList.Count(f =>
             f.LicenceNumber?.Contains("name and address", StringComparison.OrdinalIgnoreCase) == true);
 
@@ -405,27 +381,16 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             f.MeasurementDetails.MeterVerification != null
             && siblingLeakTerms.Any(t => f.MeasurementDetails.MeterVerification.Contains(t, StringComparison.OrdinalIgnoreCase)));
 
-        // Was Maintenance's own "Y:"/"N:" sub-fields leaking in as Calibration/Conformance/
-        // FlowVerification/MeterVerification's answer - the row immediately below their shared
-        // grid label row is consistently Maintenance's own row on several real templates, not a
-        // dedicated value row for these four fields. Fixed via
-        // LabelToMatch.ExcludeNextLineIfFirstColumnStartsWith(["Maintenance"]) - see analysis doc.
+        // The row below these four fields' shared label row is Maintenance's own on several
+        // templates, not their value row, so its "Y:"/"N:" leaked in as the answer.
         var conformanceBareYOrN = formsList.Count(f =>
             f.MeasurementDetails.Conformance is "Y:" or "N:");
         var flowVerificationBareYOrN = formsList.Count(f =>
             f.MeasurementDetails.FlowVerification is "Y:" or "N:");
 
-        // Found via a proactive sweep of _extraction-results.csv for sibling field-label text
-        // leaking into other fields' values - the same class of bug as the guards above, just
-        // discovered by scanning every text field against every known page label rather than
-        // waiting for a specific field to be reported. InspectionClass's "Email" leak is fixed
-        // via additionalSameLineEndTexts (WalkSameLineColumns' TextEnd bound). MetWith/
-        // InspectingOfficer needed a different fix - the same endText approach had zero effect,
-        // traced via gated instrumentation to the upstream row/column-grouping having already
-        // merged the sibling field's text into the SAME DocumentLineColumn on some documents, so
-        // there was no second column for TextEnd to exclude. Fixed instead via
-        // TruncateAtKnownSiblingLabel in WrInspectionReportSchemaConverter.cs - a plain string
-        // truncation that works regardless of the upstream column structure.
+        // Found by sweeping every text field against every known page label, rather than waiting
+        // for one to be reported. MetWith and InspectingOfficer need TruncateAtKnownSiblingLabel
+        // instead of a TextEnd bound; see that method for why.
         var inspectionClassLeaksEmailLabel = formsList.Count(f =>
             f.InspectionClass?.Contains("Email", StringComparison.OrdinalIgnoreCase) == true);
         var metWithLeaksPositionLabel = formsList.Count(f =>
@@ -472,10 +437,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             await csv.WriteRecordsAsync(templateFieldCoverageRows);
         }
 
-        // QA-review export: one row per document for a human spot-check pass, not the raw
-        // 51-column dump. Reuses the per-template coverage just computed above to flag only the
-        // fields that are usually populated for THIS document's template but came back blank
-        // here - a targeted "look at this" list rather than 51 columns to eyeball per row.
+        // One row per document for a human spot-check, flagging only fields usually populated for
+        // this document's template but blank here.
         var coverageByTemplateField = templateFieldCoverageRows
             .ToDictionary(r => (r.Template, r.Field), r => r.Documents == 0 ? 0.0 : r.NonBlank / (double)r.Documents);
 
@@ -486,8 +449,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             .Where(k => k.StartsWith("MeasurementDetails.", StringComparison.Ordinal))
             .ToList();
 
-        // A field blank on this doc is only worth flagging if most other documents of the same
-        // template DO have it - otherwise a genuinely sparse field would flag on every document.
+        // Only worth flagging if most documents of the template have it, or a sparse field flags
+        // on every one.
         const double usuallyPopulatedThreshold = 0.6;
 
         var qaReviewRows = formsList
@@ -598,8 +561,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             "or the 'Calibration Certificate' collision - the IgnoreBlockIfContains fix regressed");
 
         // A ratchet, not a target: the one remaining document has a genuinely blank date field.
-        // Pinned at the measured figure rather than 0 so it doesn't fail the build, while any
-        // growth does. Lower it whenever the gap is genuinely reduced.
+        // Lower it whenever the gap is reduced.
         const int knownUnparsedInspectionDates = 1;
 
         Assert.True(
@@ -608,11 +570,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             + $"known {knownUnparsedInspectionDates}. Extraction is claiming the wrong text, not just missing "
             + "a value - see test output.");
 
-        // Separate from the parse ratchet above: these documents do resolve a date, so a capture
-        // regression would otherwise hide behind the salvage that rescues it. These are the
-        // guard in RemoveSiblingValue rather than real leaks: InspectingOfficer on those
-        // documents is itself "2019" or "Time: 10:50", so the Contains below matches the date's
-        // own year, and stripping it by value would delete the date.
+        // These documents do resolve a date, so a capture regression would hide behind the salvage.
+        // They are RemoveSiblingValue's guard, not real leaks: InspectingOfficer is itself "2019"
+        // or "Time: 10:50" there, so stripping it by value would delete the date's own year.
         const int knownInspectionDateColumnLeaks = 5;
 
         Assert.True(
@@ -660,11 +620,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     private static string Percent(int count, int total) =>
         total == 0 ? "n/a" : $"{count * 100.0 / total:F1}%";
 
-    // Categorical, not a pinned accuracy number that would go stale the next time the harness
-    // runs - High covers templates the classifier itself is least sure about (Unknown) or where
-    // the golden set so far is thin (T4/T7/Impounding all have single-digit sample counts - see
-    // analysis/08-wr51-field-report.md section 3), Medium is the heterogeneous narrative bucket,
-    // Normal is the two best-covered templates (T1, T6).
+    // Categorical rather than a pinned number that goes stale: High is where the classifier is
+    // least sure or the golden set is thin, Normal is T1 and T6.
     private static string ReviewPriority(WrTemplateType template) => template switch
     {
         WrTemplateType.Unknown => "High",
@@ -700,12 +657,8 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         string ReviewOutcome,
         string ReviewNotes);
 
-    // No ground truth exists for all 789 files (only the 46-document golden set has that), so
-    // this is coverage - "did the field produce anything" - not accuracy - "was it right". Still
-    // useful at full scale precisely where the golden set's per-template samples are too
-    // small to trust (T4=3, T7=1, Impounding=1 documents there vs the real counts here). One row
-    // per (template, field) rather than one column per field, since it covers every field
-    // Wr51GroundTruthAccuracyTests.FieldExtractors knows about (reused from there directly, not
-    // duplicated) - a fixed-column shape doesn't scale to ~50 fields across 7 templates.
+    // Coverage, not accuracy: only the 46-document golden set has truth. Useful at full scale
+    // exactly where that set is thinnest (T4=3, T7=1, Impounding=1 there). One row per template
+    // and field, since a fixed-column shape does not scale to ~50 fields across 7 templates.
     private record TemplateFieldCoverageRow(string Template, string Field, int Documents, int NonBlank, string Coverage);
 }

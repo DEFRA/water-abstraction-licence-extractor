@@ -5,14 +5,9 @@ using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Helpers;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-/// <summary>
-/// Unit coverage for WrInspectionReportTableMatcher, built from hand-crafted OcrTable/
-/// OcrTableCell fixtures - no live Azure calls, mirroring the existing
-/// FindLabelGroupMatchesHelperColumnTests.cs pattern for the heuristic column-walk mechanisms.
-/// Covers both cell shapes found during real prototyping against Azure AI Document
-/// Intelligence's prebuilt-layout model: label+value merged into one cell (the majority of
-/// documents), and label/value split into adjacent cells (wr51__nw0690016005).
-/// </summary>
+/// Hand-crafted fixtures, no live Azure calls. Both cell shapes Document Intelligence produces
+/// are covered: label and value merged into one cell, the majority, and split into adjacent cells
+/// (wr51__nw0690016005).
 public class TableMatcherHelperTests
 {
     private static readonly IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> Labels =
@@ -25,9 +20,8 @@ public class TableMatcherHelperTests
         Content = content
     };
 
-    /// A cell that reports a rectangle. Cell() above sets none, and
-    /// DocumentTableCell.ToCoordinates() returns null unless all four edges are set, so a region
-    /// can only be asserted against a cell built here.
+    /// Cell() above sets no rectangle, and ToCoordinates() needs all four edges, so a region can
+    /// only be asserted against a cell built here.
     private static DocumentTableCell CellAt(int row, int col, string content, double left) => new()
     {
         RowIndex = row,
@@ -45,10 +39,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenLabelAndValueAreMergedInOneCell_ThenValueIsExtracted()
     {
-        // Embedded in a full grid, not a bare 2-cell table - FindBestGridTable deliberately
-        // requires a majority-of-the-grid match before trusting a table at all (guards against
-        // a coincidental one- or two-label overlap with an unrelated block), so a minimal
-        // fixture would be rejected before ever reaching the per-field logic under test here.
+        // A full grid, not a bare 2-cell table: FindBestGridTable requires a majority-of-grid
+        // match, so a minimal fixture is rejected before reaching the logic under test.
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
         var results = TableMatcherHelper.MatchToPossibilities(
@@ -64,10 +56,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenCellContentIsAzuresOwnSelectionMarkAnnotation_ThenItIsNormalisedToARealTick()
     {
-        // Azure's own ":selected:"/":unselected:" selection-mark annotation appears directly in
-        // Content for checkbox-style cells, often WITHOUT a redundant rendered tick glyph. Left
-        // unhandled, this falls through to the "" catch-all Possibility and scores Blank instead
-        // of the real tick - locks in the fix (NormaliseSelectionMarks).
+        // Azure writes ":selected:" into Content for checkbox cells, often with no tick glyph at
+        // all. Unhandled, it falls through to the "" catch-all and scores Blank.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Where(c => c.RowIndex != 0 || c.ColumnIndex is not (0 or 1))
             .Append(Cell(0, 0, "Source of supply:"))
@@ -87,13 +77,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenCellContentIsGenuinelyUnrecognisable_ThenFieldResolvesAsBlankViaTheCatchAll()
     {
-        // A field only falls back to the heuristic when its label isn't found in the table AT
-        // ALL, or when its content is too long to plausibly be a tick answer (see
-        // WhenCellContentIsNarrativeLength... below) - see WhenFieldLabelIsNotFoundInAnyTable
-        // too. Content that IS found, IS short enough to be a tick, but matches no real
-        // Possibility still resolves as Blank via InOrderPossibilities' "" catch-all - same design
-        // the heuristic column-walk path already relies on (see that Possibility's own comment -
-        // "a genuinely blank tick field must still survive as a match").
+        // Content found, short enough to be a tick, but matching no Possibility resolves as Blank
+        // via the "" catch-all rather than falling back to the heuristic.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Where(c => c.RowIndex != 0 || c.ColumnIndex is not (0 or 1))
             .Append(Cell(0, 0, "Source of supply:"))
@@ -113,12 +98,9 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenCellContentIsNarrativeLength_ThenFieldFallsBackRatherThanFabricatingAStatus()
     {
-        // Narrative-answer documents put a genuine prose answer in the SAME cell as the label,
-        // e.g. "Source of supply: Lower Greensand at Warwick Wold / Brewer St :selected:".
-        // Without this guard, normalising ":selected:" to "✓" matches the InOrder Possibility
-        // via Contains("✓") on the whole sentence - fabricating "InOrder" for a field the model
-        // has no way to represent at all. Falling back to the heuristic is strictly safer, even
-        // though it can't represent narrative answers either - it won't confidently guess wrong.
+        // A prose answer shares the label's cell: "Source of supply: Lower Greensand at Warwick
+        // Wold / Brewer St :selected:". Without the guard, ":selected:" normalises to "✓" and
+        // Contains("✓") fabricates InOrder for a field the model cannot represent at all.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Where(c => c.RowIndex != 0 || c.ColumnIndex is not (0 or 1))
             .Append(Cell(0, 0, "Source of supply: Lower Greensand at Warwick Wold / Brewer St :selected:"))
@@ -132,8 +114,7 @@ public class TableMatcherHelperTests
             TickHelper.GetTickedOrAcceptedStatus);
 
         Assert.False(results.ContainsKey(WrInspectionReportFieldNames.SourceOfSupply));
-        // Confirms this is a targeted, per-field guard, not an overreaction that also rejects
-        // the table for genuinely short, legitimate answers on other fields in the same row.
+        // Per-field, so a short legitimate answer elsewhere in the row still uses the table.
         Assert.True(results.ContainsKey(WrInspectionReportFieldNames.Quantities));
     }
 
@@ -171,10 +152,7 @@ public class TableMatcherHelperTests
             TickHelper.GetTickedOrAcceptedStatus);
 
         var specialConditions = Assert.Single(results, r => r.Key == WrInspectionReportFieldNames.SpecialConditions).Value;
-        // Matches the "" catch-all Possibility (see InOrderPossibilities) - resolves to a real,
-        // confident Blank verdict downstream (WrInspectionReportSchemaConverter.
-        // GetInOrderStatus treats an empty/whitespace-only joined Text as InOrderStatus.Blank),
-        // not a miss.
+        // The "" catch-all resolves downstream to a confident Blank, not a miss.
         Assert.Equal(string.Empty, specialConditions.Text!.Single().Text);
     }
 
@@ -240,9 +218,7 @@ public class TableMatcherHelperTests
         Assert.Empty(results);
     }
 
-    // Builds a table containing all 13 grid fields (merged label:value cells), matching the
-    // real shape confirmed on 16/17 tested documents during prototyping - lets individual
-    // tests override one field's value without repeating the whole grid each time.
+    // All 13 grid fields as merged label:value cells, the shape 16 of 17 tested documents use.
     private static DocumentTable BuildFullGridTable(string specialConditionsValue)
     {
         return new DocumentTable
@@ -291,9 +267,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenAFreeTextFieldIsGenuinelyAbsent_ThenItIsNotInTheResults()
     {
-        // Grid present (passes the table-selection gate) but no Telephone No/Time/Serial number
-        // cells at all - a real, if less common, real-world shape (e.g. a document where the
-        // header block itself isn't part of the same table Lattice detected for the grid).
+        // A real shape: the grid passes the selection gate but the header block is not part of
+        // the same table, so there are no Telephone No/Time/Serial number cells.
         var table = BuildFullGridTable(specialConditionsValue: "✓");
 
         var results = TableMatcherHelper.MatchTextFields(
@@ -305,9 +280,8 @@ public class TableMatcherHelperTests
     /*[Fact] Don't think this reasoning holds up so commenting out for now
     public void WhenNoTableResemblesTheGrid_ThenFreeTextFieldsAreNotResolvedEitherEvenIfPresentElsewhere()
     {
-            // FindBestGridTable's own majority-of-grid gate applies here too - a table with real
-            // Telephone No/Time/Serial number cells but nothing resembling the LicenceProvisions grid
-            // itself must not be trusted, same reasoning as MatchGridFields's own equivalent guard.
+            // The majority-of-grid gate applies here too, so a table with header cells but no
+            // provisions grid is not trusted.
         var unrelatedTable = new DocumentTable
         {
             RowCount = 1,
@@ -324,8 +298,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenSerialNumberUsesATemplateAlternateWordingRatherThanTheFirst_ThenItIsStillFound()
     {
-        // SerialNumber has 3 real alternates (Existing/T6/Baseline) - MatchFreeTextFields must
-        // try each alternate's own TextStart, not just the first ("Serial number").
+        // SerialNumber has three alternates, so each one's TextStart must be tried, not just the
+        // first.
         var cells = BuildFullGridTable(specialConditionsValue: "✓").Cells
             .Append(Cell(5, 0, "Meter Serial Number: 3K220000854902"))
             .ToList();
@@ -374,8 +348,8 @@ public class TableMatcherHelperTests
     [Fact]
     public void WhenGridLabelAndValueAreSplit_ThenTheRegionIsTheValueCellsNotTheLabelCells()
     {
-        // The label cell is the one iterated to find the field, so taking its region instead would
-        // outline the printed question rather than the answer a verifier is being asked to check.
+        // The label cell is the one iterated, so its region would outline the printed question
+        // rather than the answer.
         var cells = BuildFullGridTable(specialConditionsValue: string.Empty).Cells
             .Where(c => !(c.RowIndex == 4 && c.ColumnIndex == 1))
             .Append(CellAt(4, 1, "Special conditions:", left: 300))

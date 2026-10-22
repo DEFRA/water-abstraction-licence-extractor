@@ -4,16 +4,8 @@ using WRADI.DocumentType.WrInspectionReport.Enums;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-/// <summary>
-/// Direct unit tests for WrInspectionReportSchemaConverter.ToForm's template classification
-/// (Metadata.Template), isolated from PDF extraction - same pattern as
-/// WrInspectionReportSchemaConverterTests, a hand-built MatchesResult with just the marker
-/// label groups populated is enough to exercise ClassifyTemplate's priority order without a
-/// real or dummy PDF fixture. Added because none of the 11 WR51 dummy fixtures assert
-/// Metadata.Template at all, and the priority order/blank-comments nuance here were both hard
-/// to get right the first time - exactly the kind of logic a silent regression could slip
-/// through undetected.
-/// </summary>
+/// A hand-built MatchesResult with only the marker groups populated exercises ClassifyTemplate's
+/// priority order; none of the 11 dummy PDF fixtures assert Metadata.Template at all.
 public class WrTemplateClassificationTests
 {
     private static MatchesResult BuildMatchesResult(string? documentHeader, params string[] presentMarkerNames)
@@ -65,14 +57,7 @@ public class WrTemplateClassificationTests
     [Fact]
     public void WhenCommentsSectionHasNeitherBaselineNorAlternateHeading_ThenNonStandardNarrative()
     {
-        // A deliberate, evidenced tradeoff, not an oversight - two candidate rules were
-        // measured against the golden set: treating "no heading at all" as T1 (alternate-only
-        // exclusion) missed 6 genuinely non-standard documents (headingless narratives,
-        // multi-section reports) that this rule catches; treating it as NonStandardNarrative
-        // (this rule, chosen) costs 2 false positives on documents that are genuinely T1 but
-        // happen to have nothing written in that section. The 2-false-positive version won.
-        // See WrInspectionReportSchemaConverter.ClassifyTemplate's own comment for the exact
-        // documents and counts this was measured against.
+        // The 2 false positives are the chosen cost; see ClassifyTemplate for the measurement.
         var matchesResult = BuildMatchesResult("51");
 
         var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
@@ -93,9 +78,7 @@ public class WrTemplateClassificationTests
     [Fact]
     public void WhenDocumentHeaderMissingButAT4MarkerMatched_ThenT4NotUnknown()
     {
-        // The positive template markers take priority over the missing-header check - a
-        // document can be confidently T4 even if DocumentHeader's own alternate happened not
-        // to match.
+        // A document can be confidently T4 even where DocumentHeader's alternate did not match.
         var matchesResult = BuildMatchesResult(null, "TemplateMarkerT4");
 
         var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
@@ -106,9 +89,7 @@ public class WrTemplateClassificationTests
     [Fact]
     public void WhenImpoundingMarkerPresent_ThenImpoundingRegardlessOfOtherMarkers()
     {
-        // Impounding is checked first - a document that also happens to trip the T4 marker
-        // (e.g. shares some label wording) must still classify as Impounding, since that's a
-        // different licence type entirely, not a template variant of an abstraction licence.
+        // Impounding wins over a tripped T4 marker: it is a different licence type, not a variant.
         var matchesResult = BuildMatchesResult("51", "TemplateMarkerImpounding", "TemplateMarkerT4");
 
         var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);
@@ -159,9 +140,7 @@ public class WrTemplateClassificationTests
     [Fact]
     public void WhenBothBaselineAndAlternateCommentsHeadingsPresent_ThenAlternateWins()
     {
-        // A document with the baseline heading text somewhere AND a recognised alternate
-        // heading (e.g. "Notes and Actions") elsewhere is not a clean T1 document - the
-        // alternate heading's presence is what actually drives this field's real shape.
+        // The alternate heading's presence drives the field's shape, so this is not a clean T1.
         var matchesResult = BuildMatchesResult("51", "TemplateMarkerBaselineComments", "TemplateMarkerAlternateComments");
 
         var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null);

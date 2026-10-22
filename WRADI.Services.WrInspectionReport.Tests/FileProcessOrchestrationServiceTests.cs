@@ -10,11 +10,8 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 
 public class FileProcessOrchestrationServiceTests
 {
-    /// <summary>
-    /// A file service whose bucket contains exactly the keys these candidates resolve to. The
-    /// orchestrator now selects on what is in ingress, so a fake that lists nothing filters every
-    /// candidate out and a test asserting a send would fail for the wrong reason.
-    /// </summary>
+    /// The orchestrator selects on what is in ingress, so a fake listing nothing filters every
+    /// candidate out and a send assertion fails for the wrong reason.
     private static IFileService FileServiceHolding(params InspectionReportFinderResult[] candidates)
     {
         var fileService = A.Fake<IFileService>();
@@ -93,10 +90,8 @@ public class FileProcessOrchestrationServiceTests
         Assert.Equal("WrInspectionReport", enqueuedRequest.DocumentType);
     }
 
-    /// <summary>
-    /// A window selects by what DMS recorded, so an unparseable or absent upload date cannot be
-    /// compared and the candidate is left out - which must be visible rather than silent.
-    /// </summary>
+    /// An unparseable or absent upload date cannot be compared, so the candidate is left out -
+    /// visibly, not silently.
     [Theory]
     [InlineData("2025-06-15 00:00:00", true)]
     [InlineData("2025-01-01 00:00:00", true)]
@@ -133,10 +128,8 @@ public class FileProcessOrchestrationServiceTests
         Assert.Equal(expectSent ? 1 : 0, startedProcessRun?.NumberOfFiles);
     }
 
-    /// <summary>
-    /// The cap draws from the window, not from every discovered document, or a windowed run would be
-    /// indistinguishable from an arbitrary MaxFilesPerRun slice.
-    /// </summary>
+    /// The cap draws from the window, or a windowed run is indistinguishable from an arbitrary
+    /// MaxFilesPerRun slice.
     [Fact]
     public async Task WhenAWindowAndACapAreBothSet_ThenTheCapAppliesToTheWindowedCandidates()
     {
@@ -147,8 +140,7 @@ public class FileProcessOrchestrationServiceTests
             MaxFilesPerRun = 2
         };
 
-        // Permit numbers carry the expectation, so the assertion is on which files were taken
-        // rather than how many - two of five is also what an unwindowed cap would send.
+        // Asserted on which files, not how many: two of five is also what an unwindowed cap sends.
         var candidates = new List<InspectionReportFinderResult>();
 
         foreach (var (permitNumber, uploadDate) in new[]
@@ -177,9 +169,7 @@ public class FileProcessOrchestrationServiceTests
         Assert.All(enqueuedRequests, request => Assert.StartsWith("INSIDE-", request.PermitNumber));
     }
 
-    /// <summary>
-    /// The run has to record what it covered; nothing else retains the window afterwards.
-    /// </summary>
+    /// Nothing else retains the window afterwards.
     [Fact]
     public async Task WhenAWindowIsSet_ThenTheProcessRunDescriptionSaysSo()
     {
@@ -254,13 +244,10 @@ public class FileProcessOrchestrationServiceTests
         return (enqueuedRequests, startedProcessRun);
     }
 
-    /// <summary>
-    /// A skipped candidate must be absent from the run's NumberOfFiles as well as from the queue,
-    /// since the count is written before anything is sent.
-    /// </summary>
+    /// NumberOfFiles is written before anything is sent, so a skipped candidate must be absent
+    /// from the count as well as the queue.
     [Theory]
-    // The DMS file name does not decide this: a .doc whose PDF has been converted into the bucket
-    // is sendable, and a .pdf that was never collected is not.
+    // Both extensions appear with both outcomes: the bucket decides, not the DMS file name.
     [InlineData("Compliance Inspection WR51 - 032842002.docx", true, true)]
     [InlineData("Compliance Inspection WR51 - 032842002.docx", false, false)]
     [InlineData("Compliance Inspection WR51 - 032842002.pdf", true, true)]
@@ -328,11 +315,8 @@ public class FileProcessOrchestrationServiceTests
         Assert.Equal(expectSent ? 1 : 0, startedProcessRun?.NumberOfFiles);
     }
 
-    /// <summary>
-    /// The bug WRADI-391 fixes: the send loop was wrapped in one try/catch that rethrew, so a single
-    /// rejected send (a 429 from the API, in the incident that prompted this) abandoned every
-    /// remaining file in the run while the process run still recorded the full count.
-    /// </summary>
+    /// One try/catch around the whole send loop meant a single rejected send - a 429 - abandoned
+    /// every remaining file while the run still recorded the full count.
     [Fact]
     public async Task WhenOneBatchFails_ThenTheRemainingBatchesAreStillSent()
     {
@@ -366,7 +350,7 @@ public class FileProcessOrchestrationServiceTests
             {
                 var batch = call.GetArgument<IReadOnlyList<FileProcessSingleRequest>>(0)!;
 
-                // The first batch throws the way a 429 did, the rest succeed.
+                // The first batch throws as a 429 does, the rest succeed.
                 if (++batchNumber == 1)
                 {
                     throw new HttpRequestException("Response status code does not indicate success: 429 (Too Many Requests).");

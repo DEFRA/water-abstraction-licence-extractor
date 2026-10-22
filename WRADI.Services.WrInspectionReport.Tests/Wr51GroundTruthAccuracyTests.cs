@@ -26,16 +26,12 @@ using Form = WRADI.DocumentType.WrInspectionReport.Models.WrInspectionReport;
 namespace WRADI.Services.WrInspectionReport.Tests;
 
 /// <summary>
-/// Phase 0 accuracy harness for WR51. Ground truth is a hand-labelled golden set that
-/// intentionally lives OUTSIDE this repo - the source PDFs and their derived
-/// <c>.truth.json</c> files contain real names/addresses/phone numbers and must never be
-/// committed. This test reads that external folder, replays extraction against the same
-/// cached PdfPig text the other WR51 tests use, and reports per-field
-/// precision/recall/hallucination stats - no DB, no API, replay-only.
+/// Ground truth lives OUTSIDE this repo: the PDFs and their <c>.truth.json</c> files hold real
+/// names, addresses and phone numbers and must never be committed. Replay-only against the cached
+/// PdfPig text.
 ///
-/// If the ground-truth folder isn't present (any machine other than the one it was labelled
-/// on, and CI), the test reports that and returns rather than failing - this is a reporting
-/// tool, not a gate, until enough of the golden set exists to set real thresholds.
+/// With the folder absent - any machine but the one it was labelled on, and CI - this reports and
+/// returns rather than failing. A reporting tool, not a gate.
 /// </summary>
 public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 {
@@ -48,10 +44,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         new DocnetNoOcrAlternativePdfDocumentService();
     private static readonly IMessageQueueService MessageQueueService = new ApiMessageQueueService(new HttpClient());
 
-    // Two T6-only measurement fields discovered while hand-labelling the golden set have no
-    // corresponding property anywhere in WrInspectionReportMeasurementDetails.cs - a genuine
-    // model gap, not an extraction bug. Reported separately as "Unmodeled" rather than scored
-    // as misses, so they don't drown out fields the pipeline could plausibly get right.
+    // Two T6-only fields have no property in WrInspectionReportMeasurementDetails at all - a model
+    // gap, not an extraction bug, so they report as "Unmodeled" rather than scoring as misses.
     private static readonly HashSet<string> UnmodeledFields =
         ["MeasurementDetails.CalibrationCertificate", "MeasurementDetails.VerificationCertificate"];
 
@@ -138,27 +132,17 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         string Recall,
         string HallucinationRate);
 
-    /// <summary>
-    /// InOrderStatus.Blank/Unknown/DidntMatch are the enum's "nothing usable was produced"
-    /// states, not real answers - ToString()-ing them directly would make every one of them
-    /// look like a confidently extracted (and wrong/hallucinated) value. Collapsed to null so
-    /// they're scored as "no extraction", same as a genuinely empty string field.
-    /// </summary>
-    // internal, not private: WrInspectionReportPdfPigNoOcrPdfTests reuses these two for its
-    // full per-template coverage report, rather than duplicating the 50-field mapping.
+    /// Blank, Unknown and DidntMatch mean nothing usable was produced, so they collapse to null -
+    /// ToString()-ing them would score each as a confidently extracted wrong value.
+    // internal because WrInspectionReportPdfPigNoOcrPdfTests reuses these two.
     internal static string? FormatInOrderStatus(InOrderStatus status) =>
         status is InOrderStatus.Blank or InOrderStatus.Unknown or InOrderStatus.DidntMatch
             ? null
             : status.ToString();
 
-    /// <summary>
-    /// Property-path extractors matching the 53 ground-truth field keys. Enum fields (the
-    /// LicenceProvisions grid) are compared via FormatInOrderStatus() against the truth's
-    /// status string - when truth instead holds narrative text (several real documents
-    /// describe provisions in prose rather than a tick mark - see the golden set's own notes)
-    /// this will correctly score as a miss/wrong, which is real signal: the current model has
-    /// no way to represent a narrative provisions answer, only InOrderStatus.
-    /// </summary>
+    /// One per ground-truth field key. Where truth holds narrative text instead of a status - some
+    /// documents describe provisions in prose - this scores as wrong, which is real signal: the
+    /// model has no way to hold a narrative provisions answer, only InOrderStatus.
     internal static readonly Dictionary<string, Func<Form, string?>> FieldExtractors = new()
     {
         ["LicenceNumber"] = f => f.LicenceNumber,
@@ -229,36 +213,22 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     private static string? StripAllWhitespace(string? normalizedValue) =>
         normalizedValue == null ? null : Regex.Replace(normalizedValue, @"\s+", "");
 
-    /// <summary>
-    /// Multi-line values (addresses, most often) get joined with '\n' by the pipeline but were
-    /// hand-transcribed into ground truth as ", "-separated prose for readability - genuinely
-    /// the same content, different join character. Stripping whitespace AND commas collapses
-    /// both styles to the same bag of characters so this doesn't score as a wrong answer.
-    /// </summary>
+    /// The pipeline joins multi-line values with '\n' where truth was hand-transcribed with ", ",
+    /// so whitespace and commas both go, collapsing the two styles to the same characters.
     private static string? StripSeparators(string? normalizedValue) =>
         normalizedValue == null ? null : Regex.Replace(normalizedValue, @"[\s,]+", "");
 
-    // Minimum truth length (post-normalization) before near-identical scoring kicks in. Guards
-    // against short structured values (phone numbers, serial numbers, dates) where a single
-    // wrong character already produces a deceptively high similarity ratio - e.g. one wrong
-    // digit in an 11-digit phone number is already ~91% similar, which would misreport a
-    // genuinely wrong value as a near-hit. Every real narrative field (GeneralComments) in the
-    // golden set is reliably well over this; every real single-value field in FieldExtractors
-    // is reliably well under it.
+    // Short structured values score deceptively high: one wrong digit in an 11-digit phone number
+    // is already ~91% similar. Every narrative field sits well above this length and every
+    // single-value field well below.
     private const int MinLengthForSimilarityScoring = 200;
 
-    // Chosen from the 2026-09-08 golden-set GeneralComments analysis: real near-misses
-    // (superscript/whitespace encoding artifacts, e.g. "m3" vs "³", "13th" vs "13 th")
-    // clustered at >=0.90 similarity; sub-0.90 cases were confirmed by manual inspection to be
-    // genuine content differences (extraction running past the field's true end and picking up
-    // trailing boilerplate, or anchoring on the wrong section entirely), not scoring artifacts.
+    // From the 2026-09-08 GeneralComments analysis: encoding near-misses ("m3" vs "³", "13th" vs
+    // "13 th") clustered at >=0.90, and every sub-0.90 case was a genuine content difference.
     private const double NearIdenticalSimilarityThreshold = 0.90;
 
-    /// <summary>
-    /// Normalized Levenshtein similarity (1 - editDistance / max(len)). Two-row DP, not a full
-    /// n*m matrix - GeneralComments values run several thousand characters long in real
-    /// documents, and a full matrix would be tens of megabytes for the longest of them.
-    /// </summary>
+    /// Two-row DP, not a full n*m matrix: GeneralComments runs several thousand characters, where
+    /// a full matrix would be tens of megabytes.
     private static double LevenshteinSimilarity(string a, string b)
     {
         if (a.Length == 0 && b.Length == 0)
@@ -319,10 +289,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             return Outcome.Miss;
         }
 
-        // Whitespace-insensitive equality first: values like phone numbers or licence numbers
-        // routinely differ only by internal spacing between truth and extraction (e.g.
-        // "01730 813439" vs "01730813439") - genuinely the same value, not a wrong answer.
-        // Scoring these as Wrong would misreport a harness normalization gap as a pipeline bug.
+        // Phone and licence numbers routinely differ only by internal spacing ("01730 813439" vs
+        // "01730813439"), which would otherwise report a harness gap as a pipeline bug.
         if (extractedNorm == truthNorm
             || StripAllWhitespace(extractedNorm) == StripAllWhitespace(truthNorm)
             || StripSeparators(extractedNorm) == StripSeparators(truthNorm))
@@ -335,11 +303,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             return Outcome.PartialHit;
         }
 
-        // Substring containment above only catches truncation-shaped near-misses (one string is
-        // a prefix/suffix of the other). Narrative fields more often differ by a handful of
-        // characters scattered throughout - neither containing the other - which this catches
-        // instead. See MinLengthForSimilarityScoring/NearIdenticalSimilarityThreshold for why
-        // this is gated to long values only.
+        // Containment above only catches truncation. Narrative fields more often differ by a few
+        // characters scattered throughout, neither string containing the other.
         if (truthNorm != null
             && truthNorm.Length >= MinLengthForSimilarityScoring
             && LevenshteinSimilarity(extractedNorm, truthNorm) >= NearIdenticalSimilarityThreshold)
@@ -356,14 +321,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         await RunHarnessAsync(tableExtractorService: null, outputSuffix: string.Empty);
     }
 
-    /// <summary>
-    /// Same harness, with the opt-in table-based LicenceProvisions grid extraction enabled
-    /// (WrInspectionReportTableMatcher, via a real Azure AI Document Intelligence
-    /// "prebuilt-layout" call per document - real cost, ~$0.01/page, cached afterward via
-    /// AzureAiServicesDocumentIntelligenceTableExtractorService's own cache namespace).
-    /// Separate CSVs (suffix "-table-based") so this never clobbers the baseline run above -
-    /// diff the two by hand for the LicenceProvisions.* rows.
-    /// </summary>
+    /// Table-based grid extraction via a real Azure Document Intelligence call per document -
+    /// about $0.01 a page, cached afterwards. Writes to "-table-based" CSVs so it never clobbers
+    /// the baseline above.
     [Fact]
     public async Task WhenScoringWithTableBasedGridExtractionEnabled_ThenReportsPerFieldAccuracy()
     {
@@ -384,13 +344,8 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         await RunHarnessAsync(tableExtractorService, outputSuffix: "-table-based");
     }
 
-    /// <summary>
-    /// Same harness, table-based LicenceProvisions grid extraction via TabulaTableExtractorService
-    /// instead - reads the PDF's own drawn ruling lines through PdfPig, no cloud call, no cost,
-    /// no secrets needed, so this always runs (no skip guard) - motivated by a 4-document
-    /// spot-check showing it competitive with Azure DI. Separate CSVs (suffix
-    /// "-tabula-table-based") so this never clobbers either the baseline or the Azure DI run.
-    /// </summary>
+    /// Tabula reads the PDF's own ruling lines, so there is no cloud call, no cost and no secret,
+    /// and this always runs. A 4-document spot-check had it competitive with Azure DI.
     [Fact]
     public async Task WhenScoringWithTabulaTableExtractionEnabled_ThenReportsPerFieldAccuracy()
     {
@@ -399,16 +354,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         await RunHarnessAsync(tableExtractorService, outputSuffix: "-tabula-table-based");
     }
 
-    /// <summary>
-    /// The cost-optimised two-tier design actually wired into WrInspectionReportExtractionOrchestrator,
-    /// at its default minimumFieldsToSkipFallback (10, tuned via
-    /// WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve - see that
-    /// test for the full curve behind this choice):
-    /// Tabula (free, local) tried first, Azure DI (paid, ~$0.01/page) only tried - and only billed -
-    /// when Tabula resolved fewer than 10 of the 13 grid fields confidently. Reports the same
-    /// per-field accuracy as the other runs PLUS how many T1 documents actually needed the paid
-    /// fallback, which is the real cost-saving evidence for this design (suffix "-cost-optimized").
-    /// </summary>
+    /// The two-tier design as wired, at its default minimumFieldsToSkipFallback: Tabula first,
+    /// Azure DI billed only where Tabula resolved fewer than that of the 13 grid fields. Also
+    /// reports how many T1 documents needed the paid fallback, which is the cost evidence.
     [Fact]
     public async Task WhenScoringWithCostOptimizedTableExtractionEnabled_ThenReportsPerFieldAccuracy()
     {
@@ -430,15 +378,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         await RunHarnessAsync(primaryTableExtractorService, outputSuffix: "-cost-optimized", fallbackTableExtractorService);
     }
 
-    /// <summary>
-    /// Sweeps WrInspectionReportExtractionOrchestrator's minimumFieldsToSkipFallback dial to find
-    /// where the cost/accuracy curve actually bends, rather than guessing. 1 is the shipped
-    /// default (cheapest - fallback only when the primary found nothing at all); 13 means "fall
-    /// back unless Tabula resolved literally every grid field" (most accuracy, least saving). Uses
-    /// the cached Azure DI results from the other runs in this file - no new API cost from running
-    /// this sweep itself, since the golden set's Azure DI table lookups are already cached per
-    /// document regardless of which threshold is being evaluated in-process.
-    /// </summary>
+    /// Sweeps minimumFieldsToSkipFallback to find where the cost/accuracy curve bends. 1 falls
+    /// back only when the primary found nothing; 13 falls back unless Tabula resolved every grid
+    /// field. Reuses the cached Azure DI results, so the sweep itself costs nothing.
     [Fact]
     public async Task WhenSweepingTheCostOptimizedFallbackThreshold_ThenReportsTheAccuracyCostCurve()
     {
@@ -468,11 +410,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         }
     }
 
-    /// <summary>
-    /// Satisfies PdfDataExtractorService's non-null requirement on the baseline run without
-    /// enabling any actual table matching. Mirrors the stub of the same name in
-    /// Wr51PdfPigNoOcrPdfTests, which exists for the same reason.
-    /// </summary>
+    /// Satisfies PdfDataExtractorService's non-null requirement without enabling table matching.
     private class EmptyTableExtractorService : ITableExtractorService
     {
         public string Name => "Empty";
@@ -502,16 +440,11 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
         Assert.True(truthPaths.Length > 0, $"No .truth.json files found in {GroundTruthFolder}");
 
         var pdfFolder = TestConfig.PdfFolder;
-        // An empty stub where a run deliberately has no overlay: the properties cannot express
-        // "no tables", and the parameter separately drives whether the overlay runs at all.
         var lookupTableExtractorService = tableExtractorService ?? new EmptyTableExtractorService();
         var lookupConfiguration = BuildLookupConfiguration(pdfFolder, lookupTableExtractorService);
 
-        // Same extractor for both roles; PdfDataExtractorService throws if either is null and any
-        // active label needs it. The baseline passes null to mean "no table overlay", which these
-        // properties can't express, so they get an empty stub. The parameter itself stays null -
-        // it separately drives whether the orchestrator runs the overlay at all, so coalescing it
-        // there would silently turn the no-table baseline into a table-based run.
+        // The properties cannot express "no tables", so the baseline gets an empty stub. The
+        // parameter stays null: coalescing it would turn the baseline into a table-based run.
         var detailRows = new List<DetailRow>();
         var missingPdfs = new List<string>();
         var extractionFailures = new List<(string SourceFile, string Error)>();
@@ -591,8 +524,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
                     if (!UnmodeledFields.Contains(fieldName) && !FieldExtractors.TryGetValue(fieldName, out _))
                     {
-                        // Ground-truth field with no known mapping (schema drift between the
-                        // golden set and this test) - surface it rather than silently skipping.
+                        // Schema drift between the golden set and this test, surfaced not skipped.
                         extractionFailures.Add((truth.SourceFile, $"No extractor registered for ground-truth field '{fieldName}'"));
                         continue;
                     }
@@ -655,11 +587,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
             await csv.WriteRecordsAsync(summaryRows);
         }
 
-        // Aggregate across ALL fields per document's classified template, not per-field-per-
-        // template - the golden set only has a handful of documents in most non-T1 buckets
-        // (T7=1, Impounding=2 at last count), so a per-field breakdown there would mostly be
-        // single data points dressed up as a percentage. This is still directly useful for the
-        // one thing that's actually been asked about it: does accuracy differ by template.
+        // Across all fields per template, not per field per template: most non-T1 buckets hold a
+        // handful of documents (T7=1, Impounding=2), so a per-field split is single data points
+        // dressed as percentages.
         var templateSummaryRows = detailRows
             .GroupBy(r => r.Template)
             .Select(g =>
@@ -735,10 +665,9 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
 
         Assert.True(detailRows.Count > 0, "No field comparisons were produced - check ground-truth folder contents and PDF availability.");
 
-        // A partial run is the dangerous case: recall is computed over whatever survived, so a
-        // bug that kills most of the golden set still reports a plausible percentage over a
-        // quietly smaller denominator, and only a total wipeout trips the assert above. Missing
-        // PDFs are environmental and excluded; anything else means the numbers aren't comparable.
+        // A partial run is the dangerous case: recall is computed over whatever survived, so a bug
+        // killing most of the golden set still reports a plausible percentage over a quietly
+        // smaller denominator. Only a total wipeout trips the assert above.
         var expectedDocumentCount = truthPaths.Length - missingPdfs.Count;
 
         Assert.True(

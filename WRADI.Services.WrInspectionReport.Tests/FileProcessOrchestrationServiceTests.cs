@@ -134,7 +134,7 @@ public class FileProcessOrchestrationServiceTests
     }
 
     /// <summary>
-    /// The cap draws from the window, not from the whole corpus, or a windowed run would be
+    /// The cap draws from the window, not from every discovered document, or a windowed run would be
     /// indistinguishable from an arbitrary MaxFilesPerRun slice.
     /// </summary>
     [Fact]

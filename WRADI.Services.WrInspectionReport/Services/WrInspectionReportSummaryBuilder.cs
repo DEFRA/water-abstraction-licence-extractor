@@ -16,7 +16,7 @@ public static class WrInspectionReportSummaryBuilder
     /// value does still count: a rule matched and the value was genuinely empty.
     private const string NoFindingEnumValue = "DidntMatch";
 
-    /// The abstraction corpus runs from the 1960s, so anything earlier is a misread.
+    /// Abstraction licences run from the 1960s, so anything earlier is a misread.
     private const int EarliestPlausibleYear = 1960;
 
     /// The sections completeness is measured over.

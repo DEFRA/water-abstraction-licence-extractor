@@ -68,18 +68,18 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
     }
 
     /// <summary>
-    /// Smoke/coverage test against the real WR51 corpus. There's no hand-verified ground truth
+    /// Smoke/coverage test against the real WR51 documents. There's no hand-verified ground truth
     /// for these files, so this doesn't assert exact field values - it proves the ported label
     /// DSL (including the new LimitTo column-restriction behaviour) runs end-to-end against real
     /// documents without exceptions, and reports basic field-coverage stats.
     /// </summary>
     [Fact]
-    public async Task WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage()
+    public async Task WhenExtractingRealWr51Documents_ThenNoExceptionsAndReasonableFieldCoverage()
     {
         var pdfFolder = TestConfig.PdfFolder;
 
         // TestLicences is shared with the licence pipeline's own integration tests, so
-        // filter to just the WR51 corpus rather than picking up every licence PDF too.
+        // filter to just the WR51 documents rather than picking up every licence PDF too.
         // The handful of hand-verified "dummy" fixtures (WR51__<licence>__dummy.pdf, no
         // real DMS GUID in the filename) belong to Wr51PdfPigNoOcrPdfTests instead, which
         // derives a stable id via GuidHelper rather than relying on a real one.
@@ -185,7 +185,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         testOutputHelper.WriteLine($"Meter rows:               {meterRows.Count} from {csvRows.Count} documents");
         testOutputHelper.WriteLine($"Meter CSV written to:     {metersPath}");
 
-        // Zero on this corpus until v3 documents enter it: only v3 prints an actions grid. Written
+        // Zero until v3 documents enter the set: only v3 prints an actions grid. Written
         // regardless so the file is not mistaken for a missing export when it does.
         var actionsPath = Path.Combine(OutputService.OutputFolder!, "_extraction-results-actions.csv");
         var actionRows = formsList
@@ -198,32 +198,32 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             WrInspectionReportReportBuilder.BuildCsv(actionRows));
 
         testOutputHelper.WriteLine(
-            $"Action rows:              {actionRows.Count} (v3 only - none in this corpus yet)");
+            $"Action rows:              {actionRows.Count} (v3 only - none in these documents yet)");
 
         await ReportCoverage(formsList, testOutputHelper, failures, total);
     }
 
     /// <summary>
-    /// Same full real corpus, with the cost-optimised table extraction overlay enabled (Tabula
+    /// The same real documents, with the cost-optimised table extraction overlay enabled (Tabula
     /// primary, free; Azure DI fallback, paid, only on documents where Tabula resolves fewer than
     /// WrInspectionReportExtractionOrchestrator's default minimumFieldsToSkipFallback (10) of the
     /// 13 grid fields - see that class for how that default was tuned against the golden set).
-    /// No ground truth exists at corpus scale, so this
+    /// No ground truth exists at this scale, so this
     /// reports coverage (field presence), not accuracy - compare against
-    /// WhenExtractingRealWr51Corpus_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
+    /// WhenExtractingRealWr51Documents_ThenNoExceptionsAndReasonableFieldCoverage's own numbers by
     /// hand for the LicenceProvisions.*/meter fields the overlay targets. Real Azure DI cost is
     /// incurred here (once per T1 document where the fallback fires) - this is NOT a free test to
     /// re-run casually; each first run against a given document is billed, further runs hit that
     /// document's cache.
     /// </summary>
     [Fact]
-    public async Task WhenExtractingRealWr51CorpusWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
+    public async Task WhenExtractingRealWr51DocumentsWithCostOptimizedTableExtraction_ThenReportsCoverageAndFallbackRate()
     {
         if (string.IsNullOrEmpty(TestConfig.AiServicesEndpoint) || string.IsNullOrEmpty(TestConfig.AiServicesKey))
         {
             testOutputHelper.WriteLine(
                 "AiServicesEndpoint/AiServicesKey user secrets not set for " +
-                "WRADI.Services.WrInspectionReport.Tests - skipping the full-corpus table-extraction run. " +
+                "WRADI.Services.WrInspectionReport.Tests - skipping the all-documents table-extraction run. " +
                 "Set both via dotnet user-secrets to enable it.");
             return;
         }
@@ -386,7 +386,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
             f.Address.SiteAddress?.TrimEnd().EndsWith("Email:", StringComparison.OrdinalIgnoreCase) == true);
 
         // The next-line same-column fetch swept the "Name and address:" row in as a second
-        // line of the licence number on 197/789 real corpus files - additionalSameLineEndTexts
+        // line of the licence number on 197 of 789 real files - additionalSameLineEndTexts
         // fix. A handful of newline-separated values remain (wrapped labels, genuine
         // multi-licence inspections) - this only guards against the dominant leak returning.
         var licenceNumberLeaksNameAndAddress = formsList.Count(f =>
@@ -680,7 +680,7 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         _ => 2
     };
 
-    private record TemplateDistributionRow(string Template, int Documents, string PercentOfCorpus);
+    private record TemplateDistributionRow(string Template, int Documents, string PercentOfDocuments);
 
     private record QaReviewRow(
         string Filename,
@@ -700,9 +700,9 @@ public class WrInspectionReportPdfPigNoOcrPdfTests(ITestOutputHelper testOutputH
         string ReviewOutcome,
         string ReviewNotes);
 
-    // No ground truth exists for the full real corpus (only the 46-doc golden set has that), so
+    // No ground truth exists for all 789 files (only the 46-document golden set has that), so
     // this is coverage - "did the field produce anything" - not accuracy - "was it right". Still
-    // useful at full corpus scale precisely where the golden set's per-template samples are too
+    // useful at full scale precisely where the golden set's per-template samples are too
     // small to trust (T4=3, T7=1, Impounding=1 documents there vs the real counts here). One row
     // per (template, field) rather than one column per field, since it covers every field
     // Wr51GroundTruthAccuracyTests.FieldExtractors knows about (reused from there directly, not

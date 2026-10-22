@@ -100,7 +100,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             new NullLicenceNumberService(),
             null,
             // FromLetterAndTableGrid needs an unstructured table extractor. Tabula is the
-            // free/local one the real-corpus WR51 test uses, so this costs nothing.
+            // free/local one the real-document WR51 test uses, so this costs nothing.
             UnstructuredTableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,

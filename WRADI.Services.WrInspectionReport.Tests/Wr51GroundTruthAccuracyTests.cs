@@ -30,7 +30,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// intentionally lives OUTSIDE this repo - the source PDFs and their derived
 /// <c>.truth.json</c> files contain real names/addresses/phone numbers and must never be
 /// committed. This test reads that external folder, replays extraction against the same
-/// cached PdfPig text used by the other WR51 corpus tests, and reports per-field
+/// cached PdfPig text the other WR51 tests use, and reports per-field
 /// precision/recall/hallucination stats - no DB, no API, replay-only.
 ///
 /// If the ground-truth folder isn't present (any machine other than the one it was labelled
@@ -145,7 +145,7 @@ public class Wr51GroundTruthAccuracyTests(ITestOutputHelper testOutputHelper)
     /// they're scored as "no extraction", same as a genuinely empty string field.
     /// </summary>
     // internal, not private: WrInspectionReportPdfPigNoOcrPdfTests reuses these two for its
-    // full-corpus per-template coverage report, rather than duplicating the 50-field mapping.
+    // full per-template coverage report, rather than duplicating the 50-field mapping.
     internal static string? FormatInOrderStatus(InOrderStatus status) =>
         status is InOrderStatus.Blank or InOrderStatus.Unknown or InOrderStatus.DidntMatch
             ? null

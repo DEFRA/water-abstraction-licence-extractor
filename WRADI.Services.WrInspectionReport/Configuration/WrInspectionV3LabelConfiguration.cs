@@ -36,21 +36,12 @@ public static class WrInspectionV3LabelConfiguration
     ];
 
     /// <summary>
-    /// v3 replaced v1's tick grid with a condition-and-outcome list, and each row of it is a
-    /// key/value pair like any other field, so the outcomes need no new reading mechanism.
+    /// Named with the shared provision field names, not V3-prefixed ones like the text fields
+    /// above, so GetInOrderStatus resolves them with no mapping step. Safe only because the
+    /// orchestrator replaces the whole label set for v3.
     ///
-    /// Named with the shared provision field names rather than V3-prefixed ones, unlike the text
-    /// fields above: GetInOrderStatus then resolves them with no mapping step. Safe because the
-    /// orchestrator replaces the whole label set for v3, so a v1 rule of the same name is never
-    /// also present.
-    ///
-    /// Three of v1's thirteen - special conditions, land, and charging factors - have no v3
-    /// counterpart and stay unmatched, which is correct: v3 does not print them.
-    ///
-    /// The metering accuracy and maintenance records rows are deliberately absent. They sit inside
-    /// the repeating meter group rather than the conditions list, and metering accuracy holds
-    /// evidence text ("Flow Meter Verification full report seen dated 31/03/2025 - meter accuracy
-    /// 6.33%") rather than a verdict, so neither is a provision. Both go to the meter record.
+    /// Special conditions, land and charging factors have no v3 counterpart. Metering accuracy and
+    /// maintenance records are not conditions - they sit in the repeating meter group.
     /// </summary>
     private static List<(string, List<LabelToMatch>)> ConditionRules() =>
     [
@@ -63,14 +54,12 @@ public static class WrInspectionV3LabelConfiguration
         KeyValueField("Means of measurement", WrInspectionReportFieldNames.MeansOfMeasurement),
         KeyValueField("Records", WrInspectionReportFieldNames.Records),
 
-        // v3's "Returns" is the condition requiring the holder to send us their figures, which is
-        // what v1 called provision of information. A judgement call, not a name match.
+        // "Returns" onto provision of information is a judgement call, not a name match.
         KeyValueField("Returns", WrInspectionReportFieldNames.ProvisionOfInformation),
 
         KeyValueField("Other further conditions", WrInspectionReportFieldNames.OtherProvisions),
 
-        // The full keys, not their stems: the extractor also emits truncated copies ("Compensation
-        // or flow", "Metering accuracy, calibration or") and an exact match beats a stem match.
+        // Full keys, not stems: the extractor also emits truncated copies of these.
         KeyValueField(
             "Hands of Flow (HoF), Level (HoL) or prescribed flow",
             WrInspectionReportFieldNames.V3ConditionHandsOffFlow),
@@ -90,10 +79,8 @@ public static class WrInspectionV3LabelConfiguration
                 .FromLetterAndKeyValueTable()
                 .Build()]);
 
-    /// <summary>
-    /// AllowValueToWrapToNextLine was tried and appended the NEXT field's label rather than the
-    /// wrapped remainder - the same corruption that sank an earlier attempt at v1's NameAndAddress.
-    /// </summary>
+    /// AllowValueToWrapToNextLine was tried and appended the next field's label instead of the
+    /// wrapped remainder, the same corruption that sank the attempt at v1's NameAndAddress.
     private static (string, List<LabelToMatch>) RuleLicenceHolderName() =>
         (WrInspectionReportFieldNames.V3LicenceHolderName, [
             WrFluentRule
@@ -134,17 +121,12 @@ public static class WrInspectionV3LabelConfiguration
                 .EndsAt("Job title or role")
                 .Build()]);
 
-    /// <summary>
-    /// Multi-valued in the samples ("Bekah Flynn &amp; Anna Pursey") and left unsplit: the shared
-    /// model's InspectingOfficer is a single string, so there is nowhere for a second name to go.
-    /// </summary>
+    /// Left unsplit though the samples hold two names: the shared InspectingOfficer is one string.
     private static (string, List<LabelToMatch>) RuleInspectingOfficers() =>
         (WrInspectionReportFieldNames.V3InspectingOfficers, [
             WrFluentRule
                 .After("Inspecting officer(s)")
-                // The consultation documents label this singular. Plural stays first so that
-                // where "(s)" is present it is consumed as part of the label rather than left on
-                // the front of the officer's name.
+                // Plural first, or the "(s)" is left on the front of the officer's name.
                 .AlsoStartsWith("Inspecting officer")
                 .Named(WrInspectionReportFieldNames.V3InspectingOfficers)
                 .FromLetterAndKeyValueTable()
@@ -163,8 +145,8 @@ public static class WrInspectionV3LabelConfiguration
                 .NextLines(40)
                 .Build()]);
 
-    // The heading sentence wraps, so anchoring on its opening words began the capture mid-sentence
-    // ("recorded here." led the block). Anchored instead on the line the first meter follows.
+    // Anchored on the line the first meter follows: the heading wraps, and anchoring on its
+    // opening words began the capture mid-sentence.
     private static (string, List<LabelToMatch>) RuleMeterDetailsBlock() =>
         (WrInspectionReportFieldNames.V3MeterDetailsBlock, [
             WrFluentRule
@@ -174,15 +156,8 @@ public static class WrInspectionV3LabelConfiguration
                 .NextLines(80)
                 .Build()]);
 
-    /// <summary>
-    /// The non-compliances table. The capture yields only the tail of the wrapped header
-    /// ("category date").
-    ///
-    /// Its columns are known - the extractor reads the header cleanly as condition reference,
-    /// condition breached, compliance category, CCS reference and breach date - but every body
-    /// row is empty in every consultation sample, so the value formats are unobserved and a
-    /// filled example is needed before anything parses or normalises them.
-    /// </summary>
+    /// Captured raw, leading with the tail of the wrapped header. Every body row is empty in every
+    /// sample, so nothing parses the columns until a filled example turns up.
     private static (string, List<LabelToMatch>) RuleNonCompliancesBlock() =>
         (WrInspectionReportFieldNames.V3NonCompliancesBlock, [
             WrFluentRule
@@ -192,10 +167,6 @@ public static class WrInspectionV3LabelConfiguration
                 .NextLines(30)
                 .Build()]);
 
-    /// <summary>
-    /// A single dropdown value below the enforcement preamble. Unfilled in the consultation
-    /// samples, where it reads "Choose an item.".
-    /// </summary>
     private static (string, List<LabelToMatch>) RuleEnforcementResponse() =>
         (WrInspectionReportFieldNames.V3EnforcementResponse, [
             WrFluentRule
@@ -205,16 +176,8 @@ public static class WrInspectionV3LabelConfiguration
                 .NextLines(6)
                 .Build()]);
 
-    /// <summary>
-    /// The actions table: Reference, Type, Action, Complete by. Captured as raw text, which leads
-    /// with the tail of the wrapped "Complete by" header.
-    ///
-    /// A row read is available and unbuilt, not blocked: the extractor yields this as a clean
-    /// four-column table, one row per action, with a filled action's whole text in a single cell.
-    /// Two things stand in the way. KeyValueTableHelper reads two-column tables only, and the
-    /// extractor also emits a fragmented duplicate of this table in which one action spans a row
-    /// per line, so picking the clean copy needs a rule. Unfilled rows read "Choose an item.".
-    /// </summary>
+    /// The raw block, kept alongside the per-row read in WrInspectionV3KeyValueMatcher. Leads with
+    /// the tail of the wrapped "Complete by" header.
     private static (string, List<LabelToMatch>) RuleActionsBlock() =>
         (WrInspectionReportFieldNames.V3ActionsBlock, [
             WrFluentRule
@@ -228,11 +191,8 @@ public static class WrInspectionV3LabelConfiguration
         (WrInspectionReportFieldNames.V3GeneralComments, [
             WrFluentRule
                 .After("General comments, details / dates of occupation changes, actions required")
-                // The heading is long enough to wrap, and the break lands in different places
-                // depending on the content above it: 40 of the 41 sample documents break after
-                // "actions required", one after "actions". Anchoring on the shorter form as well
-                // catches both, and the leftover "required etc." is stripped from the value
-                // because capture begins on the line after the heading.
+                // The heading wraps in two places - 40 of 41 samples after "actions required",
+                // one after "actions" - so both forms are anchored and the leftover is stripped.
                 .AlsoStartsWith("General comments, details / dates of occupation changes, actions")
                 .Remove([new TextToMatch("required etc.")])
                 .Named(WrInspectionReportFieldNames.V3GeneralComments)

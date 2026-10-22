@@ -3,19 +3,12 @@ using WRADI.DocumentType.WrInspectionReport.Constants;
 
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
-/// <summary>
-/// WRADI-418. Projects the v3 form's fields onto the shared field names, so a v3 document
-/// populates the same model and the same CSV columns as a v1 one.
-///
-/// Additive and idempotent: it appends shared-named results and leaves the V3-named ones in
-/// place, so a second call changes nothing.
-/// </summary>
+/// Projects v3's fields onto the shared names, so a v3 document fills the same CSV columns as a v1
+/// one. Appends and leaves the V3-named results in place, so a second call changes nothing.
 public static class WrInspectionV3SharedFieldMapper
 {
-    /// <summary>
-    /// Not exhaustive: criticality, contact email, the end time and the four block captures have
-    /// no v1 counterpart, and the converter reads those from their V3 names directly.
-    /// </summary>
+    /// Not exhaustive: criticality, contact email, the end time and the four block captures have no
+    /// v1 counterpart, and the converter reads those from their V3 names directly.
     private static readonly (string V3FieldName, string SharedFieldName)[] Aliases =
     [
         (WrInspectionReportFieldNames.V3LicenceNumber, WrInspectionReportFieldNames.LicenceNumber),
@@ -33,11 +26,8 @@ public static class WrInspectionV3SharedFieldMapper
 
     private const string PageFooterPrefix = "Document Template Version";
 
-    /// <summary>
-    /// The v3 page footer, which lands mid-value wherever a page break falls inside a multi-line
-    /// capture - it turned up inside the conditions list, the enforcement response and the
-    /// general comments. Page furniture, not content.
-    /// </summary>
+    /// The page footer lands mid-value wherever a page break falls inside a multi-line capture - it
+    /// turned up in the conditions list, the enforcement response and the general comments.
     public static string? StripPageFurniture(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
@@ -68,11 +58,8 @@ public static class WrInspectionV3SharedFieldMapper
     private static bool IsPageFooter(string line) =>
         line.TrimStart().StartsWith(PageFooterPrefix, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// The general comments heading wraps, so its own last word ("etc.") is the first line the
-    /// rule captures. SkipNextLineWhenStartsWith was tried on the rule and had no effect on this
-    /// shape.
-    /// </summary>
+    /// The heading wraps, so its own last word ("etc.") is the first line the rule captures.
+    /// SkipNextLineWhenStartsWith was tried on the rule and had no effect on this shape.
     private static IReadOnlyList<DocumentLine> TidyLines(string fieldName, IReadOnlyList<DocumentLine> lines)
     {
         var tidied = lines.Where(line => !IsPageFooter(line.Text)).ToList();
@@ -127,10 +114,7 @@ public static class WrInspectionV3SharedFieldMapper
         matchesResult.Matches = matches.Concat(added).ToList();
     }
 
-    /// <summary>
-    /// v3 prints the holder's name and address as two separate cells where v1 captures them as
-    /// one block. Joined name-first, the reading order of the v1 form.
-    /// </summary>
+    /// Two cells in v3 against v1's single block, joined name-first as the v1 form reads.
     private static void AddNameAndAddress(List<LabelGroupResult> matches, List<LabelGroupResult> added)
     {
         if (Find(matches, WrInspectionReportFieldNames.NameAndAddress) != null)
@@ -159,11 +143,9 @@ public static class WrInspectionV3SharedFieldMapper
     private static LabelGroupResult? Find(List<LabelGroupResult> matches, string fieldName) =>
         matches.FirstOrDefault(match => match.MatchedLabelName == fieldName);
 
-    /// <summary>
-    /// LabelToMatch.Name is init-only and MatchedLabelName's setter is a no-op while MatchedLabel
-    /// is set, so a Clone() cannot be renamed - it reads back under the old name. Building fresh
-    /// loses the computed Confidence, which nothing downstream of the form reads.
-    /// </summary>
+    /// LabelToMatch.Name is init-only and MatchedLabelName's setter is a no-op while MatchedLabel is
+    /// set, so a Clone() cannot be renamed - it reads back under the old name. Building fresh loses
+    /// the computed Confidence, which nothing downstream of the form reads.
     private static LabelGroupResult Rename(
         LabelGroupResult source,
         string fieldName,

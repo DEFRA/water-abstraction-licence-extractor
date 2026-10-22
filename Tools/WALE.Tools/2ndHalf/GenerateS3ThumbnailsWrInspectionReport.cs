@@ -11,7 +11,7 @@ namespace WALE.Tools._2ndHalf;
 ///
 /// Needed because the thumbnail is only written when a document is actually rendered, and
 /// no_ocr_pages_metadata_cache is keyed on file id and service name with no process-run
-/// component - so any run over an already-cached corpus takes the fast path and writes none.
+/// component - so a run over already-cached documents takes the fast path and writes none.
 /// The page screenshots still exist, so the API can regenerate from them.
 ///
 /// Safe to re-run: the upload endpoint skips keys already present.

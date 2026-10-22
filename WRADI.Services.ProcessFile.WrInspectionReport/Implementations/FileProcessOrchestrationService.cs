@@ -66,7 +66,7 @@ public class FileProcessOrchestrationService(
         }
 
         // Before MaxFilesPerRun, so a capped run takes its files from the chosen window rather
-        // than from the whole corpus.
+        // than from every discovered document.
         if (WrInspectionReportCandidateSelector.HasUploadWindow(settings.UploadedFrom, settings.UploadedTo))
         {
             var withinWindow = sendable

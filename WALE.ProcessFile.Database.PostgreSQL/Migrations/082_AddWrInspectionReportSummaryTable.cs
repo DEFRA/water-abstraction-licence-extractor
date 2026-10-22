@@ -40,7 +40,7 @@ public class AddWrInspectionReportSummaryTable : Migration
             .OnTable(SummaryTable)
             .OnColumn("sort_date").Ascending();
 
-        // Serves the latest-run-per-file lookup the corpus view reads through.
+        // Serves the latest-run-per-file lookup the list view reads through.
         Create.Index("ix_wr_inspection_report_summary_file_run")
             .OnTable(SummaryTable)
             .OnColumn("file_id").Ascending()

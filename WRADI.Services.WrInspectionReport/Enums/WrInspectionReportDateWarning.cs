@@ -9,7 +9,7 @@ public enum WrInspectionReportDateWarning
     /// An inspection cannot have happened after today.
     FutureDate,
 
-    /// Earlier than the abstraction corpus runs.
+    /// Earlier than abstraction licences go back.
     BeforeCorpusEra,
 
     /// After DMS recorded the document, so the document predates the inspection it describes.

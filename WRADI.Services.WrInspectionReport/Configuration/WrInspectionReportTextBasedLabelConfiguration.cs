@@ -108,12 +108,10 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
         "General comments"
     ];
 
-    // The LicenceProvisions grid's shared "In Order / Not In Order / blank" answer shape.
-    // Order is load-bearing: paired checkboxes ("☑ ☐" etc.) must precede the single-glyph
-    // entries, or a bare "☒" wins .First() before the paired check gets a chance. The PUA
-    // entries are Wingdings tick glyphs (\u escapes so they survive editing) - they'd previously
-    // decayed to `new("")`, which matches everything, silently resolving real ticks (and every
-    // Y/N after them) to Blank.
+    // Order is load-bearing: paired checkboxes ("☑ ☐") must precede the single-glyph entries, or a
+    // bare "☒" wins .First() first. The PUA entries are Wingdings ticks, as \u escapes so they
+    // survive editing - they had decayed to `new("")`, which matches everything and resolved real
+    // ticks, and every Y/N after them, to Blank.
     private static readonly List<TextToMatch> InOrderPossibilities =
     [
         new("☑ ☐") { ExceptWhenInsideWord = true },
@@ -215,7 +213,7 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                 .FromText()
                 .Build()]);
 
-    // "Records" renders with progressively wider letter-kerning on 340/789 real corpus docs
+    // "Records" renders with progressively wider letter-kerning on 340 of 789 real documents
     // (43%) - only 7 distinct literal patterns cover all occurrences, so literal alternates are
     // sufficient here rather than a whitespace-tolerant matching engine change.
     private static (string, List<LabelToMatch>) RuleRecords() =>
@@ -363,10 +361,8 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                     "Telepho n e N o", "T e lephone No", "T e l e phone No", "T e l N o")
                 .FromLetterAndTableFreeText()
                 .Build(),
-            // Plain "Tel No" is a genuinely distinct label wording, not just an OCR-spaced
-            // variant of "Telephone No" (see AlsoStartsWith above), so it needs its own
-            // alternate. NextLines(0): the value always sits on the label's own row here -
-            // reaching further risks sweeping in "Site address"/"Met with" content instead.
+            // "Tel No" is a distinct wording, not an OCR-spaced "Telephone No", so it needs its
+            // own alternate. NextLines(0) because reaching further sweeps in "Site address".
             WrFluentRule
                 .Between("Tel No", "Site address")
                 .Named(WrInspectionReportFieldNames.TelephoneNumber)
@@ -430,11 +426,9 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
 
     // ---- Meter / measurement details ----
 
-    // Wide enough to fit a multi-meter table's full column of "Point N, <site>: <value>" lines
-    // (see WrInspectionReportSchemaConverter's Meters-splitting logic) - harmless for a
-    // single-meter document, since the same-line walk still stops at its own end boundary well
-    // before running out of lines. Not used on TextEnd-less (plain After()) rules, which have no
-    // boundary to stop at regardless of how many lines are available.
+    // Wide enough for a multi-meter table's whole column. Harmless on a single-meter document,
+    // where the same-line walk stops at its own end boundary first, but not used on TextEnd-less
+    // After() rules, which have no boundary to stop at.
     private const int MeterTableNextLines = 10;
 
     private static (string, List<LabelToMatch>) RuleMeterName() =>
@@ -782,10 +776,8 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                 WrInspectionReportFieldNames.TemplateMarkerV3,
                 regex: DocumentTemplateVersionV3Regex()));
 
-    // Two forms occur in the v3-era templates: "2026_08_04_V3" and "2026_10_06", the newer one
-    // having dropped the V3 suffix. Matching a bare date is safe because this marker appears
-    // nowhere in the legacy corpus - 0 of 15,262 documents carry the line at all - so a date here
-    // can only be a v3-era template.
+    // Two forms occur, "2026_08_04_V3" and "2026_10_06", the newer having dropped the suffix.
+    // Matching a bare date is safe: 0 of 15,262 legacy documents carry this line at all.
     [GeneratedRegex(@"Document Template Version\s+(?:\S*[Vv]3\b|\d{4}_\d{2}_\d{2})")]
     private static partial Regex DocumentTemplateVersionV3Regex();
 
@@ -817,10 +809,9 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                 "General / relevant background", "General comments, background"
             ]));
 
-    // The baseline heading alone only covers 61% of the real corpus, hence the "Actions"/
-    // "Summary" alternates. Deliberately excluded from Remove: they can legitimately recur as a
-    // genuine sub-heading later in the same captured block, and stripping them there corrupts
-    // real narrative content.
+    // The baseline heading covers only 61% of documents, hence the "Actions"/"Summary"
+    // alternates. Excluded from Remove: they recur as genuine sub-headings inside a captured
+    // block, where stripping them corrupts real narrative.
     private static (string, List<LabelToMatch>) RuleGeneralComments() =>
         (WrInspectionReportFieldNames.GeneralComments, [
             WrFluentRule
@@ -872,13 +863,11 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
                 .RequireCompleteDateToClaimGroup()
                 .FromText()
                 .Build(),
-            // Fallback for a squeezed layout where "Inspection Date:" wraps onto its own row
-            // with "Inspecting Officer: ... Time: ..." landing between label and value. Anchors
-            // on "Inspecting Officer" (a bare "Inspection" anchor also matches "Inspection
-            // report"/"Inspection Class:") and walks WholeLine to "Licence provisions" to span
-            // the wrap. "Date:" is stripped, not anchored on - it collides with "Date of
-            // certificate or record:" elsewhere on the page, and was measured to regress recall
-            // 98%->40% when tried directly.
+            // For a squeezed layout where "Inspection Date:" wraps and "Inspecting Officer: ...
+            // Time: ..." lands between label and value. Anchored on "Inspecting Officer" because a
+            // bare "Inspection" also matches "Inspection report" and "Inspection Class:".
+            // Anchoring on "Date:" instead collides with "Date of certificate or record:" and
+            // regressed recall 98%->40%.
             WrFluentRule
                 .Between("Inspecting Officer", "Licence provisions")
                 .Named(WrInspectionReportFieldNames.InspectionDate)
@@ -934,9 +923,8 @@ public static partial class WrInspectionReportTextBasedLabelConfiguration
         ];
     }
 
-    // A compound row (Maintenance:/Readings taken: plus Y/N, Frequency, By whom sub-fields) -
-    // kept outside the Rule fluent surface since it's structurally more complex, not less (five
-    // SubLabels sharing one parent row); the SubLabels themselves still use Rule.
+    // A compound row: five SubLabels sharing one parent row, which is why it sits outside the
+    // Rule fluent surface. The SubLabels themselves still use Rule.
     private static List<LabelToMatch> MaintenanceLine(string textStart, string textEnd, string name)
     {
         return

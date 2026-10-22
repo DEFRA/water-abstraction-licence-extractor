@@ -4,7 +4,7 @@ namespace WRADI.DocumentType.WrInspectionReport.Interfaces;
 
 public interface IWrInspectionReportSummaryReadService
 {
-    /// The most recent projection per file, which is what a corpus view shows - a report is
+    /// The most recent projection per file, which is what the list view shows - a report is
     /// immutable, so an older run's result for the same file is only ever a staler extraction.
     /// A null date bound is unbounded; rows with no date are returned only when both are null.
     Task<List<WrInspectionReportSummary>> GetLatestPerFileAsync(

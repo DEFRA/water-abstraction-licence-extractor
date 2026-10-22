@@ -108,7 +108,7 @@ public class WrInspectionReportSummaryBuilderTests
         [Theory]
         [InlineData(1959, true)]
         [InlineData(1960, false)]
-        public void WhenTheYearPredatesTheCorpus_ThenBeforeCorpusEra(int year, bool expectWarning)
+        public void WhenTheYearPredatesAbstractionLicences_ThenBeforeCorpusEra(int year, bool expectWarning)
         {
             var warning = WrInspectionReportSummaryBuilder.CheckDate(new DateOnly(year, 5, 1), null);
 

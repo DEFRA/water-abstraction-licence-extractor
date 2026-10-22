@@ -6,24 +6,15 @@ using WRADI.DocumentType.WrInspectionReport.Constants;
 namespace WRADI.DocumentType.WrInspectionReport.Services;
 
 /// <summary>
-/// WRADI-418. Resolves the v3 form's fields by reading its two-column key/value tables, and
-/// overlays the results onto whatever the label rules produced.
+/// Overlays the v3 form's two-column key/value tables onto the label-rule results. A field it
+/// cannot resolve keeps what the rules found, so this can only add, never take one away.
 ///
-/// Anything resolved here replaces the label-rule result for that field; anything it cannot
-/// resolve keeps whatever the rules found, so this can only add, never take a field away.
-///
-/// A rule opts its field in with FromLetterAndKeyValueTable(), and the rule's own start text is
-/// the lookup key.
+/// A rule opts in with FromLetterAndKeyValueTable(), and its own start text is the lookup key.
 /// </summary>
 public static class WrInspectionV3KeyValueMatcher
 {
-    /// <summary>The key that starts each repeat of the meter group.</summary>
     public const string MeterGroupFirstKey = "Meter location or reference";
 
-    /// <summary>
-    /// Takes tables already fetched: one GetTablesAsync call per document however much is read
-    /// from it, which matters as soon as the extractor is a paid one.
-    /// </summary>
     public static void Apply(
         MatchesResult item,
         IReadOnlyList<DocumentTable> tables,
@@ -79,14 +70,8 @@ public static class WrInspectionV3KeyValueMatcher
             .ToList();
     }
 
-    /// <summary>
-    /// The v3 meter keys against the shared meter fields.
-    ///
-    /// The verification evidence is free text, not a verdict ("Flow Meter Verification full report
-    /// seen dated 31/03/2025 - meter accuracy 6.33%"), and differs per meter, so it is a string on
-    /// the meter rather than a status on the provisions. It fills VerificationCertificate, which
-    /// had no extraction wired to it before.
-    /// </summary>
+    /// The verification evidence is free text differing per meter ("meter accuracy 6.33%"), not a
+    /// verdict, so it fills the meter's VerificationCertificate rather than a provision status.
     private static readonly (string Key, string FieldName)[] MeterKeys =
     [
         (MeterGroupFirstKey, WrInspectionReportFieldNames.MeterName),
@@ -101,12 +86,9 @@ public static class WrInspectionV3KeyValueMatcher
     ];
 
     /// <summary>
-    /// One line per meter into the shared meter fields, which
-    /// WrInspectionReportSchemaConverter.BuildMeters then zips by line index into one record each.
-    ///
-    /// An absent value contributes an empty line to hold its position, and the converter's v3 read
-    /// preserves interior blanks for exactly that reason. Without both halves a meter with a gap
-    /// pulls the next meter's serial number onto itself.
+    /// One line per meter, zipped by line index in BuildMeters. An absent value contributes an
+    /// empty line to hold its position and the converter's v3 read preserves interior blanks -
+    /// without both halves, a meter with a gap pulls the next meter's serial number onto itself.
     /// </summary>
     public static void ApplyMeters(
         MatchesResult item,
@@ -147,7 +129,6 @@ public static class WrInspectionV3KeyValueMatcher
             .ToList();
     }
 
-    /// <summary>The actions grid's own column names, and the dropdown text an unfilled row holds.</summary>
     private static readonly string[] ActionHeaders = ["Reference", "Type", "Action", "Complete by"];
 
     private const string UnfilledDropdown = "Choose an item.";
@@ -160,11 +141,7 @@ public static class WrInspectionV3KeyValueMatcher
         ("Complete by", WrInspectionReportFieldNames.ActionCompleteBy)
     ];
 
-    /// <summary>
-    /// One line per action into four parallel fields, which the converter zips by index the same
-    /// way it does meters. Empty lines are kept, so an action with no reference does not pull the
-    /// next action's reference onto itself.
-    /// </summary>
+    /// One line per action into four parallel fields, zipped by index as the meters are.
     public static void ApplyActions(
         MatchesResult item,
         IReadOnlyList<DocumentTable> tables,
@@ -207,20 +184,14 @@ public static class WrInspectionV3KeyValueMatcher
             .ToList();
     }
 
-    /// <summary>
-    /// The type cell wraps mid-word, so "Non-compliance" is read back as "Non- compliance". Only
-    /// applied to the type, which is a dropdown whose values never contain a space after a hyphen.
-    /// The action text is left alone, where a hyphen followed by a space can be genuine.
-    /// </summary>
+    /// The type cell wraps mid-word, giving "Non- compliance". Applied to the type only, a dropdown
+    /// whose values never hold a space after a hyphen; in the action text that can be genuine.
     private static string RejoinHyphenatedWrap(string value) => value.Replace("- ", "-");
 
-    /// <summary>A value no cell produced, holding a position in a repeating group.</summary>
     private static readonly DocumentTableValue Blank = new(string.Empty, null);
 
-    /// <summary>
-    /// Every line of a wrapped cell carries that whole cell's region, which is as fine as a table
-    /// extractor reports: it gives no per-line rectangle to split it by.
-    /// </summary>
+    /// Every line of a wrapped cell carries the whole cell's region; no table extractor reports a
+    /// per-line rectangle to split it by.
     private static LabelGroupResult BuildResult(
         string fieldName,
         DocumentTableValue value,
@@ -235,10 +206,7 @@ public static class WrInspectionV3KeyValueMatcher
         return BuildResultFromLines(fieldName, lines, serviceName);
     }
 
-    /// <summary>
-    /// Keeps empty lines, unlike <see cref="BuildResult"/>: in a repeating group the line position
-    /// carries meaning.
-    /// </summary>
+    /// Keeps empty lines, unlike <see cref="BuildResult"/>.
     private static LabelGroupResult BuildResultFromLines(
         string fieldName,
         IReadOnlyList<DocumentTableValue> values,
@@ -255,9 +223,8 @@ public static class WrInspectionV3KeyValueMatcher
             })
             .ToList();
 
-        // MatchedLabelName as well as LabelGroupName: WrInspectionReportSchemaConverter
-        // .GetMultilineText resolves a field by MatchedLabelName, so a result carrying only the
-        // group name reads back as empty even though it is present.
+        // MatchedLabelName as well: GetMultilineText resolves by it, so a result carrying only the
+        // group name reads back as empty.
         return new LabelGroupResult
         {
             LabelGroupName = fieldName,

@@ -27,7 +27,7 @@ public static class KeyValueTableHelper
 
                 if (!pairs.TryGetValue(key, out var existing) || value.Length > existing.Text.Length)
                 {
-                    pairs[key] = DocumentTableValue.From(cell, value);
+                    pairs[key] = DocumentTableValue.From(cell, value, table.PageNumber);
                 }
             }
         }
@@ -84,7 +84,7 @@ public static class KeyValueTableHelper
                     continue;
                 }
 
-                current.TryAdd(key, DocumentTableValue.From(cell, value));
+                current.TryAdd(key, DocumentTableValue.From(cell, value, table.PageNumber));
             }
         }
 

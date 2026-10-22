@@ -162,6 +162,12 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         WrInspectionReportFieldNames.Units
     ];
 
+    private static List<DocumentLine> LinesOf(MatchesResult result, string fieldName) =>
+        (result.Matches ?? [])
+            .Where(group => group.MatchedLabelName == fieldName)
+            .SelectMany(group => group.Text ?? [])
+            .ToList();
+
     private static List<DocumentLineWord> WordsOf(MatchesResult result, string fieldName) =>
         (result.Matches ?? [])
             .Where(group => group.MatchedLabelName == fieldName)
@@ -173,7 +179,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
     /// On the MatchesResult, not through ToForm: the result is saved before anything renders it, so
     /// a check through the converter passes while the stored document carries nothing the portal
     /// can resolve. A missing shared name means the alias pass stopped running before the save; a
-    /// present name with no region means a reader is discarding the cell again.
+    /// present name with no region, or on no page, means a reader is discarding what it read.
     [Fact]
     public async Task WhenV3Document_ThenSharedFieldsAreStoredWithTheirCellRegions()
     {
@@ -199,6 +205,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
 
         var missingField = new List<string>();
         var missingRegion = new List<string>();
+        var missingPage = new List<string>();
         var documents = 0;
 
         // Act
@@ -229,6 +236,11 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
                 {
                     missingRegion.Add($"{filename} {field}");
                 }
+
+                if (LinesOf(result, field).All(line => line.PageNumber < 1))
+                {
+                    missingPage.Add($"{filename} {field}");
+                }
             }
         }
 
@@ -239,6 +251,7 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
         Assert.NotEqual(0, documents);
         Assert.Empty(missingField);
         Assert.Empty(missingRegion);
+        Assert.Empty(missingPage);
     }
 
     [Fact]

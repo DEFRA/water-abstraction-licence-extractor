@@ -104,27 +104,6 @@ public class NoOcrDatabaseTests
         return new AbstractionLicenceNumber(allNaldData.AbstractionAndImpoundmentLicences!, []);
     }
 
-    private static Dictionary<string, DmsFileData> FileLicenceMapping =>
-        new()
-        {
-            {
-                "25 68 001 247",
-                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10892721.pdf" }
-            },
-            {
-                "25 68 001 248",
-                new DmsFileData { DestinationFileName = "Application - Transfer -Application New Licence Issued 19_06_2019 00_00_00 10893422.pdf" }
-            },
-            {
-                "NE/026/0034/018",
-                new DmsFileData { DestinationFileName = "NE0260034018__Application Minor Variation Issued Licence 11.12.2019 11149535.pdf" }
-            },
-            {
-                "NE/026/0034/052",
-                new DmsFileData { DestinationFileName = "NE0260034052__Application Apportionment Issued Licence 11.12.2019 11149440.pdf" }
-            }
-        };
-
     private readonly Dictionary<string, List<NaldAbstractionData>> _naldData = [];
 
     private async Task<LookupConfiguration> LookupConfigurationAsync(string pdfFolder)

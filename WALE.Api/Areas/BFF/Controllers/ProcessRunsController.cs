@@ -399,40 +399,6 @@ public class ProcessRunsController(
         return returnDict;
     }
     
-    private async Task<List<Guid>> GetFileIdsAsync(int processRunId)
-    {
-        var fileIds = new List<Guid>();
-        var loopLicences = new List<Licence>();
-        
-        const int licencesToTake = 10;
-        var first = true;
-        var loopIdx = 0;
-        
-        while (first || loopLicences.Count == licencesToTake)
-        {
-            first = false;
-            var startAt = loopIdx++ * licencesToTake;
-            
-            loopLicences = await abstractionLicenceOutputService.GetLicencesAsync(
-                processRunId,
-                startAt,
-                licencesToTake);
-            
-            var loopFileIds = loopLicences
-                .Select(l => l.DmsFileId)
-                .Where(fid => fid != null)
-                .Select(fid => fid!.Value);
-            
-            fileIds.AddRange(loopFileIds);
-        }
-        
-        var uniqueFileIds = fileIds
-            .Distinct()
-            .ToList();
-
-        return uniqueFileIds;
-    }
-
     private async Task<string[]> GetDistinctListLicenceSetIds(int processRunId)
     {
         var cacheKey = $"licence-list-set-ids:{processRunId}";

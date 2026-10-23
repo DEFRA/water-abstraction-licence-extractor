@@ -94,10 +94,10 @@ public static class WrInspectionReportExtractionOrchestrator
             return (stopExecution, alreadySaved, scrapeResult, template);
         }
         
-        // Gating on T1 here (rather than relying solely on WrInspectionReportTableMatcher's own
-        // content-based guards) avoids spending a real Document Intelligence call/cost on
-        // templates with no tick/cross grid for this mechanism to find
-        if (template == WrTemplateType.T1
+        // The overlay only ever replaces the grid keys it resolves confidently, so a template with
+        // no grid falls through with its heuristic result and one extra free local extraction.
+        if (template is WrTemplateType.T1 or WrTemplateType.T4 or WrTemplateType.T6
+                or WrTemplateType.NonStandardNarrative
             && tableExtractorService != null
             && pdfBytesForTableExtraction != null)
         {

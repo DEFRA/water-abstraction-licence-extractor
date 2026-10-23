@@ -1074,11 +1074,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         return value?.ToDateTime(TimeOnly.MinValue);
     }
 
-    private static DateTime ToDateTime(DateOnly value)
-    {
-        return value.ToDateTime(TimeOnly.MinValue);
-    }
-    
     private static async Task ReplaceLinkedLicencesAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,

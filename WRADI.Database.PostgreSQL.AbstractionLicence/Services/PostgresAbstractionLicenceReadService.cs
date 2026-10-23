@@ -2999,31 +2999,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     
     private static void AddArrayEmptyFilter(
         StringBuilder sql,
-        DynamicParameters parameters,
-        string parameterName,
-        bool? empty,
-        string jsonProperty)
-    {
-        if (!empty.HasValue)
-        {
-            return;
-        }
-
-        var comparison = empty.Value ? "= 0" : "> 0";
-
-        sql.AppendLine(
-            $"""
-               AND jsonb_array_length(
-                   COALESCE(
-                       data::jsonb -> '{jsonProperty}',
-                       '[]'::jsonb
-                   )
-               ) {comparison}
-             """);
-    }
-    
-    private static void AddArrayEmptyFilter(
-        StringBuilder sql,
         bool? empty,
         string jsonProperty)
     {

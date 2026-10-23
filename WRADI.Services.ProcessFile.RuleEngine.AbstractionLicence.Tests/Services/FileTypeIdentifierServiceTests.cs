@@ -91,42 +91,4 @@ public class FileTypeIdentifierServiceTests
         }
     }
 
-    private static LookupConfiguration CreateTestConfiguration()
-    {
-        return new LookupConfiguration(
-            [],
-            [],
-            new LocalFileService(""),
-            new FileSystemCacheService(""),
-            new FileSystemOutputService(""),
-            null,
-            null,
-            null,
-            null,
-            1,
-            DateTime.Now);
-    }
-
-    private static MatchesResult CreateMockMatchesResult(string content)
-    {
-        var documentLine = new DocumentLine();
-        var documentLineColumn = new DocumentLineColumn([new(
-            content,
-            null,
-            DocumentLineWordCoordinates.NotKnown(),
-            null)]);
-        
-        documentLine.Columns.Add(documentLineColumn);
-
-        var labelGroupResult = new LabelGroupResult
-        {
-            Text = new List<DocumentLine> { documentLine },
-            SubResults = new List<LabelGroupResult>()
-        };
-
-        return new MatchesResult
-        {
-            Matches = [labelGroupResult]
-        };
-    }
 }

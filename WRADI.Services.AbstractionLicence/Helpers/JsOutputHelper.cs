@@ -211,11 +211,6 @@ public static class JsOutputHelper
         return " (" + Math.Round(value.Value, 1) + "%)";
     }
 
-    private static void Log(string message, StringBuilder outputStringBuilder)
-    {
-        outputStringBuilder.Append(message);
-    }
-
     private static object? GetValue(JsonElement? jsonElement, Type desiredType)
     {
         if (jsonElement == null)

@@ -464,7 +464,18 @@ public static class AbstractionLicenceSchemaConverter
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
-                var clonedLinkedLicence = linkedLicence.Clone();
+                var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
+                
+                // Add to an existing ones history
+                if (existing != null)
+                {
+                    var newContainedIn = existing.ContainedIn?.ToList() ?? [];
+                    newContainedIn.AddRange(linkedLicence.ContainedIn!);
+                    
+                    continue;
+                }
+                
+                var clonedLinkedLicence = linkedLicence.Clone(); // TODO we need to update a bunch of the NALD fields etc...
                 clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
 
                 foreach (var containedIn in clonedLinkedLicence.ContainedIn!)
@@ -1534,17 +1545,36 @@ public static class AbstractionLicenceSchemaConverter
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Starting aggregating sets / adding incoming " +
             $"links for {allLicences.Count} licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
-        var licencesNotInAnySet = allLicences
+        var licencesNotInAnySetList = allLicences
             .Where(l => !returnLicenceSets.Any(ls => ls.Licences.Contains(l)))
             .ToList();
 
-        if (licencesNotInAnySet.Count >= 1)
+        var licencesNotInAnySetDict = new Dictionary<Licence, List<Licence>>();
+
+        foreach (var licenceNotInAnySet in licencesNotInAnySetList)
+        {
+            var licencesReferencing = allLicences
+                .Where(l => l.LinkedLicences.Any(ll => ll.LicenceNumber == licenceNotInAnySet.LicenceNumber?.Value))
+                .ToList();
+
+            foreach (var licenceReferencing in licencesReferencing)
+            {
+                if (!licencesNotInAnySetDict.ContainsKey(licenceReferencing))
+                {
+                    licencesNotInAnySetDict.Add(licenceReferencing, []);
+                }
+                
+                licencesNotInAnySetDict[licenceReferencing].Add(licenceNotInAnySet);
+            }
+        }
+
+        foreach (var licenceNotInAnySetGroup in licencesNotInAnySetDict)
         {
             returnLicenceSets.Add(
                 new LicenceSet
                 {
                     LicenceSetType = LicenceSetType.Others,
-                    Licences = [primaryLicence, ..licencesNotInAnySet]
+                    Licences = [licenceNotInAnySetGroup.Key, ..licenceNotInAnySetGroup.Value]
                 });
         }
         

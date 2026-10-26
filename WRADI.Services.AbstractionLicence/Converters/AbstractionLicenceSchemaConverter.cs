@@ -1447,7 +1447,6 @@ public static class AbstractionLicenceSchemaConverter
                 Licences = [licence],
                 AggregateSets = GetAggregates(
                     [licence],
-                    [licence],
                     true)
             };
 
@@ -1471,11 +1470,11 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
-            var aggregatesWithLinkedLicnces = licence.AbstractionLimits.Aggregates!
+            var aggregatesWithLinkedLicences = licence.AbstractionLimits.Aggregates!
                 .Where(agg => agg.LinkedLicences?.Length >= 1)
                 .ToList();
 
-            foreach (var aggregate in aggregatesWithLinkedLicnces)
+            foreach (var aggregate in aggregatesWithLinkedLicences)
             {
                 var licencesReferencedInLimits = aggregate.LinkedLicences!
                     .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
@@ -1612,6 +1611,18 @@ public static class AbstractionLicenceSchemaConverter
             {
                 continue;
             }
+
+            var newAggregateSets = new List<Aggregate>();
+            
+            foreach (var aggregateSet in licenceSet.AggregateSets)
+            {
+                var clonedAggregateSet = aggregateSet.Clone();
+                clonedAggregateSet.LicenceSetId = null;
+                
+                newAggregateSets.Add(clonedAggregateSet);
+            }
+            
+            licenceSet.AggregateSets = newAggregateSets.ToArray();
         }
         
         ConsoleHelper.WriteLine(
@@ -2571,7 +2582,6 @@ public static class AbstractionLicenceSchemaConverter
 
     private static Aggregate[]? GetAggregates(
         IReadOnlyList<Licence> licences,
-        IReadOnlyList<Licence> allLicences,
         bool excludeAnyLinksNotInSet)
     {
         var aggregates = new List<Aggregate>();
@@ -2584,6 +2594,7 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             var relevantAggregates = licence.AbstractionLimits.Aggregates;
+            
             if (excludeAnyLinksNotInSet)
             {
                 relevantAggregates = relevantAggregates
@@ -2595,6 +2606,15 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             aggregates.AddRange(relevantAggregates);
+        }
+
+        aggregates = aggregates
+            .Select(agg => agg.Clone())
+            .ToList();
+        
+        foreach (var aggregate in aggregates)
+        {
+            aggregate.LicenceSetId = null;
         }
 
         return aggregates.Count == 0 ? null : aggregates.ToArray();
@@ -4463,8 +4483,24 @@ public static class AbstractionLicenceSchemaConverter
         var timePeriod = GetTimePeriod(
             siblings?.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
+        var lls = abstractionLinkedLicences.ToList();
+        lls.Add(new LinkedLicence
+        {
+            LicenceNumber = licenceNumber
+        });
+        
+        var ls = lls
+            .Select(ll => new Licence
+            {
+                LicenceNumber = new ValueWithConfidence<string> { Value = ll.LicenceNumber }
+            })
+            .ToArray();
+        
         var aggregate = new Aggregate
         {
+            LicenceSetId = abstractionLinkedLicences.Count > 0
+                ? LicenceSet.GetLicenceSetId(ls)
+                : null,
             SourceLicenceNumber = licenceNumber,
             SourceLicenceVersionId = licenceVersionId,
             PrimaryType = abstractionLinkedLicences.Count >= 1
@@ -6253,14 +6289,6 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
-        return returnList;
-    }
-
-    private static List<LicenceSetReference> AddImplicitAndExplicitLicenceSets(
-        Licence licence1,
-        List<LicenceSet> allLicenceSetsForLicence)
-    {
-        var returnList = new List<LicenceSetReference>(licence1.LicenceSets);
         return returnList;
     }
 

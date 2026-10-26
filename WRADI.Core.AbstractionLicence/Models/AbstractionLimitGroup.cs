@@ -16,15 +16,7 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     
     public bool? ContainsLegalText { get; set; }
 
-    public AbstractionLimitGroup Clone()
-    {
-        var returnItem = new AbstractionLimitGroup();
-        CloneProperties(this, returnItem);
-        
-        return returnItem;
-    }
-    
-    public static void CloneProperties(
+    protected static void CloneProperties(
         AbstractionLimitGroup sourceGroup,
         AbstractionLimitGroup destinationGroup)
     {

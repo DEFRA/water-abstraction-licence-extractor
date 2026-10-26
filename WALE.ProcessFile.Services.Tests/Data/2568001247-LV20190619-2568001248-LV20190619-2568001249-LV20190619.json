@@ -16,6 +16,7 @@
         {
           "difference": "Different source licence / different order",
           "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+          "licenceSetId": "2568001247-2568001248-2568001249",
           "sourceLicenceNumber": "25/68/001/247",
           "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
@@ -64,6 +65,7 @@
         {
           "difference": "Different source licence / different order",
           "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+          "licenceSetId": "2568001247-2568001248-2568001249",
           "sourceLicenceNumber": "25/68/001/248",
           "sourceLicenceVersionId": "LV20190619",
           "primaryType": "LicenceToLicence",
@@ -282,6 +284,7 @@
         "aggregates": [
           {
             "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+            "licenceSetId": "2568001247-2568001248-2568001249",
             "sourceLicenceNumber": "25/68/001/249",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
@@ -293,6 +296,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/247",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -341,6 +345,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/248",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -667,6 +672,7 @@
         "aggregates": [
           {
             "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+            "licenceSetId": "2568001247-2568001248-2568001249",
             "sourceLicenceNumber": "25/68/001/247",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
@@ -678,6 +684,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/249",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -689,6 +696,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/247",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",
@@ -737,6 +745,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/248",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",
@@ -824,6 +833,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/248",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -1148,6 +1158,7 @@
         "aggregates": [
           {
             "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+            "licenceSetId": "2568001247-2568001248-2568001249",
             "sourceLicenceNumber": "25/68/001/248",
             "sourceLicenceVersionId": "LV20190619",
             "primaryType": "LicenceToLicence",
@@ -1159,6 +1170,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/249",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -1170,6 +1182,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/247",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",
@@ -1218,6 +1231,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/248",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",
@@ -1305,6 +1319,7 @@
               {
                 "difference": "Different source licence / different order",
                 "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                "licenceSetId": "2568001247-2568001248-2568001249",
                 "sourceLicenceNumber": "25/68/001/247",
                 "sourceLicenceVersionId": "LV20190619",
                 "primaryType": "LicenceToLicence",
@@ -1316,6 +1331,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001249-LV20190619-LL-2568001247-2568001248-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/249",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",
@@ -1327,6 +1343,7 @@
                       {
                         "difference": "Different source licence / different order",
                         "id": "2568001247-LV20190619-LL-2568001248-2568001249-C173928",
+                        "licenceSetId": "2568001247-2568001248-2568001249",
                         "sourceLicenceNumber": "25/68/001/247",
                         "sourceLicenceVersionId": "LV20190619",
                         "primaryType": "LicenceToLicence",
@@ -1375,6 +1392,7 @@
                       {
                         "difference": "Different source licence / different order",
                         "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                        "licenceSetId": "2568001247-2568001248-2568001249",
                         "sourceLicenceNumber": "25/68/001/248",
                         "sourceLicenceVersionId": "LV20190619",
                         "primaryType": "LicenceToLicence",
@@ -1462,6 +1480,7 @@
                   {
                     "difference": "Different source licence / different order",
                     "id": "2568001248-LV20190619-LL-2568001247-2568001249-C173928",
+                    "licenceSetId": "2568001247-2568001248-2568001249",
                     "sourceLicenceNumber": "25/68/001/248",
                     "sourceLicenceVersionId": "LV20190619",
                     "primaryType": "LicenceToLicence",

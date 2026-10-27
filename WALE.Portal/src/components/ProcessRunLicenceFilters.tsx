@@ -19,9 +19,7 @@ export function ProcessRunLicenceFilters({
                                              issuers,
                                              shortLicenceIds,
                                              issueDates,
-                                             setPageNumber,
-                                             onToggleSingles,
-                                             showSingles
+                                             setPageNumber
                                          }: ProcessRunLicenceFiltersProps) {
     const [pendingQuery, setPendingQuery] = useState<ProcessRunQuery>(query);
 

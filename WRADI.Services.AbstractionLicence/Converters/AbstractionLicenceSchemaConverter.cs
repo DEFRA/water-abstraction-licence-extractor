@@ -475,9 +475,28 @@ public static class AbstractionLicenceSchemaConverter
                     continue;
                 }
                 
-                var clonedLinkedLicence = linkedLicence.Clone(); // TODO we need to update a bunch of the NALD fields etc...
-                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+                var followOnDmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
+                    scrapedLicenceNumber,
+                    lookupConfiguration.CacheService);
+                
+                var (_, _, followOnLicenceType, followOnLicenceStatus) = await GetNaldLicenceDataAsync(
+                    followOnLicenceNumber,
+                    followOnLicenceNumber,
+                    linkedLicence.LicenceType.ToString(),
+                    regionCode,
+                    naldDataLookupService);
 
+                var followOnDmsFileData = await followOnDmsFileDataTask;
+                
+                var clonedLinkedLicence = linkedLicence.Clone();
+                
+                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+                clonedLinkedLicence.LicenceType = followOnLicenceType;
+                clonedLinkedLicence.NaldStatus = followOnLicenceStatus;
+                clonedLinkedLicence.DmsFileId = followOnDmsFileData?.FileId;
+                clonedLinkedLicence.DmsPath = followOnDmsFileData?.DmsPath;
+                clonedLinkedLicence.DmsPermitNumber = followOnDmsFileData?.PermitNumber;
+                
                 foreach (var containedIn in clonedLinkedLicence.ContainedIn!)
                 {
                     containedIn.History = extendedHistory;   

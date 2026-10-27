@@ -1907,7 +1907,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(4, licenceSets.Count);
+        Assert.Equal(6, licenceSets.Count);
         
         // TODO put some more checks in here
         
@@ -2124,7 +2124,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(4, licenceSets.Count);
+        Assert.Equal(5, licenceSets.Count);
         
         Assert.Equal("NE0260034018", licenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
@@ -2176,7 +2176,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         agreedSchemaLicenceGroup = licenceSets[2];
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
         
-        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
+        Assert.Equal(3, agreedSchemaLicence.LicenceSets.Length);
         Assert.Equal("NE0260034052", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
         Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
         
@@ -2287,7 +2287,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
             await LookupConfigurationAsync(3, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(4, licenceSets.Count);
+        Assert.Equal(5, licenceSets.Count);
         
         Assert.Equal("NE0260034018", licenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);

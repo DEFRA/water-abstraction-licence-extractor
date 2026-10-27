@@ -1,5 +1,6 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -366,12 +367,10 @@ public class DatabaseAbstractionLicenceOutputService(
     {
         var licenceSetsTask = databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
         var allLicenceSetLicencesTask = databaseReadService.GetLicenceSetLicencesAsync(processRunId);
-        var allLicenceSetTypesTask = databaseReadService.GetLicenceSetTypesForProcessRun(processRunId);
         var allAggregateSetsTask = databaseReadService.GetAggregateSetsForProcessRun(processRunId);
 
         var licenceSets = await licenceSetsTask;
         var allLicenceSetLicences = await allLicenceSetLicencesTask;
-        var allLicenceSetTypes = await allLicenceSetTypesTask;
         var allAggregateSets = await allAggregateSetsTask;
 
         var returnList = new Dictionary<string, LicenceSet>();
@@ -405,13 +404,19 @@ public class DatabaseAbstractionLicenceOutputService(
                     }
                     
                     return licenceId == licenceSetLicence.LicenceId
-                        ||
-                           l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
+                        || l.LicenceNumber?.Value == licenceSetLicence.LicenceNumber;
                 });
 
                 if (licence == null)
                 {
-                    continue;
+                    licence = new Licence
+                    {
+                        LicenceNumber = new ValueWithConfidence<string>
+                        {
+                            Value = licenceSetLicence.LicenceNumber
+                        },
+                        Status = ScrapeStatus.Error
+                    };
                 }
 
                 licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
@@ -420,11 +425,6 @@ public class DatabaseAbstractionLicenceOutputService(
 
             licenceSet.Licences = licences
                 .ToArray();
-
-            licenceSet.LicenceSetType = allLicenceSetTypes
-                .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)
-                .Select(lst => lst.Type)
-                .FirstOrDefault();
 
             licenceSet.AggregateSets = allAggregateSets
                 .Where(lst => lst.LicenceSetId == licenceSetSimple.LicenceSetId)

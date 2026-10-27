@@ -1379,11 +1379,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               licence_set_id, 
-                               short_licence_set_id, 
-                               schema_licence_set_id 
-                           FROM licence_set 
-                           WHERE process_run_id = @ProcessRunId
+                               ls.licence_set_id, 
+                               ls.short_licence_set_id,
+                               ls.schema_licence_set_id,
+                               lst.licence_set_type
+                           FROM licence_set ls
+                           JOIN licence_set_type lst on lst.licence_set_id = ls.licence_set_id
+                           WHERE
+                               ls.process_run_id = @ProcessRunId
                            """;
 
         return (await QueryAsync<LicenceSetTable>(

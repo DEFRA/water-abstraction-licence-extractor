@@ -89,7 +89,8 @@ public static class JsOutputHelper
         };
     }
 
-    public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
+    public static IReadOnlyList<OutputListDataItem> ToListData(
+        List<IntermediateOutputLicence> outputLines,
         int processRunId,
         Dictionary<string, LicenceVerificationLookups> verificationLookups)
     {

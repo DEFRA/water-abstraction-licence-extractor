@@ -53,7 +53,7 @@ public class LicenceSet
 
             if (part?.StartsWith("R0") == true)
             {
-                part = licenceNumberParts![licenceNumberParts.Length - 2];
+                part = licenceNumberParts![licenceNumberParts.Length - 2] + part;
             }
 
             outputSb.Append(part);

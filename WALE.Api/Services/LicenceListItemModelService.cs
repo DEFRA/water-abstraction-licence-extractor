@@ -192,7 +192,7 @@ public class LicenceListItemModelService
 
         if (!string.IsNullOrEmpty(source.SourceFields))
         {
-            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields);
+            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields); // TODO - use serialiser options?
         }
         
         return new ContainedInInformation

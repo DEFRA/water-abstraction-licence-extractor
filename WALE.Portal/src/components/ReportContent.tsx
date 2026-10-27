@@ -53,7 +53,7 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                 waleApiClient.getMatchesResultByMatchesResultIdString(matchesResultId),
                 waleApiClient.licenceByLicenceId(licenceId, false),
                 waleApiClient.licenceByLicenceId(licenceId, true),
-                waleApiClient.licenceSets(fileId),
+                waleApiClient.licenceSetsByLicenceId(licenceId),
                 waleApiClient.licenceByLicenceIdString(licenceId, false),
                 waleApiClient.licenceByLicenceIdString(licenceId, true)
             ]);

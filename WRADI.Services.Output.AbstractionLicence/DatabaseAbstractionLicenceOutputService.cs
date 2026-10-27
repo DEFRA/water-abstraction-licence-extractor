@@ -3,6 +3,7 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
@@ -447,35 +448,33 @@ public class DatabaseAbstractionLicenceOutputService(
 
         foreach (var licenceSetSimple in licenceSets)
         {
-            var licenceSet = new LicenceSet();
+            var licenceSet = new LicenceSet
+            {
+                LicenceSetType = (LicenceSetType)licenceSetSimple.LicenceSetType
+            };
 
-            var licenceSetLicenceIds =
-                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId,
-                    processRun.ProcessRunId);
+            var licenceSetLicenceIds = await databaseReadService.GetLicenceSetLicencesAsync(
+                licenceSetSimple.LicenceSetId,
+                processRun.ProcessRunId);
 
             var licences = new List<Licence>();
 
             foreach (var licenceSetLicence in licenceSetLicenceIds)
             {
-                var licence = new Licence
-                {
-                    LicenceNumber = !string.IsNullOrEmpty(licenceSetLicence.LicenceNumber)
-                        ? new ValueWithConfidence<string>(
-                            licenceSetLicence.LicenceNumber,
-                            -1, // TODO
-                            -1) // TODO
-                        : null
-                };
-
-                licence.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                var licence = await databaseReadService.GetLicenceAsync(licenceSetLicence.LicenceId!.Value);
+                licence!.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
+                
                 licences.Add(licence);
             }
 
             licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetType = 
-                (await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId))[0];
             licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
 
+            if (licenceSet.AggregateSets?.Length == 0)
+            {
+                licenceSet.AggregateSets = null;
+            }
+            
             returnList.Add(licenceSet);
         }
 

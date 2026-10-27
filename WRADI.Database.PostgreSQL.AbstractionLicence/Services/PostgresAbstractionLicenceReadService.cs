@@ -15,6 +15,7 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 using WRADI.Core.AbstractionLicence.Models.Table;
+using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 
 namespace WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 
@@ -1401,9 +1402,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT DISTINCT
                                ls.licence_set_id,
-                               ls.short_licence_set_id, 
-                               ls.schema_licence_set_id 
+                               ls.short_licence_set_id,
+                               ls.schema_licence_set_id,
+                               lst.licence_set_type
                            FROM licence_set ls
+                           JOIN licence_set_type lst on lst.licence_set_id = ls.licence_set_id
                            JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
                            JOIN licence l on l.licence_id = lsl.licence_id
                            WHERE
@@ -1540,17 +1543,23 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     public async Task<Aggregate[]?> GetAggregateSets(int licenceSetId)
     {
         await using var connection = GetPostgresConnection();
-        /*const string sql = """
+        const string sql = """
                            SELECT
-                               aggregate_set_id,
-                               schema_aggregate_set_id,
                                data
                            FROM aggregate_set
-                           WHERE licence_set_id = @LicenceSetId
-                           """;*/
+                           WHERE
+                               licence_set_id = @LicenceSetId
+                           """;
 
-        // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
-        return [];
+        var results = await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new { LicenceSetId = licenceSetId });
+        
+        return results
+            .Select(aggData => JsonSerializer.Deserialize<Aggregate>(aggData, JsonHelper.GetSerializerOptions())!)
+            .ToArray();
     }
 
     public async Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(

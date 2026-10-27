@@ -431,8 +431,7 @@ public class FileDataController(
 
         if (result != 0)
         {
-            await RefreshCurrentProcessRunLicenceListData(verification);
-            FireAndForgetAffectedProcessRunsDataRefresh(verification);
+            FireAndForgetDataRefresh(verification);
         }
 
         return Ok(result);
@@ -447,8 +446,7 @@ public class FileDataController(
 
         if (result != 0)
         {
-            await RefreshCurrentProcessRunLicenceListData(verification);
-            FireAndForgetAffectedProcessRunsDataRefresh(verification);
+            FireAndForgetDataRefresh(verification);
         }
 
         return Ok(result);
@@ -468,21 +466,20 @@ public class FileDataController(
 
         if (result != 0)
         {
-            await RefreshCurrentProcessRunLicenceListData(verifications.MinBy(v => v.ProcessRunId)!);
             // Entries share a licence file and item ID, so refreshing from the earliest process run covers them all
-            FireAndForgetAffectedProcessRunsDataRefresh(verifications.MinBy(v => v.ProcessRunId)!);
+            FireAndForgetDataRefresh(verifications.MinBy(v => v.ProcessRunId)!);
         }
 
         return Ok(result);
     }
 
-    private void FireAndForgetAffectedProcessRunsDataRefresh(LicenceSectionVerification verification)
+    private void FireAndForgetDataRefresh(LicenceSectionVerification verification)
     {
         _ = Task.Run((Func<Task?>)(async () =>
         {
             try
             {
-                await RefreshRecentProcessRunsLicenceListData(verification);
+                await RefreshLicenceListData(verification);
             }
             catch
             {
@@ -491,30 +488,12 @@ public class FileDataController(
         }));
     }
 
-    private async Task RefreshCurrentProcessRunLicenceListData(LicenceSectionVerification verification)
-    {
-        var mainLicence = verification.SourceLicenceNumber;
-
-        if (!string.IsNullOrWhiteSpace(mainLicence))
-        {
-            var licenceList = new List<string> { mainLicence };
-
-            if (!string.IsNullOrWhiteSpace(verification.LicenceSectionItemId))
-            {
-                licenceList.Add(verification.LicenceSectionItemId);
-            }
-            
-            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
-                licenceList.ToArray());
-        }
-    }
-
-    private async Task RefreshRecentProcessRunsLicenceListData(LicenceSectionVerification verification)
+    private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();
 
         var currentProcessId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId;
-        var processRunIds = new List<int>();
+        var processRunIds = new List<int> {verification.ProcessRunId};
 
         if (currentProcessId is > 0 &&
             currentProcessId > verification.ProcessRunId)

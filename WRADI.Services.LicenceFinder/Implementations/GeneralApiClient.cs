@@ -11,25 +11,15 @@ using WALE.ProcessFile.Core.Models.Dms;
 
 namespace WRADI.Services.LicenceFinder.Implementations;
 
-public class GeneralApiClient : IGeneralApiClient
+public class GeneralApiClient(IHttpClientFactory httpClientFactory) : IGeneralApiClient
 {
-    public GeneralApiClient(string apiBaseUrl)
-    {
-        HttpClient = new HttpClient(new HttpClientHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        });
-        
-        HttpClient.BaseAddress = new Uri(apiBaseUrl);
-    }
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("GeneralApi");
     
-    private HttpClient HttpClient { get; set; }
-
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
     {
         var path = "/Extractor/Dms/GetFileIds";
 
-        var response = await HttpClient.GetAsync(path);
+        var response = await _httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -44,7 +34,7 @@ public class GeneralApiClient : IGeneralApiClient
         var json = JsonSerializer.Serialize(newDmsFileIdInformation, GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
     
@@ -55,7 +45,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}&extractType={extractType}";
 
-        var response = await HttpClient.GetAsync(path);
+        var response = await _httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -70,7 +60,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = $"/Extractor/Import/GetDate?dataSource={dataSource}";
 
-        var response = await HttpClient.GetAsync(path);
+        var response = await _httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadAsStringAsync();
@@ -80,7 +70,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = "/Extractor/Dms/GetDmsFileReaderResults";
 
-        var response = await HttpClient.GetAsync(path);
+        var response = await _httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -98,7 +88,7 @@ public class GeneralApiClient : IGeneralApiClient
         }, GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
     
@@ -107,7 +97,7 @@ public class GeneralApiClient : IGeneralApiClient
         var path = "/Extractor/LicenceFinder/ClearResults";
 
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
 
@@ -117,7 +107,7 @@ public class GeneralApiClient : IGeneralApiClient
         var json = JsonSerializer.Serialize(results, GetSerializerOptions());
 
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
 
@@ -126,7 +116,7 @@ public class GeneralApiClient : IGeneralApiClient
         var path = "/Extractor/InspectionReportFinder/ClearResults";
 
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
 
@@ -139,7 +129,7 @@ public class GeneralApiClient : IGeneralApiClient
         }, GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
 
@@ -152,7 +142,7 @@ public class GeneralApiClient : IGeneralApiClient
         }, GetSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpClient.PostAsync(new Uri(HttpClient.BaseAddress!, path), httpContent);
+        var response = await _httpClient.PostAsync(new Uri(_httpClient.BaseAddress!, path), httpContent);
         response.EnsureSuccessStatusCode();
     }
     
@@ -160,7 +150,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = "/Extractor/VersionFiles/ClearAllFiles";
         
-        var response = await HttpClient.DeleteAsync(new Uri(HttpClient.BaseAddress!, path));
+        var response = await _httpClient.DeleteAsync(new Uri(_httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();
     }
 
@@ -168,7 +158,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = "/Extractor/VersionFiles/ClearDownloadFiles";
         
-        var response = await HttpClient.DeleteAsync(new Uri(HttpClient.BaseAddress!, path));
+        var response = await _httpClient.DeleteAsync(new Uri(_httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();
     }
 
@@ -176,7 +166,7 @@ public class GeneralApiClient : IGeneralApiClient
     {
         var path = $"/Extractor/LicenceFinder/GetResults?skip={skip}&take={take}";
 
-        var response = await HttpClient.GetAsync(path);
+        var response = await _httpClient.GetAsync(path);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();

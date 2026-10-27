@@ -24,4 +24,13 @@ public interface IGeneralApiClient
     public Task SaveInspectionReportFinderResultsAsync(List<DmsExtract> results);
 
     public Task ClearInspectionReportFinderResultsAsync();
+
+    public Task<(List<DmsExtract> Data, string ImportDate)> GetDmsExtractAsync(
+        int skip,
+        int take,
+        string extractType);
+
+    public Task<List<LicenceMatchResult>> GetLicenceFinderResultsAsync(int skip, int take);
+
+    public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
 }

@@ -1,3 +1,5 @@
+using System.Net;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WRADI.Services.LicenceFinder.Implementations;
 using WRADI.Services.LicenceFinder.Rules;
@@ -21,7 +23,25 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ILicenceFileProcessor, LicenceFileProcessor>();
         services.AddScoped<IReadExtract, FileReadExtractService>();
         services.AddScoped<ILicenceFileFinder, LicenceFileFinder>();
+        services.AddScoped<IGeneralApiClient, GeneralApiClient>();
+    
+        services.AddHttpClient("GeneralApi", (serviceProvider, client) =>
+            {
+                var configuration =
+                    serviceProvider.GetRequiredService<IConfiguration>();
 
+                var apiBaseUrl = configuration["LicenceFinder:ApiBaseUrl"]
+                                 ?? throw new InvalidOperationException("ApiBaseUrl is missing.");
+
+                client.BaseAddress = new Uri(apiBaseUrl);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AutomaticDecompression =
+                    DecompressionMethods.GZip | DecompressionMethods.Deflate
+            });
+
+        services.AddTransient<IGeneralApiClient, GeneralApiClient>();
         // Register all matching rules
         services.AddScoped<ILicenceMatchingRule, ManualFolderPermitDocumentMatchRule>();
         services.AddScoped<ILicenceMatchingRule, ManualFolderFileNameMatchRule>();

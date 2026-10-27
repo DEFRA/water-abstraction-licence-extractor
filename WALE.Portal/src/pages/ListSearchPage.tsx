@@ -178,6 +178,13 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
     const openReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number) => {
         const knownItem = outputList.find(item => item.fileId === fileId);
+        
+        // If we know just the file ID, we can often get the rest of the stuff we need
+        if (!!knownItem && !licenceId && !matchesResultId) {
+            licenceId = knownItem.licenceId!;
+            matchesResultId = knownItem.matchesResultId!;
+        }
+        
         openReport(fileId, licenceId, matchesResultId, processRunId, knownItem, openReportWithId);
 
         if (!knownItem) {

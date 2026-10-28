@@ -58,15 +58,13 @@ export function LicenceSetReportContent({licenceId, licenceSetId, hideBackLink =
     return (
         <div id="cols" className={`cols-${licenceSetData.licences!.length + 1}`}>
             <div id="col0">
-                <h1 id="licence-set-id">{licenceSetId}</h1>
-
-                <JsonView src={licenceSetData} collapsed={1} theme="default"/>
-
-                {!hideBackLink && (
-                    <h1 id="backLink">
-                        <a href="/list">Back to all licences</a>
-                    </h1>
-                )}
+                <div style={{padding: '20px'}}>
+                    <h1 id="licence-set-id">{licenceSetId}</h1>
+    
+                    <div style={{marginTop: '20px'}}>
+                        <JsonView src={licenceSetData} collapsed={1} theme="default"/>
+                    </div>
+                </div>                    
             </div>
             {licenceSetData.licences!.map((licence, i) => (
                 <div key={i}>

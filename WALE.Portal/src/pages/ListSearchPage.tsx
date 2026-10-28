@@ -333,17 +333,17 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     </div>
                     <table id="licencesTable">
                         <thead>
-                        <ProcessRunLicenceFilters
-                            query={query}
-                            setQuery={setQuery}
-                            issuers={issuers}
-                            shortLicenceIds={shortLicenceIds}
-                            issueDates={issueDates}
-                            setPageNumber={setPageNumber}
-                            showSingles={showSingles}
-                            onToggleSingles={setShowSingles}
-                        />
-                   </thead>
+                            <ProcessRunLicenceFilters
+                                query={query}
+                                setQuery={setQuery}
+                                issuers={issuers}
+                                shortLicenceIds={shortLicenceIds}
+                                issueDates={issueDates}
+                                setPageNumber={setPageNumber}
+                                showSingles={showSingles}
+                                onToggleSingles={setShowSingles}
+                            />
+                       </thead>
                         <tbody>
                         {outputList.map((item, index) => (
                             <LicencesTableRow
@@ -363,7 +363,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
             {activeTab === 'licenceSets' && (
                 <div id="licenceSets">
-                    <table>
+                    <table style={{'marginTop': '30px', 'width': '100%'}}>
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
                             data={outputList} 
@@ -373,7 +373,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                         />
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
                     </table>
-                    <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
                 </div>
             )}
 

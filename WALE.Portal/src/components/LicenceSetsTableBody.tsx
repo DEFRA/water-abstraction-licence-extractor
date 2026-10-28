@@ -166,34 +166,31 @@ function renderListRow(
 
     rows.push(
         <tr key={`${licenceSetId}-0`} style={{backgroundColor}} className={`indent-level-${indentLevel}`}>
-            <td rowSpan={licencesInSet.length}>
-                <div className='indentDiv'></div>
-                {licencesInSet.map((item, idx) => (
-                    item.imagePath === undefined ? (
-                        <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
-                    ) : 'TODO'
+            <td rowSpan={licencesInSet.length} style={{textAlign: 'center'}}>
+                {licencesInSet.map((item, _) => (
+                    !!item.thumbnailUrl ? (
+                        <img src={item.thumbnailUrl} width={80} />
+                    ) : <div style={{'display': 'inline-block', 'width': '80px', 'color': '#888'}}>...</div>
                 ))}
             </td>
             <td rowSpan={licencesInSet.length}>
                 <span className='lsId' title={licenceSetId}>
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(licencesInSet[0].fileId!, licencesInSet[0].licenceId!, licencesInSet[0].matchesResultId!, licenceSetId);
+                        
+                        let bestLicence = licencesInSet.find(l => !!l.matchesResultId)!;
+                        onOpenLicenceSetReport(bestLicence.fileId!, bestLicence.licenceId!, bestLicence.matchesResultId!, licenceSetId);
                     }}>
                         {licenceSet.shortLicenceSetId}
                     </a>
                 </span>
             </td>
             <td rowSpan={licencesInSet.length}>
-                <ul>
-                    {licenceSet.licenceSetTypes?.map((type, idx) => (
-                        <li key={idx} className={`ls-type ${getLicenceSetTypeClass(type)}`}>{getLicenceSetTypeClass(type)}</li>
-                    ))}
-                </ul>
+                <span key={0} className={`ls-type ${getLicenceSetTypeClass(licenceSet.licenceSetType)}`}>{getLicenceSetTypeClass(licenceSet.licenceSetType)}</span>
             </td>
             <td className={licenceInSetType}>{firstLicenceInSet.licenceNumber}</td>
             <td className='filename-cell'>
-                {firstLicenceInSet.filename !== '--' ? (
+                {!!firstLicenceInSet.filename && firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
                         onOpenReport(firstLicenceInSet.fileId!, firstLicenceInSet.licenceId!, firstLicenceInSet.matchesResultId!,  firstLicenceInSet);
@@ -213,10 +210,10 @@ function renderListRow(
             <tr key={`${licenceSetId}-${j}`} style={{backgroundColor}} className={`indent-level-${indentLevel}`}>
                 <td className={currentLicenceInSetType}>{licenceInSet.licenceNumber}</td>
                 <td className='filename-cell'>
-                    {licenceInSet.filename !== '--' ? (
+                    {!!licenceInSet.filename && licenceInSet.filename !== '--' ? (
                         <a href='#' onClick={(e) => {   
                             e.preventDefault();
-                            onOpenReport(licenceInSet.fileId!, licenceInSet.licenceId!, licenceInSet.matcheResultId!, licenceInSet);
+                            onOpenReport(licenceInSet.fileId!, licenceInSet.licenceId!, licenceInSet.matchesResultId!, licenceInSet);
                         }} className='filenameSet'>
                             {licenceInSet.filename}
                         </a>

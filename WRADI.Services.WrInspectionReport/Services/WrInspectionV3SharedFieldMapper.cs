@@ -55,6 +55,9 @@ public static class WrInspectionV3SharedFieldMapper
         return string.IsNullOrWhiteSpace(stripped) ? null : stripped;
     }
 
+    private static readonly string[] CommentsEndMarkers =
+        ["Report recipient name", "Recipient email address", "Guidance Notes"];
+
     private static bool IsPageFooter(string line) =>
         line.TrimStart().StartsWith(PageFooterPrefix, StringComparison.OrdinalIgnoreCase);
 
@@ -70,6 +73,16 @@ public static class WrInspectionV3SharedFieldMapper
                 && tidied[0].Text.Trim().TrimEnd('.').Equals("etc", StringComparison.OrdinalIgnoreCase))
             {
                 tidied.RemoveAt(0);
+            }
+
+            // EndsAt does not bound an After() rule, so the capture runs to NextLines and takes
+            // the footer and the guidance notes with it.
+            var end = tidied.FindIndex(line => CommentsEndMarkers.Any(marker =>
+                line.Text.Trim().StartsWith(marker, StringComparison.OrdinalIgnoreCase)));
+
+            if (end >= 0)
+            {
+                tidied = tidied.Take(end).ToList();
             }
         }
 

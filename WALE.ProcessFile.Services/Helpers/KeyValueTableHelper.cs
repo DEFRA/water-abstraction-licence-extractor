@@ -49,8 +49,25 @@ public static class KeyValueTableHelper
             .OrderBy(pair => pair.Key.Length)
             .ToList();
 
-        return candidates.Count > 0 ? candidates[0].Value : null;
+        if (candidates.Count > 0)
+        {
+            return candidates[0].Value;
+        }
+
+        // "(s)" can sit mid-key - "Point(s) of abstraction" against "Point of abstraction" - so no
+        // single stem reaches both forms.
+        var singular = WithoutPluralMarker(key);
+
+        return pairs
+            .Where(pair => WithoutPluralMarker(pair.Key)
+                .StartsWith(singular, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(pair => pair.Key.Length)
+            .Select(pair => pair.Value)
+            .FirstOrDefault();
     }
+
+    private static string WithoutPluralMarker(string key) =>
+        key.Replace("(s)", string.Empty, StringComparison.OrdinalIgnoreCase);
 
     /// A new group each time <paramref name="firstKeyOfGroup"/> is seen again, in document order.
     public static List<Dictionary<string, DocumentTableValue>> ReadRepeatingGroups(

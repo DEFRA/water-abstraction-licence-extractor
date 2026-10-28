@@ -9,6 +9,7 @@ using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
+using WRADI.Core.AbstractionLicence.Models.Table;
 using WRADI.Core.AbstractionLicence.Strategies;
 
 namespace WRADI.Services.Output.AbstractionLicence;
@@ -439,11 +440,18 @@ public class DatabaseAbstractionLicenceOutputService(
 
     public async Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
     {
-        var processRun = (await ogDatabaseReadService.GetMostRecentProcessRunAsync(licenceId))!;
+        var processRun = await ogDatabaseReadService.GetMostRecentProcessRunAsync(licenceId);
 
         var licenceSets = await databaseReadService.GetLicenceSetsSimpleByLicenceIdAsync(
             licenceId);
 
+        return await GetLicenceSetsSharedAsync(licenceSets, processRun!);
+    }
+
+    private async Task<List<LicenceSet>> GetLicenceSetsSharedAsync(
+        List<LicenceSetTable> licenceSets,
+        ProcessRun processRun)
+    {
         var returnList = new List<LicenceSet>();
 
         foreach (var licenceSetSimple in licenceSets)
@@ -489,40 +497,7 @@ public class DatabaseAbstractionLicenceOutputService(
             fileId,
             processRun.ProcessRunId);
 
-        var returnList = new List<LicenceSet>();
-
-        foreach (var licenceSetSimple in licenceSets)
-        {
-            var licenceSet = new LicenceSet();
-
-            var licenceSetLicenceIds =
-                await databaseReadService.GetLicenceSetLicencesAsync(licenceSetSimple.LicenceSetId,
-                    processRun.ProcessRunId);
-
-            var licences = new List<Licence>();
-
-            foreach (var licenceSetLicence in licenceSetLicenceIds)
-            {
-                var licence = await GetLicenceAsync(licenceSetLicence.LicenceId!.Value);
-                licence!.LicenceVersion.SetExplicitLicenceVersionId(licenceSetLicence.LicenceVersionId!);
-                
-                licences.Add(licence);
-            }
-
-            licenceSet.Licences = licences.ToArray();
-            licenceSet.LicenceSetType =
-                (await databaseReadService.GetLicenceSetTypes(licenceSetSimple.LicenceSetId)).FirstOrDefault();
-            licenceSet.AggregateSets = await databaseReadService.GetAggregateSets(licenceSetSimple.LicenceSetId);
-
-            if (licenceSet.AggregateSets?.Length == 0)
-            {
-                licenceSet.AggregateSets = null;
-            }
-
-            returnList.Add(licenceSet);
-        }
-
-        return returnList;
+        return await GetLicenceSetsSharedAsync(licenceSets, processRun);
     }
 
     public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)

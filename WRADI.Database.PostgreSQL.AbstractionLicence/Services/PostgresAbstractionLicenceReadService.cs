@@ -1569,17 +1569,34 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         int processRunId)
     {
         await using var connection = GetPostgresConnection();
-        /*const string sql = """
+        const string sql = """
                             SELECT
-                                aggregate_set_id,
-                                schema_aggregate_set_id,
+                                licence_set_id,
                                 data
                             FROM aggregate_set
-                            WHERE process_run_id = @ProcessRunId
-                            """;*/
+                            WHERE
+                                process_run_id = @ProcessRunId
+                            """;
 
-        // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
-        return [];
+        var results = await QueryAsync<(int, string)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
+
+        var licenceSetAggregatesList = results!
+            .Select(aggData => (
+                aggData.Item1,
+                JsonSerializer.Deserialize<Aggregate>(aggData.Item2, JsonHelper.GetSerializerOptions())!))
+            .ToList();
+
+        var licenceSetAggregatesDict = licenceSetAggregatesList
+            .GroupBy(r => r.Item1)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Item2).ToList());
+
+        return licenceSetAggregatesDict
+            .Select(kvp => (kvp.Key, kvp.Value.ToArray()))
+            .ToList();
     }
 
     public async Task<Licence?> GetLicenceAsync(int licenceId)

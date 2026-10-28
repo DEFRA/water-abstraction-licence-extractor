@@ -73,7 +73,9 @@ public class UiProcessRunService(
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }
     
-    public async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query)
+    public async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(
+        int processRunId,
+        ProcessRunQuery query)
     {
         var completeNumber = 1;
         var fileNumber = 1;

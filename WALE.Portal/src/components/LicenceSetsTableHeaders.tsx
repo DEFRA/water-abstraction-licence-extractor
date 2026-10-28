@@ -5,6 +5,7 @@ export function LicenceSetsTableHeaders() {
                 <td></td>
                 <td>Licence set id</td>
                 <td>Type</td>
+                <td>Aggregate sets</td>
                 <td>Licence no.</td>
                 <td>Filename</td>
             </tr>

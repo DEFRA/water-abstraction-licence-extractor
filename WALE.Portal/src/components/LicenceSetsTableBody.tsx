@@ -188,6 +188,9 @@ function renderListRow(
             <td rowSpan={licencesInSet.length}>
                 <span key={0} className={`ls-type ${getLicenceSetTypeClass(licenceSet.licenceSetType)}`}>{getLicenceSetTypeClass(licenceSet.licenceSetType)}</span>
             </td>
+            <td rowSpan={licencesInSet.length}>
+                {JSON.stringify(licenceSet)}
+            </td>
             <td className={licenceInSetType}>{firstLicenceInSet.licenceNumber}</td>
             <td className='filename-cell'>
                 {!!firstLicenceInSet.filename && firstLicenceInSet.filename !== '--' ? (

@@ -231,10 +231,7 @@ public class LicenceListItemModelService
         {
             LicenceSetId =  source.LicenceSetId,
             LicenceSetType = source.LicenceSetType,
-            ShortLicenceSetId =  source.ShortLicenceSetId,
-            LicenceSetTypes =  source.LicenceSetTypes
-                .Select(x => x.LicenceSetType)
-                .ToArray(),
+            ShortLicenceSetId = source.ShortLicenceSetId
         };
     }
     
@@ -244,8 +241,7 @@ public class LicenceListItemModelService
         return new UpsertLicenceSetItem
         {
             LicenceSetType = source.LicenceSetType.ToString(),
-            LicenceSetTypes = source.LicenceSetTypes.Select(x => x.ToString()).ToArray(),
-           LicenceSetId  = source.LicenceSetId,
+            LicenceSetId  = source.LicenceSetId,
             ShortLicenceSetId = source.ShortLicenceSetId
         };
     }

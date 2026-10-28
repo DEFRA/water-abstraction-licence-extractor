@@ -111,7 +111,7 @@ public static class JsOutputHelper
         {
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
-            var licenceSets = outputLine.LicenceSetReferences?
+            var itemLicenceSets = outputLine.LicenceSetReferences?
                 .Select(lsr =>
                 {
                     var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
@@ -124,15 +124,13 @@ public static class JsOutputHelper
                             ShortLicenceSetId = "ERROR"
                         };
                     }
-
-                    var licenceSetType = lsr.LicenceSetType;
-
+                    
                     return new OutputListDataItemLicenceSet
                     {
                         LicenceSetId = ls.LicenceSetId,
                         ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = [ls.LicenceSetType],
-                        LicenceSetType = licenceSetType
+                        LicenceSetType = lsr.LicenceSetType,
+                        AggregateSets = ls.AggregateSets
                     };
                 })
                 .ToArray() ?? [];
@@ -162,7 +160,7 @@ public static class JsOutputHelper
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
-                licenceSets = licenceSets
+                licenceSets = itemLicenceSets
             };
 
             foreach (var strategy in verificationOutputStrategies.Values)

@@ -105,7 +105,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
             }
         })();
 
-        if (itemId === 'None Outgoing') {
+        if (itemId === 'None Outgoing' || (title === 'Aggregates' && itemId === 'None')) {
             return `${actionVerb} the absence of ${title.toLowerCase()}`;
         }
 

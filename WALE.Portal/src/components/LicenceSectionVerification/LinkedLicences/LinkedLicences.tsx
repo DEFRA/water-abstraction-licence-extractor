@@ -38,7 +38,12 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 const dateB = b.createdDateTimeUtc ? new Date(b.createdDateTimeUtc).getTime() : 0;
                 return dateB - dateA;
             })[0];
-    
+
+        const latestNoneOutgoingType = noneOutgoingVerification?.verificationType;
+        const canConfirmNoneOutgoing = latestNoneOutgoingType !== 'RequestBusinessReview';
+        const canRequestNoneOutgoingBusinessReview = latestNoneOutgoingType !== 'RequestBusinessReview';
+        const canCompleteNoneOutgoingBusinessReview = latestNoneOutgoingType !== 'CompleteBusinessReview';
+
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -241,6 +246,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                     marginTop: noneOutgoingVerification ? '12px' : '0'
                                 }}>
                                     <button
+                                        disabled={!canConfirmNoneOutgoing}
                                         onClick={() => onItemVerificationRequested?.('ConfirmNone', 'None Outgoing')}
                                         style={{
                                             padding: '6px 20px',
@@ -248,7 +254,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            cursor: 'pointer',
+                                            cursor: canConfirmNoneOutgoing ? 'pointer' : 'not-allowed',
+                                            opacity: canConfirmNoneOutgoing ? 1 : 0.5,
                                             fontWeight: '600',
                                             fontSize: '0.85rem'
                                         }}
@@ -256,6 +263,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         Confirm No Outgoing Linked Licences
                                     </button>
                                     <button
+                                        disabled={!canRequestNoneOutgoingBusinessReview}
                                         onClick={() => onItemVerificationRequested?.('RequestBusinessReview', 'None Outgoing')}
                                         style={{
                                             padding: '6px 12px',
@@ -263,7 +271,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            cursor: 'pointer',
+                                            cursor: canRequestNoneOutgoingBusinessReview ? 'pointer' : 'not-allowed',
+                                            opacity: canRequestNoneOutgoingBusinessReview ? 1 : 0.5,
                                             fontWeight: '600',
                                             fontSize: '0.85rem'
                                         }}
@@ -271,6 +280,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                         Request Business Review - None Outgoing
                                     </button>
                                     <button
+                                        disabled={!canCompleteNoneOutgoingBusinessReview}
                                         onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', 'None Outgoing')}
                                         style={{
                                             padding: '6px 12px',
@@ -278,7 +288,8 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                                             color: 'white',
                                             border: 'none',
                                             borderRadius: '4px',
-                                            cursor: 'pointer',
+                                            cursor: canCompleteNoneOutgoingBusinessReview ? 'pointer' : 'not-allowed',
+                                            opacity: canCompleteNoneOutgoingBusinessReview ? 1 : 0.5,
                                             fontWeight: '600',
                                             fontSize: '0.85rem'
                                         }}

@@ -114,6 +114,7 @@ public class ProcessRunsController(
         var queryTake = query.Take;
         var querySkip = query.Skip;
 
+        query = query.Clone();
         query.Skip = 0;
         query.Take = int.MaxValue;
         

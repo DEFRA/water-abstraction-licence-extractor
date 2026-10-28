@@ -3536,24 +3536,35 @@ private async Task<
                 s.short_licence_set_id
                     AS ShortLicenceSetId,
                 s.licence_set_type
-                    AS LicenceSetType,
-                t.licence_list_item_licence_set_id
-                    AS LicenceListItemLicenceSetId,
-                t.licence_set_type
                     AS LicenceSetType
             FROM licence_list_item_licence_set s
-            LEFT JOIN licence_list_item_licence_set_type t
-                ON t.licence_list_item_licence_set_id = s.licence_list_item_licence_set_id
-            WHERE s.process_run_id = @ProcessRunId
-              AND s.licence_list_item_id = ANY(@ItemIds)
-            ORDER BY s.licence_list_item_id,
-                     s.licence_list_item_licence_set_id;
+            WHERE
+                s.process_run_id = @ProcessRunId
+                AND s.licence_list_item_id = ANY(@ItemIds)
+            ORDER BY
+                s.licence_list_item_id,
+                s.licence_list_item_licence_set_id;
             """;
 
-        var lookup = new Dictionary<long, LicenceListItemLicenceSet>();
-
-        await connection
-            .QueryAsync<LicenceListItemLicenceSet, LicenceListItemLicenceSetType, LicenceListItemLicenceSet>(
+        const string aggSql =
+            """
+            SELECT
+                agg.licence_list_item_licence_set_id
+                    AS LicenceListItemLicenceSetId,
+                agg.licence_list_item_licence_set_aggregate_set_id
+                    AS LicenceListItemLicenceSetAggregateSetId,
+                agg.data
+                    AS Data
+            FROM licence_list_item_licence_set s
+            JOIN licence_list_item_licence_set_aggregate_set agg
+                ON s.licence_list_item_licence_set_id = agg.licence_list_item_licence_set_id
+            WHERE
+                s.process_run_id = @ProcessRunId
+                AND s.licence_list_item_id = ANY(@ItemIds);
+            """;
+        
+        var licenceResults = (await connection
+            .QueryAsync<LicenceListItemLicenceSet>(
                 new CommandDefinition(
                     sql,
                     new
@@ -3561,25 +3572,34 @@ private async Task<
                         ProcessRunId = processRunId,
                         ItemIds = itemIds
                     },
-                    cancellationToken: cancellationToken),
-                (set, _) =>
-                {
-                    if (!lookup.TryGetValue(set.LicenceListItemLicenceSetId, out var existing))
+                    cancellationToken: cancellationToken)))
+            .ToList();
+        
+        var aggResults = (await connection
+            .QueryAsync<LicenceListItemLicenceSetAggregateSet>(
+                new CommandDefinition(
+                    aggSql,
+                    new
                     {
-                        existing = set;
-                        lookup[set.LicenceListItemLicenceSetId] = existing;
-                    }
+                        ProcessRunId = processRunId,
+                        ItemIds = itemIds
+                    },
+                    cancellationToken: cancellationToken)))
+            .ToList();
 
-                    return existing;
-                },
-                splitOn: "LicenceListItemLicenceSetId");
-
-        return lookup.Values
-            .GroupBy(x => x.LicenceListItemId)
+        foreach (var licenceResult in licenceResults)
+        {
+            licenceResult.AggregateSets = aggResults
+                .Where(agg => agg.LicenceListItemLicenceSetId == licenceResult.LicenceListItemLicenceSetId)
+                .Select(agg => JsonSerializer.Deserialize<Aggregate>(agg.Data!, JsonHelper.GetSerializerOptions()))
+                .ToArray()!;
+        }
+        
+        return licenceResults
+            .GroupBy(result => result.LicenceListItemId)
             .ToDictionary(
                 group => group.Key,
-                group =>
-                    (IReadOnlyList<LicenceListItemLicenceSet>)
+                IReadOnlyList<LicenceListItemLicenceSet> (group) =>
                     group.ToArray());
     }
 

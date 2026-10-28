@@ -1365,34 +1365,33 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 connection,
                 transaction,
                 licenceSetRowId,
-                licenceSet.LicenceSetTypes,
+                [licenceSet.LicenceSetType!],
+                cancellationToken);
+            
+            await InsertLicenceSetAggregateSetsAsync(
+                connection,
+                transaction,
+                licenceSetRowId,
+                licenceSet.AggregateSets ?? [],
                 cancellationToken);
         }
     }
     private static UpsertLicenceSetItem MergeLicenceSets(
         IGrouping<string, UpsertLicenceSetItem> group)
     {
-        var first = group.First();
-
         return new UpsertLicenceSetItem
         {
             LicenceSetId = group.Key,
-
             ShortLicenceSetId = group
                 .Select(x => x.ShortLicenceSetId)
                 .FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x)),
-
             LicenceSetType = group
                 .Select(x => x.LicenceSetType)
                 .FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x)),
-
-            LicenceSetTypes = group
-                .SelectMany(x => x.LicenceSetTypes ?? [])
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+            AggregateSets = group
+                .SelectMany(x => x.AggregateSets ?? [])
                 .ToArray()
         };
     }
@@ -1440,6 +1439,52 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 },
                 transaction,
                 cancellationToken: cancellationToken));
+    }
+    
+    private static async Task InsertLicenceSetAggregateSetsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long licenceSetRowId,
+        IReadOnlyCollection<Aggregate> aggregates,
+        CancellationToken cancellationToken)
+    {
+        if (aggregates.Count == 0)
+        {
+            return;
+        }
+
+        const string sql =
+            """
+            INSERT INTO licence_list_item_licence_set_aggregate_set
+            (
+                licence_list_item_licence_set_id,
+                licence_list_item_licence_set_aggregate_set_id,
+                data
+            )
+            VALUES
+            (
+                @LicenceListItemLicenceSetId,
+                @LicenceListItemLicenceSetAggregateSetId,
+                CAST(@Data AS jsonb)
+            );
+            """;
+
+        foreach (var aggregate in aggregates)
+        {
+            var parameters = new
+            {
+                LicenceListItemLicenceSetId = licenceSetRowId,
+                LicenceListItemLicenceSetAggregateSetId = aggregate.Id,
+                Data = JsonSerializer.Serialize(aggregate, JsonHelper.GetSerializerOptions())
+            };
+            
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    sql,
+                    parameters,
+                    transaction,
+                    cancellationToken: cancellationToken));
+        }
     }
 
     private static async Task InsertLicenceSetTypesAsync(

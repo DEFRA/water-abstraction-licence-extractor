@@ -3562,17 +3562,12 @@ private async Task<
                         ItemIds = itemIds
                     },
                     cancellationToken: cancellationToken),
-                (set, type) =>
+                (set, _) =>
                 {
                     if (!lookup.TryGetValue(set.LicenceListItemLicenceSetId, out var existing))
                     {
                         existing = set;
                         lookup[set.LicenceListItemLicenceSetId] = existing;
-                    }
-
-                    if (type != null)
-                    {
-                        existing.LicenceSetTypes.Add(type);
                     }
 
                     return existing;

@@ -223,15 +223,17 @@ public class LicenceListItemModelService
         throw new InvalidOperationException($"Unrecognized {typeof(TEnum).Name} value: '{value}'");
     }
     
-    private static OutputListDataItemLicenceSet ToOutputLicenceSet(LicenceListItemLicenceSet source)
+    private static OutputListDataItemLicenceSet ToOutputLicenceSet(
+        LicenceListItemLicenceSet source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         return new OutputListDataItemLicenceSet
         {
-            LicenceSetId =  source.LicenceSetId,
+            LicenceSetId = source.LicenceSetId,
             LicenceSetType = source.LicenceSetType,
-            ShortLicenceSetId = source.ShortLicenceSetId
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
     
@@ -241,8 +243,9 @@ public class LicenceListItemModelService
         return new UpsertLicenceSetItem
         {
             LicenceSetType = source.LicenceSetType.ToString(),
-            LicenceSetId  = source.LicenceSetId,
-            ShortLicenceSetId = source.ShortLicenceSetId
+            LicenceSetId = source.LicenceSetId,
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
 

@@ -109,11 +109,13 @@ public class UiProcessRunService(
 
         foreach (var listDataItem in paginationListData)
         {
-            if (licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
+            if (!licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
             {
-                listDataItem.isLicenceNumberFlagged = true;
-                listDataItem.licenceNumberFlagReason = flagReason;
+                continue;
             }
+            
+            listDataItem.isLicenceNumberFlagged = true;
+            listDataItem.licenceNumberFlagReason = flagReason;
         }
 
         return paginationListData;

@@ -23,10 +23,6 @@ public static class JsOutputHelper
         var licenceHolderOcrConfidence =
             GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
         var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData, "ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData, "servicesUsed",
-            GeneralConstants.PdfPigDataExtractorServiceName);
-
-        var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
         var licenceNumber = licence.LicenceNumber;
         var licenceNumberOcrConfidence =
@@ -129,7 +125,7 @@ public static class JsOutputHelper
                     {
                         LicenceSetId = ls.LicenceSetId,
                         ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetType = lsr.LicenceSetType,
+                        LicenceSetType = ls.LicenceSetType,
                         AggregateSets = ls.AggregateSets
                     };
                 })
@@ -168,7 +164,10 @@ public static class JsOutputHelper
                 var sectionVerificationLookups = verificationLookups.GetValueOrDefault(
                     strategy.SectionName, new LicenceVerificationLookups());
 
-                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
+                strategy.HandleVerifications(
+                    listRow,
+                    sectionVerificationLookups,
+                    outputLine.DmsFileId!.Value,
                     outputLine.LicenceNumber!);
             }
 

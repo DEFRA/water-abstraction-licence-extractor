@@ -378,7 +378,10 @@ public class DatabaseAbstractionLicenceOutputService(
 
         foreach (var licenceSetSimple in licenceSets)
         {
-            var licenceSet = new LicenceSet();
+            var licenceSet = new LicenceSet
+            {
+                LicenceSetType = (LicenceSetType)licenceSetSimple.LicenceSetType
+            };
 
             var licenceSetLicenceIds = allLicenceSetLicences
                 .Where(lsl => lsl.LicenceSetId == licenceSetSimple.LicenceSetId);

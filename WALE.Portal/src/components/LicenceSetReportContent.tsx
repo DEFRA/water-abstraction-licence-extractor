@@ -11,7 +11,7 @@ interface LicenceSetReportContentProps {
     hideBackLink?: boolean;
 }
 
-export function LicenceSetReportContent({licenceId, licenceSetId, hideBackLink = true}: LicenceSetReportContentProps) {
+export function LicenceSetReportContent({licenceId, licenceSetId}: LicenceSetReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [licenceSetData, setLicenceSetData] = useState<LicenceSet | null>(null);

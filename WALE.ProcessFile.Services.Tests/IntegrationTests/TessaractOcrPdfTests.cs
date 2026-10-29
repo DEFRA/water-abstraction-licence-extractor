@@ -169,7 +169,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, resultList.Count);
+        Assert.Equal(21, resultList.Count);
         // Tesseract struggles to read licence number in header and abstraction limits
         // in this document. Azure AI does read them
 
@@ -290,7 +290,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(20, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -418,7 +418,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(14, resultList.Count);
+        Assert.Equal(24, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -540,7 +540,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(19, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -604,7 +604,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(13, resultList.Count);
+        Assert.Equal(22, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -739,7 +739,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(8, resultList.Count);
+        Assert.Equal(15, resultList.Count);
 
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Null(points);
@@ -811,7 +811,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(18, resultList.Count);
 
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -874,7 +874,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(11, resultList.Count);
+        Assert.Equal(18, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);
@@ -1495,7 +1495,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(9, resultList.Count);
+        Assert.Equal(16, resultList.Count);
         
         var points = resultList.FirstOrDefault(result => result.LabelGroupName == "Points");
         Assert.Null(points);
@@ -1555,7 +1555,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(12, resultList.Count);
+        Assert.Equal(19, resultList.Count);
         
         var records = resultList.FirstOrDefault(result => result.LabelGroupName == "Records");
         Assert.NotNull(records);

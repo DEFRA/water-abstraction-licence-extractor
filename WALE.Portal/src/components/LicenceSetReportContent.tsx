@@ -6,12 +6,12 @@ import {getImageUrl} from "../utils/images.ts";
 import "../assets/licencesetstyles.css";
 
 interface LicenceSetReportContentProps {
-    fileId: string;
+    licenceId: number;
     licenceSetId: string;
     hideBackLink?: boolean;
 }
 
-export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = true}: LicenceSetReportContentProps) {
+export function LicenceSetReportContent({licenceId, licenceSetId}: LicenceSetReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [licenceSetData, setLicenceSetData] = useState<LicenceSet | null>(null);
@@ -23,11 +23,13 @@ export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = tr
 
                 // Load data using API client
                 const [licenceSetsResult] = await Promise.allSettled([
-                    waleApiClient.licenceSets(fileId)
+                    waleApiClient.licenceSetsByLicenceIdString(licenceId)
                 ]);
 
                 if (licenceSetsResult.status === 'fulfilled') {
-                    let licenceSet = licenceSetsResult.value.filter(x => x.licenceSetId === licenceSetId)[0];
+                    let licenceSets= JSON.parse(licenceSetsResult.value) as LicenceSet[];
+                    let licenceSet = licenceSets.filter(ls => ls.licenceSetId === licenceSetId)[0];
+                    
                     setLicenceSetData(licenceSet);
                 }
             } catch (err) {
@@ -39,7 +41,7 @@ export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = tr
         };
 
         loadAllData();
-    }, [fileId, licenceSetId]);
+    }, [licenceId, licenceSetId]);
 
     if (loading) {
         return <div style={{padding: '20px'}}>Loading report...</div>;
@@ -56,15 +58,13 @@ export function LicenceSetReportContent({fileId, licenceSetId, hideBackLink = tr
     return (
         <div id="cols" className={`cols-${licenceSetData.licences!.length + 1}`}>
             <div id="col0">
-                <h1 id="licence-set-id">{licenceSetId}</h1>
-
-                <JsonView src={licenceSetData} collapsed={1} theme="default"/>
-
-                {!hideBackLink && (
-                    <h1 id="backLink">
-                        <a href="/list">Back to all licences</a>
-                    </h1>
-                )}
+                <div style={{padding: '20px'}}>
+                    <h1 id="licence-set-id">{licenceSetId}</h1>
+    
+                    <div style={{marginTop: '20px'}}>
+                        <JsonView src={licenceSetData} collapsed={1} theme="default"/>
+                    </div>
+                </div>                    
             </div>
             {licenceSetData.licences!.map((licence, i) => (
                 <div key={i}>

@@ -5,16 +5,8 @@ public class PeriodAndPointRestricted
     public Point[]? Points { get; set; }
     
     public Purpose[]? Purposes { get; set; }
-    
-    public PeriodAndPointRestricted Clone()
-    {
-        var returnItem = new PeriodAndPointRestricted();
-        CloneProperties(this, returnItem);
-        
-        return returnItem;
-    }
-    
-    public static void CloneProperties(
+
+    protected static void CloneProperties(
         PeriodAndPointRestricted source,
         PeriodAndPointRestricted destination)
     {

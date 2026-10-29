@@ -7,6 +7,6 @@ public sealed class UpsertLicenceSetItem
     public string? ShortLicenceSetId { get; init; }
 
     public string? LicenceSetType { get; init; }
-
-    public string[] LicenceSetTypes { get; init; } = [];
+    
+    public Aggregate[]? AggregateSets { get; set; }
 }

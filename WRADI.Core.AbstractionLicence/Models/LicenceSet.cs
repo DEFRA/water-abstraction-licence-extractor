@@ -7,61 +7,59 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class LicenceSet
 {
-    public string LicenceSetId
+    public string LicenceSetId => GetLicenceSetId(Licences);
+
+    public static string GetLicenceSetId(Licence[] licences)
     {
-        get
+        var licencesAlphabetical = licences.OrderBy(licence => licence.LicenceNumber?.Value);
+        var outputSb = new StringBuilder();
+        
+        foreach (var licence in licencesAlphabetical)
         {
-            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
-            var outputSb = new StringBuilder();
-            
-            foreach (var licence in licencesAlphabetical)
+            if (outputSb.Length > 0)
             {
-                if (outputSb.Length > 0)
-                {
-                    outputSb.Append('-');
-                }
-
-                var licenceNumberNoSeperators =
-                    FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
-
-                outputSb.Append(licenceNumberNoSeperators);
+                outputSb.Append('-');
             }
 
-            return outputSb.ToString();
+            var licenceNumberNoSeperators =
+                FormattingHelper.RemoveSeperators(licence.LicenceNumber?.Value);
+
+            outputSb.Append(licenceNumberNoSeperators);
         }
+
+        return outputSb.ToString();
     }
     
-    public string ShortLicenceSetId
+    public string ShortLicenceSetId => GetShortLicenceSetId(Licences);
+    
+    public static string GetShortLicenceSetId(Licence[] licences)
     {
-        get
+        var licencesAlphabetical = licences.OrderBy(licence => licence.LicenceNumber?.Value);
+        var outputSb = new StringBuilder();
+        
+        foreach (var licence in licencesAlphabetical)
         {
-            var licencesAlphabetical = Licences.OrderBy(licence => licence.Id);
-            var outputSb = new StringBuilder();
-            
-            foreach (var licence in licencesAlphabetical)
+            if (outputSb.Length > 0)
             {
-                if (outputSb.Length > 0)
-                {
-                    outputSb.Append('-');
-                }
-
-                var licenceNumberParts = licence.LicenceNumber?.Value?
-                    .Replace(" ", "/")
-                    .Replace(".", "/")
-                    .Split('/');
-
-                var part = licenceNumberParts?.Last();
-
-                if (part?.StartsWith("R0") == true)
-                {
-                    part = licenceNumberParts![licenceNumberParts.Length - 2];
-                }
-                
-                outputSb.Append(part);
+                outputSb.Append('-');
             }
 
-            return outputSb.ToString();
+            var licenceNumberParts = licence.LicenceNumber?.Value?
+                .Replace(" ", "/")
+                .Replace(".", "/")
+                .Split('/');
+
+            var part = licenceNumberParts?.Last();
+
+            if (part?.StartsWith("R0") == true)
+            {
+                part = licenceNumberParts![licenceNumberParts.Length - 2] + part;
+            }
+
+            outputSb.Append(part);
         }
+
+        return outputSb.ToString();
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

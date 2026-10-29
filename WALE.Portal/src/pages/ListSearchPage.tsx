@@ -178,6 +178,13 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
     const openReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number) => {
         const knownItem = outputList.find(item => item.fileId === fileId);
+        
+        // If we know just the file ID, we can often get the rest of the stuff we need
+        if (!!knownItem && !licenceId && !matchesResultId) {
+            licenceId = knownItem.licenceId!;
+            matchesResultId = knownItem.matchesResultId!;
+        }
+        
         openReport(fileId, licenceId, matchesResultId, processRunId, knownItem, openReportWithId);
 
         if (!knownItem) {
@@ -326,17 +333,17 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     </div>
                     <table id="licencesTable">
                         <thead>
-                        <ProcessRunLicenceFilters
-                            query={query}
-                            setQuery={setQuery}
-                            issuers={issuers}
-                            shortLicenceIds={shortLicenceIds}
-                            issueDates={issueDates}
-                            setPageNumber={setPageNumber}
-                            showSingles={showSingles}
-                            onToggleSingles={setShowSingles}
-                        />
-                   </thead>
+                            <ProcessRunLicenceFilters
+                                query={query}
+                                setQuery={setQuery}
+                                issuers={issuers}
+                                shortLicenceIds={shortLicenceIds}
+                                issueDates={issueDates}
+                                setPageNumber={setPageNumber}
+                                showSingles={showSingles}
+                                onToggleSingles={setShowSingles}
+                            />
+                       </thead>
                         <tbody>
                         {outputList.map((item, index) => (
                             <LicencesTableRow
@@ -356,7 +363,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
             {activeTab === 'licenceSets' && (
                 <div id="licenceSets">
-                    <table>
+                    <table style={{'marginTop': '30px', 'width': '100%'}}>
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
                             data={outputList} 
@@ -366,7 +373,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                         />
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
                     </table>
-                    <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
                 </div>
             )}
 

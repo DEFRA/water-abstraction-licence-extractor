@@ -78,31 +78,17 @@ public class ProcessRunsController(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     { 
-        var getTotalsTask =
-            abstractionLicenceOutputService.GetTotalLicenceCountAsync(
-                processRunId,
-                query);
+        var getTotalsTask = abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+            processRunId,
+            query);
 
-        var paginationDataTask =
-           uiProcessRunService.GetProcessRunRawDataList(
-                processRunId,
-                query);
+        var paginationDataTask = uiProcessRunService.GetProcessRunRawDataList(
+            processRunId,
+            query);
 
-        var issuersTask =
-            GetIssuers(processRunId);
-
-        var licenceSetIdsTask =
-            GetLicenceSetIds(processRunId);
-
-        var issueDatesTask =
-            GetIssueDates(processRunId);
-
-        await Task.WhenAll(
-            getTotalsTask,
-            paginationDataTask,
-            issuersTask,
-            licenceSetIdsTask,
-            issueDatesTask);
+        var issuersTask = GetIssuers(processRunId);
+        var licenceSetIdsTask = GetLicenceSetIds(processRunId);
+        var issueDatesTask = GetIssueDates(processRunId);
 
         var processRun = new ProcessRunResponse
         {
@@ -128,6 +114,7 @@ public class ProcessRunsController(
         var queryTake = query.Take;
         var querySkip = query.Skip;
 
+        query = query.Clone();
         query.Skip = 0;
         query.Take = int.MaxValue;
         

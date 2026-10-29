@@ -73,7 +73,9 @@ public class UiProcessRunService(
         return $"Updated Process Run: {processRunId} for {processRunRawDataList.Count} licences";
     }
     
-    public async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query)
+    public async Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(
+        int processRunId,
+        ProcessRunQuery query)
     {
         var completeNumber = 1;
         var fileNumber = 1;
@@ -107,11 +109,13 @@ public class UiProcessRunService(
 
         foreach (var listDataItem in paginationListData)
         {
-            if (licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
+            if (!licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
             {
-                listDataItem.isLicenceNumberFlagged = true;
-                listDataItem.licenceNumberFlagReason = flagReason;
+                continue;
             }
+            
+            listDataItem.isLicenceNumberFlagged = true;
+            listDataItem.licenceNumberFlagReason = flagReason;
         }
 
         return paginationListData;

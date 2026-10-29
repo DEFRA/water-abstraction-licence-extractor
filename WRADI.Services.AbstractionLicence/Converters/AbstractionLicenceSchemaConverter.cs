@@ -464,9 +464,39 @@ public static class AbstractionLicenceSchemaConverter
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
-                var clonedLinkedLicence = linkedLicence.Clone();
-                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+                var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
+                
+                // Add to an existing ones history
+                if (existing != null)
+                {
+                    var newContainedIn = existing.ContainedIn?.ToList() ?? [];
+                    newContainedIn.AddRange(linkedLicence.ContainedIn!);
+                    
+                    continue;
+                }
+                
+                var followOnDmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
+                    scrapedLicenceNumber,
+                    lookupConfiguration.CacheService);
+                
+                var (_, _, followOnLicenceType, followOnLicenceStatus) = await GetNaldLicenceDataAsync(
+                    followOnLicenceNumber,
+                    followOnLicenceNumber,
+                    linkedLicence.LicenceType.ToString(),
+                    regionCode,
+                    naldDataLookupService);
 
+                var followOnDmsFileData = await followOnDmsFileDataTask;
+                
+                var clonedLinkedLicence = linkedLicence.Clone();
+                
+                clonedLinkedLicence.LicenceNumber = followOnLicenceNumber;
+                clonedLinkedLicence.LicenceType = followOnLicenceType;
+                clonedLinkedLicence.NaldStatus = followOnLicenceStatus;
+                clonedLinkedLicence.DmsFileId = followOnDmsFileData?.FileId;
+                clonedLinkedLicence.DmsPath = followOnDmsFileData?.DmsPath;
+                clonedLinkedLicence.DmsPermitNumber = followOnDmsFileData?.PermitNumber;
+                
                 foreach (var containedIn in clonedLinkedLicence.ContainedIn!)
                 {
                     containedIn.History = extendedHistory;   
@@ -1447,7 +1477,6 @@ public static class AbstractionLicenceSchemaConverter
                 Licences = [licence],
                 AggregateSets = GetAggregates(
                     [licence],
-                    [licence],
                     true)
             };
 
@@ -1471,11 +1500,11 @@ public static class AbstractionLicenceSchemaConverter
                 continue;
             }
 
-            var aggregatesWithLinkedLicnces = licence.AbstractionLimits.Aggregates!
+            var aggregatesWithLinkedLicences = licence.AbstractionLimits.Aggregates!
                 .Where(agg => agg.LinkedLicences?.Length >= 1)
                 .ToList();
 
-            foreach (var aggregate in aggregatesWithLinkedLicnces)
+            foreach (var aggregate in aggregatesWithLinkedLicences)
             {
                 var licencesReferencedInLimits = aggregate.LinkedLicences!
                     .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
@@ -1535,17 +1564,36 @@ public static class AbstractionLicenceSchemaConverter
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Starting aggregating sets / adding incoming " +
             $"links for {allLicences.Count} licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
-        var licencesNotInAnySet = allLicences
+        var licencesNotInAnySetList = allLicences
             .Where(l => !returnLicenceSets.Any(ls => ls.Licences.Contains(l)))
             .ToList();
 
-        if (licencesNotInAnySet.Count >= 1)
+        var licencesNotInAnySetDict = new Dictionary<Licence, List<Licence>>();
+
+        foreach (var licenceNotInAnySet in licencesNotInAnySetList)
+        {
+            var licencesReferencing = allLicences
+                .Where(l => l.LinkedLicences.Any(ll => ll.LicenceNumber == licenceNotInAnySet.LicenceNumber?.Value))
+                .ToList();
+
+            foreach (var licenceReferencing in licencesReferencing)
+            {
+                if (!licencesNotInAnySetDict.ContainsKey(licenceReferencing))
+                {
+                    licencesNotInAnySetDict.Add(licenceReferencing, []);
+                }
+                
+                licencesNotInAnySetDict[licenceReferencing].Add(licenceNotInAnySet);
+            }
+        }
+
+        foreach (var licenceNotInAnySetGroup in licencesNotInAnySetDict)
         {
             returnLicenceSets.Add(
                 new LicenceSet
                 {
                     LicenceSetType = LicenceSetType.Others,
-                    Licences = [primaryLicence, ..licencesNotInAnySet]
+                    Licences = [licenceNotInAnySetGroup.Key, ..licenceNotInAnySetGroup.Value]
                 });
         }
         
@@ -1612,6 +1660,18 @@ public static class AbstractionLicenceSchemaConverter
             {
                 continue;
             }
+
+            var newAggregateSets = new List<Aggregate>();
+            
+            foreach (var aggregateSet in licenceSet.AggregateSets)
+            {
+                var clonedAggregateSet = aggregateSet.Clone();
+                clonedAggregateSet.LicenceSetId = null;
+                
+                newAggregateSets.Add(clonedAggregateSet);
+            }
+            
+            licenceSet.AggregateSets = newAggregateSets.ToArray();
         }
         
         ConsoleHelper.WriteLine(
@@ -2571,7 +2631,6 @@ public static class AbstractionLicenceSchemaConverter
 
     private static Aggregate[]? GetAggregates(
         IReadOnlyList<Licence> licences,
-        IReadOnlyList<Licence> allLicences,
         bool excludeAnyLinksNotInSet)
     {
         var aggregates = new List<Aggregate>();
@@ -2584,6 +2643,7 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             var relevantAggregates = licence.AbstractionLimits.Aggregates;
+            
             if (excludeAnyLinksNotInSet)
             {
                 relevantAggregates = relevantAggregates
@@ -2595,6 +2655,15 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             aggregates.AddRange(relevantAggregates);
+        }
+
+        aggregates = aggregates
+            .Select(agg => agg.Clone())
+            .ToList();
+        
+        foreach (var aggregate in aggregates)
+        {
+            aggregate.LicenceSetId = null;
         }
 
         return aggregates.Count == 0 ? null : aggregates.ToArray();
@@ -4463,8 +4532,24 @@ public static class AbstractionLicenceSchemaConverter
         var timePeriod = GetTimePeriod(
             siblings?.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
+        var lls = abstractionLinkedLicences.ToList();
+        lls.Add(new LinkedLicence
+        {
+            LicenceNumber = licenceNumber
+        });
+        
+        var ls = lls
+            .Select(ll => new Licence
+            {
+                LicenceNumber = new ValueWithConfidence<string> { Value = ll.LicenceNumber }
+            })
+            .ToArray();
+        
         var aggregate = new Aggregate
         {
+            LicenceSetId = abstractionLinkedLicences.Count > 0
+                ? LicenceSet.GetLicenceSetId(ls)
+                : null,
             SourceLicenceNumber = licenceNumber,
             SourceLicenceVersionId = licenceVersionId,
             PrimaryType = abstractionLinkedLicences.Count >= 1
@@ -6253,14 +6338,6 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
-        return returnList;
-    }
-
-    private static List<LicenceSetReference> AddImplicitAndExplicitLicenceSets(
-        Licence licence1,
-        List<LicenceSet> allLicenceSetsForLicence)
-    {
-        var returnList = new List<LicenceSetReference>(licence1.LicenceSets);
         return returnList;
     }
 

@@ -53,7 +53,7 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                 waleApiClient.getMatchesResultByMatchesResultIdString(matchesResultId),
                 waleApiClient.licenceByLicenceId(licenceId, false),
                 waleApiClient.licenceByLicenceId(licenceId, true),
-                waleApiClient.licenceSets(fileId),
+                waleApiClient.licenceSetsByLicenceIdString(licenceId),
                 waleApiClient.licenceByLicenceIdString(licenceId, false),
                 waleApiClient.licenceByLicenceIdString(licenceId, true)
             ]);
@@ -62,7 +62,7 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
             if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
             if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
             if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
-            if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+            if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(JSON.parse(licenceSetsResult.value));
             if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
             if (licenceVerificationStringResult.status === 'fulfilled') setLicenceVerificationStringResult(JSON.parse(licenceVerificationStringResult.value));
 

@@ -7,4 +7,6 @@ public class LicenceSetTable
     public string? SchemaLicenceSetId { get; init; }   
     
     public string? ShortLicenceSetId { get; init; }
+    
+    public int LicenceSetType { get; init; }
 }

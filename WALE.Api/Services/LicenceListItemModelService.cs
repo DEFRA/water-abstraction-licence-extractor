@@ -192,7 +192,7 @@ public class LicenceListItemModelService
 
         if (!string.IsNullOrEmpty(source.SourceFields))
         {
-            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields);
+            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields); // TODO - use serialiser options?
         }
         
         return new ContainedInInformation
@@ -223,18 +223,17 @@ public class LicenceListItemModelService
         throw new InvalidOperationException($"Unrecognized {typeof(TEnum).Name} value: '{value}'");
     }
     
-    private static OutputListDataItemLicenceSet ToOutputLicenceSet(LicenceListItemLicenceSet source)
+    private static OutputListDataItemLicenceSet ToOutputLicenceSet(
+        LicenceListItemLicenceSet source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         return new OutputListDataItemLicenceSet
         {
-            LicenceSetId =  source.LicenceSetId,
+            LicenceSetId = source.LicenceSetId,
             LicenceSetType = source.LicenceSetType,
-            ShortLicenceSetId =  source.ShortLicenceSetId,
-            LicenceSetTypes =  source.LicenceSetTypes
-                .Select(x => x.LicenceSetType)
-                .ToArray(),
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
     
@@ -244,9 +243,9 @@ public class LicenceListItemModelService
         return new UpsertLicenceSetItem
         {
             LicenceSetType = source.LicenceSetType.ToString(),
-            LicenceSetTypes = source.LicenceSetTypes.Select(x => x.ToString()).ToArray(),
-           LicenceSetId  = source.LicenceSetId,
-            ShortLicenceSetId = source.ShortLicenceSetId
+            LicenceSetId = source.LicenceSetId,
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
 

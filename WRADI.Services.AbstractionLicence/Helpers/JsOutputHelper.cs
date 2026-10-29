@@ -23,10 +23,6 @@ public static class JsOutputHelper
         var licenceHolderOcrConfidence =
             GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
         var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData, "ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData, "servicesUsed",
-            GeneralConstants.PdfPigDataExtractorServiceName);
-
-        var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
         var licenceNumber = licence.LicenceNumber;
         var licenceNumberOcrConfidence =
@@ -89,7 +85,8 @@ public static class JsOutputHelper
         };
     }
 
-    public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
+    public static IReadOnlyList<OutputListDataItem> ToListData(
+        List<IntermediateOutputLicence> outputLines,
         int processRunId,
         Dictionary<string, LicenceVerificationLookups> verificationLookups)
     {
@@ -110,7 +107,7 @@ public static class JsOutputHelper
         {
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
-            var licenceSets = outputLine.LicenceSetReferences?
+            var itemLicenceSets = outputLine.LicenceSetReferences?
                 .Select(lsr =>
                 {
                     var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
@@ -123,15 +120,13 @@ public static class JsOutputHelper
                             ShortLicenceSetId = "ERROR"
                         };
                     }
-
-                    var licenceSetType = lsr.LicenceSetType;
-
+                    
                     return new OutputListDataItemLicenceSet
                     {
                         LicenceSetId = ls.LicenceSetId,
                         ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = [ls.LicenceSetType],
-                        LicenceSetType = licenceSetType
+                        LicenceSetType = ls.LicenceSetType,
+                        AggregateSets = ls.AggregateSets
                     };
                 })
                 .ToArray() ?? [];
@@ -161,7 +156,7 @@ public static class JsOutputHelper
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
-                licenceSets = licenceSets
+                licenceSets = itemLicenceSets
             };
 
             foreach (var strategy in verificationOutputStrategies.Values)
@@ -169,7 +164,10 @@ public static class JsOutputHelper
                 var sectionVerificationLookups = verificationLookups.GetValueOrDefault(
                     strategy.SectionName, new LicenceVerificationLookups());
 
-                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
+                strategy.HandleVerifications(
+                    listRow,
+                    sectionVerificationLookups,
+                    outputLine.DmsFileId!.Value,
                     outputLine.LicenceNumber!);
             }
 

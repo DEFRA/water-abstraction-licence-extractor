@@ -15,6 +15,7 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 using WRADI.Core.AbstractionLicence.Models.Table;
+using JsonHelper = WALE.ProcessFile.Core.Helpers.JsonHelper;
 
 namespace WRADI.Database.PostgreSQL.AbstractionLicence.Services;
 
@@ -1378,11 +1379,14 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT 
-                               licence_set_id, 
-                               short_licence_set_id, 
-                               schema_licence_set_id 
-                           FROM licence_set 
-                           WHERE process_run_id = @ProcessRunId
+                               ls.licence_set_id, 
+                               ls.short_licence_set_id,
+                               ls.schema_licence_set_id,
+                               lst.licence_set_type
+                           FROM licence_set ls
+                           JOIN licence_set_type lst on lst.licence_set_id = ls.licence_set_id
+                           WHERE
+                               ls.process_run_id = @ProcessRunId
                            """;
 
         return (await QueryAsync<LicenceSetTable>(
@@ -1401,9 +1405,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         const string sql = """
                            SELECT DISTINCT
                                ls.licence_set_id,
-                               ls.short_licence_set_id, 
-                               ls.schema_licence_set_id 
+                               ls.short_licence_set_id,
+                               ls.schema_licence_set_id,
+                               lst.licence_set_type
                            FROM licence_set ls
+                           JOIN licence_set_type lst on lst.licence_set_id = ls.licence_set_id
                            JOIN licence_set_licence lsl on lsl.licence_set_id = ls.licence_set_id
                            JOIN licence l on l.licence_id = lsl.licence_id
                            WHERE
@@ -1540,34 +1546,57 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     public async Task<Aggregate[]?> GetAggregateSets(int licenceSetId)
     {
         await using var connection = GetPostgresConnection();
-        /*const string sql = """
+        const string sql = """
                            SELECT
-                               aggregate_set_id,
-                               schema_aggregate_set_id,
                                data
                            FROM aggregate_set
-                           WHERE licence_set_id = @LicenceSetId
-                           """;*/
+                           WHERE
+                               licence_set_id = @LicenceSetId
+                           """;
 
-        // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
-        return [];
+        var results = await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new { LicenceSetId = licenceSetId });
+        
+        return results
+            .Select(aggData => JsonSerializer.Deserialize<Aggregate>(aggData, JsonHelper.GetSerializerOptions())!)
+            .ToArray();
     }
 
     public async Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(
         int processRunId)
     {
         await using var connection = GetPostgresConnection();
-        /*const string sql = """
+        const string sql = """
                             SELECT
-                                aggregate_set_id,
-                                schema_aggregate_set_id,
+                                licence_set_id,
                                 data
                             FROM aggregate_set
-                            WHERE process_run_id = @ProcessRunId
-                            """;*/
+                            WHERE
+                                process_run_id = @ProcessRunId
+                            """;
 
-        // This was not fully implemented in the SqlServerReadService, so I am skipping it for now.
-        return [];
+        var results = await QueryAsync<(int, string)>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId });
+
+        var licenceSetAggregatesList = results!
+            .Select(aggData => (
+                aggData.Item1,
+                JsonSerializer.Deserialize<Aggregate>(aggData.Item2, JsonHelper.GetSerializerOptions())!))
+            .ToList();
+
+        var licenceSetAggregatesDict = licenceSetAggregatesList
+            .GroupBy(r => r.Item1)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Item2).ToList());
+
+        return licenceSetAggregatesDict
+            .Select(kvp => (kvp.Key, kvp.Value.ToArray()))
+            .ToList();
     }
 
     public async Task<Licence?> GetLicenceAsync(int licenceId)
@@ -3507,24 +3536,35 @@ private async Task<
                 s.short_licence_set_id
                     AS ShortLicenceSetId,
                 s.licence_set_type
-                    AS LicenceSetType,
-                t.licence_list_item_licence_set_id
-                    AS LicenceListItemLicenceSetId,
-                t.licence_set_type
                     AS LicenceSetType
             FROM licence_list_item_licence_set s
-            LEFT JOIN licence_list_item_licence_set_type t
-                ON t.licence_list_item_licence_set_id = s.licence_list_item_licence_set_id
-            WHERE s.process_run_id = @ProcessRunId
-              AND s.licence_list_item_id = ANY(@ItemIds)
-            ORDER BY s.licence_list_item_id,
-                     s.licence_list_item_licence_set_id;
+            WHERE
+                s.process_run_id = @ProcessRunId
+                AND s.licence_list_item_id = ANY(@ItemIds)
+            ORDER BY
+                s.licence_list_item_id,
+                s.licence_list_item_licence_set_id;
             """;
 
-        var lookup = new Dictionary<long, LicenceListItemLicenceSet>();
-
-        await connection
-            .QueryAsync<LicenceListItemLicenceSet, LicenceListItemLicenceSetType, LicenceListItemLicenceSet>(
+        const string aggSql =
+            """
+            SELECT
+                agg.licence_list_item_licence_set_id
+                    AS LicenceListItemLicenceSetId,
+                agg.licence_list_item_licence_set_aggregate_set_id
+                    AS LicenceListItemLicenceSetAggregateSetId,
+                agg.data
+                    AS Data
+            FROM licence_list_item_licence_set s
+            JOIN licence_list_item_licence_set_aggregate_set agg
+                ON s.licence_list_item_licence_set_id = agg.licence_list_item_licence_set_id
+            WHERE
+                s.process_run_id = @ProcessRunId
+                AND s.licence_list_item_id = ANY(@ItemIds);
+            """;
+        
+        var licenceResults = (await connection
+            .QueryAsync<LicenceListItemLicenceSet>(
                 new CommandDefinition(
                     sql,
                     new
@@ -3532,30 +3572,34 @@ private async Task<
                         ProcessRunId = processRunId,
                         ItemIds = itemIds
                     },
-                    cancellationToken: cancellationToken),
-                (set, type) =>
-                {
-                    if (!lookup.TryGetValue(set.LicenceListItemLicenceSetId, out var existing))
+                    cancellationToken: cancellationToken)))
+            .ToList();
+        
+        var aggResults = (await connection
+            .QueryAsync<LicenceListItemLicenceSetAggregateSet>(
+                new CommandDefinition(
+                    aggSql,
+                    new
                     {
-                        existing = set;
-                        lookup[set.LicenceListItemLicenceSetId] = existing;
-                    }
+                        ProcessRunId = processRunId,
+                        ItemIds = itemIds
+                    },
+                    cancellationToken: cancellationToken)))
+            .ToList();
 
-                    if (type != null)
-                    {
-                        existing.LicenceSetTypes.Add(type);
-                    }
-
-                    return existing;
-                },
-                splitOn: "LicenceListItemLicenceSetId");
-
-        return lookup.Values
-            .GroupBy(x => x.LicenceListItemId)
+        foreach (var licenceResult in licenceResults)
+        {
+            licenceResult.AggregateSets = aggResults
+                .Where(agg => agg.LicenceListItemLicenceSetId == licenceResult.LicenceListItemLicenceSetId)
+                .Select(agg => JsonSerializer.Deserialize<Aggregate>(agg.Data!, JsonHelper.GetSerializerOptions()))
+                .ToArray()!;
+        }
+        
+        return licenceResults
+            .GroupBy(result => result.LicenceListItemId)
             .ToDictionary(
                 group => group.Key,
-                group =>
-                    (IReadOnlyList<LicenceListItemLicenceSet>)
+                IReadOnlyList<LicenceListItemLicenceSet> (group) =>
                     group.ToArray());
     }
 

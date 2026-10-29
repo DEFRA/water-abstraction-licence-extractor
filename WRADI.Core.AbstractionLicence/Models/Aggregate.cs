@@ -57,7 +57,10 @@ public class Aggregate : AbstractionLimitGroup
             return outputSb.ToString();
         }
     }
-    
+
+    // Only is set when inside a Licence rather then inside a LicenceSet
+    public string? LicenceSetId { get; set; }
+
     public int GetCombinedLimitValue()
     {
         var combinedValue = 0.0;
@@ -100,19 +103,20 @@ public class Aggregate : AbstractionLimitGroup
         
         return returnItem;
     }
-    
-    public static void CloneProperties(
+
+    protected static void CloneProperties(
         Aggregate sourceAggregate,
         Aggregate destinationAggregate)
     {
+        destinationAggregate.LicenceSetId = sourceAggregate.LicenceSetId;
         destinationAggregate.SourceLicenceNumber = sourceAggregate.SourceLicenceNumber;
         destinationAggregate.SourceLicenceVersionId = sourceAggregate.SourceLicenceVersionId;
         destinationAggregate.IsExplicitlyAggregate = sourceAggregate.IsExplicitlyAggregate;
         destinationAggregate.PrimaryType = sourceAggregate.PrimaryType;
         destinationAggregate.SubType = sourceAggregate.SubType;
         destinationAggregate.NaldType = sourceAggregate.NaldType;
-        destinationAggregate.LinkedLicences = sourceAggregate.LinkedLicences;
-        destinationAggregate.Variations = sourceAggregate.Variations;
+        destinationAggregate.LinkedLicences = sourceAggregate.LinkedLicences?.ToArray();
+        destinationAggregate.Variations = sourceAggregate.Variations?.ToArray();
         
         AbstractionLimitGroup.CloneProperties(
             sourceAggregate,

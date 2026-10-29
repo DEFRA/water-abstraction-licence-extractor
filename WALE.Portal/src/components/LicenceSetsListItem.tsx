@@ -15,28 +15,23 @@ export function LicenceSetsListItem({fileId, licenceId, matchesResultId, licence
 
     const licenceSetType = getLicenceSetTypeClass(licenceSet.licenceSetType);
 
-    let backLink = licenceSetType === "allLicencesImplicitlyReferencedInLimits";
-    let abstractionLimits = licenceSetType === "allLicencesExplicitlyReferencedInLimits";
-    let mixed = licenceSetType === "allLicencesIncludingImplicitlyReferenced";
-    let fullyEncompassedIn = licenceSetType === "fullyEncompassedIn";
-    let partiallyEncompassedIn = licenceSetType === "partiallyEncompassedIn";
+    let groupedByAbstractionLimits = licenceSetType === "licencesGroupedByAbstractionLimits";
+    let singleLicenceOnly = licenceSetType === "singleLicenceOnly";
+    let others = licenceSetType === "others";
+    let unknown = licenceSetType === "unknown";
 
-    let color = backLink ? "#AAA" : "black";
+    let color = groupedByAbstractionLimits ? "hotpink" : "red";
 
-    if (abstractionLimits) {
-        color = "lightseagreen";
+    if (singleLicenceOnly) {
+        color = "forestgreen";
     }
 
-    if (mixed) {
-        color = "orange";
+    if (others) {
+        color = "black"
     }
 
-    if (fullyEncompassedIn) {
-        color = "forestgreen"
-    }
-
-    if (partiallyEncompassedIn) {
-        color = "hotpink"
+    if (unknown) {
+        color = "orange"
     }
 
     return (

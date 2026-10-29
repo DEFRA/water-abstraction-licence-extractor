@@ -12,6 +12,7 @@ interface LicenceSetsTableBodyProps {
 export interface LicenceSetsTotals {
     licenceSetsCount: number;
     licenceSetTypesCount: number;
+    aggregateSetsCount: number;
     licenceSetsLicenceNumberCount: number;
     licenceSetsFilenameCount: number;
 }
@@ -56,6 +57,7 @@ export function LicenceSetsTableBody({
         const stats = {
             licenceSetsCount: 0,
             licenceSetTypesCount: 0,
+            aggregateSetsCount: 0,
             licenceSetsLicenceNumberCount: 0,
             licenceSetsFilenameCount: 0
         };
@@ -70,7 +72,8 @@ export function LicenceSetsTableBody({
             const rowsAdded = generatedRows.length - currentRowsCountBefore;
 
             stats.licenceSetsCount++;
-            stats.licenceSetTypesCount += licenceSet.licenceSetTypes?.length ?? 0;
+            stats.licenceSetTypesCount += 1;
+            stats.aggregateSetsCount += licenceSet.aggregateSets?.length ?? 0;
             stats.licenceSetsLicenceNumberCount += rowsAdded;
 
             const licencesInSet = getLicencesInSet(data, licenceSet.licenceSetId!);

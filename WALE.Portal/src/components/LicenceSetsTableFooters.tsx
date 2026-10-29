@@ -5,7 +5,7 @@ export function LicenceSetsTableFooters({totals}: {totals?: any}) {
                 <td>Total</td>
                 <td id="ls-licence-set-total">{totals?.licenceSetsCount}</td>
                 <td id="ls-types-total">{totals?.licenceSetTypesCount}</td>
-                <td id="ls-aggregates-sets">TODO</td>
+                <td id="ls-aggregates-sets">{totals?.aggregateSetsCount}</td>
                 <td id="ls-licence-number-total">{totals?.licenceSetsLicenceNumberCount}</td>
                 <td id="ls-filename-total">{totals?.licenceSetsFilenameCount}</td>
             </tr>

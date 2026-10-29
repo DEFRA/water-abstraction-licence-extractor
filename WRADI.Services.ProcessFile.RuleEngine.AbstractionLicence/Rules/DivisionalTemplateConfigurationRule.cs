@@ -21,7 +21,7 @@ public class DivisionalTemplateConfigurationRule : IRule<TemplateFinderResult>
     {
         var matchedLabel = content.Matches?
             .Where(m => m.LabelGroupName == $"{Region}SplitLabels")
-            .Select(c => c.MatchedLabel)?.FirstOrDefault()?.Name;
+            .Select(c => c.MatchedLabelName).FirstOrDefault();
         
         return new TemplateFinderResult
         {

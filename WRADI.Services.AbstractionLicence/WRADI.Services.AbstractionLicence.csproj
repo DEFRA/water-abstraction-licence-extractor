@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\WALE.ProcessFile.Services\WALE.ProcessFile.Services.csproj" />
       <ProjectReference Include="..\WRADI.Core.AbstractionLicence\WRADI.Core.AbstractionLicence.csproj" />
+        <ProjectReference Include="..\WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence\WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.csproj" />
     </ItemGroup>
 
     <ItemGroup>

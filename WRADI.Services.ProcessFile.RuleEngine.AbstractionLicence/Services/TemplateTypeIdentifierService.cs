@@ -35,7 +35,9 @@ public class TemplateTypeIdentifierService
         _ruleEngine.AddRule(new EaScannedWithoutSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithSplitTemplateConfigurationRule());
         _ruleEngine.AddRule(new NationalRiversWithoutSplitTemplateConfigurationRule());
+        _ruleEngine.AddRule(new NationalRiversSecondaryTemplateConfigurationRule());
         _ruleEngine.AddRule(new DivisionalTemplateConfigurationRule());
+        _ruleEngine.AddRule(new IssuerDerivedTemplateConfigurationRule());
         
         _ruleEngine.SetRegion(region);
     }

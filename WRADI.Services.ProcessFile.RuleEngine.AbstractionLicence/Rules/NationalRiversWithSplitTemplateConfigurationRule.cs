@@ -7,7 +7,7 @@ namespace WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Rules;
 
 public class NationalRiversWithSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
-    public string RuleName => "NRA-Scanned (Potential Spilt Required)";
+    public string RuleName => "NRA-Scanned (Potential Split Required)";
     public string? Region { get; set; }
     public int Priority => 2;
 

@@ -45,7 +45,7 @@ public class EnvironmentAgencyTemplateRuleTests
         var content = Ea(scanned: true, withSplitLabels: true);
 
         _scannedWithSplit.CanApply(content).Should().BeTrue();
-        _scannedWithSplit.Apply(content).TemplateType.Should().Contain("Spilt Required");
+        _scannedWithSplit.Apply(content).TemplateType.Should().Contain("Split Required");
         _scanned.CanApply(content).Should().BeFalse();
     }
 

@@ -6,7 +6,7 @@ namespace WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Rules;
 
 public class EaScannedWithSplitTemplateConfigurationRule : IRule<TemplateFinderResult>
 {
-    public string RuleName => "EA-Scanned (Potential Spilt Required)";
+    public string RuleName => "EA-Scanned (Potential Split Required)";
     public string? Region { get; set; }
     public int Priority => 2;
 

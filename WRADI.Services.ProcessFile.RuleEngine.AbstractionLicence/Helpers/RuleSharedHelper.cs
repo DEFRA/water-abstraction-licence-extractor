@@ -4,22 +4,20 @@ namespace WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Helpers;
 
 public static class RuleSharedHelper
 {
-    /// The patterns overlap - "Northumbria and Yorkshire Region" satisfies NENRAModern1,
-    /// NENRAModern2 and NRAOld alike - so the first tested wins. Ordered rather than a Dictionary
-    /// because enumeration order must not be what decides it. Keys are the group names
-    /// TemplateHeaderLabels registers.
-    ///
-    /// Known gap: AnglianNRAModern1 and AnglianNRAModern2 share one Region regex, so Anglian always
-    /// resolves to Modern 1. Telling them apart needs their Licence label, which is not consulted.
-    private static readonly (string LabelGroupName, string TemplateName)[] TemplateMapping =
+    /// Ordered most-specific first: the patterns overlap - "Northumbria and Yorkshire Region"
+    /// satisfies NENRAModern1, NENRAModern2 and NRAOld alike - so whichever is tested first wins.
+    /// LabelGroupName must match what TemplateHeaderLabels registers; RegionRegex names which
+    /// groups share a pattern, which is what DetermineSecondaryTemplate's tie-break keys on.
+    private static readonly (string LabelGroupName, string TemplateName, string RegionRegex)[]
+        TemplateMapping =
     [
-        ("NENRAModern1", "Modern 1"),
-        ("NENRAModern2", "Modern 2"),
-        ("NRAOld", "Old"),
-        ("AnglianNRAModern1", "Anglian Modern 1"),
-        ("AnglianNRAModern2", "Anglian Modern 2"),
-        ("NWNRAModern1", "NW Modern 1"),
-        ("NWNRAOld", "Old")
+        ("NENRAModern1", "Modern 1", "NorthumbriaYorkshireRegion"),
+        ("NENRAModern2", "Modern 2", "YorkshireRegion"),
+        ("NRAOld", "Old", "NorthumbriaRegion"),
+        ("AnglianNRAModern1", "Anglian Modern 1", "AnglianRegion"),
+        ("AnglianNRAModern2", "Anglian Modern 2", "AnglianRegion"),
+        ("NWNRAModern1", "NW Modern 1", "NorthWestRegion"),
+        ("NWNRAOld", "Old", "NationalRiversAuthority")
     ];
 
     public static string DetermineSecondaryTemplate(MatchesResult? matches)
@@ -29,27 +27,42 @@ public static class RuleSharedHelper
             return string.Empty;
         }
 
-        foreach (var (labelGroupName, templateName) in TemplateMapping)
+        var candidates = TemplateMapping
+            .Where(mapping => HasLabel(matches, mapping.LabelGroupName, "Region"))
+            .ToList();
+
+        if (candidates.Count == 0)
         {
-            if (HasRequiredLabels(matches, labelGroupName))
-                return templateName;
+            return string.Empty;
         }
 
-        return string.Empty;
+        // Requiring the Licence label of every group instead would lose the ones whose licence
+        // line OCRs badly - a real document matched "Licence Serlel No" and no Region at all.
+        var tied = candidates
+            .Where(mapping => mapping.RegionRegex == candidates[0].RegionRegex)
+            .ToList();
+
+        if (tied.Count == 1)
+        {
+            return candidates[0].TemplateName;
+        }
+
+        var onLicenceLabel = tied
+            .Where(mapping => HasLabel(matches, mapping.LabelGroupName, "Licence"))
+            .ToList();
+
+        return onLicenceLabel.Count == 1
+            ? onLicenceLabel[0].TemplateName
+            : candidates[0].TemplateName;
     }
 
     /// MatchedLabelName, not MatchedLabel.Name: the latter is [JsonIgnore] and null on a
     /// MatchesResult read back from the database, leaving every secondary template unresolvable.
-    ///
-    /// The group's other label, "Licence", is deliberately not required: it also matches EA forms,
-    /// so accepting it alone would classify EA documents as NRA.
-    private static bool HasRequiredLabels(MatchesResult matches, string labelGroupName)
+    private static bool HasLabel(MatchesResult matches, string labelGroupName, string labelName)
     {
-        var groupMatches = matches.Matches?
-            .Where(m => m.LabelGroupName == labelGroupName)
-            .ToList() ?? [];
-
-        return groupMatches.Any(c => c.MatchedLabelName == "Region");
+        return matches.Matches?
+            .Any(m => m.LabelGroupName == labelGroupName
+                && m.MatchedLabelName == labelName) == true;
     }
     
     public static string? ExtractLicenceNumber(MatchesResult matchesResult)

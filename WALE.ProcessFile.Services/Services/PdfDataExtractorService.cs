@@ -410,8 +410,10 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        const int minimumWordsPerPage = 18;
-        var wordsPerPage = (int)Math.Ceiling(pdfDocument.DocumentLines.Count / (double)pdfDocument.Pages.Count);
+        const int minimumWordsPerPage = 75;
+        var wordsPerPage = (int)Math.Ceiling(
+            pdfDocument.DocumentLines.SelectMany(l => l.Columns).Sum(c => c.Words.Count)
+            / (double)pdfDocument.Pages.Count);
 
         var isLikelyTextFile = wordsPerPage >= minimumWordsPerPage;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;

@@ -464,7 +464,8 @@ public static class AbstractionLicenceSchemaConverter
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
-                var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
+                var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber)
+                    ?? linkedLicencesWithAddedFollowOns.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
                 
                 // Add to an existing ones history
                 if (existing != null)

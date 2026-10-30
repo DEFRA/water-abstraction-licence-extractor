@@ -1,0 +1,107 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>WRADI.Services.LicenceFinder</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+    <ProjectReference Include="..\WRADI.Services.ProcessFile.AbstractionLicence\WRADI.Services.ProcessFile.AbstractionLicence.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Manual_Fix_Extract.xlsx" />
+    <None Remove="Resources\NALD_Extract.csv" />
+    <None Remove="Resources\Site_1_DL_1.xlsx" />
+    <None Remove="Resources\Site_1_DL_2.xlsx" />
+    <None Remove="Resources\Site_1_DL_3.xlsx" />
+    <None Remove="Resources\Site_1_DL_4.xlsx" />
+    <None Remove="Resources\Site_1_DL_5.xlsx" />
+    <None Remove="Resources\Site_1_DL_6.xlsx" />
+    <None Remove="Resources\Site_1_DL_7.xlsx" />
+    <None Remove="Resources\Site_1_DL_8.xlsx" />
+    <None Remove="Resources\Site_1_DL_9.xlsx" />
+    <None Remove="Resources\Site_1_DL_10.xlsx" />
+    <None Remove="Resources\Site_ALL.xlsx" />
+    <None Remove="Resources\Site_WA.xlsx" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Manual_Fix_Extract.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Resources\NALD_Extract.xlsx" />
+    <None Remove="Resources\Site_1_DL.xlsx" />
+    <None Remove="Resources\Previous_Iteration_Matches.xlsx" />
+    <None Remove="Resources\NALD_Metadata.csv" />
+    <None Remove="Resources\NALD_Metadata_Reference.csv" />
+    <None Remove="Resources\Change_Audit.xlsx" />
+    <None Remove="Resources\File_Reader_Extract.csv" />
+    <None Remove="Resources\File_Identification_Extract.csv" />
+    <None Remove="Resources\Overrides.xlsx" />
+    <None Remove="Resources\LicenceVersionResults.xlsx" />
+    <Content Include="Resources\LicenceVersionResults.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Remove="Resources\File_Reader_Extract_Anglian.csv" />
+    <None Remove="Resources\File_Reader_Extract_NE.csv" />
+    <None Remove="Resources\File_Identification_Extract_NE.csv" />
+    <None Remove="Resources\File_Identification_Extract_Anglian.csv" />
+    <None Remove="Resources\Template_Results_NE.xlsx" />
+    <None Remove="Resources\Site_1.xlsx" />
+    <None Remove="Resources\Site_2.xlsx" />
+    <None Remove="Resources\Site_3.xlsx" />
+    <None Remove="Resources\Site_4.xlsx" />
+    <None Remove="Resources\Site_5.xlsx" />
+    <None Remove="Resources\Template_Results_Anglian.xlsx" />
+    <None Remove="Resources\WaterPdfs_Inventory_20260125.csv" />
+    <None Remove="Resources\Consolidated.xlsx" />
+    <None Remove="Resources\Template_Results_NW.xlsx" />
+    <None Remove="Resources\File_Reader_Extract_NW.csv" />
+    <None Remove="Resources\Current_Iteration_Matches.xlsx" />
+    <None Remove="Resources\WaterPdfs_Inventory_20260213.csv" />
+    <None Remove="Resources\File_Identification_Extract_NW.csv" />
+    <None Remove="Resources\ANGLIAN_LicenceMatchResults_20260118_221710.xlsx" />
+    <None Remove="Resources\ANGLIAN_Overrides.xlsx" />
+    <None Remove="Resources\Anglia_File_Reader_Extract-20260225.csv" />
+    <None Remove="Resources\Anglia_File_Reader_Extract-220260226.csv" />
+    <None Remove="Resources\March_Consolidated.xlsx" />
+    <None Remove="Resources\Overrides_20260324.xlsx" />
+    <None Remove="Resources\ANGLIAN_Overrides_20260324.xlsx" />
+    <None Remove="Resources\Overrides_2026_04_13.xlsx" />
+    <None Remove="Resources\Consolidated_2026_04_13.xlsx" />
+    <None Remove="Resources\Previous_Iteration_Matches_20260325_122219.xlsx" />
+    <None Remove="Resources\WaterPdfs_Inventory_20260415.csv" />
+    <None Remove="Resources\Current_Iteration_Matches_LicenceMatchResults_20260414_111430.xlsx" />
+    <None Remove="Resources\LicenceReader-20260430.csv" />
+    <None Remove="Resources\Override_Master_Provided_2026_05_13.xlsx" />
+    <None Remove="Resources\Override_Master_May_29_2026.xlsx" />
+    <None Remove="Resources\Override_Master_2026_086_08_2.xlsx" />
+    <None Remove="Resources\New_Override_Master.xlsx" />
+    <Content Include="Resources\New_Override_Master.xlsx" />
+    <None Remove="Resources\Old_Override_Master.xlsx" />
+    <Content Include="Resources\Old_Override_Master.xlsx" />
+    <None Remove="Resources\Override_Master_2026_09_14.xlsx" />
+    <Content Include="Resources\Override_Master_2026_09_14.xlsx" />
+    <None Remove="Resources\Override_Master_20261013.xlsx" />
+    <Content Include="Resources\Override_Master_20261013.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
+      <HintPath>..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\10.0.5\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

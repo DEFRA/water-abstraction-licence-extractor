@@ -18,6 +18,7 @@ import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
 import ExportImportVerifications from "../components/ExportImportVerifications.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
+import LicenceFinderAction from "../components/LicenceFinderAction";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListSearchPage() {
@@ -386,6 +387,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 <div id="actions">
                     <ScrapeDocuments documentType="AbstractionLicence"/>
                     <ExportImportVerifications />
+                    <LicenceFinderAction />
                 </div>
             )}
 

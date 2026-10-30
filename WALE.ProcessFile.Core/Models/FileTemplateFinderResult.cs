@@ -3,7 +3,7 @@ namespace WALE.ProcessFile.Core.Models;
 /// <summary>
 /// Represents the result of license file matching process
 /// </summary>
-public class TemplateFinderResult
+public class FileTemplateFinderResult
 {
     public string PermitNumber { get; set; } = string.Empty;
     public string FileUrl { get; set; } = string.Empty;

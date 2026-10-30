@@ -1511,9 +1511,9 @@ public class LicenceFileFinder : ILicenceFileFinder
             .Where(d => passResults.Contains(d.PermitNumber.Trim()))
             .ToList();
         
-        var results = new List<TemplateFinderResult>();
+        var results = new List<FileTemplateFinderResult>();
         
-        results.AddRange(prevMatchResults.Select(p => new TemplateFinderResult
+        results.AddRange(prevMatchResults.Select(p => new FileTemplateFinderResult
         {
             PermitNumber = p.PermitNumber,
             FileUrl = p.FileUrl,
@@ -1524,7 +1524,7 @@ public class LicenceFileFinder : ILicenceFileFinder
             FileName = LicenceFileHelpers.ExtractFilenameFromUrl(p.FileUrl),
         }));
         
-        results.AddRange(previousFileVersionMatches.Select(p => new TemplateFinderResult
+        results.AddRange(previousFileVersionMatches.Select(p => new FileTemplateFinderResult
         {
             PermitNumber = p.PermitNumber,
             FileUrl = p.FileUrl,
@@ -1535,7 +1535,7 @@ public class LicenceFileFinder : ILicenceFileFinder
             FileName = LicenceFileHelpers.ExtractFilenameFromUrl(p.FileUrl),
         }));
         
-        results.AddRange(overrides.Select(p => new TemplateFinderResult
+        results.AddRange(overrides.Select(p => new FileTemplateFinderResult
         {
             PermitNumber = p.PermitNumber,
             FileUrl = p.FileUrl,

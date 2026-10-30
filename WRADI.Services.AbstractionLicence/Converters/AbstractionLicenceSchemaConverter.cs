@@ -1523,7 +1523,15 @@ public static class AbstractionLicenceSchemaConverter
                 }
 
                 licencesReferencedInLimits.Insert(0, licence);
-
+                
+                // De-dupe, prefering full scrapes
+                licencesReferencedInLimits = licencesReferencedInLimits
+                    .GroupBy(l => l.LicenceNumber?.Value)
+                    .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
+                    .ToList();
+                
+                AssertNoDuplicateLicences(licencesReferencedInLimits);
+                
                 var licenceSet = new LicenceSet
                 {
                     LicenceSetType = LicenceSetType.LicencesGroupedByAbstractionLimits,
@@ -1570,7 +1578,8 @@ public static class AbstractionLicenceSchemaConverter
             $"links for {allLicences.Count} licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
         
         var licencesNotInAnySetList = allLicences
-            .Where(l => !returnLicenceSets.Any(ls => ls.Licences.Contains(l)))
+            .Where(l => !returnLicenceSets.Any(ls =>
+                ls.Licences.Any(l2 => l.LicenceNumber?.Value == l2.LicenceNumber?.Value)))
             .ToList();
 
         var licencesNotInAnySetDict = new Dictionary<Licence, List<Licence>>();
@@ -1594,11 +1603,22 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var licenceNotInAnySetGroup in licencesNotInAnySetDict)
         {
+            var licences = new List<Licence> { licenceNotInAnySetGroup.Key };
+            licences.AddRange(licenceNotInAnySetGroup.Value);
+
+            // De-dupe, prefering full scrapes
+            licences = licences
+                .GroupBy(l => l.LicenceNumber?.Value)
+                .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
+                .ToList();
+            
+            AssertNoDuplicateLicences(licences);
+            
             returnLicenceSets.Add(
                 new LicenceSet
                 {
                     LicenceSetType = LicenceSetType.Others,
-                    Licences = [licenceNotInAnySetGroup.Key, ..licenceNotInAnySetGroup.Value]
+                    Licences = licences.ToArray()
                 });
         }
         
@@ -1618,7 +1638,7 @@ public static class AbstractionLicenceSchemaConverter
         
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
-        AddVariationsToLicenceAggregates(allLicences); 
+        AddVariationsToLicenceAggregates(allLicences);
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
@@ -1682,9 +1702,25 @@ public static class AbstractionLicenceSchemaConverter
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Finished aggregating sets / adding incoming links at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+        // Check for dupes
+        foreach (var returnLicenceSet in returnLicenceSets)
+        {
+            AssertNoDuplicateLicences(returnLicenceSet.Licences);
+        }
+        
         return returnLicenceSets;
     }
 
+    private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
+    {
+        var grouped = licences.GroupBy(l => l.LicenceNumber?.Value);
+
+        if (grouped.Any(group => group.Count() >= 2))
+        {
+            throw new Exception("Duplicate licences detected");
+        }
+    }
+    
     private static void AddLicencesReferencedInLimitsToLicenceSets(
         List<LicenceSet> licenceSets,
         Licence primaryLicence,
@@ -1732,8 +1768,9 @@ public static class AbstractionLicenceSchemaConverter
         var newLicences = new List<Licence>();
         newLicences.AddRange(firstLicenceSetInLimits.Licences);
         newLicences.AddRange(missingLicences);
-                
+
         firstLicenceSetInLimits.Licences = newLicences.ToArray();
+        AssertNoDuplicateLicences(firstLicenceSetInLimits.Licences);
     }
 
     private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
@@ -2443,11 +2480,19 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var licenceSetGroup in licenceSetGroups)
         {
+            var logId = string.Join(',', licenceSetGroup.Select(lsg => lsg.LicenceSetId));
+            if (logId.Length > 150)
+            {
+                logId = logId[..150];
+            }
+            
             ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAndLicenceSetReferencesAsync)} {idx++} " +
-                $"of {licenceSetGroups.Count} done");
+                $"of {licenceSetGroups.Count} started - {licenceSetGroup.Count} sets in batch - {logId}");
             
             foreach (var licenceSet in licenceSetGroup)
             {
+                //ConsoleHelper.WriteLine($"DEBUG - {nameof(AbstractionLicenceSchemaConverter)} - {licenceSet.LicenceSetId} started");
+                
                 foreach (var licence in licenceSet.Licences)
                 {
                     var allInstancesOfLicence = allInstancesOfAllLicences
@@ -2564,25 +2609,6 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
     
-    private static Licence[] GetLicencesFromStrings(
-        IEnumerable<Licence> licences,
-        IReadOnlyList<string> licenceNumbers)
-    {
-        var returnList = new List<Licence>();
-
-        foreach (var licence in licences)
-        {
-            if (!licenceNumbers.Contains(licence.LicenceNumber?.Value))
-            {
-                continue;
-            }
-
-            returnList.Add(licence);
-        }
-
-        return returnList.ToArray();
-    }
-
     private static List<(
         string LicenceNumber,
         string ScrapedLicenceNumber,

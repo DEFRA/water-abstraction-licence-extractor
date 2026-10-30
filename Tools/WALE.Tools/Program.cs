@@ -121,7 +121,7 @@ switch (workflow)
         break;
     
     case "OverrideAddIncrements": // ONE OFF - Add increment info to override file
-        var overrideRootPath = $"/Users/{folderPathUsername}/Documents/GitHub/water-abstraction-licence-finder/WRADI.ProcessFile.Cmd.LicenceFinder.Services/Resources";
+        var overrideRootPath = $"/Users/{folderPathUsername}/Documents/GitHub/water-abstraction-licence-finder/WRADI.LicenceFinder.Cmd.Services/Resources";
         await OverrideAddIncrements.GenerateOverrideFileAsync(overrideRootPath);
         break;
     

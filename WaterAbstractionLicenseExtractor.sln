@@ -148,13 +148,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Licence Finder", "Licence F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local Development", "Local Development", "{6DE16EEF-FFAC-4A1F-96E6-CD367C2C04F5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.ProcessFile.Cmd.LicenceFinder", "WRADI.ProcessFile.Cmd.LicenceFinder\WRADI.ProcessFile.Cmd.LicenceFinder.csproj", "{816375A3-29EE-4A4F-83CA-2737557B07BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.LicenceFinder.Cmd", "WRADI.LicenceFinder.Cmd\WRADI.LicenceFinder.Cmd.csproj", "{816375A3-29EE-4A4F-83CA-2737557B07BE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{71E2DDB5-95CD-4021-AD44-D83D05B3D874}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Services.LicenceFinder", "WRADI.Services.LicenceFinder\WRADI.Services.LicenceFinder.csproj", "{183787CB-B0F7-4E84-9CD4-ED54060DEFE9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.Lambda.LicenceFinder.EntryPoint", "WRADI.Lambda.LicenceFinder.EntryPoint\WRADI.Lambda.LicenceFinder.EntryPoint.csproj", "{EC67D256-BFE4-45C7-9118-8799E90B899A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRADI.LicenceFinder.LocalQueueReader", "WRADI.LicenceFinder.LocalQueueReader\WRADI.LicenceFinder.LocalQueueReader.csproj", "{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -694,6 +696,18 @@ Global
 		{EC67D256-BFE4-45C7-9118-8799E90B899A}.Release|x64.Build.0 = Release|Any CPU
 		{EC67D256-BFE4-45C7-9118-8799E90B899A}.Release|x86.ActiveCfg = Release|Any CPU
 		{EC67D256-BFE4-45C7-9118-8799E90B899A}.Release|x86.Build.0 = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|x64.Build.0 = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Debug|x86.Build.0 = Debug|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|x64.ActiveCfg = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|x64.Build.0 = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|x86.ActiveCfg = Release|Any CPU
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -759,5 +773,6 @@ Global
 		{71E2DDB5-95CD-4021-AD44-D83D05B3D874} = {F1EDF024-2B31-4BC1-98D1-C51C919A8E08}
 		{183787CB-B0F7-4E84-9CD4-ED54060DEFE9} = {71E2DDB5-95CD-4021-AD44-D83D05B3D874}
 		{EC67D256-BFE4-45C7-9118-8799E90B899A} = {43B9A380-0CE3-4440-A4CD-A79B5778BCBF}
+		{404EDCCE-73CE-4DFA-B2D2-2E40C0F77A9E} = {6DE16EEF-FFAC-4A1F-96E6-CD367C2C04F5}
 	EndGlobalSection
 EndGlobal

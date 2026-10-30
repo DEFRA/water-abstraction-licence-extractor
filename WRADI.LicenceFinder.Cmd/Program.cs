@@ -17,7 +17,7 @@ using var host = Host.CreateDefaultBuilder(args)
 
 using var scope = host.Services.CreateScope();
 var service = scope.ServiceProvider.GetRequiredService<ILicenceFinderService>();
-var config = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 var flow = args.FirstOrDefault() ?? config["LicenceFinder:FlowToRun"] ?? "FindLicenceFilesAsync";
 
 var messageRequest = new LicenceFinderMessageRequest

@@ -4,10 +4,11 @@ import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
 import {getImageUrl, getPdfUrl} from "../utils/images.ts";
-import {waleApiClient} from '../api/apiClient';
+import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
 import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
+import DocumentTextView from './DocumentTextView';
 
 interface ReportContentProps {
     fileId: string;
@@ -35,12 +36,34 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
     const [licenceString, setLicenceString] = useState<string | null>(null);
     const [licenceVerificationStringResult, setLicenceVerificationStringResult] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
-    // const [textData, setTextData] = useState<string>('');
+    const [documentText, setDocumentText] = useState<string | null>(null);
+    const [documentTextLoading, setDocumentTextLoading] = useState(false);
 
     // UI states
     const [activeTab, setActiveTab] = useState<TabType>('verification');
 
     const iframeParentRef = useRef<HTMLDivElement>(null);
+
+    /// Raw fetch: the generated client has no DocumentText method.
+    const loadDocumentText = async () => {
+        if (documentText !== null || documentTextLoading) {
+            return;
+        }
+
+        setDocumentTextLoading(true);
+
+        try {
+            const response = await fetch(`${waleApiBaseUrl}/BFF/FileData/DocumentText?fileId=${fileId}`);
+            const text = response.ok ? await response.text() : '';
+
+            // The endpoint answers an empty body, not a 404, when nothing is cached for the file.
+            setDocumentText(text.trim() === '' ? null : text);
+        } catch {
+            setDocumentText(null);
+        } finally {
+            setDocumentTextLoading(false);
+        }
+    };
 
     // Load all data
     const loadAllData = async () => {
@@ -220,16 +243,17 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                                     Internal data
                                 </a>
                             </li>
-                            <li style={{display: 'none'}}>
+                            <li>
                                 <a
                                     href="#"
                                     className={activeTab === 'text' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         setActiveTab('text');
+                                        void loadDocumentText();
                                     }}
                                 >
-                                    Digital text
+                                    Document text
                                 </a>
                             </li>
                             <li>
@@ -284,11 +308,11 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
 
                         {activeTab === 'text' && (
                             <div id="text">
-                                <span
-                                    // dangerouslySetInnerHTML={{
-                                    //     __html: textData.replaceAll('\n', '<br/>\n')
-                                    // }}
-                                />
+                                {documentTextLoading && <p>Loading...</p>}
+                                {!documentTextLoading && documentText === null && (
+                                    <p>No text is cached for this document.</p>
+                                )}
+                                {documentText !== null && <DocumentTextView text={documentText}/>}
                             </div>
                         )}
                         

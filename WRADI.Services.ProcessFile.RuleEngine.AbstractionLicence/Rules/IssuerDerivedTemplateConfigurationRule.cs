@@ -64,8 +64,8 @@ public partial class IssuerDerivedTemplateConfigurationRule : IRule<TemplateFind
         if (issuer.Contains("Water Authority", StringComparison.OrdinalIgnoreCase)
             || issuer.Contains("River Authority", StringComparison.OrdinalIgnoreCase))
         {
-            // The authority name, not a class name, because DivisionalTemplateConfigurationRule
-            // puts the authority in TemplateType and two vocabularies would split any grouping.
+            // Upper-cased to match DivisionalTemplateConfigurationRule: its curated label names
+            // cannot be reached from here without a circular reference.
             var authority = issuer.ToUpperInvariant();
 
             return (authority, authority);

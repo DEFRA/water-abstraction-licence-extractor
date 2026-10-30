@@ -72,4 +72,27 @@ public class IssuerDerivedTemplateConfigurationRuleTests
         _rule.CanApply(new MatchesResult()).Should().BeFalse();
         _rule.CanApply(WithIssuer("Some Water Company Limited")).Should().BeFalse();
     }
+
+    [Fact]
+    public void Divisional_AndIssuerDerived_AgreeOnTheSameAuthority()
+    {
+        var divisional = new DivisionalTemplateConfigurationRule { Region = "NE" };
+
+        var fromLabel = divisional.Apply(new MatchesResult
+        {
+            Matches =
+            [
+                new LabelGroupResult
+                {
+                    LabelGroupName = "NESplitLabels",
+                    MatchedLabelName = "Yorkshire Water Authority"
+                }
+            ]
+        });
+
+        var fromIssuer = _rule.Apply(WithIssuer("YORKSHIRE WATER AUTHORITY"));
+
+        fromLabel.TemplateType.Should().Be(fromIssuer.TemplateType);
+        fromLabel.Template.Should().Be(fromIssuer.Template);
+    }
 }

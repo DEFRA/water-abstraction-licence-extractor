@@ -9,6 +9,7 @@ import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../ap
 import LicenceImages from "./LicenceImages";
 import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 import DocumentTextView from './DocumentTextView';
+import TemplateTypeTag from "./TemplateTypeTag";
 
 interface ReportContentProps {
     fileId: string;
@@ -162,11 +163,21 @@ export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink
                 <div id="left-cell">
                     <div className="leftDetails">
                         {reportData2?.licenceNumber?.value && (
-                            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                            <div style={{
+                                marginBottom: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                flexWrap: 'wrap'
+                            }}>
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
                                     Licence Number {reportData2.licenceNumber.value}
                                 </span>
                                 {outputListDataItem?.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={outputListDataItem.licenceNumberFlagReason}/>}
+                                <TemplateTypeTag
+                                    templateType={(reportData2 as unknown as {templateType?: string})?.templateType}
+                                    template={(reportData2 as unknown as {template?: string})?.template}/>
                             </div>
                         )}
                         {/* Tab Navigation */}

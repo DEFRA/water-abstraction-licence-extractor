@@ -1137,11 +1137,16 @@ public static class AbstractionLicenceSchemaConverter
         INaldDataLookupService naldDataLookupService)
     {
         var groupedLinkedLicences = linkedLicences
-            .GroupBy(linkedLicence => (
-                FormattingHelper.StripForComparison(
-                    linkedLicence.LicenceNumber,
-                    linkedLicence.RegionId!.Value),
-                linkedLicence.RegionId!.Value));
+            .GroupBy(linkedLicence =>
+            {
+                var regionId = GetRegionIdOrDefault(
+                    linkedLicence.RegionId,
+                    $"{licenceNumber} {linkedLicence.LicenceNumber}");
+                
+                return (
+                    FormattingHelper.StripForComparison(linkedLicence.LicenceNumber, regionId),
+                    regionId);
+            });
 
         var uniqueLinkedLicences = new List<(LinkedLicence linkedLicence, int regionId)>();
         
@@ -1240,7 +1245,7 @@ public static class AbstractionLicenceSchemaConverter
                 LicenceNumberContainsOther(
                     newLinkedLicence.LicenceNumber,
                     linkedLicence.linkedLicence.LicenceNumber,
-                    linkedLicence.linkedLicence.RegionId!.Value)))
+                    linkedLicence.linkedLicence.RegionId ?? 0)))
             {
                 continue;
             }
@@ -2734,6 +2739,21 @@ public static class AbstractionLicenceSchemaConverter
         
         return returnLicences;
     }
+
+    private static int GetRegionIdOrDefault(int? regionId, string? extraInfo = null)
+    {
+        const int defaultRegionId = 0;
+        
+        if (regionId == null)
+        {
+            ConsoleHelper.WriteLine(
+                $"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - " +
+                $"Region id was missing, using {defaultRegionId}. {extraInfo}");
+        }
+        
+                
+        return regionId ?? defaultRegionId;
+    }
     
     private static async Task<Licence?> GetLinkedLicenceAsync(
         Licence primaryLicence,
@@ -2748,7 +2768,9 @@ public static class AbstractionLicenceSchemaConverter
     {
         var strippedLlNumbers = FormattingHelper.StripForComparisonMultipleOptions(
             linkedLicence.LicenceNumber,
-            linkedLicence.RegionId!.Value);
+            GetRegionIdOrDefault(
+                linkedLicence.RegionId,
+                $"{primaryLicence.LicenceNumber} {linkedLicence.LicenceNumber}"));
 
         if (strippedLlNumbers.Count == 0)
         {
@@ -2786,7 +2808,8 @@ public static class AbstractionLicenceSchemaConverter
         var missingDmsData = !foundDmsData;
         var missingFileId = destinationFileId == Guid.Empty || destinationFileId == null;
         var missingFilename = string.IsNullOrEmpty(destinationFileName);
-                    
+        var primaryRegionId = GetRegionIdOrDefault(primaryLicence.RegionId, primaryLicence.LicenceNumber?.Value);
+        
         if (missingDmsData || missingFileId || missingFilename)
         {
             var status = ScrapeStatus.NotFound;
@@ -2799,16 +2822,16 @@ public static class AbstractionLicenceSchemaConverter
             {
                 LicenceNumber = new ValueWithConfidence<string>(linkedLicence.LicenceNumber, -1, -1),
                 Status = status,
-                RegionId = primaryLicence.RegionId!.Value,
+                RegionId = primaryRegionId,
             };
         }
         
         var naldDataLine = await naldDataLookupService.GetNaldAbstractionDataLineAsync(
             linkedLicence.LicenceNumber,
-            primaryLicence.RegionId!.Value);
+            primaryRegionId);
 
         var clonedConfig = lookupConfiguration.Clone();
-        clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryLicence.RegionId!.Value;
+        clonedConfig.RegionId = naldDataLine?.FgacRegionCode ?? primaryRegionId;
 
         (bool StopExecution, bool? AlreadySaved, MatchesResult? Item) relatedFileMatches;
 

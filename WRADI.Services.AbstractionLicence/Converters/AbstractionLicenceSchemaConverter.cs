@@ -1713,11 +1713,29 @@ public static class AbstractionLicenceSchemaConverter
 
     private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
     {
-        var grouped = licences.GroupBy(l => l.LicenceNumber?.Value);
+        var grouped = licences
+            .GroupBy(l => l.LicenceNumber?.Value);
 
-        if (grouped.Any(group => group.Count() >= 2))
+        foreach (var group in grouped)
         {
-            throw new Exception("Duplicate licences detected");
+            if (group.Count() >= 2)
+            {
+                throw new Exception("Duplicate licences detected");
+            }
+
+            foreach (var licence in group)
+            {
+                var groupedLinked = licence.LinkedLicences
+                    .GroupBy(l => l.LicenceNumber);
+
+                foreach (var linkedLicenceGroup in groupedLinked)
+                {
+                    if (linkedLicenceGroup.Count() >= 2)
+                    {
+                        throw new Exception("Duplicate linked licences detected");
+                    }
+                }
+            }
         }
     }
     

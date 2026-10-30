@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 namespace WALE.ProcessFile.Core.Helpers;
 
 /// Caches the Task, not its result, so concurrent callers missing a cold entry await one fetch.
+/// Every caller gets the same instance back, so none of them may mutate it.
 public static class ReferenceDataCache
 {
     /// The data changes only on a NALD reimport, but a warm Lambda container outlives a run.

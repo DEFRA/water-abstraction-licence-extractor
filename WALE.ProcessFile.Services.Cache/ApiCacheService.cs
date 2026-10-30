@@ -13,6 +13,7 @@ namespace WALE.ProcessFile.Services.Cache;
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
+
     
     public Task SetupAsync()
     {
@@ -547,7 +548,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return await response.Content.ReadAsStringAsync();
     }
     
-    public async Task<HashSet<string>> GetFirstNamesAsync()
+    public Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        return ReferenceDataCache.GetAsync(
+            $"{nameof(ApiCacheService)}.FirstNames|{httpClient.BaseAddress}",
+            ReferenceDataCache.DefaultTimeToLive,
+            FetchFirstNamesAsync);
+    }
+
+    private async Task<HashSet<string>> FetchFirstNamesAsync()
     {
         var dtStart = DateTime.UtcNow;
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Started getting first names");

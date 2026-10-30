@@ -46,6 +46,10 @@ public class Licence
     
     public string? Filename { get; set; }
 
+    public string? TemplateType { get; set; }
+
+    public string? Template { get; set; }
+
     public LicenceVersion LicenceVersion { get; init; } = new();
     
     public PointOfAbstraction[] Points { get; init; } = [];
@@ -83,6 +87,8 @@ public class Licence
             NaldStatus = NaldStatus,
             NaldHasAggregateCondition = NaldHasAggregateCondition,
             Filename = Filename,
+            TemplateType = TemplateType,
+            Template = Template,
             LicenceVersion = LicenceVersion,
             Points = Points,
             Purposes = Purposes,

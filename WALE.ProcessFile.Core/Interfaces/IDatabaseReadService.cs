@@ -16,6 +16,8 @@ public interface IDatabaseReadService
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);
+
+    Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(Guid fileId, string[] ocrServiceNamesByPreference);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     

@@ -1,3 +1,4 @@
+using WRADI.Services.ProcessFile.RuleEngine.AbstractionLicence.Services;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
@@ -570,10 +571,16 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         var naldHasAggCondition = naldAbstractionDataLine?.HasAggCondition ?? false;
-        
+
+        var template = TemplateTypeIdentifierServices
+            .ForRegionCode(naldAbstractionDataLine?.FgacRegionCode ?? regionCode)
+            .IdentifyTemplateType(matchesResult);
+
         return new Licence
         {
             Filename = matchesResult.Filename,
+            TemplateType = template?.TemplateType,
+            Template = template?.Template,
             MatchesResultId = matchesResult.MatchesResultId,
             DmsPath = dmsFileData?.DmsPath,
             LicenceNumber = licenceNumberWithConfidence,

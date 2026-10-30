@@ -19,9 +19,11 @@ public class DivisionalTemplateConfigurationRule : IRule<TemplateFinderResult>
 
     public TemplateFinderResult Apply(MatchesResult content)
     {
+        // Upper-cased to match IssuerDerivedTemplateConfigurationRule, which also puts an
+        // authority in TemplateType.
         var matchedLabel = content.Matches?
             .Where(m => m.LabelGroupName == $"{Region}SplitLabels")
-            .Select(c => c.MatchedLabel)?.FirstOrDefault()?.Name;
+            .Select(c => c.MatchedLabelName?.ToUpperInvariant()).FirstOrDefault();
         
         return new TemplateFinderResult
         {

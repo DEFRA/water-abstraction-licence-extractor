@@ -1712,6 +1712,19 @@ public static class AbstractionLicenceSchemaConverter
         return returnLicenceSets;
     }
 
+    private static void AssertNoDuplicateLinkedLicences(string[] linkedLicences)
+    {
+        var grouped = linkedLicences.GroupBy(l => l);
+        
+        foreach (var group in grouped)
+        {
+            if (group.Count() >= 2)
+            {
+                throw new Exception("Duplicate linked licence detected");
+            }
+        }
+    }
+    
     private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
     {
         var grouped = licences
@@ -4274,15 +4287,19 @@ public static class AbstractionLicenceSchemaConverter
 
         if (shouldCopyIndividualValues)
         {
+            var licenceNumbersRaw = linkedLicenceNumbers
+                .Select(ll => ll.LicenceNumber!)
+                .ToArray();
+
+            AssertNoDuplicateLinkedLicences(licenceNumbersRaw);
+            
             allAggregates.AddRange(
                 previouslyFoundIndividualLimits
                     .Select(previouslyFoundIndividualLimit =>
                         new Aggregate
                         {
                             PrimaryType = PrimaryType.LicenceToLicence,
-                            LinkedLicences = linkedLicenceNumbers
-                                .Select(ll => ll.LicenceNumber!)
-                                .ToArray(),
+                            LinkedLicences = licenceNumbersRaw,
                             SourceLicenceNumber = licenceNumber,
                             SourceLicenceVersionId = licenceVersionId,
                             NaldType = GetNaldType(naldDataLine),
@@ -4613,6 +4630,14 @@ public static class AbstractionLicenceSchemaConverter
                 LicenceNumber = new ValueWithConfidence<string> { Value = ll.LicenceNumber }
             })
             .ToArray();
+
+        var aggregateLinkedLicences = abstractionLinkedLicences
+            .Select(lln => lln.LicenceNumber!)
+            .GroupBy(lln => lln)
+            .Select(lln => lln.First())
+            .ToArray();
+        
+        AssertNoDuplicateLinkedLicences(aggregateLinkedLicences);
         
         var aggregate = new Aggregate
         {
@@ -4625,9 +4650,7 @@ public static class AbstractionLicenceSchemaConverter
                 ? PrimaryType.LicenceToLicence
                 : PrimaryType.InLicence,
             NaldType = GetNaldType(naldDataLine),
-            LinkedLicences = abstractionLinkedLicences.Count > 0
-                ? abstractionLinkedLicences.Select(lln => lln.LicenceNumber!).ToArray()
-                : null,
+            LinkedLicences = abstractionLinkedLicences.Count > 0 ? aggregateLinkedLicences : null,
             Limits = aggregateAbstractionLimits,
             Points = pointsLoop?.ToArray() ?? [],
             Purposes = purposesLoop?.ToArray() ?? [],

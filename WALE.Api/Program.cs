@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Services;
 using System.IO.Compression;
 using Amazon.SQS;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -152,6 +153,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<IAbstractionLicenceOutputService, DatabaseAbstractionLicenceOutputService>()
         .AddTransient<ICacheService, DatabaseCacheService>()
+        .AddTransient<IDocumentTextService, DocumentTextService>()
         .AddTransient<IInspectionReportFinderCacheService, DatabaseInspectionReportFinderCacheService>()
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()

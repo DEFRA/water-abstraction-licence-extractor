@@ -1860,6 +1860,7 @@ public static class AbstractionLicenceSchemaConverter
                                 return new LinkedLicence
                                 {
                                     LicenceNumber = missingLinkedLicenceNumber,
+                                    RegionId = licenceSetLicence.RegionId,
                                     IsBecauseOfAggregate = true,
                                     ContainedIn =
                                     [

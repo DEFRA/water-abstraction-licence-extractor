@@ -8,8 +8,13 @@ using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
-public class DocumentTextService(IDatabaseReadService databaseReadService) : IDocumentTextService
+public class DocumentTextService(
+    IDatabaseReadService databaseReadService,
+    IDatabaseWriteService databaseWriteService) : IDocumentTextService
 {
+    /// Bump for any change to what a derivation produces; older rows are then re-derived.
+    private const int FormatVersion = 1;
+
     /// A document's native text is a full layer or none at all - a median 15,000 characters
     /// against 0 - so any threshold inside that gap behaves the same.
     private const int SmallestUsefulNativeText = 2048;
@@ -30,17 +35,44 @@ public class DocumentTextService(IDatabaseReadService databaseReadService) : IDo
 
     public async Task<string?> GetDocumentTextAsync(Guid fileId)
     {
+        var stored = await databaseReadService.GetStoredDocumentTextAsync(fileId);
+
+        if (stored?.FormatVersion == FormatVersion)
+        {
+            return stored.Text;
+        }
+
+        var (text, _) = await DeriveAsync(fileId);
+
+        return text;
+    }
+
+    public async Task StoreDocumentTextAsync(Guid fileId)
+    {
+        var (text, sourceService) = await DeriveAsync(fileId);
+
+        if (text == null || sourceService == null)
+        {
+            return;
+        }
+
+        await databaseWriteService.SaveDocumentTextAsync(fileId, sourceService, FormatVersion, text);
+    }
+
+    private async Task<(string? Text, string? SourceService)> DeriveAsync(Guid fileId)
+    {
         var unreadable = new List<string>();
 
         var nativeText = await ReadNativeTextAsync(fileId, unreadable);
 
         if (nativeText?.Length >= SmallestUsefulNativeText)
         {
-            return nativeText;
+            return (nativeText, GeneralConstants.PdfPigDataExtractorServiceName);
         }
 
-        var ocrText = await ReadOcrTextAsync(fileId, unreadable);
-        var text = string.IsNullOrWhiteSpace(ocrText) ? nativeText : ocrText;
+        var (ocrText, ocrServiceName) = await ReadOcrTextAsync(fileId, unreadable);
+        var useOcr = !string.IsNullOrWhiteSpace(ocrText);
+        var text = useOcr ? ocrText : nativeText;
 
         // Nothing cached is legitimately empty; payloads that all fail to parse are a defect,
         // and returning null for those hides it as an ordinary 204.
@@ -51,7 +83,9 @@ public class DocumentTextService(IDatabaseReadService databaseReadService) : IDo
                 $"{string.Join("; ", unreadable)}.");
         }
 
-        return text;
+        return text == null
+            ? (null, null)
+            : (text, useOcr ? ocrServiceName : GeneralConstants.PdfPigDataExtractorServiceName);
     }
 
     private async Task<string?> ReadNativeTextAsync(Guid fileId, List<string> unreadable)
@@ -72,11 +106,16 @@ public class DocumentTextService(IDatabaseReadService databaseReadService) : IDo
             : FormatPages(lines.Select(line => (line.PageNumber, line.Text)));
     }
 
-    private async Task<string?> ReadOcrTextAsync(Guid fileId, List<string> unreadable)
+    private async Task<(string? Text, string? ServiceName)> ReadOcrTextAsync(
+        Guid fileId,
+        List<string> unreadable)
     {
         var pages = await databaseReadService.GetOcrCachedPagesAsync(fileId, OcrServicesByPreference);
 
-        return FormatPages(pages.SelectMany(page => ReadPage(page, unreadable)));
+        // The query resolves one service for the whole file, so any page names it.
+        return (
+            FormatPages(pages.SelectMany(page => ReadPage(page, unreadable))),
+            pages.FirstOrDefault()?.OcrServiceName);
     }
 
     private static IEnumerable<(int PageNumber, string? Text)> ReadPage(

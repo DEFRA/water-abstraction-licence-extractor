@@ -14,8 +14,9 @@ public class DocumentTextServiceTests
     private static readonly Guid FileId = Guid.NewGuid();
 
     private readonly IDatabaseReadService _readService = A.Fake<IDatabaseReadService>();
+    private readonly IDatabaseWriteService _writeService = A.Fake<IDatabaseWriteService>();
 
-    private DocumentTextService Service() => new(_readService);
+    private DocumentTextService Service() => new(_readService, _writeService);
 
     private static string NativePayload(params string[] lines)
     {
@@ -167,5 +168,84 @@ public class DocumentTextServiceTests
         OcrStoredAs();
 
         Assert.Null(await Service().GetDocumentTextAsync(FileId));
+    }
+
+    private void StoredAs(StoredDocumentText? stored)
+    {
+        A.CallTo(() => _readService.GetStoredDocumentTextAsync(FileId))
+            .Returns(Task.FromResult(stored));
+    }
+
+    /// Must match DocumentTextService.FormatVersion.
+    private const int CurrentFormatVersion = 1;
+
+    [Fact]
+    public async Task AStoredRowAtTheCurrentFormatIsReturnedWithoutDeriving()
+    {
+        StoredAs(new StoredDocumentText
+        {
+            SourceService = "AzureAiVisionOcr",
+            FormatVersion = CurrentFormatVersion,
+            Text = "text from the store"
+        });
+
+        Assert.Equal("text from the store", await Service().GetDocumentTextAsync(FileId));
+
+        A.CallTo(() => _readService.GetAllPagesTextAsync(A<Guid>._, A<string>._)).MustNotHaveHappened();
+        A.CallTo(() => _readService.GetOcrCachedPagesAsync(A<Guid>._, A<string[]>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task AStoredRowAtAnOlderFormatIsIgnoredAndDerivedAgain()
+    {
+        StoredAs(new StoredDocumentText
+        {
+            SourceService = "TesseractOcr-SparseTextOsd",
+            FormatVersion = CurrentFormatVersion - 1,
+            Text = "text in the old format"
+        });
+
+        NativeStoredAs(null);
+        OcrStoredAs(OcrPayload("freshly derived text"));
+
+        Assert.Equal("freshly derived text", await Service().GetDocumentTextAsync(FileId));
+    }
+
+    [Fact]
+    public async Task ReadingNeverStores()
+    {
+        StoredAs(null);
+        NativeStoredAs(NativePayload(new string('x', 2048), "native text"));
+
+        await Service().GetDocumentTextAsync(FileId);
+
+        A.CallTo(() => _writeService.SaveDocumentTextAsync(
+                A<Guid>._, A<string>._, A<int>._, A<string>._))
+            .MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task StoringRecordsTheExtractorThatProducedTheText()
+    {
+        NativeStoredAs(NativePayload(new string('x', 2048), "native text"));
+
+        await Service().StoreDocumentTextAsync(FileId);
+
+        A.CallTo(() => _writeService.SaveDocumentTextAsync(
+                FileId, GeneralConstants.PdfPigDataExtractorServiceName, CurrentFormatVersion, A<string>._))
+            .MustHaveHappenedOnceExactly();
+    }
+
+    [Fact]
+    public async Task AFileWithNothingCachedIsNotStored()
+    {
+        NativeStoredAs(null);
+        OcrStoredAs();
+
+        await Service().StoreDocumentTextAsync(FileId);
+
+        A.CallTo(() => _writeService.SaveDocumentTextAsync(
+                A<Guid>._, A<string>._, A<int>._, A<string>._))
+            .MustNotHaveHappened();
     }
 }

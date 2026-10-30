@@ -38,7 +38,7 @@ jobs:
           ref: ${{ github.ref_name }}
       - name: Delete tessdata folder
         run: |
-          cd WRADI.Lambda.LicenceFinder/tessdata
+          cd WRADI.Lambda.LicenceFinder.EntryPoint/tessdata
           rm configs
           rm frk.traineddata
           rm pdf.ttf          
@@ -83,27 +83,6 @@ jobs:
             echo "should_push=false" >> $GITHUB_OUTPUT
           fi
 
-      #- name: Start Sonar Analysis
-      #  shell: pwsh
-      #  env:
-      #    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      #  run: |
-      #    # take the input and convert to lowercase & hyphen
-      #    $solution_name = "${{ inputs.dotnet_application_solution_name }}"
-      #    $project_key = "DEFRA_water-abstraction-licence-extractor"
-      #    Write-Host "Using SonarQube Project Key: $project_key"
-      #    .\.sonar\scanner\dotnet-sonarscanner begin `
-      #      /k:"$project_key" `
-      #      /o:"defra" `
-      #      /d:sonar.token="$env:SONAR_TOKEN" `
-      #      /d:sonar.host.url="https://sonarcloud.io" `
-      #      /v:"${{ steps.shortsha.outputs.shortsha }}" `
-      #      /d:sonar.cs.opencover.reportsPaths="TestResults/*.coverage.opencover.xml" `
-      #      /d:sonar.cs.vstest.reportsPaths="TestResults/*.test_results.trx" `
-      #      /d:sonar.branch.name="${{ github.ref_name }}" `
-      #      /d:sonar.verbose=true `
-      #      /d:sonar.exclusions="**/wwwroot/**,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**" `
-      #      /d:sonar.coverage.exclusions="**/wwwroot/**,**/*.cshtml,**/Interfaces/*.cs,**/*Map.cs,**/*Mapper.cs,**/Program.cs,**/Startup.cs,**/DTOs/*.cs,**/Entities/*.cs,**/Models/*.cs,**/tessdata/configs,**/tessdata,**/tessdata/**,tessdata/**/*,tessdata/**"
 
       - name: Restore NuGet packages
         shell: pwsh
@@ -112,19 +91,7 @@ jobs:
         shell: pwsh
         run: dotnet build ${{ inputs.dotnet_application_solution_name }}.sln --configuration Release
 
-      #- name: Run Unit Tests with Coverage
-      #  shell: bash
-      #  run: |
-      #    dotnet test WALE.ProcessFile.Services.Tests/WALE.ProcessFile.Services.Tests.csproj \
-      #      --no-build --configuration Release \
-      #      -p:CollectCoverage=true \
-      #      -p:CoverletOutput=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.coverage.opencover.xml \
-      #      -p:CoverletOutputFormat=opencover \
-      #      -p:Deterministic=true \
-      #      -p:DebugType=full \
-      #      -p:DebugSymbols=true \
-      #      --logger "trx;LogFileName=$(pwd)/TestResults/${{ inputs.dotnet_application_solution_name }}.test_results.trx"
-
+     
       - name: List coverage files
         shell: pwsh
         run: Get-ChildItem -Recurse -Filter "*.coverage.opencover.xml"; Get-ChildItem -Recurse -Filter "*.test_results.trx"

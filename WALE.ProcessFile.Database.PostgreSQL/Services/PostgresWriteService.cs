@@ -407,6 +407,40 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         return request;
     }
 
+    public async Task SaveDocumentTextAsync(
+        Guid fileId,
+        string sourceService,
+        int formatVersion,
+        string text)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           INSERT INTO document_text
+                               (file_id, source_service, format_version, text, date_time_utc)
+                           VALUES
+                               (@FileId, @SourceService, @FormatVersion, @Text, @DateTimeUtc)
+                           ON CONFLICT (file_id) DO UPDATE SET
+                               source_service = EXCLUDED.source_service,
+                               format_version = EXCLUDED.format_version,
+                               text = EXCLUDED.text,
+                               date_time_utc = EXCLUDED.date_time_utc;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                SourceService = sourceService,
+                FormatVersion = formatVersion,
+                Text = text,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task SaveAllPagesTextAsync(
         string documentLinesStr,
         Guid fileId,

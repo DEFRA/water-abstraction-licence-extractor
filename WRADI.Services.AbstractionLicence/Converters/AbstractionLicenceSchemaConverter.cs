@@ -1557,7 +1557,9 @@ public static class AbstractionLicenceSchemaConverter
 
                         var variations = new List<AggregateVariation>();
                         variations.AddRange(primary.Variations ?? []);
-                        variations.Add(AggregateVariation.FromAggregate(aggregate, "Different source licence / different order"));
+                        variations.Add(AggregateVariation.FromAggregate(
+                            aggregate,
+                            AggregateVariation.DifferentOrder));
                         
                         primary.Variations = variations.ToArray();
                         continue;
@@ -1639,7 +1641,14 @@ public static class AbstractionLicenceSchemaConverter
         
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
+
+        AssertNoMultipleLevelVariations(returnLicenceSets);
+        AssertNoMultipleLevelVariations(allLicences);
+        
         AddVariationsToLicenceAggregates(allLicences);
+        
+        AssertNoMultipleLevelVariations(returnLicenceSets);
+        AssertNoMultipleLevelVariations(allLicences);
         
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
@@ -1651,6 +1660,9 @@ public static class AbstractionLicenceSchemaConverter
             primaryLicence,
             allLicences,
             licencesGroupedByAbstractionLimitsLicenceSets);
+
+        AssertNoMultipleLevelVariations(returnLicenceSets);
+        AssertNoMultipleLevelVariations(allLicences);
         
         foreach (var licence in allLicences)
         {
@@ -1724,7 +1736,73 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
     }
+
+    private static void AssertNoMultipleLevelVariations(IEnumerable<Licence> licences)
+    {
+        foreach (var licence in licences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                break;
+            }
+
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.Variations == null)
+                {
+                    break;
+                }
+
+                foreach (var variation in aggregate.Variations)
+                {
+                    if (variation.Variations == null)
+                    {
+                        break;
+                    }
+
+                    if (variation.Variations.Length >= 1)
+                    {
+                        throw new Exception("Multi level variation detected");
+                    }
+                }
+            }
+        }
+    }
     
+    private static void AssertNoMultipleLevelVariations(IEnumerable<LicenceSet> licenceSets)
+    {
+        foreach (var licenceSet in licenceSets)
+        {
+            AssertNoMultipleLevelVariations(licenceSet.Licences);
+            
+            if (licenceSet.AggregateSets == null)
+            {
+                break;
+            }
+            
+            foreach (var aggregate in licenceSet.AggregateSets)
+            {
+                if (aggregate.Variations == null)
+                {
+                    break;
+                }
+
+                foreach (var variation in aggregate.Variations)
+                {
+                    if (variation.Variations == null)
+                    {
+                        break;
+                    }
+
+                    if (variation.Variations.Length >= 1)
+                    {
+                        throw new Exception("Multi level variation detected");
+                    }
+                }
+            }
+        }
+    }
+
     private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
     {
         var grouped = licences
@@ -1946,7 +2024,7 @@ public static class AbstractionLicenceSchemaConverter
                     
                                 variations.Add(AggregateVariation.FromAggregate(
                                     newAggregate,
-                                    "Different source licence / different order"));
+                                    AggregateVariation.DifferentOrder));
                         
                                 superset.Variations = variations.ToArray();
                             }
@@ -2362,7 +2440,9 @@ public static class AbstractionLicenceSchemaConverter
                         variations.AddRange(matchingSourceAggregate.Variations);
                     }
                     
-                    variations.Add(AggregateVariation.FromAggregate(otherAggregate, "Different source licence / different order"));
+                    variations.Add(AggregateVariation.FromAggregate(
+                        otherAggregate,
+                        AggregateVariation.DifferentOrder));
 
                     variations = variations.Where(v => v.Id != matchingSourceAggregate.Id).ToList();
                     matchingSourceAggregate.Variations = variations.Count >= 1 ? variations.ToArray() : null;

@@ -258,6 +258,28 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
 
     /// Keeping only the longest image per page instead was tried and loses text where a page's
     /// images genuinely differ.
+    public async Task<StoredDocumentText?> GetStoredDocumentTextAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT source_service AS SourceService,
+                                  format_version AS FormatVersion,
+                                  text AS Text
+                           FROM document_text
+                           WHERE file_id = @FileId
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<StoredDocumentText>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId
+            });
+    }
+
     public async Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(
         Guid fileId,
         string[] ocrServiceNamesByPreference)

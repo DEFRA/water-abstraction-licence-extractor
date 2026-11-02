@@ -33,6 +33,8 @@ public interface IDatabaseWriteService
    
     Task SaveAllPagesTextAsync(string documentLinesStr, Guid fileId, string noOcrServiceName, int processRunId);
 
+    Task SaveDocumentTextAsync(Guid fileId, string sourceService, int formatVersion, string text);
+
     // Metadata only - image_on_page.data holds an empty placeholder for rows written this way.
     // Real bytes live in S3 (see IImageService); this exists so GetImagesAsync's listing keeps
     // working without a schema change.

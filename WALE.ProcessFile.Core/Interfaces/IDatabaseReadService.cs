@@ -18,6 +18,8 @@ public interface IDatabaseReadService
     Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);
 
     Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(Guid fileId, string[] ocrServiceNamesByPreference);
+
+    Task<StoredDocumentText?> GetStoredDocumentTextAsync(Guid fileId);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     

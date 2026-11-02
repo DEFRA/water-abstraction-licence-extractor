@@ -29,6 +29,7 @@ public class FileDataController(
     IFileService fileService,
     IInspectionReportFinderCacheService inspectionReportFinderCacheService,
     IWrInspectionReportSummaryReadService wrInspectionReportSummaryReadService,
+    IDocumentTextService documentTextService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -286,6 +287,12 @@ public class FileDataController(
         return Ok(result);
     }
     
+    [HttpGet]
+    public async Task<ActionResult<string?>> DocumentTextAsync([FromQuery] Guid fileId)
+    {
+        return Ok(await documentTextService.GetDocumentTextAsync(fileId));
+    }
+
     [HttpGet]
     public async Task<ActionResult<Licence?>> LicenceByLicenceIdAsync(
         [FromQuery] int licenceId,

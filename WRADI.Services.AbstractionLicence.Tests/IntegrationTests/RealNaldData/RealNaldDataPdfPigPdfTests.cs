@@ -121,7 +121,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(16, resultList.Count);
+        Assert.Equal(25, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -198,7 +198,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(19, resultList.Count);
+        Assert.Equal(28, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -288,7 +288,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(23, resultList.Count);
+        Assert.Equal(32, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -387,7 +387,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(16, resultList.Count);
+        Assert.Equal(25, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -453,7 +453,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(20, resultList.Count);
+        Assert.Equal(29, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -530,7 +530,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(19, resultList.Count);
+        Assert.Equal(28, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -643,7 +643,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(21, resultList.Count);
+        Assert.Equal(30, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -747,7 +747,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(17, resultList.Count);
+        Assert.Equal(26, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         

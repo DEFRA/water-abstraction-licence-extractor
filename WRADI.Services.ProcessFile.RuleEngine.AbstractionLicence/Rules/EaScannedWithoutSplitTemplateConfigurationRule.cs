@@ -10,9 +10,10 @@ public class EaScannedWithoutSplitTemplateConfigurationRule : IRule<TemplateFind
     public string? Region { get; set; }
     public int Priority => 3;
 
+    /// Reports "Scanned" and outranks EaDigital, so it must not claim a native document.
     public bool CanApply(MatchesResult content)
     {
-        return content.Matches?
+        return content.ScannedFile && content.Matches?
             .Where(m => m.LabelGroupName == "EALabel").Any() == true && content.Matches?
             .Where(m => m.LabelGroupName == $"{Region}SplitLabels").Any() == false;
     }

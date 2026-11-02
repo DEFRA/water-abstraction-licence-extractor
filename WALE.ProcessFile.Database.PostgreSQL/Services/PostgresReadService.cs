@@ -256,6 +256,55 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    /// Keeping only the longest image per page instead was tried and loses text where a page's
+    /// images genuinely differ.
+    public async Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(
+        Guid fileId,
+        string[] ocrServiceNamesByPreference)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           WITH chosen AS (
+                               SELECT ocr_service_name
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = ANY(@Services)
+                               GROUP BY ocr_service_name
+                               ORDER BY array_position(@Services, ocr_service_name)
+                               LIMIT 1
+                           ),
+                           deduplicated AS (
+                               SELECT
+                                   ocr_service_name AS OcrServiceName,
+                                   page_number AS PageNumber,
+                                   image_number AS ImageNumber,
+                                   data AS Data,
+                                   row_number() OVER (
+                                       PARTITION BY page_number, md5(data)
+                                       ORDER BY image_number) AS occurrence
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = (SELECT ocr_service_name FROM chosen)
+                           )
+                           SELECT OcrServiceName, PageNumber, ImageNumber, Data
+                           FROM deduplicated
+                           WHERE occurrence = 1
+                           ORDER BY PageNumber, ImageNumber;
+                           """;
+
+        var rows = await QueryAsync<OcrCachedPage>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Services = ocrServiceNamesByPreference
+            });
+
+        return rows.ToList();
+    }
+
     public async Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request)
     {
         await using var connection = GetPostgresConnection();

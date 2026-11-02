@@ -1561,10 +1561,30 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             new { LicenceSetId = licenceSetId });
         
         return results
-            .Select(aggData => JsonSerializer.Deserialize<Aggregate>(aggData, JsonHelper.GetSerializerOptions())!)
+            .Select(ToAggregate)
+            .Where(agg => agg != null)
+            .Select(agg => agg!)
             .ToArray();
     }
 
+    private static Aggregate? ToAggregate(string aggregateString)
+    {
+        if (string.IsNullOrEmpty(aggregateString))
+        {
+            return null;
+        }
+        
+        try
+        {
+            return JsonSerializer.Deserialize<Aggregate>(aggregateString, JsonHelper.GetSerializerOptions())!;
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(PostgresReadService)} - {ex} - Data was {aggregateString}");
+            return null;
+        }
+    }
+    
     public async Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(
         int processRunId)
     {
@@ -1584,10 +1604,12 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             0,
             new { ProcessRunId = processRunId });
 
-        var licenceSetAggregatesList = results!
+        var licenceSetAggregatesList = results
             .Select(aggData => (
                 aggData.Item1,
-                JsonSerializer.Deserialize<Aggregate>(aggData.Item2, JsonHelper.GetSerializerOptions())!))
+                ToAggregate(aggData.Item2)))
+            .Where(tup => tup.Item2 != null)
+            .Select(tup => (tup.Item1, tup.Item2!))
             .ToList();
 
         var licenceSetAggregatesDict = licenceSetAggregatesList
@@ -3591,7 +3613,9 @@ private async Task<
         {
             licenceResult.AggregateSets = aggResults
                 .Where(agg => agg.LicenceListItemLicenceSetId == licenceResult.LicenceListItemLicenceSetId)
-                .Select(agg => JsonSerializer.Deserialize<Aggregate>(agg.Data!, JsonHelper.GetSerializerOptions()))
+                .Select(agg => ToAggregate(agg.Data!))
+                .Where(agg => agg != null)
+                .Select(agg => agg!)
                 .ToArray()!;
         }
         

@@ -173,7 +173,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(10, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -306,7 +306,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(13, resultList.Count);
+        Assert.Equal(20, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -462,7 +462,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(21, resultList.Count);
+        Assert.Equal(30, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         

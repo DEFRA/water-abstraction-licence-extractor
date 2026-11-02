@@ -149,7 +149,7 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(13, resultList.Count);
+        Assert.Equal(20, resultList.Count);
         
         var issuerResult = resultList.FirstOrDefault(result => result.LabelGroupName == "Issuer");
         Assert.NotNull(issuerResult);

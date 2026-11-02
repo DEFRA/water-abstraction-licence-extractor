@@ -140,7 +140,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(11, resultList.Count);
 
         var period = resultList
             .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
@@ -276,7 +276,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // Better then Azure AI Vision
+        Assert.Equal(12, resultList.Count); // Better then Azure AI Vision
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
@@ -1685,7 +1685,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2, 2);
-        Assert.Equal(6, resultFull.Matches!.Count);
+        Assert.Equal(13, resultFull.Matches!.Count);
 
         var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

@@ -35,7 +35,7 @@ public class DatabaseAbstractionLicenceOutputService(
         var existingList = await databaseReadService.GetLicenceSetsSimpleAsync(processRunId);
 
         if (existingList.Any(x =>
-                x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
+            x.SchemaLicenceSetId == licenceSet.LicenceSetId && x.ShortLicenceSetId == licenceSet.ShortLicenceSetId))
         {
             return;
         }
@@ -45,6 +45,7 @@ public class DatabaseAbstractionLicenceOutputService(
             licenceSet.ShortLicenceSetId,
             processRunId);
 
+        // TODO update this to just be the references
         foreach (var licence in licenceSet.Licences)
         {
             var licenceId = licence.NoneSchemaData.TryGetValue("licenceId", out var licenceIdOut)
@@ -65,6 +66,7 @@ public class DatabaseAbstractionLicenceOutputService(
                 processRunId);
         }
 
+        // TODO - probably redundant
         await databaseWriteService.SaveLicenceSetTypeAsync(
             licenceSetId,
             (int)licenceSet.LicenceSetType,

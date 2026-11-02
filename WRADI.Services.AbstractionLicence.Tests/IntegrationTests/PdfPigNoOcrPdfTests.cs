@@ -120,7 +120,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(21, resultList.Count);
+        Assert.Equal(30, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -158,7 +158,7 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(17, resultList.Count);
+        Assert.Equal(26, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         

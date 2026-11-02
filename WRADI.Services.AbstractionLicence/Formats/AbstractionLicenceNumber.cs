@@ -84,11 +84,11 @@ public partial class AbstractionLicenceNumber(
         @"\b[0-9A-Z*&/.]{1,15}/([0-9]{2}|[0-9]/)[0-9A-Z*&/.]{1,15}\b|\b[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}\.[0-9A-Z*&]{1,15}|(?<=\b)[0-9]{1,15}[ /][0-9ABRSG ]{2,15}[0-9]\b(?! cubic)(?! litre)(?! million)(?! mega)";
 
     (bool Success, List<DocumentLine> MatchedLines)
-            ILicenceNumberServiceCore.AnyIsLicenceNumber(
-        IEnumerable<DocumentLine?> lines,
-        LabelToMatch label,
-        bool isOcr,
-        Dictionary<string, object?> additionalInformationStore)
+        ILicenceNumberServiceCore.AnyIsLicenceNumber(
+            IEnumerable<DocumentLine?> lines,
+            LabelToMatch label,
+            bool isOcr,
+            Dictionary<string, object?> additionalInformationStore)
     {
         var matchedLines = new List<DocumentLine>();
 
@@ -217,16 +217,16 @@ public partial class AbstractionLicenceNumber(
         var normalized = NormalizeLicenceNumber(licenceNumber);
 
         var index = GetLicenceIndex();
-        if (!index.TryGetValue(normalized, out var candidates))
+        if (!index.TryGetValue(normalized, out var entries))
         {
             return [];
         }
 
         var segments = ExtractSegments(licenceNumber);
         
-        return candidates
-            .Where(c => SegmentsMatch(segments, c.Segments))
-            .Select(c => c.NaldLicence)
+        return entries
+            .Where(entry => AllChecksMatch(segments, licenceNumber, entry))
+            .Select(entry => entry.NaldLicence)
             .ToList();
     }
 
@@ -265,7 +265,7 @@ public partial class AbstractionLicenceNumber(
                 var candidateSegments = ExtractSegments(candidateText);
 
                 var matchedEntries = entries
-                    .Where(entry => SegmentsMatch(candidateSegments, entry.Segments))
+                    .Where(entry => AllChecksMatch(candidateSegments, candidateText, entry))
                     .Select(entry => entry.NaldLicence)
                     .ToList();
                 

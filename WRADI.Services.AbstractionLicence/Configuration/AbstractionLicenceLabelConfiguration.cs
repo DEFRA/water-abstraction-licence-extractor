@@ -37,7 +37,11 @@ public static partial class AbstractionLicenceLabelConfiguration
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
             
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
-            ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
+            ("ScheduleOfConditionsB", GetScheduleOfConditionsB()),
+
+            // Matched for their own sake, not for the schema: TemplateTypeIdentifierService reads
+            // these groups off the result to classify the document's template.
+            ..TemplateHeaderLabels.GetLabelGroups()
         ];
     }
     

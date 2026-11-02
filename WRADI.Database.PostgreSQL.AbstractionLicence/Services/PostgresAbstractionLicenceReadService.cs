@@ -3983,6 +3983,9 @@ private async Task<
         return (sql.ToString(), parameters);
     }
 
+    /// Where a predicate sits relative to the window decides which row wins: the run pin
+    /// narrows the ranked rows, the filters must not. Moving the filters inside takes
+    /// limits_count = 0 from 121 licences to 401, each fixed in a later run.
     private static (StringBuilder Sql, DynamicParameters Parameters)
         BuildLicenceEstateQuery(
             string selectList,
@@ -4021,9 +4024,6 @@ private async Task<
             WHERE estate_rank = 1
             """);
 
-        // Outside the window on purpose: moved inside, the rank is taken over matching rows
-        // only, so a licence fixed since an older run comes back - limits_count = 0 matches
-        // 401 licences rather than 121.
         ReadSqlHelper.AddStringFilter(
             sql,
             parameters,

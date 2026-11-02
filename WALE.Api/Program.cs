@@ -158,6 +158,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
+        .AddTransient<IThumbnailUrlService, ThumbnailUrlService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
         .Configure<VerificationConfig>(options =>
         {

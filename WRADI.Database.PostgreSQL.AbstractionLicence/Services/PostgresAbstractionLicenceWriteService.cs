@@ -42,7 +42,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         string status,
         string? filename,
         string? permitNumber,
-        string? licenceNumber)
+        string? licenceNumber,
+        int matchesResultId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -54,6 +55,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                ,file_id = @FileId
                                ,status = @Status
                                ,data = @Data
+                               ,matches_result_id = case when @MatchesResultId is null then matches_result_id else @MatchesResultId end
                            WHERE
                                 licence_id = @LicenceId
                                 AND process_run_id = @ProcessRunId
@@ -72,7 +74,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 LicenceId = licenceId,
                 Data = licenceData,
                 ProcessRunId = processRunId,
-                Status = status
+                Status = status,
+                MatchesResultId = matchesResultId != 0 ? matchesResultId : (int?)null
             });
     }
 

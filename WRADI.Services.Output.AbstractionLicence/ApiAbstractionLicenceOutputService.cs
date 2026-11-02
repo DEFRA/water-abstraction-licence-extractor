@@ -42,12 +42,14 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         }
         
         var path = "/Extractor/Licence/SaveLicenceSet";
+        
+        var licenceSetSerialised = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions());
 
         var json = JsonSerializer.Serialize(new
         {
             fileId,
             processRunId,
-            licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
+            licenceSet = licenceSetSerialised
         }, JsonHelper.GetSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");

@@ -3770,17 +3770,8 @@ private async Task<
     }
     
     
-    private async Task<List<LicenceListItem>>
-        GetLicenceListItemParentsAsync(
-            int processRunId,
-            ProcessRunQuery query,
-            CancellationToken cancellationToken)
-{
-    await using var connection = GetPostgresConnection();
-    
-    var sql = new StringBuilder(
+    internal const string LicenceListItemColumns =
         """
-        SELECT
             licence_list_item_id AS LicenceListItemId,
             licence_id AS LicenceId,
             matches_result_id AS MatchesResultId,
@@ -3815,179 +3806,221 @@ private async Task<
             licence_number_flag_reason AS LicenceNumberFlagReason,
             created_date_time_utc AS CreatedDateTimeUtc,
             updated_date_time_utc AS UpdatedDateTimeUtc
-        FROM licence_list_item
-        WHERE process_run_id = @ProcessRunId
-          AND status = 'Live'
-        """);
+        """;
 
-    var parameters = new DynamicParameters();
-
-    parameters.Add("ProcessRunId", processRunId);
-    parameters.Add("Skip", query.Skip);
-    parameters.Add("Take", query.Take);
-
-    AddLicenceListItemFilters(
-        sql,
-        parameters,
-        query);
-
-    if (!string.IsNullOrEmpty(query.SearchTermClean) &&
-        string.IsNullOrWhiteSpace(query.SortField))
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceListItemPageQuery(
+            int processRunId,
+            ProcessRunQuery query)
     {
+        var (sql, parameters) = BuildLicenceListItemQuery(
+            LicenceListItemColumns,
+            processRunId,
+            query);
+
+        parameters.Add("Skip", query.Skip);
+        parameters.Add("Take", query.Take);
+
+        if (!string.IsNullOrEmpty(query.SearchTermClean) &&
+            string.IsNullOrWhiteSpace(query.SortField))
+        {
+            sql.AppendLine(
+                """
+                ORDER BY
+                    array_position(
+                        string_to_array(lower(search_text), ' '),
+                        lower(@SearchTerm)
+                    ) ASC NULLS LAST
+                """);
+        }
+        else
+        {
+            ReadSqlHelper.AddOrdering(
+                sql,
+                query.SortField,
+                query.SortAscending);
+        }
+
         sql.AppendLine(
             """
-            ORDER BY
-                array_position(
-                    string_to_array(lower(search_text), ' '),
-                    lower(@SearchTerm)
-                ) ASC NULLS LAST
+            LIMIT @Take
+            OFFSET @Skip;
             """);
+
+        return (sql.ToString(), parameters);
     }
-    else
+
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceListItemCountQuery(
+            int processRunId,
+            ProcessRunQuery query)
     {
-        ReadSqlHelper.AddOrdering(
-            sql,
-            query.SortField,
-            query.SortAscending);  
+        var (sql, parameters) = BuildLicenceListItemQuery(
+            "COUNT(*)",
+            processRunId,
+            query);
+
+        return (sql.ToString(), parameters);
     }
- 
 
-    sql.AppendLine(
-        """
-        LIMIT @Take
-        OFFSET @Skip;
-        """);
+    private static (StringBuilder Sql, DynamicParameters Parameters)
+        BuildLicenceListItemQuery(
+            string selectList,
+            int processRunId,
+            ProcessRunQuery query)
+    {
+        var sql = new StringBuilder();
 
-    var results = await connection.QueryAsync<LicenceListItem>(
-        new CommandDefinition(
-            sql.ToString(),
+        sql.AppendLine("SELECT");
+        sql.AppendLine(selectList);
+        sql.AppendLine(
+            """
+            FROM licence_list_item
+            WHERE process_run_id = @ProcessRunId
+              AND status = 'Live'
+            """);
+
+        var parameters = new DynamicParameters();
+
+        parameters.Add("ProcessRunId", processRunId);
+
+        AddLicenceListItemFilters(
+            sql,
             parameters,
-            cancellationToken: cancellationToken));
+            query);
 
-    return results.ToList();
-}
+        return (sql, parameters);
+    }
 
-private static async Task<int>
-    GetLicenceListItemParentsCountAsync(
-        NpgsqlConnection connection,
-        int processRunId,
-        ProcessRunQuery query,
-        CancellationToken cancellationToken)
-{
-    var sql = new StringBuilder(
-        """
-        SELECT COUNT(*)
-        FROM licence_list_item
-        WHERE process_run_id = @ProcessRunId
-          AND status = 'Live'
-        """);
+    private async Task<List<LicenceListItem>>
+        GetLicenceListItemParentsAsync(
+            int processRunId,
+            ProcessRunQuery query,
+            CancellationToken cancellationToken)
+    {
+        await using var connection = GetPostgresConnection();
 
-    var parameters = new DynamicParameters();
+        var (sql, parameters) = BuildLicenceListItemPageQuery(
+            processRunId,
+            query);
 
-    parameters.Add("ProcessRunId", processRunId);
+        var results = await connection.QueryAsync<LicenceListItem>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
 
-    AddLicenceListItemFilters(
-        sql,
-        parameters,
-        query);
+        return results.ToList();
+    }
 
-    return await connection.ExecuteScalarAsync<int>(
-        new CommandDefinition(
-            sql.ToString(),
+    private static async Task<int>
+        GetLicenceListItemParentsCountAsync(
+            NpgsqlConnection connection,
+            int processRunId,
+            ProcessRunQuery query,
+            CancellationToken cancellationToken)
+    {
+        var (sql, parameters) = BuildLicenceListItemCountQuery(
+            processRunId,
+            query);
+
+        return await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
+    }
+
+    private static void AddLicenceListItemFilters(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        ProcessRunQuery query)
+    {
+        ReadSqlHelper.AddSearchTermFilter(
+            sql,
             parameters,
-            cancellationToken: cancellationToken));
-}
+            query.SearchTermClean);
 
-private static void AddLicenceListItemFilters(
-    StringBuilder sql,
-    DynamicParameters parameters,
-    ProcessRunQuery query)
-{
-    ReadSqlHelper.AddSearchTermFilter(
-        sql,
-        parameters,
-        query.SearchTermClean);
+        ReadSqlHelper.AddStringFilter(
+            sql,
+            parameters,
+            "issuer",
+            "Issuer",
+            query.Issuer);
 
-    ReadSqlHelper.AddStringFilter(
-        sql,
-        parameters,
-        "issuer",
-        "Issuer",
-        query.Issuer);
+        ReadSqlHelper.AddBooleanFilter(
+            sql,
+            parameters,
+            "ocr",
+            "OcrScan",
+            query.OcrScan);
 
-    ReadSqlHelper.AddBooleanFilter(
-        sql,
-        parameters,
-        "ocr",
-        "OcrScan",
-        query.OcrScan);
+        ReadSqlHelper.AddBooleanFilter(
+            sql,
+            parameters,
+            "means_found",
+            "MeansFound",
+            query.MeansFound);
 
-    ReadSqlHelper.AddBooleanFilter(
-        sql,
-        parameters,
-        "means_found",
-        "MeansFound",
-        query.MeansFound);
+        ReadSqlHelper.AddBooleanFilter(
+            sql,
+            parameters,
+            "is_licence_number_flagged",
+            "IsLicenceNumberFlagged",
+            query.IsLicenceNumberFlagged);
 
-    ReadSqlHelper.AddBooleanFilter(
-        sql,
-        parameters,
-        "is_licence_number_flagged",
-        "IsLicenceNumberFlagged",
-        query.IsLicenceNumberFlagged);
+        ReadSqlHelper.AddBooleanFilter(
+            sql,
+            parameters,
+            "is_issue_date_flagged",
+            "IsIssueDateFlagged",
+            query.IsIssueDateFlagged);
 
-    ReadSqlHelper.AddBooleanFilter(
-        sql,
-        parameters,
-        "is_issue_date_flagged",
-        "IsIssueDateFlagged",
-        query.IsIssueDateFlagged);
+        ReadSqlHelper.AddCountEmptyFilter(
+            sql,
+            query.PointsEmpty,
+            "points_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
-        sql,
-        query.PointsEmpty,
-        "points_count");
+        ReadSqlHelper.AddCountEmptyFilter(
+            sql,
+            query.PurposesEmpty,
+            "purposes_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
-        sql,
-        query.PurposesEmpty,
-        "purposes_count");
+        ReadSqlHelper.AddCountEmptyFilter(
+            sql,
+            query.LimitsEmpty,
+            "limits_count");
 
-    ReadSqlHelper.AddCountEmptyFilter(
-        sql,
-        query.LimitsEmpty,
-        "limits_count");
+        ReadSqlHelper.AddAggregatesFilter(
+            sql,
+            parameters,
+            query.AggregatesFilter);
 
-    ReadSqlHelper.AddAggregatesFilter(
-        sql,
-        parameters,
-        query.AggregatesFilter);
+        ReadSqlHelper.AddIssueYearFilter(
+            sql,
+            parameters,
+            query.IssueYear?.ToString());
 
-    ReadSqlHelper.AddIssueYearFilter(
-        sql,
-        parameters,
-        query.IssueYear?.ToString());
+        ReadSqlHelper.AddLinkedLicencesTypeFilter(
+            sql,
+            parameters,
+            query.LinkedLicencesType);
 
-    ReadSqlHelper.AddLinkedLicencesTypeFilter(
-        sql,
-        parameters,
-        query.LinkedLicencesType);
+        ReadSqlHelper.AddLicenceSetFilter(
+            sql,
+            parameters,
+            query.ShortLicenceSetId);
 
-    ReadSqlHelper.AddLicenceSetFilter(
-        sql,
-        parameters,
-        query.ShortLicenceSetId);
+        ReadSqlHelper.AddVerificationTypeFilter(
+            sql,
+            parameters,
+            query.VerificationType);
 
-    ReadSqlHelper.AddVerificationTypeFilter(
-        sql,
-        parameters,
-        query.VerificationType);
-
-    ReadSqlHelper.AddLicenceNumbersFilter(
-        sql,
-        parameters,
-        query.LicenceNumbers);
-}
+        ReadSqlHelper.AddLicenceNumbersFilter(
+            sql,
+            parameters,
+            query.LicenceNumbers);
+    }
 
     // TODO move to a 'Core' layer
     private static JsonSerializerOptions GetSerializerOptions() =>

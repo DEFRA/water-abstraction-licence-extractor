@@ -487,6 +487,11 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<List<Override>> GetOverridesAsync()
+    {
+        throw new NotImplementedException();
+    }
+
     public Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
     {
         throw new NotImplementedException();

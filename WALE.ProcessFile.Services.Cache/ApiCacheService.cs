@@ -497,6 +497,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task<List<Override>> GetOverridesAsync()
+    {
+        var path = "/Extractor/Override/GetAll";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<Override>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
     {
         var path = "/Extractor/Dms/SaveDmsFileReaderResult";

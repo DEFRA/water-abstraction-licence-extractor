@@ -843,6 +843,38 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             CancellationToken.None);
     }
 
+    public async Task<List<LicenceListItem>> GetLicenceEstateAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var (sql, parameters) = BuildLicenceEstatePageQuery(query);
+
+        var results = await connection.QueryAsync<LicenceListItem>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
+
+        return results.ToList();
+    }
+
+    public async Task<int> GetLicenceEstateCountAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var (sql, parameters) = BuildLicenceEstateCountQuery(query);
+
+        return await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
+    }
+
     public async Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync()
     {
         await using var connection = GetPostgresConnection();
@@ -3818,34 +3850,10 @@ private async Task<
             processRunId,
             query);
 
-        parameters.Add("Skip", query.Skip);
-        parameters.Add("Take", query.Take);
-
-        if (!string.IsNullOrEmpty(query.SearchTermClean) &&
-            string.IsNullOrWhiteSpace(query.SortField))
-        {
-            sql.AppendLine(
-                """
-                ORDER BY
-                    array_position(
-                        string_to_array(lower(search_text), ' '),
-                        lower(@SearchTerm)
-                    ) ASC NULLS LAST
-                """);
-        }
-        else
-        {
-            ReadSqlHelper.AddOrdering(
-                sql,
-                query.SortField,
-                query.SortAscending);
-        }
-
-        sql.AppendLine(
-            """
-            LIMIT @Take
-            OFFSET @Skip;
-            """);
+        AddOrderingAndPaging(
+            sql,
+            parameters,
+            query);
 
         return (sql.ToString(), parameters);
     }
@@ -3929,6 +3937,124 @@ private async Task<
                 sql,
                 parameters,
                 cancellationToken: cancellationToken));
+    }
+
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceEstatePageQuery(
+            LicenceEstateQuery query)
+    {
+        var (sql, parameters) = BuildLicenceEstateQuery(
+            LicenceListItemColumns,
+            query);
+
+        AddOrderingAndPaging(
+            sql,
+            parameters,
+            query);
+
+        return (sql.ToString(), parameters);
+    }
+
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceEstateCountQuery(
+            LicenceEstateQuery query)
+    {
+        var (sql, parameters) = BuildLicenceEstateQuery(
+            "COUNT(*)",
+            query);
+
+        return (sql.ToString(), parameters);
+    }
+
+    private static (StringBuilder Sql, DynamicParameters Parameters)
+        BuildLicenceEstateQuery(
+            string selectList,
+            LicenceEstateQuery query)
+    {
+        var sql = new StringBuilder();
+        var parameters = new DynamicParameters();
+
+        sql.AppendLine("SELECT");
+        sql.AppendLine(selectList);
+
+        // Aliased as the table it wraps: the correlated filters in AddLicenceListItemFilters
+        // reference licence_list_item by name, so another alias breaks them at runtime.
+        sql.AppendLine(
+            """
+            FROM (
+                SELECT
+                    *,
+                    row_number() OVER (
+                        PARTITION BY lower(licence_number)
+                        ORDER BY process_run_id DESC
+                    ) AS estate_rank
+                FROM licence_list_item
+            """);
+
+        if (query.ProcessRunId.HasValue)
+        {
+            sql.AppendLine("    WHERE process_run_id = @ProcessRunId");
+
+            parameters.Add("ProcessRunId", query.ProcessRunId.Value);
+        }
+
+        sql.AppendLine(
+            """
+            ) AS licence_list_item
+            WHERE estate_rank = 1
+            """);
+
+        // Outside the window on purpose: moved inside, the rank is taken over matching rows
+        // only, so a licence fixed since an older run comes back - limits_count = 0 matches
+        // 401 licences rather than 121.
+        ReadSqlHelper.AddStringFilter(
+            sql,
+            parameters,
+            "status",
+            "ProjectedStatus",
+            query.ProjectedStatus);
+
+        AddLicenceListItemFilters(
+            sql,
+            parameters,
+            query);
+
+        return (sql, parameters);
+    }
+
+    private static void AddOrderingAndPaging(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        ProcessRunQuery query)
+    {
+        parameters.Add("Skip", query.Skip);
+        parameters.Add("Take", query.Take);
+
+        if (!string.IsNullOrEmpty(query.SearchTermClean) &&
+            string.IsNullOrWhiteSpace(query.SortField))
+        {
+            sql.AppendLine(
+                """
+                ORDER BY
+                    array_position(
+                        string_to_array(lower(search_text), ' '),
+                        lower(@SearchTerm)
+                    ) ASC NULLS LAST
+                """);
+        }
+        else
+        {
+            ReadSqlHelper.AddOrdering(
+                sql,
+                query.SortField,
+                query.SortAscending);
+        }
+
+        sql.AppendLine(
+            """
+            LIMIT @Take
+            OFFSET @Skip;
+            """);
     }
 
     private static void AddLicenceListItemFilters(

@@ -59,20 +59,9 @@ public static class JsonHelper
         return jsonElement.GetDouble();
     }
     
-    /// The output services serialise a payload into a second Serialize call, so indentation is
-    /// escaped twice: 1.57x on this estate, for a wire format nothing reads.
     public static JsonSerializerOptions GetWireSerializerOptions()
     {
-        _wireOptions ??= new JsonSerializerOptions
-        {
-            WriteIndented = false,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
-            }
-        };
+        _wireOptions ??= new JsonSerializerOptions(GetSerializerOptions()) { WriteIndented = false };
 
         return _wireOptions;
     }

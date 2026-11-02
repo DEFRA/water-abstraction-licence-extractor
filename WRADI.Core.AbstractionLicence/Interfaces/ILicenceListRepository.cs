@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
@@ -21,6 +22,10 @@ public interface ILicenceListRepository
     Task<int> GetLicencesListSearchCountAsync(
         int processRunId,
         ProcessRunQuery query);
+
+    Task<List<LicenceListItem>> GetLicenceEstateAsync(LicenceEstateQuery query);
+
+    Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query);
 
     Task<List<string>> GetLicenceListIssuersAsync(int processRunId);
     

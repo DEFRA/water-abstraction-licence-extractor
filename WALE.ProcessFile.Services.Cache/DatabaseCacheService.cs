@@ -300,6 +300,11 @@ public class DatabaseCacheService(
         return databaseReadService.GetDmsExtractAsync(skip, take, extractType);
     }
 
+    public Task<List<Override>> GetOverridesAsync()
+    {
+        return databaseReadService.GetOverridesAsync();
+    }
+
     public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
         return databaseReadService.GetDmsFileReaderResultsAsync();

@@ -94,11 +94,13 @@ public interface IAbstractionLicenceDatabaseReadService
         ProcessRunQuery query,
         CancellationToken cancellationToken = default);
     
-    Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId);
+    Task<List<string>> GetLicenceListDistinctIssuersAsync(int? processRunId);
+
+    Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
+    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
+    Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId);
 
     Task<int> GetLicencesListSearchCountAsync(
         int processRunId,

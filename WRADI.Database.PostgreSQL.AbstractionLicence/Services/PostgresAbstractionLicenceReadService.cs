@@ -3390,75 +3390,119 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .ToList();
     }
 
-    public async Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId)
+    /// Filter lists are drawn from here too, or they offer values no estate row carries - 344
+    /// of 1,413 licence set ids locally, an older run's set not being the newest one's.
+    private static string NewestPerLicence(int? processRunId) =>
+        $"""
+         SELECT
+             *,
+             row_number() OVER (
+                 PARTITION BY lower(licence_number)
+                 ORDER BY process_run_id DESC
+             ) AS estate_rank
+         FROM licence_list_item
+         {(processRunId.HasValue ? "WHERE process_run_id = @ProcessRunId" : string.Empty)}
+         """;
+
+    public async Task<List<string>> GetLicenceListDistinctIssuersAsync(int? processRunId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql =
-            """
+
+        var sql =
+            $"""
             SELECT DISTINCT issuer
-            FROM licence_list_item
-            WHERE process_run_id = @ProcessRunId
+            FROM ({NewestPerLicence(processRunId)}) estate
+            WHERE estate_rank = 1
               AND NULLIF(trim(issuer), '') IS NOT NULL
             ORDER BY issuer;
             """;
 
-        var results=  await QueryAsync<string>(
+        var results = await QueryAsync<string>(
             connection,
             sql,
             0,
             new
             {
-                @ProcessRunId =  processRunId
+                ProcessRunId = processRunId
             });
-        
+
         return results.ToList();
     }
 
-    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListStatusesAsync(int? processRunId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql =
-            """
-            SELECT DISTINCT 
-                   short_licence_set_id        
-            FROM licence_list_item_licence_set
-            where process_run_id = @ProcessRunId
-            order by short_licence_set_id
+
+        var sql =
+            $"""
+            SELECT DISTINCT status
+            FROM ({NewestPerLicence(processRunId)}) estate
+            WHERE estate_rank = 1
+              AND NULLIF(trim(status), '') IS NOT NULL
+            ORDER BY status;
             """;
 
-        var results=  await QueryAsync<string>(
+        var results = await QueryAsync<string>(
             connection,
             sql,
             0,
             new
             {
-                @ProcessRunId =  processRunId
+                ProcessRunId = processRunId
             });
-        
+
         return results.ToList();
     }
 
-    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql =
-            """
+
+        var sql =
+            $"""
+            SELECT DISTINCT licence_set.short_licence_set_id
+            FROM licence_list_item_licence_set licence_set
+            JOIN ({NewestPerLicence(processRunId)}) estate
+              ON estate.licence_list_item_id = licence_set.licence_list_item_id
+             AND estate.estate_rank = 1
+            WHERE licence_set.short_licence_set_id IS NOT NULL
+            ORDER BY licence_set.short_licence_set_id;
+            """;
+
+        var results = await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+
+        return results.ToList();
+    }
+
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql =
+            $"""
             SELECT DISTINCT issue_year
-            FROM licence_list_item
-            WHERE process_run_id = @ProcessRunId
-            and  issue_year IS NOT NULL
+            FROM ({NewestPerLicence(processRunId)}) estate
+            WHERE estate_rank = 1
+              AND issue_year IS NOT NULL
             ORDER BY issue_year;
             """;
 
-        var results=  await QueryAsync<string>(
+        var results = await QueryAsync<string>(
             connection,
             sql,
             0,
             new
             {
-                @ProcessRunId =  processRunId
+                ProcessRunId = processRunId
             });
-        
+
         return results.ToList();
     }
 
@@ -3999,30 +4043,18 @@ private async Task<
 
         // Aliased as the table it wraps: the correlated filters in AddLicenceListItemFilters
         // reference licence_list_item by name, so another alias breaks them at runtime.
-        sql.AppendLine(
-            """
-            FROM (
-                SELECT
-                    *,
-                    row_number() OVER (
-                        PARTITION BY lower(licence_number)
-                        ORDER BY process_run_id DESC
-                    ) AS estate_rank
-                FROM licence_list_item
-            """);
-
-        if (query.ProcessRunId.HasValue)
-        {
-            sql.AppendLine("    WHERE process_run_id = @ProcessRunId");
-
-            parameters.Add("ProcessRunId", query.ProcessRunId.Value);
-        }
-
+        sql.AppendLine("FROM (");
+        sql.AppendLine(NewestPerLicence(query.ProcessRunId));
         sql.AppendLine(
             """
             ) AS licence_list_item
             WHERE estate_rank = 1
             """);
+
+        if (query.ProcessRunId.HasValue)
+        {
+            parameters.Add("ProcessRunId", query.ProcessRunId.Value);
+        }
 
         ReadSqlHelper.AddStringFilter(
             sql,

@@ -550,17 +550,22 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetLicenceEstateCountAsync(query);
     }
 
-    public async Task<List<string>> GetLicenceListIssuersAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListStatusesAsync(int? processRunId)
+    {
+        return await databaseReadService.GetLicenceListStatusesAsync(processRunId);
+    }
+
+    public async Task<List<string>> GetLicenceListIssuersAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);
     }
 
-    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListLicenceSetIdsAsync(processRunId);
     }
 
-    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListIssueYearsAsync(processRunId);
     }

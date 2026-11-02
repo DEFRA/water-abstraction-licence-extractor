@@ -27,9 +27,11 @@ public interface ILicenceListRepository
 
     Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query);
 
-    Task<List<string>> GetLicenceListIssuersAsync(int processRunId);
+    Task<List<string>> GetLicenceListIssuersAsync(int? processRunId);
+
+    Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
+    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
+    Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId);
 }

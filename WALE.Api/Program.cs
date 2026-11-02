@@ -160,6 +160,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
         .AddTransient<ILicenceEstateExportService, LicenceEstateExportService>()
         .AddTransient<ILicenceEstateExportRunner, LicenceEstateExportRunner>()
+        .AddTransient<IThumbnailUrlService, ThumbnailUrlService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
         .Configure<VerificationConfig>(options =>
         {

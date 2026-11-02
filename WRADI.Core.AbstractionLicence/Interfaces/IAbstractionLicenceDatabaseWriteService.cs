@@ -41,7 +41,8 @@ public interface IAbstractionLicenceDatabaseWriteService
         string status,
         string? filename,
         string? permitNumber,
-        string? licenceNumber);
+        string? licenceNumber,
+        int matchesResultId);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,

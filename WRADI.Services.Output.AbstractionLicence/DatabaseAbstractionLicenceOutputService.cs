@@ -89,8 +89,13 @@ public class DatabaseAbstractionLicenceOutputService(
 
     public Task UpdateLicenceAsync(Licence licence, int licenceId, int processRunId)
     {
-        var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
+        if (licence.LicenceId == 0)
+        {
+            licence.LicenceId = licenceId;
+        }
 
+        var licenceStr = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions());
+        
         return databaseWriteService.UpdateLicenceAsync(
             licenceId,
             licenceStr,
@@ -99,7 +104,8 @@ public class DatabaseAbstractionLicenceOutputService(
             licence.Status.ToString(),
             licence.Filename,
             licence.DmsPermitNumber,
-            licence.LicenceNumber?.Value);
+            licence.LicenceNumber?.Value,
+            licence.MatchesResultId);
     }
 
     public Task<int> SaveLicenceAsync(Licence licence, int processRunId)

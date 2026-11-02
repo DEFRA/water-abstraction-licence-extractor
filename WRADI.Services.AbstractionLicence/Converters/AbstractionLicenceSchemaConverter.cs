@@ -1746,21 +1746,21 @@ public static class AbstractionLicenceSchemaConverter
         {
             if (licence.AbstractionLimits.Aggregates == null)
             {
-                break;
+                continue;
             }
 
             foreach (var aggregate in licence.AbstractionLimits.Aggregates)
             {
                 if (aggregate.Variations == null)
                 {
-                    break;
+                    continue;
                 }
 
                 foreach (var variation in aggregate.Variations)
                 {
                     if (variation.Variations == null)
                     {
-                        break;
+                        continue;
                     }
 
                     if (variation.Variations.Length >= 1)
@@ -1780,21 +1780,21 @@ public static class AbstractionLicenceSchemaConverter
             
             if (licenceSet.AggregateSets == null)
             {
-                break;
+                continue;
             }
             
             foreach (var aggregate in licenceSet.AggregateSets)
             {
                 if (aggregate.Variations == null)
                 {
-                    break;
+                    continue;
                 }
 
                 foreach (var variation in aggregate.Variations)
                 {
                     if (variation.Variations == null)
                     {
-                        break;
+                        continue;
                     }
 
                     if (variation.Variations.Length >= 1)

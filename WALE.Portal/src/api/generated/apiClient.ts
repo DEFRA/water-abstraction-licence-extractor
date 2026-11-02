@@ -5712,6 +5712,153 @@ export class Client {
     }
 
     /**
+     * @param projectedStatus (optional) 
+     * @param processRunId (optional) 
+     * @param searchTerm (optional) 
+     * @param searchTermClean (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @param issuer (optional) 
+     * @param limitsEmpty (optional) 
+     * @param aggregatesFilter (optional) 
+     * @param ocrScan (optional) 
+     * @param purposesEmpty (optional) 
+     * @param pointsEmpty (optional) 
+     * @param issueYear (optional) 
+     * @param meansFound (optional) 
+     * @param isLicenceNumberFlagged (optional) 
+     * @param isIssueDateFlagged (optional) 
+     * @param shortLicenceSetId (optional) 
+     * @param linkedLicencesType (optional) 
+     * @param verificationType (optional) 
+     * @param sortField (optional) 
+     * @param sortAscending (optional) 
+     * @param licenceNumbers (optional) 
+     * @return OK
+     */
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
+        if (projectedStatus === null)
+            throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
+        else if (projectedStatus !== undefined)
+            url_ += "ProjectedStatus=" + encodeURIComponent("" + projectedStatus) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "ProcessRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (searchTerm === null)
+            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
+        else if (searchTerm !== undefined)
+            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (searchTermClean === null)
+            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
+        else if (searchTermClean !== undefined)
+            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "Take=" + encodeURIComponent("" + take) + "&";
+        if (issuer === null)
+            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
+        else if (issuer !== undefined)
+            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (limitsEmpty === null)
+            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
+        else if (limitsEmpty !== undefined)
+            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
+        if (ocrScan === null)
+            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
+        else if (ocrScan !== undefined)
+            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
+        if (purposesEmpty === null)
+            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
+        else if (purposesEmpty !== undefined)
+            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
+        if (pointsEmpty === null)
+            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
+        else if (pointsEmpty !== undefined)
+            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
+        if (issueYear === null)
+            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
+        else if (issueYear !== undefined)
+            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
+        if (meansFound === null)
+            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
+        else if (meansFound !== undefined)
+            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
+        if (isLicenceNumberFlagged === null)
+            throw new globalThis.Error("The parameter 'isLicenceNumberFlagged' cannot be null.");
+        else if (isLicenceNumberFlagged !== undefined)
+            url_ += "IsLicenceNumberFlagged=" + encodeURIComponent("" + isLicenceNumberFlagged) + "&";
+        if (isIssueDateFlagged === null)
+            throw new globalThis.Error("The parameter 'isIssueDateFlagged' cannot be null.");
+        else if (isIssueDateFlagged !== undefined)
+            url_ += "IsIssueDateFlagged=" + encodeURIComponent("" + isIssueDateFlagged) + "&";
+        if (shortLicenceSetId === null)
+            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
+        else if (shortLicenceSetId !== undefined)
+            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
+        if (linkedLicencesType === null)
+            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
+        else if (linkedLicencesType !== undefined)
+            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
+        if (verificationType === null)
+            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
+        else if (verificationType !== undefined)
+            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
+        if (sortField === null)
+            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
+        else if (sortField !== undefined)
+            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
+        if (sortAscending === null)
+            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
+        else if (sortAscending !== undefined)
+            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
+        if (licenceNumbers === null)
+            throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
+        else if (licenceNumbers !== undefined)
+            licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceEstate(_response);
+        });
+    }
+
+    protected processGetLicenceEstate(response: Response): Promise<LicenceEstateResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceEstateResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceEstateResponse>(null as any);
+    }
+
+    /**
      * @param delayInSeconds (optional) 
      * @param regionId (optional) 
      * @param maxLicencesToTake (optional) 
@@ -9001,6 +9148,117 @@ export interface ILicence {
     linkedLicences?: LinkedLicence[];
     licenceSets?: LicenceSetReference[];
     noneSchemaData?: any;
+
+    [key: string]: any;
+}
+
+export class LicenceEstateResponse implements ILicenceEstateResponse {
+    totalRecords!: number;
+    records!: OutputListDataItem[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
+    statuses?: string[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceEstateResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.records = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.totalRecords = _data["totalRecords"];
+            if (Array.isArray(_data["records"])) {
+                this.records = [] as any;
+                for (let item of _data["records"])
+                    this.records!.push(OutputListDataItem.fromJS(item));
+            }
+            if (Array.isArray(_data["issuers"])) {
+                this.issuers = [] as any;
+                for (let item of _data["issuers"])
+                    this.issuers!.push(item);
+            }
+            if (Array.isArray(_data["issueDates"])) {
+                this.issueDates = [] as any;
+                for (let item of _data["issueDates"])
+                    this.issueDates!.push(item);
+            }
+            if (Array.isArray(_data["licenceSetIds"])) {
+                this.licenceSetIds = [] as any;
+                for (let item of _data["licenceSetIds"])
+                    this.licenceSetIds!.push(item);
+            }
+            if (Array.isArray(_data["statuses"])) {
+                this.statuses = [] as any;
+                for (let item of _data["statuses"])
+                    this.statuses!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceEstateResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceEstateResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["totalRecords"] = this.totalRecords;
+        if (Array.isArray(this.records)) {
+            data["records"] = [];
+            for (let item of this.records)
+                data["records"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.issuers)) {
+            data["issuers"] = [];
+            for (let item of this.issuers)
+                data["issuers"].push(item);
+        }
+        if (Array.isArray(this.issueDates)) {
+            data["issueDates"] = [];
+            for (let item of this.issueDates)
+                data["issueDates"].push(item);
+        }
+        if (Array.isArray(this.licenceSetIds)) {
+            data["licenceSetIds"] = [];
+            for (let item of this.licenceSetIds)
+                data["licenceSetIds"].push(item);
+        }
+        if (Array.isArray(this.statuses)) {
+            data["statuses"] = [];
+            for (let item of this.statuses)
+                data["statuses"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceEstateResponse {
+    totalRecords: number;
+    records: OutputListDataItem[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
+    statuses?: string[] | undefined;
 
     [key: string]: any;
 }

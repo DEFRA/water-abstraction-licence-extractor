@@ -1642,6 +1642,9 @@ public static class AbstractionLicenceSchemaConverter
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
         UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
 
+        SquashTwoLevelVariations(allLicences);
+        SquashTwoLevelVariations(returnLicenceSets);
+        
         AssertNoMultipleLevelVariations(returnLicenceSets);
         AssertNoMultipleLevelVariations(allLicences);
         
@@ -2428,7 +2431,8 @@ public static class AbstractionLicenceSchemaConverter
                         continue;
                     }
                     
-                    if (matchingSourceAggregate.Variations?.Any(v => v.Id == otherAggregate.Id) == true)
+                    if (matchingSourceAggregate.Variations?.Any(
+                        v => v.Id == otherAggregate.Id) == true)
                     {
                         continue;
                     }
@@ -2444,13 +2448,89 @@ public static class AbstractionLicenceSchemaConverter
                         otherAggregate,
                         AggregateVariation.DifferentOrder));
 
-                    variations = variations.Where(v => v.Id != matchingSourceAggregate.Id).ToList();
+                    variations = SquashTwoLevelVariations(variations)
+                        .Where(v => v.Id != matchingSourceAggregate.Id)
+                        .ToList();
+                        
                     matchingSourceAggregate.Variations = variations.Count >= 1 ? variations.ToArray() : null;
                 }
             }
         }
     }
 
+    private static void SquashTwoLevelVariations(List<LicenceSet> licenceSets)
+    {
+        foreach (var licenceSet in licenceSets)
+        {
+            SquashTwoLevelVariations(licenceSet.Licences);
+                
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregate in licenceSet.AggregateSets)
+            {
+                if (aggregate.Variations == null)
+                {
+                    continue;
+                }
+                
+                aggregate.Variations = SquashTwoLevelVariations(aggregate.Variations).ToArray();
+            }
+        }
+    }
+    
+    private static void SquashTwoLevelVariations(IEnumerable<Licence> licences)
+    {
+        foreach (var licence in licences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.Variations == null)
+                {
+                    continue;
+                }
+                
+                aggregate.Variations = SquashTwoLevelVariations(aggregate.Variations).ToArray();
+            }
+        }
+    }
+
+    private static List<AggregateVariation> SquashTwoLevelVariations(IEnumerable<AggregateVariation> variations)
+    {
+        var newVariations = new List<AggregateVariation>();
+        var variationsList = variations.ToList();
+                    
+        foreach (var variation in variationsList)
+        {
+            newVariations.Add(variation);
+
+            if (!(variation.Variations?.Length > 0))
+            {
+                continue;
+            }
+
+            var uniqueVariations = variation.Variations
+                .Where(vv =>
+                {
+                    var contained = variationsList.Any(v => v.Id == vv.Id);
+                    return !contained;
+                })
+                .ToList();
+                        
+            newVariations.AddRange(uniqueVariations);
+            variation.Variations = null;
+        }
+
+        return newVariations;
+    }
+    
     private static bool AreAggregatesFundamentallyEqual(
         Aggregate sourceAggregate,
         Aggregate otherAggregate) 

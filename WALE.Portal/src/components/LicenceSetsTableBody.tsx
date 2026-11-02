@@ -199,7 +199,7 @@ function renderListRow(
             </td>
             <td rowSpan={licencesInSet.length}>
                 <ul>
-                    {licenceSet.aggregateSets.length > 0 ? licenceSet.aggregateSets.map((agg: Aggregate) => (
+                    {licenceSet.aggregateSets?.length ? licenceSet.aggregateSets.map((agg: Aggregate) => (
                         <li>{agg.id}</li>
                     )) : '--'}
                 </ul>

@@ -104,7 +104,7 @@ public interface IAbstractionLicenceDatabaseReadService
         int processRunId,
         ProcessRunQuery query);
 
-    Task<List<LicenceListItem>> GetLicenceEstateAsync(
+    Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(
         LicenceEstateQuery query,
         CancellationToken cancellationToken = default);
 

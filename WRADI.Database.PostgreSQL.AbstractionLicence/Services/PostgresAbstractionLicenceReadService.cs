@@ -839,21 +839,27 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             CancellationToken.None);
     }
 
-    public async Task<List<LicenceListItem>> GetLicenceEstateAsync(
+    public async Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(
         LicenceEstateQuery query,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = GetPostgresConnection();
+        List<LicenceListItem> parents;
 
-        var (sql, parameters) = BuildLicenceEstatePageQuery(query);
+        await using (var connection = GetPostgresConnection())
+        {
+            var (sql, parameters) = BuildLicenceEstatePageQuery(query);
 
-        var results = await connection.QueryAsync<LicenceListItem>(
-            new CommandDefinition(
-                sql,
-                parameters,
-                cancellationToken: cancellationToken));
+            parents = (await connection.QueryAsync<LicenceListItem>(
+                    new CommandDefinition(
+                        sql,
+                        parameters,
+                        cancellationToken: cancellationToken)))
+                .ToList();
+        }
 
-        return results.ToList();
+        return await ToAggregatesAsync(
+            parents,
+            cancellationToken);
     }
 
     public async Task<int> GetLicenceEstateCountAsync(
@@ -3350,6 +3356,22 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             return [];
         }
 
+        return await ToAggregatesAsync(
+            parents,
+            cancellationToken);
+    }
+
+    /// The item ids may span process runs. Safe because both child tables carry a composite
+    /// foreign key on (process_run_id, licence_list_item_id), so an item id implies its run.
+    private async Task<List<LicenceListItemAggregate>> ToAggregatesAsync(
+        List<LicenceListItem> parents,
+        CancellationToken cancellationToken)
+    {
+        if (parents.Count == 0)
+        {
+            return [];
+        }
+
         var itemIds = parents
             .Select(x => x.LicenceListItemId)
             .ToArray();
@@ -3359,19 +3381,17 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             cancellationToken);
 
         var licenceSetsTask = GetLicenceSetsAsync(
-            processRunId,
             itemIds,
             cancellationToken);
-        
+
         var verificationSections =
-             await GetLicenceVerificationSectionsAsync(
-                processRunId,
+            await GetLicenceVerificationSectionsAsync(
                 itemIds,
                 cancellationToken);
 
         var linkedLicences = await linkedLicencesTask;
         var licenceSets = await licenceSetsTask;
-        
+
         return parents
             .Select(parent => new LicenceListItemAggregate
             {
@@ -3473,7 +3493,6 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 private async Task<
         Dictionary<long, List<LicenceSectionVerificationSummary>>>
     GetLicenceVerificationSectionsAsync(
-        int processRunId,
         IReadOnlyCollection<long> licenceListItemIds,
         CancellationToken cancellationToken)
 {
@@ -3527,8 +3546,7 @@ private async Task<
             ON verification_item.verification_section_id =
                verification_section.verification_section_id
 
-        WHERE verification_section.process_run_id = @ProcessRunId
-          AND verification_section.licence_list_item_id =
+        WHERE verification_section.licence_list_item_id =
               ANY(@LicenceListItemIds)
 
         ORDER BY
@@ -3542,7 +3560,6 @@ private async Task<
             sql,
             new
             {
-                ProcessRunId = processRunId,
                 LicenceListItemIds = licenceListItemIds.ToArray()
             },
             cancellationToken: cancellationToken));
@@ -3598,7 +3615,6 @@ private async Task<
     private async Task<
             Dictionary<long, IReadOnlyList<LicenceListItemLicenceSet>>>
         GetLicenceSetsAsync(
-            int processRunId,
             long[] itemIds,
             CancellationToken cancellationToken)
     {
@@ -3621,13 +3637,14 @@ private async Task<
                     AS LicenceSetType
             FROM licence_list_item_licence_set s
             WHERE
-                s.process_run_id = @ProcessRunId
-                AND s.licence_list_item_id = ANY(@ItemIds)
+                s.licence_list_item_id = ANY(@ItemIds)
             ORDER BY
                 s.licence_list_item_id,
                 s.licence_list_item_licence_set_id;
             """;
 
+        // AggregateSets reaches the portal in this order - LicenceSetsTableBody renders the
+        // array as it arrives - so without the ORDER BY the query plan decides what a user sees.
         const string aggSql =
             """
             SELECT
@@ -3641,8 +3658,10 @@ private async Task<
             JOIN licence_list_item_licence_set_aggregate_set agg
                 ON s.licence_list_item_licence_set_id = agg.licence_list_item_licence_set_id
             WHERE
-                s.process_run_id = @ProcessRunId
-                AND s.licence_list_item_id = ANY(@ItemIds);
+                s.licence_list_item_id = ANY(@ItemIds)
+            ORDER BY
+                agg.licence_list_item_licence_set_id,
+                agg.licence_list_item_licence_set_aggregate_set_id;
             """;
         
         var licenceResults = (await connection
@@ -3651,7 +3670,6 @@ private async Task<
                     sql,
                     new
                     {
-                        ProcessRunId = processRunId,
                         ItemIds = itemIds
                     },
                     cancellationToken: cancellationToken)))
@@ -3663,7 +3681,6 @@ private async Task<
                     aggSql,
                     new
                     {
-                        ProcessRunId = processRunId,
                         ItemIds = itemIds
                     },
                     cancellationToken: cancellationToken)))

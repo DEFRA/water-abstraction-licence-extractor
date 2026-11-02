@@ -23,7 +23,7 @@ public interface ILicenceListRepository
         int processRunId,
         ProcessRunQuery query);
 
-    Task<List<LicenceListItem>> GetLicenceEstateAsync(LicenceEstateQuery query);
+    Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(LicenceEstateQuery query);
 
     Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query);
 

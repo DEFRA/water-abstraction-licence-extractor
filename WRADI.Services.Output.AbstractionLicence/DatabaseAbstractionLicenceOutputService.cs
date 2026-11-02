@@ -540,7 +540,7 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetLicencesListSearchCountAsync(processRunId, query);
     }
 
-    public async Task<List<LicenceListItem>> GetLicenceEstateAsync(LicenceEstateQuery query)
+    public async Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(LicenceEstateQuery query)
     {
         return await databaseReadService.GetLicenceEstateAsync(query);
     }

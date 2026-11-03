@@ -5714,6 +5714,7 @@ export class Client {
     /**
      * @param projectedStatus (optional) 
      * @param processRunId (optional) 
+     * @param queue (optional) 
      * @param searchTerm (optional) 
      * @param searchTermClean (optional) 
      * @param skip (optional) 
@@ -5736,7 +5737,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
         let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
         if (projectedStatus === null)
             throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
@@ -5746,6 +5747,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
         else if (processRunId !== undefined)
             url_ += "ProcessRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (queue === null)
+            throw new globalThis.Error("The parameter 'queue' cannot be null.");
+        else if (queue !== undefined)
+            url_ += "Queue=" + encodeURIComponent("" + queue) + "&";
         if (searchTerm === null)
             throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
         else if (searchTerm !== undefined)
@@ -9159,6 +9164,7 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     statuses?: string[] | undefined;
+    queueCounts?: { [key: string]: number; } | undefined;
 
     [key: string]: any;
 
@@ -9206,6 +9212,13 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
                 for (let item of _data["statuses"])
                     this.statuses!.push(item);
             }
+            if (_data["queueCounts"]) {
+                this.queueCounts = {} as any;
+                for (let key in _data["queueCounts"]) {
+                    if (_data["queueCounts"].hasOwnProperty(key))
+                        (this.queueCounts as any)![key] = _data["queueCounts"][key];
+                }
+            }
         }
     }
 
@@ -9248,6 +9261,13 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
             for (let item of this.statuses)
                 data["statuses"].push(item);
         }
+        if (this.queueCounts) {
+            data["queueCounts"] = {};
+            for (let key in this.queueCounts) {
+                if (this.queueCounts.hasOwnProperty(key))
+                    (data["queueCounts"] as any)[key] = (this.queueCounts as any)[key];
+            }
+        }
         return data;
     }
 }
@@ -9259,6 +9279,7 @@ export interface ILicenceEstateResponse {
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     statuses?: string[] | undefined;
+    queueCounts?: { [key: string]: number; } | undefined;
 
     [key: string]: any;
 }
@@ -10921,6 +10942,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     isLicenceNumberFlagged?: boolean;
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
+    queue?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -10978,6 +11000,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
             this.licenceNumberFlagReason = _data["licenceNumberFlagReason"];
             this.thumbnailUrl = _data["thumbnailUrl"];
+            this.queue = _data["queue"];
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
@@ -11045,6 +11068,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
         data["licenceNumberFlagReason"] = this.licenceNumberFlagReason;
         data["thumbnailUrl"] = this.thumbnailUrl;
+        data["queue"] = this.queue;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
@@ -11089,6 +11113,7 @@ export interface IOutputListDataItem {
     isLicenceNumberFlagged?: boolean;
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
+    queue?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;

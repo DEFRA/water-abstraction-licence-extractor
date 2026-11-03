@@ -53,6 +53,10 @@ export default function LicencesPage() {
     /// Bumped to re-run the fetch after a verification is written, since the URL has not changed.
     const [refreshes, setRefreshes] = useState(0);
 
+    /// The twelve column filters are advanced: the queue bar, the three selects above and the
+    /// search box cover the common cases, so they start out of the way.
+    const [showColumnFilters, setShowColumnFilters] = useState(false);
+
     const [expanded, setExpanded] = useState<string[]>([]);
 
     /// Kept across collapses but dropped on refresh: a verification changes a run's queue.
@@ -142,58 +146,10 @@ export default function LicencesPage() {
 
     return (
         <div>
-            <h1>Licence estate</h1>
+            <div style={{display: 'flex', alignItems: 'baseline', gap: '16px', flexWrap: 'wrap'}}>
+                <h1 style={{margin: 0}}>Licence estate</h1>
 
-            <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '10px 0'}}>
-                {[{queue: undefined, label: 'All licences'}, ...LICENCE_QUEUES].map(entry => {
-                    const count = entry.queue === undefined
-                        ? Object.values(queueCounts).reduce((total, value) => total + value, 0)
-                        : queueCounts[String(entry.queue)] ?? 0;
-                    const isActive = query.queue === entry.queue;
-
-                    return (
-                        <button
-                            key={entry.label}
-                            onClick={() => chooseQueue(entry.queue)}
-                            style={{
-                                padding: '5px 10px',
-                                cursor: 'pointer',
-                                border: isActive ? '2px solid #1565c0' : '1px solid #bbb',
-                                background: isActive ? '#e3f2fd' : '#fafafa',
-                                fontWeight: isActive ? 600 : 400,
-                            }}>
-                            {entry.label} ({count})
-                        </button>
-                    );
-                })}
-
-                <button
-                    onClick={() => setQuery({
-                        ...query,
-                        minimumDocumentCount: query.minimumDocumentCount ? undefined : 2,
-                        skip: 0
-                    })}
-                    style={{
-                        padding: '5px 10px',
-                        cursor: 'pointer',
-                        marginLeft: '12px',
-                        border: query.minimumDocumentCount ? '2px solid #1565c0' : '1px solid #bbb',
-                        background: query.minimumDocumentCount ? '#e3f2fd' : '#fafafa',
-                        fontWeight: query.minimumDocumentCount ? 600 : 400,
-                    }}>
-                    Multiple documents
-                </button>
-            </div>
-
-            {lookedUpLicence !== undefined && (
-                <LicenceLookupPanel
-                    licenceNumber={lookedUpLicence}
-                    onClear={() => setQuery({...query, licenceNumbers: [], skip: 0})}
-                    onLookUp={(variant) => setQuery({...query, licenceNumbers: [variant], skip: 0})}
-                />
-            )}
-
-            <div style={{display: 'flex', gap: '14px', alignItems: 'center', margin: '8px 0', fontSize: '13px'}}>
+                {lookedUpLicence === undefined && <>
                 <label>
                     Status{' '}
                     <select
@@ -241,14 +197,64 @@ export default function LicencesPage() {
                         <option value="6">Six runs or fewer</option>
                     </select>
                 </label>
+                </>}
             </div>
+
+            {lookedUpLicence === undefined &&
+            <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '10px 0'}}>
+                {[{queue: undefined, label: 'All licences'}, ...LICENCE_QUEUES].map(entry => {
+                    const count = entry.queue === undefined
+                        ? Object.values(queueCounts).reduce((total, value) => total + value, 0)
+                        : queueCounts[String(entry.queue)] ?? 0;
+                    const isActive = query.queue === entry.queue;
+
+                    return (
+                        <button
+                            key={entry.label}
+                            onClick={() => chooseQueue(entry.queue)}
+                            style={{
+                                padding: '5px 10px',
+                                cursor: 'pointer',
+                                border: isActive ? '2px solid #1565c0' : '1px solid #bbb',
+                                background: isActive ? '#e3f2fd' : '#fafafa',
+                                fontWeight: isActive ? 600 : 400,
+                            }}>
+                            {entry.label} ({count})
+                        </button>
+                    );
+                })}
+
+                <button
+                    onClick={() => setQuery({
+                        ...query,
+                        minimumDocumentCount: query.minimumDocumentCount ? undefined : 2,
+                        skip: 0
+                    })}
+                    style={{
+                        padding: '5px 10px',
+                        cursor: 'pointer',
+                        border: query.minimumDocumentCount ? '2px solid #1565c0' : '1px solid #bbb',
+                        background: query.minimumDocumentCount ? '#e3f2fd' : '#fafafa',
+                        fontWeight: query.minimumDocumentCount ? 600 : 400,
+                    }}>
+                    Multiple documents
+                </button>
+            </div>}
+
+            {lookedUpLicence !== undefined && (
+                <LicenceLookupPanel
+                    licenceNumber={lookedUpLicence}
+                    onClear={() => setQuery({...query, licenceNumbers: [], skip: 0})}
+                    onLookUp={(variant) => setQuery({...query, licenceNumbers: [variant], skip: 0})}
+                />
+            )}
 
             {error && <div style={{color: '#b00'}}>{error}</div>}
             {loading && <div>Loading…</div>}
 
             {!loading && !error && (
                 <div>
-                    <Paging
+                    {lookedUpLicence === undefined && <Paging
                         pageNumber={pageNumber}
                         totalPages={totalPages}
                         totalLicences={totalLicences}
@@ -257,7 +263,29 @@ export default function LicencesPage() {
                         setPageNumber={setPageNumber}
                         setPageSize={(value) => setQuery({...query, take: value, skip: 0})}
                         setSearchTerm={(value) => setQuery({...query, searchTerm: value, skip: 0})}
-                    />
+                        alignLeft
+                    />}
+
+                    {records.length === 0 && query.projectedStatus !== undefined && (
+                        <div style={{margin: '8px 0', fontSize: '13px'}}>
+                            Nothing matches with status <strong>{query.projectedStatus}</strong>.{' '}
+                            <a href="#"
+                               onClick={(e) => {
+                                   e.preventDefault();
+                                   setQuery({...query, projectedStatus: undefined, skip: 0});
+                               }}>Search every status</a> — the licences worth finding are often
+                            the ones NALD does not recognise.
+                        </div>
+                    )}
+
+                    {lookedUpLicence === undefined && (
+                        <button
+                            onClick={() => setShowColumnFilters(previous => !previous)}
+                            title="Per-column filters"
+                            style={{cursor: 'pointer', fontSize: '11px', padding: '1px 6px'}}>
+                            {showColumnFilters ? '\u25BE filters' : '\u25B8 filters'}
+                        </button>
+                    )}
 
                     <table id="licencesTable">
                         <thead>
@@ -270,6 +298,7 @@ export default function LicencesPage() {
                                 setPageNumber={setPageNumber}
                                 showSingles={showSingles}
                                 onToggleSingles={setShowSingles}
+                                hideFilterRow={lookedUpLicence !== undefined || !showColumnFilters}
                             />
                         </thead>
                         <tbody>
@@ -278,6 +307,7 @@ export default function LicencesPage() {
                                     <LicencesTableRow
                                         item={item}
                                         oddRow={index % 2 === 0}
+                                        lookUpHref={`/licences?licenceNumber=${encodeURIComponent(item.licenceNumber ?? '')}`}
                                         onLookUp={() => setQuery({
                                             ...query,
                                             licenceNumbers: [item.licenceNumber ?? ''],

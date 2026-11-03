@@ -72,7 +72,7 @@ function ProcessRunsPage() {
             {activeTab === 'AbstractionLicence' && (
                 <p>
                     <Link to="/licences">Licence estate</Link>
-                    {' \u2014 every licence across runs, worst first'}
+                    {' \u2014 one row per licence across every run'}
                 </p>
             )}
 

@@ -30,15 +30,29 @@ public class LicenceEstateQueryTests
             ProjectedStatus = "Live"
         };
 
+    /// What row_number() sees - the queue derivation and the filters both sit outside it.
     private static string RankedRows(string sql)
     {
-        var start = sql.IndexOf("FROM (", StringComparison.Ordinal);
-        var end = sql.IndexOf(") AS licence_list_item", StringComparison.Ordinal);
+        var start = sql.LastIndexOf("FROM (", StringComparison.Ordinal);
+        var end = sql.IndexOf(") ranked", StringComparison.Ordinal);
 
         Assert.InRange(start, 0, int.MaxValue);
         Assert.InRange(end, start, int.MaxValue);
 
         return sql[start..end];
+    }
+
+    /// The filter clauses alone, so the comparison does not depend on the projection.
+    private static string FilterClauses(string sql)
+    {
+        var start = sql.IndexOf(") AS licence_list_item", StringComparison.Ordinal);
+
+        Assert.InRange(start, 0, int.MaxValue);
+
+        var clauses = sql[start..];
+        var tail = clauses.IndexOf("ORDER BY", StringComparison.Ordinal);
+
+        return tail < 0 ? clauses : clauses[..tail];
     }
 
     [Fact]
@@ -87,17 +101,44 @@ public class LicenceEstateQueryTests
         var page = PostgresAbstractionLicenceReadService.BuildLicenceEstatePageQuery(query);
         var count = PostgresAbstractionLicenceReadService.BuildLicenceEstateCountQuery(query);
 
-        var pageAsCount = page.Sql.Replace(
-            PostgresAbstractionLicenceReadService.LicenceListItemColumns,
-            "COUNT(*)");
-
-        Assert.StartsWith(count.Sql, pageAsCount, StringComparison.Ordinal);
-
-        var orderingAndPaging = pageAsCount[count.Sql.Length..];
-
-        Assert.DoesNotMatch(@"(?i)\b(and|where)\b", orderingAndPaging);
+        Assert.Equal(FilterClauses(page.Sql), FilterClauses(count.Sql));
 
         Assert.Empty(
             count.Parameters.ParameterNames.Except(page.Parameters.ParameterNames));
+    }
+
+    [Fact]
+    public void WhenDerivingTheQueue_ThenTheBranchesRunWorstFirst()
+    {
+        var page = PostgresAbstractionLicenceReadService
+            .BuildLicenceEstatePageQuery(new LicenceEstateQuery())
+            .Sql;
+
+        var branches = Regex
+            .Matches(page, @"THEN (\d)")
+            .Select(match => int.Parse(match.Groups[1].Value))
+            .ToArray();
+
+        // 8 is the ELSE, which is why it is absent here rather than last.
+        Assert.Equal([1, 2, 3, 4, 5, 6, 7, 9], branches);
+        Assert.Contains("ELSE 8", page);
+    }
+
+    [Fact]
+    public void WhenCountingTheQueues_ThenTheQueueSelectionIsNotApplied()
+    {
+        var query = new LicenceEstateQuery { Queue = 5, ProjectedStatus = "Live" };
+
+        var page = PostgresAbstractionLicenceReadService
+            .BuildLicenceEstatePageQuery(query).Sql;
+
+        var counts = PostgresAbstractionLicenceReadService
+            .BuildLicenceEstateQueueCountsQuery(query).Sql;
+
+        Assert.Contains("queue = @Queue", page);
+        Assert.DoesNotContain("queue = @Queue", counts);
+
+        Assert.Contains("status = @ProjectedStatus", page);
+        Assert.Contains("status = @ProjectedStatus", counts);
     }
 }

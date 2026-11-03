@@ -9,4 +9,6 @@ public sealed class LicenceEstateQuery : ProcessRunQuery
     public string? ProjectedStatus { get; init; }
 
     public int? ProcessRunId { get; init; }
+
+    public int? Queue { get; init; }
 }

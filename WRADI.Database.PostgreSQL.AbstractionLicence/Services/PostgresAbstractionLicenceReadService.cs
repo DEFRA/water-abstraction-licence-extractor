@@ -862,6 +862,23 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             cancellationToken);
     }
 
+    public async Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var (sql, parameters) = BuildLicenceEstateQueueCountsQuery(query);
+
+        var rows = await connection.QueryAsync<(int Queue, int Licences)>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
+
+        return rows.ToDictionary(row => row.Queue, row => row.Licences);
+    }
+
     public async Task<int> GetLicenceEstateCountAsync(
         LicenceEstateQuery query,
         CancellationToken cancellationToken = default)
@@ -3418,6 +3435,65 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .ToList();
     }
 
+    /// Worst first: a licence falls in the first branch it matches, so the nine partition the
+    /// estate. In SQL rather than the portal so a row's queue cannot disagree with the counts.
+    private const string LicenceQueue =
+        """
+            CASE
+                WHEN EXISTS (
+                        SELECT 1
+                        FROM licence_list_item_verification_section section
+                        JOIN licence_list_item_verification_item item
+                            ON item.verification_section_id = section.verification_section_id
+                        WHERE section.licence_list_item_id = ranked.licence_list_item_id
+                          AND item.current_verification_type = 'RequestBusinessReview')
+                    THEN 1
+                WHEN is_licence_number_flagged
+                    THEN 2
+                WHEN (aggregates_count > 0) <> coalesce(nald_aggregate, false)
+                    THEN 3
+                WHEN is_issue_date_flagged
+                    THEN 4
+                WHEN aggregates_count > 0 AND NOT EXISTS (
+                        SELECT 1
+                        FROM licence_list_item_verification_section section
+                        JOIN licence_list_item_verification_item item
+                            ON item.verification_section_id = section.verification_section_id
+                        WHERE section.licence_list_item_id = ranked.licence_list_item_id
+                          AND section.licence_section_name = 'Aggregates'
+                          AND item.current_verification_type IS NOT NULL
+                          AND item.current_verification_type NOT LIKE 'Auto%')
+                    THEN 5
+                WHEN linked_licences_count > 0 AND NOT EXISTS (
+                        SELECT 1
+                        FROM licence_list_item_verification_section section
+                        JOIN licence_list_item_verification_item item
+                            ON item.verification_section_id = section.verification_section_id
+                        WHERE section.licence_list_item_id = ranked.licence_list_item_id
+                          AND section.licence_section_name = 'Linked Licences'
+                          AND item.current_verification_type IS NOT NULL
+                          AND item.current_verification_type NOT LIKE 'Auto%')
+                    THEN 6
+                WHEN limits_count = 0 OR points_count = 0 OR purposes_count = 0
+                     OR NOT means_found
+                    THEN 7
+                WHEN EXISTS (
+                        SELECT 1
+                        FROM licence_list_item_verification_section section
+                        WHERE section.licence_list_item_id = ranked.licence_list_item_id)
+                     AND NOT EXISTS (
+                        SELECT 1
+                        FROM licence_list_item_verification_section section
+                        JOIN licence_list_item_verification_item item
+                            ON item.verification_section_id = section.verification_section_id
+                        WHERE section.licence_list_item_id = ranked.licence_list_item_id
+                          AND (item.current_verification_type IS NULL
+                               OR item.current_verification_type LIKE 'Auto%'))
+                    THEN 9
+                ELSE 8
+            END AS queue
+        """;
+
     /// Filter lists are drawn from here too, or they offer values no estate row carries - 344
     /// of 1,413 licence set ids locally, an older run's set not being the newest one's.
     private static string NewestPerLicence(int? processRunId) =>
@@ -4033,13 +4109,28 @@ private async Task<
             LicenceEstateQuery query)
     {
         var (sql, parameters) = BuildLicenceEstateQuery(
-            LicenceListItemColumns,
+            $"{LicenceListItemColumns},{Environment.NewLine}    queue AS Queue",
             query);
 
         AddOrderingAndPaging(
             sql,
             parameters,
             query);
+
+        return (sql.ToString(), parameters);
+    }
+
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceEstateQueueCountsQuery(
+            LicenceEstateQuery query)
+    {
+        var (sql, parameters) = BuildLicenceEstateQuery(
+            "queue AS Queue,\n    COUNT(*) AS Licences",
+            query,
+            applyQueueFilter: false);
+
+        sql.AppendLine("GROUP BY queue");
+        sql.AppendLine("ORDER BY queue;");
 
         return (sql.ToString(), parameters);
     }
@@ -4061,7 +4152,8 @@ private async Task<
     private static (StringBuilder Sql, DynamicParameters Parameters)
         BuildLicenceEstateQuery(
             string selectList,
-            LicenceEstateQuery query)
+            LicenceEstateQuery query,
+            bool applyQueueFilter = true)
     {
         var sql = new StringBuilder();
         var parameters = new DynamicParameters();
@@ -4072,16 +4164,29 @@ private async Task<
         // Aliased as the table it wraps: the correlated filters in AddLicenceListItemFilters
         // reference licence_list_item by name, so another alias breaks them at runtime.
         sql.AppendLine("FROM (");
+        sql.AppendLine("    SELECT");
+        sql.AppendLine("        *,");
+        sql.AppendLine(LicenceQueue);
+        sql.AppendLine("    FROM (");
         sql.AppendLine(NewestPerLicence(query.ProcessRunId));
         sql.AppendLine(
             """
+                ) ranked
+                WHERE estate_rank = 1
             ) AS licence_list_item
-            WHERE estate_rank = 1
+            WHERE true
             """);
 
         if (query.ProcessRunId.HasValue)
         {
             parameters.Add("ProcessRunId", query.ProcessRunId.Value);
+        }
+
+        if (applyQueueFilter && query.Queue.HasValue)
+        {
+            sql.AppendLine("  AND queue = @Queue");
+
+            parameters.Add("Queue", query.Queue.Value);
         }
 
         ReadSqlHelper.AddStringFilter(

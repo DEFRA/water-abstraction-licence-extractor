@@ -24,6 +24,7 @@ public class LicencesController(
         var licenceSetIdsTask = licenceListRepository.GetLicenceListLicenceSetIdsAsync(query.ProcessRunId);
         var issueDatesTask = licenceListRepository.GetLicenceListIssueYearsAsync(query.ProcessRunId);
         var statusesTask = licenceListRepository.GetLicenceListStatusesAsync(query.ProcessRunId);
+        var queueCountsTask = licenceListRepository.GetLicenceEstateQueueCountsAsync(query);
 
         var records = licenceListItemModelService.ConvertToOutputListDataItems(
             await licencesTask);
@@ -44,7 +45,8 @@ public class LicencesController(
                 Issuers = (await issuersTask).ToArray(),
                 LicenceSetIds = (await licenceSetIdsTask).ToArray(),
                 IssueDates = (await issueDatesTask).ToArray(),
-                Statuses = (await statusesTask).ToArray()
+                Statuses = (await statusesTask).ToArray(),
+                QueueCounts = await queueCountsTask
             });
     }
 }

@@ -111,6 +111,7 @@ public class LicenceListItemModelService
         return new OutputListDataItem
         {
             processRunId = licence.ProcessRunId,
+            queue = licence.Queue,
             fileId = licence.FileId,
             licenceId = licence.LicenceId,
             matchesResultId = licence.MatchesResultId,

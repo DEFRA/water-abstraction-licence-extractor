@@ -556,6 +556,11 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetLicenceEstateCountAsync(query);
     }
 
+    public async Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(LicenceEstateQuery query)
+    {
+        return await databaseReadService.GetLicenceEstateQueueCountsAsync(query);
+    }
+
     public async Task<List<string>> GetLicenceListStatusesAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListStatusesAsync(processRunId);

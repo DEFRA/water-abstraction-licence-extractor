@@ -27,6 +27,8 @@ public interface ILicenceListRepository
 
     Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query);
 
+    Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(LicenceEstateQuery query);
+
     Task<List<string>> GetLicenceListIssuersAsync(int? processRunId);
 
     Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);

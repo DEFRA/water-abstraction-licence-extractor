@@ -77,4 +77,7 @@ public sealed class LicenceListItem
     public DateTimeOffset CreatedDateTimeUtc { get; set; }
 
     public DateTimeOffset UpdatedDateTimeUtc { get; set; }
+
+    /// Derived by the estate query, not stored, so null on the run-scoped list.
+    public int? Queue { get; set; }
 }

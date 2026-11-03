@@ -95,7 +95,7 @@ export function ProcessRunLicenceFilters({
         {!hideFilterRow &&
         <tr>
             <td>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '4px', whiteSpace: 'nowrap'}}>
                     <button
                         type="button"
                         className="clear-filters-button"

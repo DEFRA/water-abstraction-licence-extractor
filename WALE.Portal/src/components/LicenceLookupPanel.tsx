@@ -44,7 +44,7 @@ export default function LicenceLookupPanel({licenceNumber, onClear, onLookUp}: L
         <div style={{border: '1px solid #bbb', background: '#f7fbff', padding: '10px', margin: '10px 0'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline'}}>
                 <h2 style={{margin: 0, fontSize: '16px'}}>{licenceNumber}</h2>
-                <button onClick={onClear} style={{cursor: 'pointer'}}>Back to the estate</button>
+                <button onClick={onClear} style={{cursor: 'pointer'}}>Close</button>
             </div>
 
             {error && <div style={{color: '#b00'}}>{error}</div>}

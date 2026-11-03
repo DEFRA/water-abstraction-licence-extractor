@@ -5712,9 +5712,59 @@ export class Client {
     }
 
     /**
+     * @param licenceNumber (optional) 
+     * @return OK
+     */
+    getLicenceRunHistory(licenceNumber: string | undefined): Promise<LicenceRunHistoryItem[]> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceRunHistory?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceRunHistory(_response);
+        });
+    }
+
+    protected processGetLicenceRunHistory(response: Response): Promise<LicenceRunHistoryItem[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LicenceRunHistoryItem.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceRunHistoryItem[]>(null as any);
+    }
+
+    /**
      * @param projectedStatus (optional) 
      * @param processRunId (optional) 
      * @param queue (optional) 
+     * @param minimumDocumentCount (optional) 
      * @param searchTerm (optional) 
      * @param searchTermClean (optional) 
      * @param skip (optional) 
@@ -5737,7 +5787,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
         let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
         if (projectedStatus === null)
             throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
@@ -5751,6 +5801,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'queue' cannot be null.");
         else if (queue !== undefined)
             url_ += "Queue=" + encodeURIComponent("" + queue) + "&";
+        if (minimumDocumentCount === null)
+            throw new globalThis.Error("The parameter 'minimumDocumentCount' cannot be null.");
+        else if (minimumDocumentCount !== undefined)
+            url_ += "MinimumDocumentCount=" + encodeURIComponent("" + minimumDocumentCount) + "&";
         if (searchTerm === null)
             throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
         else if (searchTerm !== undefined)
@@ -9636,6 +9690,130 @@ export interface ILicenceNaldData {
     [key: string]: any;
 }
 
+export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
+    processRunId?: number;
+    licenceListItemId?: number;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
+    filename!: string;
+    status?: string | undefined;
+    queue?: number;
+    limitsCount?: number;
+    pointsCount?: number;
+    purposesCount?: number;
+    aggregatesCount?: number;
+    linkedLicencesCount?: number;
+    licenceSetsCount?: number;
+    meansFound?: boolean;
+    ocr?: boolean;
+    issueDate?: Date | undefined;
+    isLicenceNumberFlagged?: boolean;
+    isIssueDateFlagged?: boolean;
+    createdDateTimeUtc?: Date;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunHistoryItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.processRunId = _data["processRunId"];
+            this.licenceListItemId = _data["licenceListItemId"];
+            this.licenceId = _data["licenceId"];
+            this.matchesResultId = _data["matchesResultId"];
+            this.fileId = _data["fileId"];
+            this.filename = _data["filename"];
+            this.status = _data["status"];
+            this.queue = _data["queue"];
+            this.limitsCount = _data["limitsCount"];
+            this.pointsCount = _data["pointsCount"];
+            this.purposesCount = _data["purposesCount"];
+            this.aggregatesCount = _data["aggregatesCount"];
+            this.linkedLicencesCount = _data["linkedLicencesCount"];
+            this.licenceSetsCount = _data["licenceSetsCount"];
+            this.meansFound = _data["meansFound"];
+            this.ocr = _data["ocr"];
+            this.issueDate = _data["issueDate"] ? new Date(_data["issueDate"].toString()) : undefined as any;
+            this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
+            this.isIssueDateFlagged = _data["isIssueDateFlagged"];
+            this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): LicenceRunHistoryItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunHistoryItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["processRunId"] = this.processRunId;
+        data["licenceListItemId"] = this.licenceListItemId;
+        data["licenceId"] = this.licenceId;
+        data["matchesResultId"] = this.matchesResultId;
+        data["fileId"] = this.fileId;
+        data["filename"] = this.filename;
+        data["status"] = this.status;
+        data["queue"] = this.queue;
+        data["limitsCount"] = this.limitsCount;
+        data["pointsCount"] = this.pointsCount;
+        data["purposesCount"] = this.purposesCount;
+        data["aggregatesCount"] = this.aggregatesCount;
+        data["linkedLicencesCount"] = this.linkedLicencesCount;
+        data["licenceSetsCount"] = this.licenceSetsCount;
+        data["meansFound"] = this.meansFound;
+        data["ocr"] = this.ocr;
+        data["issueDate"] = this.issueDate ? formatDate(this.issueDate) : undefined as any;
+        data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
+        data["isIssueDateFlagged"] = this.isIssueDateFlagged;
+        data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface ILicenceRunHistoryItem {
+    processRunId?: number;
+    licenceListItemId?: number;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
+    filename: string;
+    status?: string | undefined;
+    queue?: number;
+    limitsCount?: number;
+    pointsCount?: number;
+    purposesCount?: number;
+    aggregatesCount?: number;
+    linkedLicencesCount?: number;
+    licenceSetsCount?: number;
+    meansFound?: boolean;
+    ocr?: boolean;
+    issueDate?: Date | undefined;
+    isLicenceNumberFlagged?: boolean;
+    isIssueDateFlagged?: boolean;
+    createdDateTimeUtc?: Date;
+
+    [key: string]: any;
+}
+
 export class LicenceSectionItemSummary implements ILicenceSectionItemSummary {
     licenceSectionItemId!: string;
     currentVerificationType?: string | undefined;
@@ -10943,6 +11121,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
     queue?: number | undefined;
+    documentCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -11001,6 +11180,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.licenceNumberFlagReason = _data["licenceNumberFlagReason"];
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.queue = _data["queue"];
+            this.documentCount = _data["documentCount"];
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
@@ -11069,6 +11249,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["licenceNumberFlagReason"] = this.licenceNumberFlagReason;
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["queue"] = this.queue;
+        data["documentCount"] = this.documentCount;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
@@ -11114,6 +11295,7 @@ export interface IOutputListDataItem {
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
     queue?: number | undefined;
+    documentCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -14016,6 +14198,12 @@ export interface IBody2 {
     fileName?: string;
 
     [key: string]: any;
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export class ApiException extends Error {

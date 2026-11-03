@@ -4,10 +4,11 @@ import {compareAlphanumeric} from "../utils/formatting.ts";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
+    linkToEstate?: boolean;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
-export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps) {
+export function LinkedLicencesList({item, linkToEstate, onOpenReport}: LinkedLicencesListProps) {
     if (!item.linkedLicences?.length) {
         return 'No Linked Licences';
     }
@@ -19,6 +20,7 @@ export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps
             <LinkedLicencesListItem
                 key={index}
                 linkedLicence={ll}
+                linkToEstate={linkToEstate}
                 onOpenReport={onOpenReport}
             />
         ))}

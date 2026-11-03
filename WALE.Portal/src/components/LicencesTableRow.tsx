@@ -13,12 +13,13 @@ interface OutputItemTableRowProps {
     onToggleExpand?: () => void;
     onLookUp?: () => void;
     lookUpHref?: string;
+    linkToEstate?: boolean;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
-function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, linkToEstate, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center', position: 'relative'}}>
@@ -74,6 +75,7 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, loo
             <td>
                 <LinkedLicencesList
                     item={item}
+                    linkToEstate={linkToEstate}
                     onOpenReport={onOpenReport}
                 />
             </td>

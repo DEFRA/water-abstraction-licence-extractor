@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 import {
     LinkedLicence,
     NullableOfInformationDirection
@@ -10,10 +11,11 @@ import ImpoundmentTag from "./ImpoundmentTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
+    linkToEstate?: boolean;
     onOpenReport: (filename: string, licenceId: number, matchesResultId: number) => void;
 }
 
-export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
+export function LinkedLicencesListItem({linkedLicence, linkToEstate, onOpenReport}: LinkedLicencesListItemProps) {
     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
@@ -47,6 +49,22 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                        onOpenReport(linkedFileId, linkedLicenceId!, linkedMatchesResultId!);
                    }}>{styledLicenceNumber}
                 </a>
+                <NaldStatusTag status={linkedLicence.naldStatus}/>
+                <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
+            </li>
+        );
+    } else if (linkToEstate && licenceNumber) {
+        /// No file id means the run did not extract the licence, which is every linked licence
+        /// on the estate page - it mounts no FileIdMapProvider at all, having no single run to
+        /// key one on. The estate holds every run, so the lookup answers where the modal cannot.
+        return (
+            <li title={text}>
+                <Link style={{color}}
+                      to={`/licences?licenceNumber=${encodeURIComponent(licenceNumber)}`}>
+                    {styledLicenceNumber}
+                </Link>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>

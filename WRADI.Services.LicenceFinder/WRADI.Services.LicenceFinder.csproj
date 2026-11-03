@@ -36,9 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Manual_Fix_Extract.xlsx">
+    <EmbeddedResource Include="Resources\Manual_Fix_Extract.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
     <None Remove="Resources\NALD_Extract.xlsx" />
     <None Remove="Resources\Site_1_DL.xlsx" />
     <None Remove="Resources\Previous_Iteration_Matches.xlsx" />
@@ -49,9 +49,9 @@
     <None Remove="Resources\File_Identification_Extract.csv" />
     <None Remove="Resources\Overrides.xlsx" />
     <None Remove="Resources\LicenceVersionResults.xlsx" />
-    <Content Include="Resources\LicenceVersionResults.xlsx">
+    <EmbeddedResource Include="Resources\LicenceVersionResults.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
     <None Remove="Resources\File_Reader_Extract_Anglian.csv" />
     <None Remove="Resources\File_Reader_Extract_NE.csv" />
     <None Remove="Resources\File_Identification_Extract_NE.csv" />
@@ -87,15 +87,15 @@
     <None Remove="Resources\Override_Master_May_29_2026.xlsx" />
     <None Remove="Resources\Override_Master_2026_086_08_2.xlsx" />
     <None Remove="Resources\New_Override_Master.xlsx" />
-    <Content Include="Resources\New_Override_Master.xlsx" />
-    <None Remove="Resources\Old_Override_Master.xlsx" />
-    <Content Include="Resources\Old_Override_Master.xlsx" />
-    <None Remove="Resources\Override_Master_2026_09_14.xlsx" />
-    <Content Include="Resources\Override_Master_2026_09_14.xlsx" />
-    <None Remove="Resources\Override_Master_20261013.xlsx" />
-    <Content Include="Resources\Override_Master_20261013.xlsx">
+    <EmbeddedResource Include="Resources\New_Override_Master.xlsx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
+    <None Remove="Resources\Old_Override_Master.xlsx" />
+    <None Remove="Resources\Override_Master_2026_09_14.xlsx" />
+    <None Remove="Resources\Override_Master_20261013.xlsx" />
+    <EmbeddedResource Include="Resources\Override_Master_20261013.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

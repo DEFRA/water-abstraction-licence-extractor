@@ -1,4 +1,4 @@
-import {useState, useEffect, useCallback, useMemo, Fragment} from 'react';
+import {useState, useEffect, useCallback, useMemo, useRef, Fragment} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem, LicenceRunHistoryItem} from "../api/generated/apiClient.ts";
 import {waleApiClient} from "../api/apiClient";
@@ -22,12 +22,28 @@ export default function LicencesPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const query = useMemo(() => queryFromParams(searchParams), [searchParams]);
 
+    /// useSearchParams rebuilds its params only on the next render - its updater form is handed
+    /// this render's params too - so two setters called from one handler both start from the
+    /// same place and the second drops the first's write. Paging's Apply does exactly that:
+    /// setSearchTerm then setPageNumber, which is why searching did nothing. This carries the
+    /// params written so far, so every call site must pass an updater rather than an object.
+    const pendingParams = useRef(searchParams);
+
+    useEffect(() => {
+        pendingParams.current = searchParams;
+    }, [searchParams]);
+
     /// Writes to the URL but typed as a React setter, so ProcessRunLicenceFilters takes it
     /// in place of a useState one.
     const setQuery: React.Dispatch<React.SetStateAction<LicenceEstateQuery>> = (action) => {
-        const next = typeof action === 'function' ? action(query) : action;
+        const next = typeof action === 'function'
+            ? action(queryFromParams(pendingParams.current))
+            : action;
 
-        setSearchParams(paramsFromQuery(next), {replace: true});
+        const params = paramsFromQuery(next);
+
+        pendingParams.current = params;
+        setSearchParams(params, {replace: true});
     };
 
     /// The licenceNumbers filter already narrows the table, so one entry doubles as the signal
@@ -38,7 +54,7 @@ export default function LicencesPage() {
 
     const pageNumber = Math.floor(query.skip / query.take) + 1;
     const setPageNumber = (value: number) =>
-        setQuery({...query, skip: (value - 1) * query.take});
+        setQuery(previous => ({...previous, skip: (value - 1) * previous.take}));
 
     const [records, setRecords] = useState<OutputListDataItem[]>([]);
     const [queueCounts, setQueueCounts] = useState<Record<string, number>>({});
@@ -52,10 +68,6 @@ export default function LicencesPage() {
 
     /// Bumped to re-run the fetch after a verification is written, since the URL has not changed.
     const [refreshes, setRefreshes] = useState(0);
-
-    /// The twelve column filters are advanced: the queue bar, the three selects above and the
-    /// search box cover the common cases, so they start out of the way.
-    const [showColumnFilters, setShowColumnFilters] = useState(false);
 
     const [expanded, setExpanded] = useState<string[]>([]);
 
@@ -125,7 +137,7 @@ export default function LicencesPage() {
         [openLicenceSetReport, runOf]);
 
     const chooseQueue = (queue: number | undefined) =>
-        setQuery({...query, queue, skip: 0});
+        setQuery(previous => ({...previous, queue, skip: 0}));
 
     const toggleExpanded = (licenceNumber: string) => {
         if (expanded.includes(licenceNumber)) {
@@ -154,11 +166,11 @@ export default function LicencesPage() {
                     Status{' '}
                     <select
                         value={query.projectedStatus ?? ''}
-                        onChange={(e) => setQuery({
-                            ...query,
+                        onChange={(e) => setQuery(previous => ({
+                            ...previous,
                             projectedStatus: e.target.value === '' ? undefined : e.target.value,
                             skip: 0
-                        })}>
+                        }))}>
                         <option value="">Any status</option>
                         {statuses.map(status => (
                             <option key={status} value={status}>{status}</option>
@@ -170,11 +182,11 @@ export default function LicencesPage() {
                     Run{' '}
                     <select
                         value={query.processRunId ?? ''}
-                        onChange={(e) => setQuery({
-                            ...query,
+                        onChange={(e) => setQuery(previous => ({
+                            ...previous,
                             processRunId: e.target.value === '' ? undefined : Number(e.target.value),
                             skip: 0
-                        })}>
+                        }))}>
                         <option value="">Newest per licence</option>
                         {processRunIds.map(run => (
                             <option key={run} value={run}>{run}</option>
@@ -186,11 +198,11 @@ export default function LicencesPage() {
                     Seen in{' '}
                     <select
                         value={query.maximumRunCount ?? ''}
-                        onChange={(e) => setQuery({
-                            ...query,
+                        onChange={(e) => setQuery(previous => ({
+                            ...previous,
                             maximumRunCount: e.target.value === '' ? undefined : Number(e.target.value),
                             skip: 0
-                        })}>
+                        }))}>
                         <option value="">Any number of runs</option>
                         <option value="1">One run only</option>
                         <option value="3">Three runs or fewer</option>
@@ -225,11 +237,11 @@ export default function LicencesPage() {
                 })}
 
                 <button
-                    onClick={() => setQuery({
-                        ...query,
-                        minimumDocumentCount: query.minimumDocumentCount ? undefined : 2,
+                    onClick={() => setQuery(previous => ({
+                        ...previous,
+                        minimumDocumentCount: previous.minimumDocumentCount ? undefined : 2,
                         skip: 0
-                    })}
+                    }))}
                     style={{
                         padding: '5px 10px',
                         cursor: 'pointer',
@@ -244,8 +256,8 @@ export default function LicencesPage() {
             {lookedUpLicence !== undefined && (
                 <LicenceLookupPanel
                     licenceNumber={lookedUpLicence}
-                    onClear={() => setQuery({...query, licenceNumbers: [], skip: 0})}
-                    onLookUp={(variant) => setQuery({...query, licenceNumbers: [variant], skip: 0})}
+                    onClear={() => setQuery(previous => ({...previous, licenceNumbers: [], skip: 0}))}
+                    onLookUp={(variant) => setQuery(previous => ({...previous, licenceNumbers: [variant], skip: 0}))}
                 />
             )}
 
@@ -261,8 +273,8 @@ export default function LicencesPage() {
                         pageSize={query.take}
                         searchTerm={query.searchTerm ?? ''}
                         setPageNumber={setPageNumber}
-                        setPageSize={(value) => setQuery({...query, take: value, skip: 0})}
-                        setSearchTerm={(value) => setQuery({...query, searchTerm: value, skip: 0})}
+                        setPageSize={(value) => setQuery(previous => ({...previous, take: value, skip: 0}))}
+                        setSearchTerm={(value) => setQuery(previous => ({...previous, searchTerm: value, skip: 0}))}
                         alignLeft
                     />}
 
@@ -272,19 +284,10 @@ export default function LicencesPage() {
                             <a href="#"
                                onClick={(e) => {
                                    e.preventDefault();
-                                   setQuery({...query, projectedStatus: undefined, skip: 0});
+                                   setQuery(previous => ({...previous, projectedStatus: undefined, skip: 0}));
                                }}>Search every status</a> — the licences worth finding are often
                             the ones NALD does not recognise.
                         </div>
-                    )}
-
-                    {lookedUpLicence === undefined && (
-                        <button
-                            onClick={() => setShowColumnFilters(previous => !previous)}
-                            title="Per-column filters"
-                            style={{cursor: 'pointer', fontSize: '11px', padding: '1px 6px'}}>
-                            {showColumnFilters ? '\u25BE filters' : '\u25B8 filters'}
-                        </button>
                     )}
 
                     <table id="licencesTable">
@@ -298,7 +301,7 @@ export default function LicencesPage() {
                                 setPageNumber={setPageNumber}
                                 showSingles={showSingles}
                                 onToggleSingles={setShowSingles}
-                                hideFilterRow={lookedUpLicence !== undefined || !showColumnFilters}
+                                hideFilterRow={lookedUpLicence !== undefined}
                             />
                         </thead>
                         <tbody>
@@ -308,11 +311,12 @@ export default function LicencesPage() {
                                         item={item}
                                         oddRow={index % 2 === 0}
                                         lookUpHref={`/licences?licenceNumber=${encodeURIComponent(item.licenceNumber ?? '')}`}
-                                        onLookUp={() => setQuery({
-                                            ...query,
+                                        linkToEstate
+                                        onLookUp={() => setQuery(previous => ({
+                                            ...previous,
                                             licenceNumbers: [item.licenceNumber ?? ''],
                                             skip: 0
-                                        })}
+                                        }))}
                                         expanded={expanded.includes(item.licenceNumber ?? '')}
                                         onToggleExpand={() => toggleExpanded(item.licenceNumber ?? '')}
                                         onOpenReport={openReportWithId}

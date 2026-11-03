@@ -4337,13 +4337,17 @@ private async Task<
         if (!string.IsNullOrEmpty(query.SearchTermClean) &&
             string.IsNullOrWhiteSpace(query.SortField))
         {
+            // array_position scores only a whole token, so a substring search ties every row at
+            // NULL and LIMIT/OFFSET then slices arbitrarily: paging /R01 gave 646 rows, 644
+            // distinct.
             sql.AppendLine(
                 """
                 ORDER BY
                     array_position(
                         string_to_array(lower(search_text), ' '),
                         lower(@SearchTerm)
-                    ) ASC NULLS LAST
+                    ) ASC NULLS LAST,
+                    licence_number ASC
                 """);
         }
         else

@@ -1,3 +1,4 @@
+import {Link} from 'react-router-dom';
 import {ProcessRun} from "../api/generated/apiClient.ts";
 import {useState, useEffect, useMemo} from 'react'
 import {waleApiClient} from '../api/apiClient';
@@ -67,6 +68,13 @@ function ProcessRunsPage() {
                     </span>
                 ))}
             </h1>
+
+            {activeTab === 'AbstractionLicence' && (
+                <p>
+                    <Link to="/licences">Licence estate</Link>
+                    {' \u2014 every licence across runs, worst first'}
+                </p>
+            )}
 
             {visibleRuns.length === 0
                 ? (<p>No process runs found.</p>)

@@ -1,4 +1,5 @@
-import {useState, useEffect, useCallback} from 'react';
+import {useState, useEffect, useCallback, useMemo} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {getLicenceEstate} from "../api/licenceEstate";
 import LicencesTableRow from "../components/LicencesTableRow";
@@ -7,24 +8,24 @@ import Paging from "../components/Paging.tsx";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
 import type {LicenceEstateQuery} from "../class/LicenceEstateQuery.tsx";
+import {queryFromParams, paramsFromQuery} from "../utils/licenceEstateParams";
 import '../assets/liststyles.css'
 
-/// One of Paging's own options, or its selector shows a size the page is not using.
-const PageSize = 100;
-
 export default function LicencesPage() {
-    const [pageNumber, setPageNumber] = useState(1);
-    const [query, setQuery] = useState<LicenceEstateQuery>({
-        searchTerm: '',
-        skip: 0,
-        take: PageSize,
-        issuer: '',
-        ShortLicenceSetId: '',
-        linkedLicencesType: '',
-        sortField: '',
-        sortAscending: true,
-        licenceNumbers: []
-    });
+    const [searchParams, setSearchParams] = useSearchParams();
+    const query = useMemo(() => queryFromParams(searchParams), [searchParams]);
+
+    /// Writes to the URL but typed as a React setter, so ProcessRunLicenceFilters takes it
+    /// in place of a useState one.
+    const setQuery: React.Dispatch<React.SetStateAction<LicenceEstateQuery>> = (action) => {
+        const next = typeof action === 'function' ? action(query) : action;
+
+        setSearchParams(paramsFromQuery(next), {replace: true});
+    };
+
+    const pageNumber = Math.floor(query.skip / query.take) + 1;
+    const setPageNumber = (value: number) =>
+        setQuery({...query, skip: (value - 1) * query.take});
 
     const [records, setRecords] = useState<OutputListDataItem[]>([]);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -32,6 +33,9 @@ export default function LicencesPage() {
     const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
     const [issueDates, setIssueDates] = useState<string[]>([]);
     const [showSingles, setShowSingles] = useState(true);
+
+    /// Bumped to re-run the fetch after a verification is written, since the URL has not changed.
+    const [refreshes, setRefreshes] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
     const [loadedQuery, setLoadedQuery] = useState<LicenceEstateQuery | null>(null);
@@ -64,7 +68,7 @@ export default function LicencesPage() {
         return () => {
             cancelled = true;
         };
-    }, [query]);
+    }, [query, refreshes]);
 
     const {
         modals,
@@ -109,18 +113,9 @@ export default function LicencesPage() {
                         totalLicences={totalLicences}
                         pageSize={query.take}
                         searchTerm={query.searchTerm ?? ''}
-                        setPageNumber={(value) => {
-                            setPageNumber(value);
-                            setQuery(previous => ({...previous, skip: (value - 1) * previous.take}));
-                        }}
-                        setPageSize={(value) => {
-                            setPageNumber(1);
-                            setQuery(previous => ({...previous, take: value, skip: 0}));
-                        }}
-                        setSearchTerm={(value) => {
-                            setPageNumber(1);
-                            setQuery(previous => ({...previous, searchTerm: value, skip: 0}));
-                        }}
+                        setPageNumber={setPageNumber}
+                        setPageSize={(value) => setQuery({...query, take: value, skip: 0})}
+                        setSearchTerm={(value) => setQuery({...query, searchTerm: value, skip: 0})}
                     />
 
                     <table id="licencesTable">
@@ -158,9 +153,7 @@ export default function LicencesPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                /// Same values, new identity: the fetch keys on the query object, so this
-                /// re-runs it.
-                onRefresh={() => setQuery(previous => ({...previous}))}
+                onRefresh={() => setRefreshes(count => count + 1)}
             />
         </div>
     );

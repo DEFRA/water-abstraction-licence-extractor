@@ -3,6 +3,7 @@ import {useSearchParams} from 'react-router-dom';
 import {OutputListDataItem, LicenceRunHistoryItem} from "../api/generated/apiClient.ts";
 import {waleApiClient} from "../api/apiClient";
 import LicenceRunHistory from "../components/LicenceRunHistory";
+import LicenceLookupPanel from "../components/LicenceLookupPanel";
 import {getLicenceEstate} from "../api/licenceEstate";
 import LicencesTableRow from "../components/LicencesTableRow";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
@@ -28,6 +29,12 @@ export default function LicencesPage() {
 
         setSearchParams(paramsFromQuery(next), {replace: true});
     };
+
+    /// The licenceNumbers filter already narrows the table, so one entry doubles as the signal
+    /// to open the lookup - no separate parameter needed.
+    const lookedUpLicence = query.licenceNumbers?.length === 1
+        ? query.licenceNumbers[0]
+        : undefined;
 
     const pageNumber = Math.floor(query.skip / query.take) + 1;
     const setPageNumber = (value: number) =>
@@ -177,6 +184,13 @@ export default function LicencesPage() {
                     Multiple documents
                 </button>
             </div>
+
+            {lookedUpLicence !== undefined && (
+                <LicenceLookupPanel
+                    licenceNumber={lookedUpLicence}
+                    onClear={() => setQuery({...query, licenceNumbers: [], skip: 0})}
+                />
+            )}
 
             <div style={{display: 'flex', gap: '14px', alignItems: 'center', margin: '8px 0', fontSize: '13px'}}>
                 <label>

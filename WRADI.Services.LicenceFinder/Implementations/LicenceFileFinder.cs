@@ -174,7 +174,7 @@ public class LicenceFileFinder : ILicenceFileFinder
         List<LicenceMatchResult> licenceFinderPreviousIterationMatches,
         Dictionary<string, FileInventory> wradiLocalFilesInventory,
         string? regionName,
-        string overridesFilename,
+        string overridesImportDate,
         string naldDate,
         string dmsDate)
     {
@@ -224,7 +224,7 @@ public class LicenceFileFinder : ILicenceFileFinder
                     })
                     .Take(0)),
                 ($"NALD Info ({naldDate})", NaldMapping, naldRecordsToProcess),
-                ($"Overrides ({overridesFilename})", OverrideMapping, dmsChangeAuditOverrides),
+                ($"Overrides ({overridesImportDate})", OverrideMapping, dmsChangeAuditOverrides),
                 ("Local files", S3FilesMapping, wradiLocalFilesInventory.Select(x => x.Value))
             };
             

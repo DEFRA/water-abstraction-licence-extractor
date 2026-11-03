@@ -55,6 +55,21 @@ public class GeneralApiClient(IHttpClientFactory httpClientFactory) : IGeneralAp
 
         return (data, await GetImportRunDateAsync("DmsExtract") ?? "Unknown");
     }
+
+    public async Task<(List<Override> Data, string ImportDate)> GetOverridesAsync()
+    {
+        var path = "/Extractor/Override/GetAll";
+
+        var response = await _httpClient.GetAsync(path);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        var data = JsonSerializer.Deserialize<List<Override>>(
+            content,
+            GetSerializerOptions())!;
+
+        return (data, await GetImportRunDateAsync("OverrideMaster") ?? "Unknown");
+    }
     
     private async Task<string?> GetImportRunDateAsync(string dataSource)
     {

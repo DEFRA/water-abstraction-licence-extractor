@@ -360,53 +360,6 @@ public class FileReadExtractService(ILicenceFileProcessor fileProcessor) : IRead
     }
 
     /// <summary>
-    /// Reads Change_Audit.xlsx file from the resources folder
-    /// </summary>
-    /// <returns>List of change audit records</returns>
-    public (List<Override>, string) GetDmsChangeAuditOverrides(string filename)
-    {
-        var allOverrides = new List<Override>();
-        var overridesFilenames = _fileProcessor.FindFilesByPattern(filename);
-
-        if (!overridesFilenames.Any())
-        {
-            throw new FileNotFoundException($"No override files were found with the given filename '{filename}'.");
-        }
-        
-        if (overridesFilenames.Count != 1)
-        {
-            throw new FileNotFoundException("Only 1 override file should be used.");
-        }
-        
-        Console.WriteLine($"Override file is {overridesFilenames[0]}");
-        
-        foreach (var fileName in overridesFilenames)
-        {
-            var records = _fileProcessor.ExtractExcel<List<Override>>(
-                fileName,
-                new Dictionary<string, List<string>>
-                {
-                    { "Permit Number", ["PermitNumber"]},
-                    { "LicenceReference", ["LicenceReference"]},
-                    { "File URL", ["FileUrl"]},
-                    { "FullPath", ["FileUrl"]},
-                    { "DefinitiveURL", ["FileUrl"]},
-                    { "NALD Issue_No", ["IssueNo"]},
-                    { "NALD Issue No.", ["IssueNo"]},
-                    { "NALD Increment_No", ["IncrementNo"]},
-                    { "NALD Increment No.", ["IncrementNo"]},
-                    { "OverrideType", ["OverrideType"]},
-                    { "File ID", ["FileId"]}
-                },
-                ["Duplicatecheck"]);
-
-            allOverrides.AddRange(records);
-        }
-
-        return (allOverrides, overridesFilenames.First());
-    }
-
-    /// <summary>
     /// Reads all files starting with 'Manual_Fix_Extract' from the resources folder
     /// </summary>
     /// <returns>Combined list of manual fix extract records from all matching files</returns>

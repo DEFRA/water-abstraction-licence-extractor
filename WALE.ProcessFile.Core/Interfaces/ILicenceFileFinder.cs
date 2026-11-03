@@ -26,7 +26,7 @@ public interface ILicenceFileFinder
         List<LicenceMatchResult> licenceFinderPreviousIterationMatches,
         Dictionary<string, FileInventory> wradiLocalFilesInventory,
         string? regionName,
-        string overridesFilename,
+        string overridesImportDate,
         string naldDate,
         string dmsDate);
     

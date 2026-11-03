@@ -9263,6 +9263,7 @@ export class LicenceDetailResponse implements ILicenceDetailResponse {
     runs!: LicenceRunHistoryItem[];
     verifications!: LicenceSectionVerification[];
     successors?: string[] | undefined;
+    possibleVariants?: string[] | undefined;
 
     [key: string]: any;
 
@@ -9301,6 +9302,11 @@ export class LicenceDetailResponse implements ILicenceDetailResponse {
                 for (let item of _data["successors"])
                     this.successors!.push(item);
             }
+            if (Array.isArray(_data["possibleVariants"])) {
+                this.possibleVariants = [] as any;
+                for (let item of _data["possibleVariants"])
+                    this.possibleVariants!.push(item);
+            }
         }
     }
 
@@ -9333,6 +9339,11 @@ export class LicenceDetailResponse implements ILicenceDetailResponse {
             for (let item of this.successors)
                 data["successors"].push(item);
         }
+        if (Array.isArray(this.possibleVariants)) {
+            data["possibleVariants"] = [];
+            for (let item of this.possibleVariants)
+                data["possibleVariants"].push(item);
+        }
         return data;
     }
 }
@@ -9342,6 +9353,7 @@ export interface ILicenceDetailResponse {
     runs: LicenceRunHistoryItem[];
     verifications: LicenceSectionVerification[];
     successors?: string[] | undefined;
+    possibleVariants?: string[] | undefined;
 
     [key: string]: any;
 }

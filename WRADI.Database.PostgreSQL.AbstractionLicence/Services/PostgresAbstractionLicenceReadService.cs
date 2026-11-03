@@ -3594,6 +3594,24 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.ToList();
     }
 
+    public async Task<List<string>> GetLicenceEstateLicenceNumbersAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        var sql =
+            $"""
+            SELECT DISTINCT licence_number
+            FROM ({NewestPerLicence(null)}) estate
+            WHERE estate_rank = 1
+              AND NULLIF(trim(licence_number), '') IS NOT NULL
+            ORDER BY licence_number;
+            """;
+
+        var results = await QueryAsync<string>(connection, sql, 0, new { });
+
+        return results.ToList();
+    }
+
     /// Every run holding a projection, not only those a licence's newest extraction comes
     /// from: pinning to an older run is the point of the list.
     public async Task<List<int>> GetLicenceListProcessRunIdsAsync()

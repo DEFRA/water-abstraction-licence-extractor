@@ -6,13 +6,14 @@ import {LICENCE_QUEUES} from "../utils/licenceQueues";
 interface LicenceLookupPanelProps {
     licenceNumber: string;
     onClear: () => void;
+    onLookUp: (licenceNumber: string) => void;
 }
 
 function formatDate(value: Date | undefined) {
     return value === undefined ? '--' : new Date(value).toISOString().slice(0, 10);
 }
 
-export default function LicenceLookupPanel({licenceNumber, onClear}: LicenceLookupPanelProps) {
+export default function LicenceLookupPanel({licenceNumber, onClear, onLookUp}: LicenceLookupPanelProps) {
     const [detail, setDetail] = useState<LicenceDetailResponse | undefined>(undefined);
     const [error, setError] = useState<string | null>(null);
 
@@ -67,6 +68,18 @@ export default function LicenceLookupPanel({licenceNumber, onClear}: LicenceLook
                         {(detail.successors?.length ?? 0) === 0
                             ? <div>Nothing in NALD</div>
                             : <div>{detail.successors!.join(' → ')}</div>}
+                    </div>
+
+                    <div>
+                        <strong>Possibly the same licence</strong>
+                        {(detail.possibleVariants?.length ?? 0) === 0
+                            ? <div>Nothing similar</div>
+                            : detail.possibleVariants!.map((variant: string) => (
+                                <div key={variant}>
+                                    <a href="#"
+                                       onClick={(e) => { e.preventDefault(); onLookUp(variant); }}>{variant}</a>
+                                </div>
+                            ))}
                     </div>
 
                     <div>

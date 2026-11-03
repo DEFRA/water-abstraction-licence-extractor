@@ -189,6 +189,7 @@ export default function LicencesPage() {
                 <LicenceLookupPanel
                     licenceNumber={lookedUpLicence}
                     onClear={() => setQuery({...query, licenceNumbers: [], skip: 0})}
+                    onLookUp={(variant) => setQuery({...query, licenceNumbers: [variant], skip: 0})}
                 />
             )}
 
@@ -277,6 +278,11 @@ export default function LicencesPage() {
                                     <LicencesTableRow
                                         item={item}
                                         oddRow={index % 2 === 0}
+                                        onLookUp={() => setQuery({
+                                            ...query,
+                                            licenceNumbers: [item.licenceNumber ?? ''],
+                                            skip: 0
+                                        })}
                                         expanded={expanded.includes(item.licenceNumber ?? '')}
                                         onToggleExpand={() => toggleExpanded(item.licenceNumber ?? '')}
                                         onOpenReport={openReportWithId}

@@ -36,6 +36,8 @@ public interface ILicenceListRepository
     Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
 
     Task<List<int>> GetLicenceListProcessRunIdsAsync();
+
+    Task<List<string>> GetLicenceEstateLicenceNumbersAsync();
     
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     

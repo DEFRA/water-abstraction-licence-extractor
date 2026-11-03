@@ -11,12 +11,13 @@ interface OutputItemTableRowProps {
     oddRow: boolean;
     expanded?: boolean;
     onToggleExpand?: () => void;
+    onLookUp?: () => void;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
-function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -39,6 +40,14 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onOpenReport,
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
                 {item.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={item.licenceNumberFlagReason}/>}
+                {onLookUp && (
+                    <>
+                        {' '}
+                        <a href="#"
+                           title="Everything held for this licence"
+                           onClick={(e) => { e.preventDefault(); onLookUp(); }}>look up</a>
+                    </>
+                )}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>

@@ -12,4 +12,8 @@ public record LicenceDetailResponse
 
     /// The whole chain, not just the licence that directly succeeds this one.
     public string[]? Successors { get; init; }
+
+    /// Estate licences differing only in punctuation, never merged: two licences can
+    /// legitimately read alike.
+    public string[]? PossibleVariants { get; init; }
 }

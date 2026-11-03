@@ -47,8 +47,34 @@ public class LicencesController(
                 Verifications = verifications
                     .OrderByDescending(verification => verification.CreatedDateTimeUtc)
                     .ToList(),
-                Successors = await GetSuccessorsAsync(licenceNumber)
+                Successors = await GetSuccessorsAsync(licenceNumber),
+                PossibleVariants = await GetPossibleVariantsAsync(licenceNumber)
             });
+    }
+
+    /// Deliberately not NormalizeLicenceNumber, which also drops zeros and so pairs
+    /// 2/26/30/012 with 2/26/31/002: 73 groups across the estate against 4 that are real.
+    private static string NormalizeForVariants(string licenceNumber) =>
+        new(licenceNumber.Where(char.IsLetterOrDigit).Select(char.ToUpperInvariant).ToArray());
+
+    private async Task<string[]> GetPossibleVariantsAsync(string licenceNumber)
+    {
+        var estateLicenceNumbers = await memoryCache.GetOrCreateAsync(
+            "licence-estate-licence-numbers",
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+
+                return await licenceListRepository.GetLicenceEstateLicenceNumbersAsync();
+            });
+
+        var normalized = NormalizeForVariants(licenceNumber);
+
+        return (estateLicenceNumbers ?? [])
+            .Where(candidate =>
+                !candidate.Equals(licenceNumber, StringComparison.OrdinalIgnoreCase) &&
+                NormalizeForVariants(candidate) == normalized)
+            .ToArray();
     }
 
     /// The visited set is a cycle guard, and it is load-bearing: six pairs of licences in NALD

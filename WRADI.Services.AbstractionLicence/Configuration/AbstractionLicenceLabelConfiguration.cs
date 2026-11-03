@@ -2492,7 +2492,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             "spray irrigation", // TODO add more types here
                             "trickle irrigation",
                             "mineral washing",
-                            "groundwater augmentation"
+                            "groundwater augmentation",
+                            "industrial",
+                            "non-evaporative cooling"
                         ],
                         SubLabels =
                         [

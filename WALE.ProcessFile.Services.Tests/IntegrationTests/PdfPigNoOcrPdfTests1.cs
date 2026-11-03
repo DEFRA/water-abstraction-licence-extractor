@@ -2364,7 +2364,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(sectionPoint1.SubResults);
 
         var sectionPoint1Sub1 = sectionPoint1.SubResults[0];
-        Assert.Equal(9, sectionPoint1Sub1.SubResults.Count);
+        Assert.Equal(10, sectionPoint1Sub1.SubResults.Count);
         Assert.Single(sectionPoint1Sub1.SubResults[0].Text!);
         
         var sectionPoint2 = abstractionLimitsSection.SubResults[1];
@@ -2380,7 +2380,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(sectionPoint3.SubResults);
 
         var sectionPoint3Sub1 = sectionPoint3.SubResults[0];
-        Assert.Equal(9, sectionPoint3Sub1.SubResults.Count);
+        Assert.Equal(10, sectionPoint3Sub1.SubResults.Count);
         Assert.Single(sectionPoint3Sub1.SubResults[0].Text!);
         
         var sectionPoint4 = abstractionLimitsSection.SubResults[3];

@@ -19,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Resources\Manual_Fix_Extract.xlsx" />
     <None Remove="Resources\NALD_Extract.csv" />
     <None Remove="Resources\Site_1_DL_1.xlsx" />
     <None Remove="Resources\Site_1_DL_2.xlsx" />
@@ -36,9 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Manual_Fix_Extract.xlsx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
     <None Remove="Resources\NALD_Extract.xlsx" />
     <None Remove="Resources\Site_1_DL.xlsx" />
     <None Remove="Resources\Previous_Iteration_Matches.xlsx" />

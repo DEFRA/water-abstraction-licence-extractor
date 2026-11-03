@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.AwsSqs;
+using FileProcessSingleRequest = WALE.Api.Areas.BFF.Models.FileProcessSingleRequest;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -31,6 +33,24 @@ public class MessageController(
             new SendMessageRequest
             {
                 QueueUrl = awsQueueConfig.Value.OrchestratorQueue,
+                MessageBody = payload,
+                DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
+            });
+
+        return Ok();
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> SendLicenceFinderProcessMessageAsync(
+        [FromQuery] LicenceFinderMessageRequest request,
+        [FromQuery] int delayInSeconds = 0)
+    {
+        var payload = JsonSerializer.Serialize(request);
+
+        await sqsClient.SendMessageAsync(
+            new SendMessageRequest
+            {
+                QueueUrl = awsQueueConfig.Value.LicenceFinderQueue,
                 MessageBody = payload,
                 DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
             });

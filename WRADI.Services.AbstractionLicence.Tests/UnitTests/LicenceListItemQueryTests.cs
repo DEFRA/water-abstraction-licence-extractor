@@ -9,12 +9,13 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 public class LicenceListItemQueryTests
 {
     /// search_text is only ever a predicate, nothing writes licence_list_item.source_data, and
-    /// Queue is derived by the estate query rather than stored.
+    /// Queue and DocumentCount are derived by the estate query rather than stored.
     private static readonly string[] DeliberatelyNotSelected =
     [
         "SearchText",
         "SourceData",
-        "Queue"
+        "Queue",
+        "DocumentCount"
     ];
 
     /// A column missing from the SELECT leaves its property at the default - Dapper does not fail.

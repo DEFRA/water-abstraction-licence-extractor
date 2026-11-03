@@ -56,6 +56,8 @@ public class OutputListDataItem
     public string? thumbnailUrl { get; set; }
 
     public int? queue { get; set; }
+
+    public int? documentCount { get; set; }
     
     public LinkedLicence[]? linkedLicences { get; set; }
     

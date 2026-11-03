@@ -80,4 +80,6 @@ public sealed class LicenceListItem
 
     /// Derived by the estate query, not stored, so null on the run-scoped list.
     public int? Queue { get; set; }
+
+    public int? DocumentCount { get; set; }
 }

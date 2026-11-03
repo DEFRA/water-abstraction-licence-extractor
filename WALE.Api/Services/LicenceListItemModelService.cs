@@ -112,6 +112,7 @@ public class LicenceListItemModelService
         {
             processRunId = licence.ProcessRunId,
             queue = licence.Queue,
+            documentCount = licence.DocumentCount,
             fileId = licence.FileId,
             licenceId = licence.LicenceId,
             matchesResultId = licence.MatchesResultId,

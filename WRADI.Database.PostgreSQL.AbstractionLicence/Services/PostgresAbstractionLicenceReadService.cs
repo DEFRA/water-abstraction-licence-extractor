@@ -4170,7 +4170,7 @@ private async Task<
             LicenceEstateQuery query)
     {
         var (sql, parameters) = BuildLicenceEstateQuery(
-            $"{LicenceListItemColumns},{Environment.NewLine}    queue AS Queue",
+            $"{LicenceListItemColumns},{Environment.NewLine}    queue AS Queue,{Environment.NewLine}    document_count AS DocumentCount",
             query);
 
         AddOrderingAndPaging(
@@ -4226,13 +4226,22 @@ private async Task<
         // reference licence_list_item by name, so another alias breaks them at runtime.
         sql.AppendLine("FROM (");
         sql.AppendLine("    SELECT");
-        sql.AppendLine("        *,");
+        sql.AppendLine("        ranked.*,");
+        sql.AppendLine("        documents.document_count,");
         sql.AppendLine(LicenceQueue);
         sql.AppendLine("    FROM (");
         sql.AppendLine(NewestPerLicence(query.ProcessRunId));
         sql.AppendLine(
             """
                 ) ranked
+                JOIN (
+                    SELECT
+                        lower(licence_number) AS licence_number,
+                        count(DISTINCT file_id) AS document_count
+                    FROM licence_list_item
+                    GROUP BY lower(licence_number)
+                ) documents
+                    ON documents.licence_number = lower(ranked.licence_number)
                 WHERE estate_rank = 1
             ) AS licence_list_item
             WHERE true
@@ -4241,6 +4250,13 @@ private async Task<
         if (query.ProcessRunId.HasValue)
         {
             parameters.Add("ProcessRunId", query.ProcessRunId.Value);
+        }
+
+        if (query.MinimumDocumentCount.HasValue)
+        {
+            sql.AppendLine("  AND document_count >= @MinimumDocumentCount");
+
+            parameters.Add("MinimumDocumentCount", query.MinimumDocumentCount.Value);
         }
 
         if (applyQueueFilter && query.Queue.HasValue)

@@ -11,4 +11,7 @@ public sealed class LicenceEstateQuery : ProcessRunQuery
     public int? ProcessRunId { get; init; }
 
     public int? Queue { get; init; }
+
+    /// Counted across every run, not the pinned one: a licence's documents, not a run's.
+    public int? MinimumDocumentCount { get; init; }
 }

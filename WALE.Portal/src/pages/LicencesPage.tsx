@@ -7,6 +7,7 @@ import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import Paging from "../components/Paging.tsx";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
+import {LICENCE_QUEUES} from "../utils/licenceQueues";
 import type {LicenceEstateQuery} from "../class/LicenceEstateQuery.tsx";
 import {queryFromParams, paramsFromQuery} from "../utils/licenceEstateParams";
 import '../assets/liststyles.css'
@@ -28,6 +29,7 @@ export default function LicencesPage() {
         setQuery({...query, skip: (value - 1) * query.take});
 
     const [records, setRecords] = useState<OutputListDataItem[]>([]);
+    const [queueCounts, setQueueCounts] = useState<Record<string, number>>({});
     const [totalLicences, setTotalLicences] = useState(0);
     const [issuers, setIssuers] = useState<string[]>([]);
     const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
@@ -51,6 +53,7 @@ export default function LicencesPage() {
                 }
 
                 setRecords(response.records ?? []);
+                setQueueCounts(response.queueCounts ?? {});
                 setTotalLicences(response.totalRecords ?? 0);
                 setIssuers(response.issuers ?? []);
                 setShortLicenceIds(response.licenceSetIds ?? []);
@@ -96,11 +99,38 @@ export default function LicencesPage() {
             openLicenceSetReport(fileId, licenceId, matchesResultId, licenceSetId, runOf(fileId)),
         [openLicenceSetReport, runOf]);
 
+    const chooseQueue = (queue: number | undefined) =>
+        setQuery({...query, queue, skip: 0});
+
     const totalPages = totalLicences > 0 ? Math.ceil(totalLicences / query.take) : 0;
 
     return (
         <div>
             <h1>Licence estate</h1>
+
+            <div style={{display: 'flex', gap: '6px', flexWrap: 'wrap', margin: '10px 0'}}>
+                {[{queue: undefined, label: 'All licences'}, ...LICENCE_QUEUES].map(entry => {
+                    const count = entry.queue === undefined
+                        ? Object.values(queueCounts).reduce((total, value) => total + value, 0)
+                        : queueCounts[String(entry.queue)] ?? 0;
+                    const isActive = query.queue === entry.queue;
+
+                    return (
+                        <button
+                            key={entry.label}
+                            onClick={() => chooseQueue(entry.queue)}
+                            style={{
+                                padding: '5px 10px',
+                                cursor: 'pointer',
+                                border: isActive ? '2px solid #1565c0' : '1px solid #bbb',
+                                background: isActive ? '#e3f2fd' : '#fafafa',
+                                fontWeight: isActive ? 600 : 400,
+                            }}>
+                            {entry.label} ({count})
+                        </button>
+                    );
+                })}
+            </div>
 
             {error && <div style={{color: '#b00'}}>{error}</div>}
             {loading && <div>Loading…</div>}

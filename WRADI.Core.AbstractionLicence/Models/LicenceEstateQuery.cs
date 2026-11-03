@@ -14,4 +14,7 @@ public sealed class LicenceEstateQuery : ProcessRunQuery
 
     /// Counted across every run, not the pinned one: a licence's documents, not a run's.
     public int? MinimumDocumentCount { get; init; }
+
+    /// The tail: licences that dropped out of the recent runs.
+    public int? MaximumRunCount { get; init; }
 }

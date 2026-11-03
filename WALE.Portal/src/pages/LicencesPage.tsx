@@ -39,6 +39,8 @@ export default function LicencesPage() {
     const [issuers, setIssuers] = useState<string[]>([]);
     const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
     const [issueDates, setIssueDates] = useState<string[]>([]);
+    const [statuses, setStatuses] = useState<string[]>([]);
+    const [processRunIds, setProcessRunIds] = useState<number[]>([]);
     const [showSingles, setShowSingles] = useState(true);
 
     /// Bumped to re-run the fetch after a verification is written, since the URL has not changed.
@@ -68,6 +70,8 @@ export default function LicencesPage() {
                 setIssuers(response.issuers ?? []);
                 setShortLicenceIds(response.licenceSetIds ?? []);
                 setIssueDates(response.issueDates ?? []);
+                setStatuses(response.statuses ?? []);
+                setProcessRunIds(response.processRunIds ?? []);
                 setError(null);
                 setLoadedQuery(query);
             })
@@ -172,6 +176,56 @@ export default function LicencesPage() {
                     }}>
                     Multiple documents
                 </button>
+            </div>
+
+            <div style={{display: 'flex', gap: '14px', alignItems: 'center', margin: '8px 0', fontSize: '13px'}}>
+                <label>
+                    Status{' '}
+                    <select
+                        value={query.projectedStatus ?? ''}
+                        onChange={(e) => setQuery({
+                            ...query,
+                            projectedStatus: e.target.value === '' ? undefined : e.target.value,
+                            skip: 0
+                        })}>
+                        <option value="">Any status</option>
+                        {statuses.map(status => (
+                            <option key={status} value={status}>{status}</option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    Run{' '}
+                    <select
+                        value={query.processRunId ?? ''}
+                        onChange={(e) => setQuery({
+                            ...query,
+                            processRunId: e.target.value === '' ? undefined : Number(e.target.value),
+                            skip: 0
+                        })}>
+                        <option value="">Newest per licence</option>
+                        {processRunIds.map(run => (
+                            <option key={run} value={run}>{run}</option>
+                        ))}
+                    </select>
+                </label>
+
+                <label>
+                    Seen in{' '}
+                    <select
+                        value={query.maximumRunCount ?? ''}
+                        onChange={(e) => setQuery({
+                            ...query,
+                            maximumRunCount: e.target.value === '' ? undefined : Number(e.target.value),
+                            skip: 0
+                        })}>
+                        <option value="">Any number of runs</option>
+                        <option value="1">One run only</option>
+                        <option value="3">Three runs or fewer</option>
+                        <option value="6">Six runs or fewer</option>
+                    </select>
+                </label>
             </div>
 
             {error && <div style={{color: '#b00'}}>{error}</div>}

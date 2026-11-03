@@ -3594,6 +3594,24 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return results.ToList();
     }
 
+    /// Every run holding a projection, not only those a licence's newest extraction comes
+    /// from: pinning to an older run is the point of the list.
+    public async Task<List<int>> GetLicenceListProcessRunIdsAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT process_run_id
+            FROM licence_list_item
+            ORDER BY process_run_id DESC;
+            """;
+
+        var results = await QueryAsync<int>(connection, sql, 0, new { });
+
+        return results.ToList();
+    }
+
     public async Task<List<string>> GetLicenceListStatusesAsync(int? processRunId)
     {
         await using var connection = GetPostgresConnection();
@@ -4170,7 +4188,7 @@ private async Task<
             LicenceEstateQuery query)
     {
         var (sql, parameters) = BuildLicenceEstateQuery(
-            $"{LicenceListItemColumns},{Environment.NewLine}    queue AS Queue,{Environment.NewLine}    document_count AS DocumentCount",
+            $"{LicenceListItemColumns},{Environment.NewLine}    queue AS Queue,{Environment.NewLine}    document_count AS DocumentCount,{Environment.NewLine}    run_count AS RunCount",
             query);
 
         AddOrderingAndPaging(
@@ -4228,6 +4246,7 @@ private async Task<
         sql.AppendLine("    SELECT");
         sql.AppendLine("        ranked.*,");
         sql.AppendLine("        documents.document_count,");
+        sql.AppendLine("        documents.run_count,");
         sql.AppendLine(LicenceQueue);
         sql.AppendLine("    FROM (");
         sql.AppendLine(NewestPerLicence(query.ProcessRunId));
@@ -4237,7 +4256,8 @@ private async Task<
                 JOIN (
                     SELECT
                         lower(licence_number) AS licence_number,
-                        count(DISTINCT file_id) AS document_count
+                        count(DISTINCT file_id) AS document_count,
+                        count(*) AS run_count
                     FROM licence_list_item
                     GROUP BY lower(licence_number)
                 ) documents
@@ -4250,6 +4270,13 @@ private async Task<
         if (query.ProcessRunId.HasValue)
         {
             parameters.Add("ProcessRunId", query.ProcessRunId.Value);
+        }
+
+        if (query.MaximumRunCount.HasValue)
+        {
+            sql.AppendLine("  AND run_count <= @MaximumRunCount");
+
+            parameters.Add("MaximumRunCount", query.MaximumRunCount.Value);
         }
 
         if (query.MinimumDocumentCount.HasValue)

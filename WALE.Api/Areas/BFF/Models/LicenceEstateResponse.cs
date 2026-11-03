@@ -18,6 +18,8 @@ public record LicenceEstateResponse
 
     public string[]? Statuses { get; init; }
 
+    public int[]? ProcessRunIds { get; init; }
+
     /// Counted under the filters but not under the queue selection, so the bar stays whole
     /// when one queue is picked.
     public Dictionary<int, int>? QueueCounts { get; init; }

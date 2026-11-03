@@ -82,4 +82,6 @@ public sealed class LicenceListItem
     public int? Queue { get; set; }
 
     public int? DocumentCount { get; set; }
+
+    public int? RunCount { get; set; }
 }

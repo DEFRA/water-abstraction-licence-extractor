@@ -58,6 +58,8 @@ public class OutputListDataItem
     public int? queue { get; set; }
 
     public int? documentCount { get; set; }
+
+    public int? runCount { get; set; }
     
     public LinkedLicence[]? linkedLicences { get; set; }
     

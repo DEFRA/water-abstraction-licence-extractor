@@ -5765,6 +5765,7 @@ export class Client {
      * @param processRunId (optional) 
      * @param queue (optional) 
      * @param minimumDocumentCount (optional) 
+     * @param maximumRunCount (optional) 
      * @param searchTerm (optional) 
      * @param searchTermClean (optional) 
      * @param skip (optional) 
@@ -5787,7 +5788,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, maximumRunCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
         let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
         if (projectedStatus === null)
             throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
@@ -5805,6 +5806,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'minimumDocumentCount' cannot be null.");
         else if (minimumDocumentCount !== undefined)
             url_ += "MinimumDocumentCount=" + encodeURIComponent("" + minimumDocumentCount) + "&";
+        if (maximumRunCount === null)
+            throw new globalThis.Error("The parameter 'maximumRunCount' cannot be null.");
+        else if (maximumRunCount !== undefined)
+            url_ += "MaximumRunCount=" + encodeURIComponent("" + maximumRunCount) + "&";
         if (searchTerm === null)
             throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
         else if (searchTerm !== undefined)
@@ -9218,6 +9223,7 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     statuses?: string[] | undefined;
+    processRunIds?: number[] | undefined;
     queueCounts?: { [key: string]: number; } | undefined;
 
     [key: string]: any;
@@ -9265,6 +9271,11 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
                 this.statuses = [] as any;
                 for (let item of _data["statuses"])
                     this.statuses!.push(item);
+            }
+            if (Array.isArray(_data["processRunIds"])) {
+                this.processRunIds = [] as any;
+                for (let item of _data["processRunIds"])
+                    this.processRunIds!.push(item);
             }
             if (_data["queueCounts"]) {
                 this.queueCounts = {} as any;
@@ -9315,6 +9326,11 @@ export class LicenceEstateResponse implements ILicenceEstateResponse {
             for (let item of this.statuses)
                 data["statuses"].push(item);
         }
+        if (Array.isArray(this.processRunIds)) {
+            data["processRunIds"] = [];
+            for (let item of this.processRunIds)
+                data["processRunIds"].push(item);
+        }
         if (this.queueCounts) {
             data["queueCounts"] = {};
             for (let key in this.queueCounts) {
@@ -9333,6 +9349,7 @@ export interface ILicenceEstateResponse {
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     statuses?: string[] | undefined;
+    processRunIds?: number[] | undefined;
     queueCounts?: { [key: string]: number; } | undefined;
 
     [key: string]: any;
@@ -11122,6 +11139,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     thumbnailUrl?: string | undefined;
     queue?: number | undefined;
     documentCount?: number | undefined;
+    runCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -11181,6 +11199,7 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.thumbnailUrl = _data["thumbnailUrl"];
             this.queue = _data["queue"];
             this.documentCount = _data["documentCount"];
+            this.runCount = _data["runCount"];
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
@@ -11250,6 +11269,7 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["thumbnailUrl"] = this.thumbnailUrl;
         data["queue"] = this.queue;
         data["documentCount"] = this.documentCount;
+        data["runCount"] = this.runCount;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
@@ -11296,6 +11316,7 @@ export interface IOutputListDataItem {
     thumbnailUrl?: string | undefined;
     queue?: number | undefined;
     documentCount?: number | undefined;
+    runCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;

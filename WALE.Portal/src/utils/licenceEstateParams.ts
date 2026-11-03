@@ -1,7 +1,7 @@
 import type {LicenceEstateQuery} from "../class/LicenceEstateQuery.tsx";
 
 /// One of Paging's own options, or its selector shows a size the page is not using.
-export const DefaultPageSize = 100;
+const DefaultPageSize = 100;
 
 const StringKeys = [
     'searchTerm',
@@ -10,9 +10,14 @@ const StringKeys = [
     'ShortLicenceSetId',
     'linkedLicencesType',
     'verificationType',
-    'sortField',
-    'projectedStatus'
+    'sortField'
 ] as const;
+
+const DefaultProjectedStatus = 'Live';
+
+/// Absent means Live, matching the run-scoped query's hard-coded filter, so showing every
+/// status needs a token of its own rather than an absent one.
+const AnyProjectedStatus = 'any';
 
 const BooleanKeys = [
     'limitsEmpty',
@@ -24,13 +29,14 @@ const BooleanKeys = [
     'isIssueDateFlagged'
 ] as const;
 
-const NumberKeys = ['issueYear', 'queue', 'processRunId', 'minimumDocumentCount'] as const;
+const NumberKeys = ['issueYear', 'queue', 'processRunId', 'minimumDocumentCount', 'maximumRunCount'] as const;
 
 export function queryFromParams(params: URLSearchParams): LicenceEstateQuery {
     const query: LicenceEstateQuery = {
         skip: 0,
         take: Number(params.get('size')) || DefaultPageSize,
         sortAscending: params.get('sortAscending') !== 'false',
+        projectedStatus: projectedStatusFromParams(params),
         licenceNumbers: params.getAll('licenceNumber')
     };
 
@@ -64,8 +70,24 @@ export function queryFromParams(params: URLSearchParams): LicenceEstateQuery {
     return query;
 }
 
+function projectedStatusFromParams(params: URLSearchParams): string | undefined {
+    const value = params.get('projectedStatus');
+
+    if (value === null) {
+        return DefaultProjectedStatus;
+    }
+
+    return value === AnyProjectedStatus ? undefined : value;
+}
+
 export function paramsFromQuery(query: LicenceEstateQuery): URLSearchParams {
     const params = new URLSearchParams();
+
+    if (query.projectedStatus === undefined) {
+        params.set('projectedStatus', AnyProjectedStatus);
+    } else if (query.projectedStatus !== DefaultProjectedStatus) {
+        params.set('projectedStatus', query.projectedStatus);
+    }
 
     for (const key of StringKeys) {
         const value = query[key];

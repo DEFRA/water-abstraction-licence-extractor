@@ -97,6 +97,8 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<List<string>> GetLicenceListDistinctIssuersAsync(int? processRunId);
 
     Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
+
+    Task<List<int>> GetLicenceListProcessRunIdsAsync();
     
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     

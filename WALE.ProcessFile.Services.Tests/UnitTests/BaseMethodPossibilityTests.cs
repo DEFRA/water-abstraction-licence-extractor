@@ -42,7 +42,7 @@ public class BaseMethodPossibilityTests
         var request = new FunctionInputModel { label = new LabelToMatch() };
         var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.Equal("N/A", restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.Equal("N/A", restricted.LabelGroupResults[0].Text);
     }
 
     [Fact]
@@ -66,9 +66,9 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.NotNull(restricted.LabelGroupResult.Text);
-        Assert.Empty(restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.NotNull(restricted.LabelGroupResults[0].Text);
+        Assert.Empty(restricted.LabelGroupResults[0].Text);
     }
 
     [Fact]
@@ -79,9 +79,9 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.NotNull(restricted.LabelGroupResult.Text);
-        Assert.Empty(restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.NotNull(restricted.LabelGroupResults[0].Text);
+        Assert.Empty(restricted.LabelGroupResults[0].Text);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, []);
 
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -117,9 +117,9 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.NotNull(restricted.LabelGroupResult.Text);
-        Assert.Equal(string.Empty, restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.NotNull(restricted.LabelGroupResults[0].Text);
+        Assert.Equal(string.Empty, restricted.LabelGroupResults[0].Text);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -143,8 +143,8 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.Equal("In", restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.Equal("In", restricted.LabelGroupResults[0].Text);
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotEmpty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotEmpty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
+        Assert.NotEmpty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class BaseMethodPossibilityTests
         var result = new LabelGroupResult { Text = [LineOf("Point of abstraction:")] };
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
-        Assert.Null(restricted.LabelGroupResult);
+        Assert.Empty(restricted.LabelGroupResults);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class BaseMethodPossibilityTests
 
         var restricted = BaseMethod.RestrictToPossibility(request, result.Text);
 
-        Assert.NotNull(restricted.LabelGroupResult);
-        Assert.Equal("✓", restricted.LabelGroupResult.Text);
+        Assert.NotEmpty(restricted.LabelGroupResults);
+        Assert.Equal("✓", restricted.LabelGroupResults[0].Text);
     }
 }

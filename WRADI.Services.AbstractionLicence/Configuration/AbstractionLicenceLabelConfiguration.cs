@@ -2612,6 +2612,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         IncludeStartLabelText = true,
+                        FindMultipleOnSingleLine = true,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         Format = "Text",
                         Possibilities =
                         [

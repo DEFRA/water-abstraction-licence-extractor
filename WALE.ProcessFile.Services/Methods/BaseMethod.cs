@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
@@ -177,12 +178,19 @@ public static class BaseMethod
             case Text.Constant:
                 var result = RestrictToPossibility(request, lines);
 
-                if (result.HasPossiblites)
+                if (result.HasPossibilities)
                 {
-                    if (result.LabelGroupResult?.Text != null)
+                    foreach (var lgr in result.LabelGroupResults)
                     {
-                        labelGroupResult.Text = [result.LabelGroupResult];
-                        returnList.Add(labelGroupResult);
+                        if (string.IsNullOrEmpty(lgr.Text))
+                        {
+                            continue;
+                        }
+
+                        var newlabelGroupResult = labelGroupResult.Clone();
+                        newlabelGroupResult.Text = [lgr];
+                        
+                        returnList.Add(newlabelGroupResult);
                     }
                 }
                 else if (lines.Count > 0)
@@ -335,13 +343,13 @@ public static class BaseMethod
         return false;
     }
     
-    internal static (bool HasPossiblites, DocumentLine? LabelGroupResult) RestrictToPossibility(
+    internal static (bool HasPossibilities, List<DocumentLine> LabelGroupResults) RestrictToPossibility(
         FunctionInputModel request,
         IReadOnlyList<DocumentLine> lines)
     {
         if (request.label!.Possibilities?.Any() != true)
         {
-            return (false, null);
+            return (false, []);
         }
 
         foreach (var line in lines)
@@ -354,20 +362,36 @@ public static class BaseMethod
                 continue;
             }
 
-            var possibility = request.label.Possibilities
-                .First(possibility => MatchesPossibility(line.Text, possibility));
-
             var possibilityWords = line.Columns
                 .SelectMany(c => c.Words)
                 .ToList();
+            
+            var possibilities = request.label.Possibilities
+                .Where(possibility => MatchesPossibility(line.Text, possibility))
+                .ToList();
 
-            possibilityWords = DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
+            if (request.label.MultipleMatchBehaviour
+                is MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValue
+                or MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithASingleValuePerLabel)
+            {
+                possibilities = possibilities.Take(1).ToList();
+            }
+            
+            var matches = new List<DocumentLine>();
+            
+            foreach (var possibility in possibilities)
+            {
+                var filteredPossibilityWords =
+                    DocumentLineColumn.FilterWordsFromText(possibilityWords, possibility.Text);
 
-            var clonedLine = line.Clone();
-            clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(possibilityWords));
+                var clonedLine = line.Clone();
+                clonedLine.Columns.Clear();
+                clonedLine.Columns.Add(new DocumentLineColumn(filteredPossibilityWords));
 
-            return (true, clonedLine);
+                matches.Add(clonedLine);
+            }
+
+            return (true, matches);
         }
         
         var firstLineText = lines.FirstOrDefault()?.Text;
@@ -378,10 +402,10 @@ public static class BaseMethod
         if (string.IsNullOrEmpty(firstLineText)
             && request.label.Possibilities.Any(possibility => possibility.Text.Length == 0))
         {
-            return (true, new DocumentLine());
+            return (true, [new DocumentLine()]);
         }
 
-        return (true, null);
+        return (true, []);
     }
 
     private static List<LabelGroupResult> RestrictToPossibilities(

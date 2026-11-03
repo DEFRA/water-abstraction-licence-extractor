@@ -12,27 +12,28 @@ interface OutputItemTableRowProps {
     expanded?: boolean;
     onToggleExpand?: () => void;
     onLookUp?: () => void;
+    lookUpHref?: string;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
-function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
-            <td style={{textAlign: 'center'}}>
+            <td style={{textAlign: 'center', position: 'relative'}}>
+                <img src={item.thumbnailUrl} width={80} />
                 {onToggleExpand && (
                     <button
                         onClick={onToggleExpand}
                         title={expanded ? 'Hide earlier runs' : 'Show every run'}
-                        style={{cursor: 'pointer', marginBottom: '4px'}}>
+                        style={{position: 'absolute', bottom: '4px', left: '4px', cursor: 'pointer'}}>
                         {expanded ? '\u25BE' : '\u25B8'}
                         {(item.documentCount ?? 1) > 1 && ` ${item.documentCount} docs`}
                     </button>
                 )}
-                <img src={item.thumbnailUrl} width={80} />
             </td>
-            <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
+            <td id={dashesIfNullOrEmpty(item.licenceNumber)} style={{position: 'relative'}}>
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
@@ -41,12 +42,17 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, onO
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
                 {item.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={item.licenceNumberFlagReason}/>}
                 {onLookUp && (
-                    <>
-                        {' '}
-                        <a href="#"
-                           title="Everything held for this licence"
-                           onClick={(e) => { e.preventDefault(); onLookUp(); }}>look up</a>
-                    </>
+                    <a href={lookUpHref ?? '#'}
+                       title="Everything held for this licence - open in a new tab to keep the list"
+                       style={{position: 'absolute', bottom: '4px', left: '4px'}}
+                       onClick={(e) => {
+                           if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+                               return;
+                           }
+
+                           e.preventDefault();
+                           onLookUp();
+                       }}>🗂 licence record</a>
                 )}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>

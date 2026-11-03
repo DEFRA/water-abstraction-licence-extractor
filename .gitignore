@@ -30,7 +30,6 @@ appsettings.Development.json
 *.xml
 
 **/*.xls
-**/*.xlsx
 **/*.csv
 
 # Project-specific

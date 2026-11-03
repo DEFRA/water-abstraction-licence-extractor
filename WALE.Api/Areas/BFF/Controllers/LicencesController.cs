@@ -15,6 +15,18 @@ public class LicencesController(
     IThumbnailUrlService thumbnailUrlService) : Controller
 {
     [HttpGet]
+    public async Task<ActionResult<IEnumerable<LicenceRunHistoryItem>>> GetLicenceRunHistory(
+        [FromQuery] string licenceNumber)
+    {
+        if (string.IsNullOrWhiteSpace(licenceNumber))
+        {
+            return BadRequest("A licence number is required.");
+        }
+
+        return Ok(await licenceListRepository.GetLicenceRunHistoryAsync(licenceNumber));
+    }
+
+    [HttpGet]
     public async Task<ActionResult<LicenceEstateResponse>> GetLicenceEstate(
         [FromQuery] LicenceEstateQuery query)
     {

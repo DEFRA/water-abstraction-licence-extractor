@@ -862,6 +862,67 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             cancellationToken);
     }
 
+    internal static (string Sql, DynamicParameters Parameters)
+        BuildLicenceRunHistoryQuery(string licenceNumber)
+    {
+        var sql = new StringBuilder();
+
+        sql.AppendLine(
+            """
+            SELECT
+                process_run_id AS ProcessRunId,
+                licence_list_item_id AS LicenceListItemId,
+                licence_id AS LicenceId,
+                matches_result_id AS MatchesResultId,
+                file_id AS FileId,
+                filename AS Filename,
+                status AS Status,
+                limits_count AS LimitsCount,
+                points_count AS PointsCount,
+                purposes_count AS PurposesCount,
+                aggregates_count AS AggregatesCount,
+                linked_licences_count AS LinkedLicencesCount,
+                licence_sets_count AS LicenceSetsCount,
+                means_found AS MeansFound,
+                ocr AS Ocr,
+                issue_date AS IssueDate,
+                is_licence_number_flagged AS IsLicenceNumberFlagged,
+                is_issue_date_flagged AS IsIssueDateFlagged,
+                created_date_time_utc AS CreatedDateTimeUtc,
+            """);
+
+        sql.AppendLine(LicenceQueue);
+        sql.AppendLine(
+            """
+            FROM licence_list_item ranked
+            WHERE lower(licence_number) = @LicenceNumber
+            ORDER BY process_run_id DESC;
+            """);
+
+        var parameters = new DynamicParameters();
+
+        parameters.Add("LicenceNumber", licenceNumber.Trim().ToLowerInvariant());
+
+        return (sql.ToString(), parameters);
+    }
+
+    public async Task<List<LicenceRunHistoryItem>> GetLicenceRunHistoryAsync(
+        string licenceNumber,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        var (sql, parameters) = BuildLicenceRunHistoryQuery(licenceNumber);
+
+        var results = await connection.QueryAsync<LicenceRunHistoryItem>(
+            new CommandDefinition(
+                sql,
+                parameters,
+                cancellationToken: cancellationToken));
+
+        return results.ToList();
+    }
+
     public async Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(
         LicenceEstateQuery query,
         CancellationToken cancellationToken = default)

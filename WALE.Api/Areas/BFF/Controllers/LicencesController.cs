@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Interfaces;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -12,8 +13,84 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class LicencesController(
     ILicenceListRepository licenceListRepository,
     ILicenceListItemModelService licenceListItemModelService,
-    IThumbnailUrlService thumbnailUrlService) : Controller
+    IThumbnailUrlService thumbnailUrlService,
+    IAbstractionLicenceCacheService abstractionLicenceCacheService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
+    IMemoryCache memoryCache) : Controller
 {
+    [HttpGet]
+    public async Task<ActionResult<LicenceDetailResponse>> GetLicenceDetail(
+        [FromQuery] string licenceNumber)
+    {
+        if (string.IsNullOrWhiteSpace(licenceNumber))
+        {
+            return BadRequest("A licence number is required.");
+        }
+
+        var runs = await licenceListRepository.GetLicenceRunHistoryAsync(licenceNumber);
+
+        var verifications = new List<LicenceSectionVerification>();
+
+        foreach (var fileId in runs.Select(run => run.FileId).Distinct())
+        {
+            verifications.AddRange(
+                await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(
+                    fileId,
+                    licenceNumber));
+        }
+
+        return Ok(
+            new LicenceDetailResponse
+            {
+                LicenceNumber = licenceNumber,
+                Runs = runs,
+                Verifications = verifications
+                    .OrderByDescending(verification => verification.CreatedDateTimeUtc)
+                    .ToList(),
+                Successors = await GetSuccessorsAsync(licenceNumber)
+            });
+    }
+
+    /// The visited set is a cycle guard, and it is load-bearing: six pairs of licences in NALD
+    /// succeed each other, so a plain walk of 2/27/22/512 never returns.
+    private async Task<string[]> GetSuccessorsAsync(string licenceNumber)
+    {
+        var history = await memoryCache.GetOrCreateAsync(
+            "nald-licence-number-history",
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+
+                return await abstractionLicenceCacheService.GetNaldLicenceNumberHistoryAsync();
+            });
+
+        if (history is null)
+        {
+            return [];
+        }
+
+        var successors = new List<string>();
+        var visited = new HashSet<string> { licenceNumber.Trim().ToLowerInvariant() };
+        var frontier = new Queue<string>(visited);
+
+        while (frontier.Count > 0)
+        {
+            if (!history.TryGetValue(frontier.Dequeue(), out var entry))
+            {
+                continue;
+            }
+
+            foreach (var followOn in entry.FollowOnLicenceNumbers
+                         .Where(followOn => visited.Add(followOn.ToLowerInvariant())))
+            {
+                successors.Add(followOn);
+                frontier.Enqueue(followOn.ToLowerInvariant());
+            }
+        }
+
+        return successors.ToArray();
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceRunHistoryItem>>> GetLicenceRunHistory(
         [FromQuery] string licenceNumber)

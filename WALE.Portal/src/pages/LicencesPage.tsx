@@ -1,6 +1,8 @@
-import {useState, useEffect, useCallback, useMemo} from 'react';
+import {useState, useEffect, useCallback, useMemo, Fragment} from 'react';
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
+import {OutputListDataItem, LicenceRunHistoryItem} from "../api/generated/apiClient.ts";
+import {waleApiClient} from "../api/apiClient";
+import LicenceRunHistory from "../components/LicenceRunHistory";
 import {getLicenceEstate} from "../api/licenceEstate";
 import LicencesTableRow from "../components/LicencesTableRow";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
@@ -11,6 +13,9 @@ import {LICENCE_QUEUES} from "../utils/licenceQueues";
 import type {LicenceEstateQuery} from "../class/LicenceEstateQuery.tsx";
 import {queryFromParams, paramsFromQuery} from "../utils/licenceEstateParams";
 import '../assets/liststyles.css'
+
+/// LicencesTableRow's cell count, which the expanded row has to span.
+const LicenceRowColumns = 14;
 
 export default function LicencesPage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -38,6 +43,11 @@ export default function LicencesPage() {
 
     /// Bumped to re-run the fetch after a verification is written, since the URL has not changed.
     const [refreshes, setRefreshes] = useState(0);
+
+    const [expanded, setExpanded] = useState<string[]>([]);
+
+    /// Kept across collapses but dropped on refresh: a verification changes a run's queue.
+    const [runHistory, setRunHistory] = useState<Record<string, LicenceRunHistoryItem[]>>({});
     const [error, setError] = useState<string | null>(null);
 
     const [loadedQuery, setLoadedQuery] = useState<LicenceEstateQuery | null>(null);
@@ -102,6 +112,21 @@ export default function LicencesPage() {
     const chooseQueue = (queue: number | undefined) =>
         setQuery({...query, queue, skip: 0});
 
+    const toggleExpanded = (licenceNumber: string) => {
+        if (expanded.includes(licenceNumber)) {
+            setExpanded(expanded.filter(entry => entry !== licenceNumber));
+            return;
+        }
+
+        setExpanded([...expanded, licenceNumber]);
+
+        if (runHistory[licenceNumber] === undefined) {
+            waleApiClient.getLicenceRunHistory(licenceNumber)
+                .then(runs => setRunHistory(previous => ({...previous, [licenceNumber]: runs})))
+                .catch(err => console.error('Error fetching run history:', err));
+        }
+    };
+
     const totalPages = totalLicences > 0 ? Math.ceil(totalLicences / query.take) : 0;
 
     return (
@@ -130,6 +155,23 @@ export default function LicencesPage() {
                         </button>
                     );
                 })}
+
+                <button
+                    onClick={() => setQuery({
+                        ...query,
+                        minimumDocumentCount: query.minimumDocumentCount ? undefined : 2,
+                        skip: 0
+                    })}
+                    style={{
+                        padding: '5px 10px',
+                        cursor: 'pointer',
+                        marginLeft: '12px',
+                        border: query.minimumDocumentCount ? '2px solid #1565c0' : '1px solid #bbb',
+                        background: query.minimumDocumentCount ? '#e3f2fd' : '#fafafa',
+                        fontWeight: query.minimumDocumentCount ? 600 : 400,
+                    }}>
+                    Multiple documents
+                </button>
             </div>
 
             {error && <div style={{color: '#b00'}}>{error}</div>}
@@ -163,14 +205,23 @@ export default function LicencesPage() {
                         </thead>
                         <tbody>
                             {records.map((item, index) => (
-                                <LicencesTableRow
-                                    item={item}
-                                    key={`${item.fileId}-${item.licenceId}`}
-                                    oddRow={index % 2 === 0}
-                                    onOpenReport={openReportWithId}
-                                    onOpenLicenceSetReport={openLicenceSetReportWithId}
-                                    showSingles={showSingles}
-                                />
+                                <Fragment key={`${item.fileId}-${item.licenceId}`}>
+                                    <LicencesTableRow
+                                        item={item}
+                                        oddRow={index % 2 === 0}
+                                        expanded={expanded.includes(item.licenceNumber ?? '')}
+                                        onToggleExpand={() => toggleExpanded(item.licenceNumber ?? '')}
+                                        onOpenReport={openReportWithId}
+                                        onOpenLicenceSetReport={openLicenceSetReportWithId}
+                                        showSingles={showSingles}
+                                    />
+                                    {expanded.includes(item.licenceNumber ?? '') && (
+                                        <LicenceRunHistory
+                                            runs={runHistory[item.licenceNumber ?? '']}
+                                            columnCount={LicenceRowColumns}
+                                        />
+                                    )}
+                                </Fragment>
                             ))}
                         </tbody>
                     </table>
@@ -183,7 +234,10 @@ export default function LicencesPage() {
                 onMaximize={maximizeModal}
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
-                onRefresh={() => setRefreshes(count => count + 1)}
+                onRefresh={() => {
+                    setRunHistory({});
+                    setRefreshes(count => count + 1);
+                }}
             />
         </div>
     );

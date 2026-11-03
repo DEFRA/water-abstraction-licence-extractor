@@ -9,15 +9,26 @@ import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
     oddRow: boolean;
+    expanded?: boolean;
+    onToggleExpand?: () => void;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
-function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
+                {onToggleExpand && (
+                    <button
+                        onClick={onToggleExpand}
+                        title={expanded ? 'Hide earlier runs' : 'Show every run'}
+                        style={{cursor: 'pointer', marginBottom: '4px'}}>
+                        {expanded ? '\u25BE' : '\u25B8'}
+                        {(item.documentCount ?? 1) > 1 && ` ${item.documentCount} docs`}
+                    </button>
+                )}
                 <img src={item.thumbnailUrl} width={80} />
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>

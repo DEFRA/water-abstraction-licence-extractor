@@ -24,7 +24,7 @@ const BooleanKeys = [
     'isIssueDateFlagged'
 ] as const;
 
-const NumberKeys = ['issueYear', 'queue', 'processRunId'] as const;
+const NumberKeys = ['issueYear', 'queue', 'processRunId', 'minimumDocumentCount'] as const;
 
 export function queryFromParams(params: URLSearchParams): LicenceEstateQuery {
     const query: LicenceEstateQuery = {

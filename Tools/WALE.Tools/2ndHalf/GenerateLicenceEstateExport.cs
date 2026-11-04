@@ -16,7 +16,7 @@ public static class GenerateLicenceEstateExport
     {
         ConsoleHelper.WriteLine($"Exporting from {KeyConfig.PostgresHost}, "
             + $"ProcessRun {processRunId}"
-            + (licenceNumber == null ? " (first licence)" : $", licence {licenceNumber}"));
+            + (licenceNumber == null ? " (whole run)" : $", licence {licenceNumber}"));
 
         NpgsqlDataSourceProvider dataSourceProvider = new(
             KeyConfig.PostgresHost,

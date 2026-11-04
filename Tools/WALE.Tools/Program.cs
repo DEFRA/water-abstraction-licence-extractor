@@ -54,9 +54,9 @@ switch (workflow)
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO
 
-    case "GenerateLicenceEstateExport": // Hand a licence's extraction output to another team as
-        // one JSON file
-        // Third argument is an optional licence number: "GenerateLicenceEstateExport 134 2/27/18/158/R01".
+    case "GenerateLicenceEstateExport": // Hand another team the extraction output: a run as a zip
+        // of one JSON file per licence, or one licence with a third argument:
+        // "GenerateLicenceEstateExport 134 2/27/18/158/R01"
         return await GenerateLicenceEstateExport.GenerateAsync(
             processRunId,
             args.Length > 2 ? args[2] : null);

@@ -89,7 +89,6 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
         DocnetAlternativeDocumentService,
         MessageQueueService);
     
-    private static readonly int NoneNeRegionCode = 1;
     private static readonly int NeRegionCode = 3;
     
     private static Dictionary<string, DmsFileData> FileLicenceMappingWithout52 =>

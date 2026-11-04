@@ -21,7 +21,7 @@ public interface IFileService
 
     public Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null);
     
-    public Task DeleteAsync(string filename);
+    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress);
     
     Task<bool> ExistsAsync(string filename, StorageFolder folder);
     

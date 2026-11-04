@@ -172,9 +172,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         return content;
     }
     
-    public async Task DeleteAsync(string filename)
+    public async Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
     {
-        var path = $"/BFF/Files/Delete?filename={filename}";
+        var path = $"/BFF/Files/Delete?filename={filename}&folder={folder}";
        
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));

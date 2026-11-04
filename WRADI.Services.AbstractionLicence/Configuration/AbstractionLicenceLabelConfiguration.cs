@@ -2017,9 +2017,14 @@ public static partial class AbstractionLicenceLabelConfiguration
                 [
                     new("MEANS OF ABSTRACTION")
                 ],
+                // A spelling missing here does not fail to match - the section runs on to
+                // [END_OF_BLOCK] and the value swallows Purposes and Period. GetPurposeLabels
+                // carries the same spellings; keep the two in step.
                 TextEnd =
                 [
                     new("PURPOSE OF ABSTRACTION"),
+                    new("PURPOSES OF ABSTRACTION"),
+                    new("PURPOSE(S) OF ABSTRACTION"),
                     new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,

@@ -57,6 +57,9 @@ public static class GenerateLicenceEstateExport
                     + $", {summary.NotExtracted} the run did not extract"
                     + $", {summary.WithoutDocumentText} without document text"
                     + $", {summary.WithoutTemplateType} without a template type"
+                    + (summary.Duplicated > 0
+                        ? $", {summary.Duplicated} a second extraction of the same document"
+                        : "")
                     + (summary.Unreadable > 0 ? $", {summary.Unreadable} unreadable" : ""));
             }
 

@@ -74,6 +74,7 @@ public class LicenceEstateExportService(
         var written = 0;
         var notExtracted = 0;
         var unreadable = 0;
+        var duplicated = 0;
         var withoutDocumentText = 0;
         var withoutTemplateType = 0;
 
@@ -115,13 +116,17 @@ public class LicenceEstateExportService(
                     continue;
                 }
 
+                // One file can hold two licence rows with different extracted content - the
+                // duplicate-processing race on matches_result. They share a file id and a
+                // matches result id, so only the licence id tells them apart, and the second
+                // would otherwise replace the first in the zip. 3 of 433 rows in run 176.
                 var name = FileName(licence.LicenceNumber.Value);
 
                 if (!names.Add(name))
                 {
-                    throw new InvalidOperationException(
-                        $"Two licences both export as {name} - the second is "
-                        + $"{licence.LicenceNumber.Value}.");
+                    duplicated++;
+                    name = FileName(licence.LicenceNumber.Value, licenceId);
+                    names.Add(name);
                 }
 
                 if (licence.DocumentText == null)
@@ -150,12 +155,15 @@ public class LicenceEstateExportService(
             written,
             notExtracted,
             unreadable,
+            duplicated,
             withoutDocumentText,
             withoutTemplateType);
     }
 
-    private static string FileName(string licenceNumber) =>
-        new string(licenceNumber.Where(char.IsLetterOrDigit).ToArray()) + ".json";
+    private static string FileName(string licenceNumber, int? licenceId = null) =>
+        new string(licenceNumber.Where(char.IsLetterOrDigit).ToArray())
+        + (licenceId == null ? string.Empty : $"-{licenceId}")
+        + ".json";
 
     private static ValueWithConfidence<string>? IssuedTo(Licence licence)
     {

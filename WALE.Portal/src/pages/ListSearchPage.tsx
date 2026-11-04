@@ -18,6 +18,7 @@ import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
 import ExportImportVerifications from "../components/ExportImportVerifications.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
+import ExportLicenceEstate from "../components/ExportLicenceEstate.tsx";
 import LicenceFinderAction from "../components/LicenceFinderAction";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
@@ -312,6 +313,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             {activeTab === 'licences' && (
                 <div id="licences">
                     <RefreshLicenceListData processRunId={processRunId} />
+                    <ExportLicenceEstate processRunId={processRunId} />
                     <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
                    
                         <Paging

@@ -275,7 +275,84 @@ public class PdfPigNoOcrPdfTests
         
         Assert.NotNull(licence.LinkedLicences);
         Assert.Empty(licence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task WhenFixSomeSubSectionsNotBeingFound()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "ne0270028068__b6895d2e-8bcb-41f0-b618-0197bb3f35f4.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(31, resultList.Count);
         
+        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
         
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.False(abstractionLimitsSection.IsOcr);
+        Assert.Equal(21, abstractionLimitsSection.Text!.Count);
+
+        Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
+        
+        var abstractionLimitsPoint = abstractionLimitsSection.SubResults[0];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.1 25 cubic metres per hour", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[1];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.2 For purpose 4.1", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[2];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.3 For purpose 4.2", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[3];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.4 25 cubic metres per hour", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[4];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.StartsWith("6.5 The aggregate quantity of water", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("NE/027/0028/068", licence.LicenceNumber!.Value);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Equal(6, licence.AbstractionLimits.Individual.Length);
+        Assert.Equal("6.1", licence.AbstractionLimits.Individual[0].DocumentIdentifier);
+        Assert.Equal("6.2", licence.AbstractionLimits.Individual[1].DocumentIdentifier);
+        Assert.Equal("6.3", licence.AbstractionLimits.Individual[2].DocumentIdentifier);
+        Assert.Equal("6.4", licence.AbstractionLimits.Individual[3].DocumentIdentifier);
+        Assert.Equal("6.5", licence.AbstractionLimits.Individual[4].DocumentIdentifier);
+        Assert.Equal("9.3", licence.AbstractionLimits.Individual[5].DocumentIdentifier);
+        
+        Assert.Null(licence.AbstractionLimits.Aggregates);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.NotEmpty(licence.LinkedLicences);
     }
 }

@@ -54,6 +54,13 @@ switch (workflow)
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO
 
+    case "GenerateLicenceEstateExport": // Hand a licence's extraction output to another team as
+        // one JSON file
+        // Third argument is an optional licence number: "GenerateLicenceEstateExport 134 2/27/18/158/R01".
+        return await GenerateLicenceEstateExport.GenerateAsync(
+            processRunId,
+            args.Length > 2 ? args[2] : null);
+
     case "RebuildDocumentText": // AFTER A FORMAT BUMP - Re-derive stored document text so reads
         // and the estate export serve a stored row instead of deriving it per request
         return await RebuildDocumentText.RebuildAsync();

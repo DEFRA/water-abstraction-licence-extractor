@@ -5,6 +5,9 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.NoOcrService;
+using WALE.ProcessFile.Services.PdfPig.Helpers;
+using WALE.ProcessFile.Services.PdfPig.Models;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -13,7 +16,10 @@ public class DocumentTextService(
     IDatabaseWriteService databaseWriteService) : IDocumentTextService
 {
     /// Bump for any change to what a derivation produces; older rows are then re-derived.
-    private const int FormatVersion = 1;
+    private const int FormatVersion = 2;
+
+    /// Exposed so RebuildDocumentText targets the same version rather than hardcoding one.
+    public static int CurrentFormatVersion => FormatVersion;
 
     /// A document's native text is a full layer or none at all - a median 15,000 characters
     /// against 0 - so any threshold inside that gap behaves the same.
@@ -88,22 +94,40 @@ public class DocumentTextService(
             : (text, useOcr ? ocrServiceName : GeneralConstants.PdfPigDataExtractorServiceName);
     }
 
+    /// Reads the per-page blocks, not all_pages_text: that holds DocumentLines already grouped
+    /// across the full page width, which interleaves a two-column page beyond recovery.
+    /// Some files hold more than one cache row per page and the read keeps whichever arrives
+    /// first, so for those the text is whichever copy Postgres happens to return.
     private async Task<string?> ReadNativeTextAsync(Guid fileId, List<string> unreadable)
     {
-        var stored = await databaseReadService.GetAllPagesTextAsync(
-            fileId,
-            GeneralConstants.PdfPigDataExtractorServiceName);
+        var pages = await databaseReadService.GetNoOcrAllPagesTextLinesAsync(
+            new NoOcrServiceMetadataCacheRequest
+            {
+                FileId = fileId,
+                NoOcrServiceName = GeneralConstants.PdfPigDataExtractorServiceName
+            });
 
-        if (string.IsNullOrWhiteSpace(stored))
+        if (pages == null || pages.Count == 0)
         {
             return null;
         }
 
-        var lines = Deserialize<List<DocumentLine>>(stored, unreadable, "all_pages_text");
+        var lines = new List<(int PageNumber, string? Text)>();
 
-        return lines == null
-            ? null
-            : FormatPages(lines.Select(line => (line.PageNumber, line.Text)));
+        foreach (var (pageNumber, data) in pages.OrderBy(page => page.Key))
+        {
+            var blocks = Deserialize<List<MinimalTextBlock>>(
+                data, unreadable, $"no_ocr_page_text_cache page {pageNumber}");
+
+            if (blocks == null)
+            {
+                continue;
+            }
+
+            lines.AddRange(BlockTextHelper.Lines(blocks).Select(line => (pageNumber, (string?)line)));
+        }
+
+        return FormatPages(lines);
     }
 
     private async Task<(string? Text, string? ServiceName)> ReadOcrTextAsync(

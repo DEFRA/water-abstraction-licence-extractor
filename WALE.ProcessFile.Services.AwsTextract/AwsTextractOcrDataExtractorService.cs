@@ -1,3 +1,4 @@
+using RateLimiter;
 using System.Text.Json;
 using Amazon;
 using Amazon.Runtime;
@@ -67,8 +68,16 @@ public class AwsTextractOcrDataExtractorService
     
     private static readonly Lock ClientInitialisationLock = new();
 
-    private const int MaxRequestsPerSecond = 1;
-    private static readonly SemaphoreSlim RequestLock = new(1, MaxRequestsPerSecond);
+    // The account's Textract quota, divided by the Lambda's reserved concurrency, because the
+    // limiter is per instance and every instance calls Textract. Raise AccountRequestsPerSecond
+    // only with the quota: over it, pages fail OCR and the file still reports success. A
+    // SemaphoreSlim here would bound concurrency rather than rate, and pace nothing.
+    private const int AccountRequestsPerSecond = 1;
+    private const int ReservedConcurrency = 10;
+
+    private static readonly TimeLimiter RequestLimiter = TimeLimiter.GetFromMaxCountByInterval(
+        1,
+        TimeSpan.FromSeconds((double)ReservedConcurrency / AccountRequestsPerSecond));
 
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -220,16 +229,8 @@ public class AwsTextractOcrDataExtractorService
         AmazonTextractClient client,
         DetectDocumentTextRequest detectDocumentTextRequest)
     {
-        await RequestLock.WaitAsync();
-
-        try
-        {
-            return await client.DetectDocumentTextAsync(detectDocumentTextRequest);
-        }
-        finally
-        {
-            RequestLock.Release();
-        }
+        return await RequestLimiter.Enqueue(
+            () => client.DetectDocumentTextAsync(detectDocumentTextRequest));
     }
     
     private static AmazonTextractClient? _client;

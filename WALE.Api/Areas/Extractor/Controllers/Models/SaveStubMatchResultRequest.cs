@@ -7,4 +7,6 @@ public class SaveStubMatchResultRequest
     public Guid fileId { get; set; }
     
     public int processRunId { get; set; }
+
+    public bool isUpdate { get; set; }
 }

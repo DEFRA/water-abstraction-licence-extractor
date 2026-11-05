@@ -1,8 +1,11 @@
+using RateLimiter;
 using System.Text.Json;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.Textract;
 using Amazon.Textract.Model;
+using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Interfaces;
@@ -56,12 +59,22 @@ public class AwsTextractOcrDataExtractorService
     private readonly string? _secretKey;
     
     public bool HasDirectCost => true;
+
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.FailFileOnTransientError;
     public string Name => "AwsTextractOcrDataExtractorService";
     
     private static readonly Lock ClientInitialisationLock = new();
 
-    private const int MaxRequestsPerSecond = 1;
-    private static readonly SemaphoreSlim RequestLock = new(1, MaxRequestsPerSecond);
+    // The account's Textract quota, divided by the Lambda's reserved concurrency, because the
+    // limiter is per instance and every instance calls Textract. Raise AccountRequestsPerSecond
+    // only with the quota: over it, pages fail OCR and the file still reports success. A
+    // SemaphoreSlim here would bound concurrency rather than rate, and pace nothing.
+    private const int AccountRequestsPerSecond = 1;
+    private const int ReservedConcurrency = 10;
+
+    private static readonly TimeLimiter RequestLimiter = TimeLimiter.GetFromMaxCountByInterval(
+        1,
+        TimeSpan.FromSeconds((double)ReservedConcurrency / AccountRequestsPerSecond));
 
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -147,6 +160,16 @@ public class AwsTextractOcrDataExtractorService
                     returnLines = returnList;
                 }
             }
+            catch (AmazonServiceException e) when (IsTransient(e))
+            {
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - transient failure (SDK retries exhausted) - {e}");
+
+                throw new OcrServiceTransientException(
+                    Name,
+                    $"{Name} transient failure for P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}: " +
+                    $"{e.GetType().Name} - {e.Message}",
+                    e);
+            }
             catch (Exception e)
             {
                 ConsoleHelper.WriteLine($"ERROR - {nameof(AwsTextract)} - {e}");
@@ -176,20 +199,35 @@ public class AwsTextractOcrDataExtractorService
             considerableOverlapAmount);
     }
     
+    /// <summary>
+    /// Errors that are expected to clear on their own. The SDK has already retried these
+    /// (RetryMode.Standard, MaxErrorRetry = 5) by the time they surface here, so reaching this
+    /// point means sustained throttling or a service-side outage, not a blip.
+    /// </summary>
+    private static bool IsTransient(AmazonServiceException exception)
+    {
+        if (exception is ProvisionedThroughputExceededException
+            or ThrottlingException
+            or LimitExceededException
+            or InternalServerErrorException)
+        {
+            return true;
+        }
+
+        if (exception.Retryable is { Throttling: true })
+        {
+            return true;
+        }
+
+        return (int)exception.StatusCode >= 500;
+    }
+
     private static async Task<DetectDocumentTextResponse> DetectDocumentTextAsync(
         AmazonTextractClient client,
         DetectDocumentTextRequest detectDocumentTextRequest)
     {
-        await RequestLock.WaitAsync();
-
-        try
-        {
-            return await client.DetectDocumentTextAsync(detectDocumentTextRequest);
-        }
-        finally
-        {
-            RequestLock.Release();
-        }
+        return await RequestLimiter.Enqueue(
+            () => client.DetectDocumentTextAsync(detectDocumentTextRequest));
     }
     
     private static AmazonTextractClient? _client;

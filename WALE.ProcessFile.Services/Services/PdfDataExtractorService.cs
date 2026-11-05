@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -57,17 +58,22 @@ public class PdfDataExtractorService(
                 return (true, null, null);
             }
 
-            if (matchesResult != null)
+            var reclaimingTransientError =
+                matchesResult?.Status == nameof(ScrapeStatus.TransientError);
+
+            if (matchesResult != null && !reclaimingTransientError)
             {
                 return (false, true, matchesResult);
             }
 
-            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock) for {dmsDataForFile.FileId}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock" +
+                $"{(reclaimingTransientError ? ", reclaiming TransientError" : string.Empty)}) for {dmsDataForFile.FileId}");
             
             await outputService.SaveStubMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
-                processRunId);
+                processRunId,
+                isUpdate: reclaimingTransientError);
         }
 
         try
@@ -81,12 +87,19 @@ public class PdfDataExtractorService(
         }
         catch (Exception ex)
         {
+            // Transient (e.g. OCR throttling): leave the row reclaimable so the queue's retry of this
+            // message re-OCRs the file. Anything else is terminal for this run, as before.
+            var status = ex is OcrServiceTransientException
+                ? ScrapeStatus.TransientError
+                : ScrapeStatus.Error;
+
             await outputService.SaveErrorMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
                 ex.ToString(),
-                configuration.UseLockExclusivity);
+                configuration.UseLockExclusivity,
+                status);
 
             throw;
         }
@@ -570,11 +583,6 @@ public class PdfDataExtractorService(
                 {
                     servicesUsed.TryAdd(ocrService.Name, 0);
                     var serviceStartTimeUtc = DateTime.UtcNow;
-                    
-                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
-                    {
-                        returnResult.ServicesUsed.Add(ocrService.Name);
-                    }
 
                     try
                     {
@@ -594,9 +602,43 @@ public class PdfDataExtractorService(
 
                         var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
                         servicesUsed[ocrService.Name] += serviceDurationMs;
-                        
-                        // Don't rethrow - just carry on with the other providers and pages
+
+                        var isTransient = ex is OcrServiceTransientException;
+
+                        // Record it on the result so a page that lost this provider is visible, rather
+                        // than the file saving as a normal success that happens to extract differently.
+                        returnResult.ServicesFailed.Add(new OcrServiceFailure
+                        {
+                            ServiceName = ocrService.Name,
+                            PageNumber = pageNumber,
+                            ImageNumber = imageNumber,
+                            IsTransient = isTransient,
+                            ErrorType = (ex.InnerException ?? ex).GetType().Name,
+                            Message = ex.Message
+                        });
+
+                        if (isTransient && ocrService.FailurePolicy == OcrServiceFailurePolicy.FailFileOnTransientError)
+                        {
+                            // Fail the whole file: the caller marks the queue message as failed and SQS
+                            // redelivers it once the visibility timeout passes, by which time the
+                            // throttle has usually cleared. Nothing has been cached for this page.
+                            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {ocrService.Name} " +
+                                $"transient failure on page {pageNumber} image {imageNumber}, failing file for retry " +
+                                $"- {pdfDocument.PdfFilename}");
+
+                            throw;
+                        }
+
+                        // Permanent error, or a supplementary provider: carry on with the other
+                        // providers and pages.
                         continue;
+                    }
+
+                    // Only counts as "used" once a call has actually completed, so ServicesUsed is
+                    // never claimed for a provider that contributed nothing.
+                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                    {
+                        returnResult.ServicesUsed.Add(ocrService.Name);
                     }
                     
                     // No lines found, no point processing that with the other services

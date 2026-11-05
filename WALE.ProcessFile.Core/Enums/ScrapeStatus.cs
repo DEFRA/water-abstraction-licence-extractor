@@ -8,5 +8,11 @@ public enum ScrapeStatus
     FileIdMissing,
     InProgress,
     Error,
-    NotScraped
+    NotScraped,
+
+    /// <summary>
+    /// Unlike <see cref="Error"/> this does not hold the per-run lock: a retry of the same file
+    /// in the same run reclaims the row and processes from scratch.
+    /// </summary>
+    TransientError
 }

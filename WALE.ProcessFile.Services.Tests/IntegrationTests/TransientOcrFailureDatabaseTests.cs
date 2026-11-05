@@ -29,12 +29,9 @@ using WRADI.Services.Output.AbstractionLicence;
 namespace WALE.ProcessFile.Services.Tests.IntegrationTests;
 
 /// <summary>
-/// WRADI-392. An OCR provider that is throttled (Textract ProvisionedThroughputExceededException
-/// after the SDK's own retries are exhausted) used to leave a result that claimed the provider was
-/// used and saved as a normal success, so a throttled run was indistinguishable from a rules
-/// regression. These run the throttle-and-recover loop against the real database: the failure is
-/// recorded, the row is left reclaimable, and the retry reclaims that same row in place rather than
-/// inserting a second one (matches_result has no unique constraint on file and run).
+/// The throttle-and-recover loop against the real database: the failure is recorded, the row is
+/// left reclaimable, and the retry reclaims that same row rather than inserting a second one -
+/// matches_result has no unique constraint on file and run to stop it.
 /// </summary>
 [EnableParallelization]
 public class TransientOcrFailureDatabaseTests

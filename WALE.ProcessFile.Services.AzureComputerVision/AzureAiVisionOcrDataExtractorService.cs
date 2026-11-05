@@ -20,8 +20,6 @@ public class AzureAiVisionOcrDataExtractorService(
 {
     public bool HasDirectCost => true;
 
-    // Paid primary provider: a throttled page should fail the file so the queue retries it once
-    // the throttle passes, rather than silently extracting without this provider.
     public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.FailFileOnTransientError;
     public string Name => "AzureAiVisionOcr";
     public int Id { get; set; } = id;

@@ -5,14 +5,6 @@ namespace WALE.ProcessFile.Core.Enums;
 /// </summary>
 public enum OcrServiceFailurePolicy
 {
-    /// <summary>
-    /// Record the failure on the result and carry on with the other providers and pages.
-    /// </summary>
     DegradeOnError,
-
-    /// <summary>
-    /// Record the failure and fail the whole file when the provider reports a transient
-    /// error (throttling, 5xx). 
-    /// </summary>
     FailFileOnTransientError
 }

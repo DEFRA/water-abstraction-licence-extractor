@@ -60,9 +60,6 @@ public class AwsTextractOcrDataExtractorService
     
     public bool HasDirectCost => true;
 
-    // Paid primary provider: when DetectDocumentText is throttled (ProvisionedThroughputExceededException
-    // after the SDK's own retries are exhausted) fail the file so SQS redelivers it and the page is
-    // re-OCRed, rather than saving a "successful" result that silently lacks Textract on that page.
     public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.FailFileOnTransientError;
     public string Name => "AwsTextractOcrDataExtractorService";
     

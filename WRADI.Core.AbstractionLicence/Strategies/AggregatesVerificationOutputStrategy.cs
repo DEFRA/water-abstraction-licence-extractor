@@ -9,9 +9,9 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
     public string SectionName => "Aggregates";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber, Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
+        Guid fileId, string licenceNumber)
     {
-        if (!verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications))
+        if (!verificationLookups.BySourceLicence.TryGetValue((fileId, licenceNumber), out var outgoingVerifications))
         {
             return; // no incoming-link concept for Aggregates — ByItemId is never consulted
         }

@@ -13,7 +13,8 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 public class ImagesController(
     ICacheService cacheService,
     IOutputService outputService,
-    IFileService fileService) : Controller
+    IFileService fileService,
+    IImageService imageService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -124,13 +125,12 @@ public class ImagesController(
 
             using MemoryStream stream = new();
             await file.CopyToAsync(stream);
-            
-            await fileService.UploadFileAsStreamAsync(
+
+            await imageService.UploadAsync(
                 lowercaseFileName,
                 stream,
-                "image/jpeg",
-                StorageFolder.Assets);
-            
+                "image/jpeg");
+
             return Ok();
         }
 
@@ -150,11 +150,9 @@ public class ImagesController(
         foreach (var fileId in request.fileIds)
         {
             var lowercaseFileName = string.Format(request.templateUrl!, fileId);
-            
-            var presignedUrl = await fileService.GetPresignedUrlAsync(
-                lowercaseFileName,
-                StorageFolder.Assets);
-            
+
+            var presignedUrl = await imageService.GetPresignedUrlAsync(lowercaseFileName);
+
             returnDict.Add(fileId, presignedUrl);
         }
         

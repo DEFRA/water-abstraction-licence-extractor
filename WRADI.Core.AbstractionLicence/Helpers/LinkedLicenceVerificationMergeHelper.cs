@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
@@ -9,6 +8,9 @@ public static class LinkedLicenceVerificationMergeHelper
 {
     public const string NoneOutgoing = "None Outgoing";
     public const string Review = "Review";
+
+    // Placeholder for verifications whose file ID couldn't be matched to a licence when backfilled
+    public const string UnknownSourceLicenceNumber = "UNKNOWN";
 
     public static List<LicenceSectionItemSummary> MergeOutgoing(
         List<LinkedLicence> linkedLicences,
@@ -84,7 +86,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 var verificationLicence =
-                    JsonSerializer.Deserialize<LinkedLicence>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                    VerificationMergeHelper.DeserializeVerificationValue<LinkedLicence>(json, out var verificationNode);
 
                 if (verificationLicence == null)
                 {
@@ -93,14 +95,17 @@ public static class LinkedLicenceVerificationMergeHelper
                     continue;
                 }
 
+                var scrapedLinkedLicence = (originalLinkedLicences ?? [])
+                    .FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId
+                                         && x.ContainedIn != null
+                                         && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
+
+                VerificationMergeHelper.ApplyCurrentRunValuesForMissingProperties(verificationLicence,
+                    scrapedLinkedLicence, verificationNode!);
+
                 // Apply data changed flag check
                 if (verification.ProcessRunId < processRunId)
                 {
-                    var scrapedLinkedLicence = (originalLinkedLicences ?? [])
-                        .FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId
-                                             && x.ContainedIn != null
-                                             && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
-
                     var wasScrapedThisRun = scrapedLinkedLicence != null;
                     var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
 
@@ -193,8 +198,7 @@ public static class LinkedLicenceVerificationMergeHelper
 
     public static void MergeIncoming(
         List<LinkedLicence> linkedLicences,
-        IEnumerable<LicenceSectionVerification> verifications,
-        Dictionary<Guid, List<LicenceFileMapEntry>> fileIdToLicenceNumberMapping)
+        IEnumerable<LicenceSectionVerification> verifications)
     {
         var orderedVerifications = verifications
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -203,7 +207,8 @@ public static class LinkedLicenceVerificationMergeHelper
         foreach (var verification in orderedVerifications)
         {
             var fileId = verification.LicenceFileId;
-            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceMapping))
+            var licenceNumber = verification.SourceLicenceNumber;
+            if (string.IsNullOrEmpty(licenceNumber) || licenceNumber == UnknownSourceLicenceNumber)
             {
                 ConsoleHelper.WriteLine(
                     $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Incoming LL Verifications - No licence number found for {fileId}");
@@ -231,7 +236,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 var verificationLicence =
-                    JsonSerializer.Deserialize<LinkedLicence>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                    VerificationMergeHelper.DeserializeVerificationValue<LinkedLicence>(json, out _);
 
                 if (verificationLicence == null)
                 {
@@ -240,8 +245,6 @@ public static class LinkedLicenceVerificationMergeHelper
                     continue;
                 }
 
-                var licenceNumber = sourceMapping[0].LicenceNumber;
-                
                 var existingLinkedLicence =
                     linkedLicences.FirstOrDefault(x => x.LicenceNumber == licenceNumber);
 

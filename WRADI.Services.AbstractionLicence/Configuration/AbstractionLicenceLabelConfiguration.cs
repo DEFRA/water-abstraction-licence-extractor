@@ -37,7 +37,11 @@ public static partial class AbstractionLicenceLabelConfiguration
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
             
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
-            ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
+            ("ScheduleOfConditionsB", GetScheduleOfConditionsB()),
+
+            // Matched for their own sake, not for the schema: TemplateTypeIdentifierService reads
+            // these groups off the result to classify the document's template.
+            ..TemplateHeaderLabels.GetLabelGroups()
         ];
     }
     
@@ -2013,9 +2017,14 @@ public static partial class AbstractionLicenceLabelConfiguration
                 [
                     new("MEANS OF ABSTRACTION")
                 ],
+                // A spelling missing here does not fail to match - the section runs on to
+                // [END_OF_BLOCK] and the value swallows Purposes and Period. GetPurposeLabels
+                // carries the same spellings; keep the two in step.
                 TextEnd =
                 [
                     new("PURPOSE OF ABSTRACTION"),
+                    new("PURPOSES OF ABSTRACTION"),
+                    new("PURPOSE(S) OF ABSTRACTION"),
                     new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -2429,6 +2438,17 @@ public static partial class AbstractionLicenceLabelConfiguration
                     },
                     new()
                     {
+                        Name = "LegalText",
+                        Text =
+                        [
+                            new("as may be renewed from time"),
+                            new("or such other licence")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                        Format = "Text"
+                    },
+                    new()
+                    {
                         Name = "PurposeCondition",
                         Text =
                         [
@@ -2477,7 +2497,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             "spray irrigation", // TODO add more types here
                             "trickle irrigation",
                             "mineral washing",
-                            "groundwater augmentation"
+                            "groundwater augmentation",
+                            "industrial",
+                            "non-evaporative cooling"
                         ],
                         SubLabels =
                         [
@@ -2597,6 +2619,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         IncludeStartLabelText = true,
+                        FindMultipleOnSingleLine = true,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         Format = "Text",
                         Possibilities =
                         [

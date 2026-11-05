@@ -15,15 +15,17 @@ public static class NaldHelper
             return null;
         }
         
-        var strippedLicenceNumbers = WALE.ProcessFile.Core.Helpers.FormattingHelper.StripForComparisonMultipleOptions(
-            line.LicenceNo,
-            line.FgacRegionCode);
+        var strippedLicenceNumbers =
+            WALE.ProcessFile.Core.Helpers.FormattingHelper.StripForComparisonMultipleOptions(
+                line.LicenceNo,
+                line.FgacRegionCode);
         
         var naldData = new NaldAbstractionData
         {
             Id = line.Id,
             ExpiryDate = line.ExpiryDate,
             RevocationDate = line.RevDate,
+            LapsedDate = line.LapsedDate,
             OrigEffDate = line.OrigEffectiveDate,
             OrigSigDate = line.OrigSignatureDate,
             LicenceNumber = line.LicenceNo!,

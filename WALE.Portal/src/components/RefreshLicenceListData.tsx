@@ -47,8 +47,11 @@ export function RefreshLicenceListData({
 
         let disposed = false;
 
+        const hubUrl =
+            `${waleApiBaseUrl}/notificationsHub/process`.replace("-api-", "-portal-");
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${waleApiBaseUrl}/hubs/process`)
+            .withUrl(hubUrl)
             .withAutomaticReconnect()
             .configureLogging(signalR.LogLevel.Information)
             .build();
@@ -139,11 +142,6 @@ export function RefreshLicenceListData({
         setError(null);
         setSuccessMessage(null);
 
-        if (!isConnected) {
-            setError('Notification connection is not available.');
-            return;
-        }
-
         updateStatus('starting');
 
         try {
@@ -156,7 +154,7 @@ export function RefreshLicenceListData({
                 updateStatus('processing');
 
                 setSuccessMessage(
-                    `Refresh Licence List Data started for process run ${processRunId}. Waiting for completion...`
+                    `Refresh Licence List Data started successfully for process run ${processRunId}.`
                 );
             }
         } catch (err) {
@@ -188,7 +186,7 @@ export function RefreshLicenceListData({
                 <button
                     type="button"
                     onClick={startRefreshProcess}
-                    disabled={isRunning || !isConnected || !processRunId}
+                    disabled={isRunning}
                     style={{
                         backgroundColor: '#dc3545',
                         color: 'white',

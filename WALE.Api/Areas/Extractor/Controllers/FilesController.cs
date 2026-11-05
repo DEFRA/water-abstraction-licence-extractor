@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 
@@ -37,7 +38,7 @@ public class FilesController(IFileService fileService) : Controller
             throw new Exception("Stream is null");
         }
         
-        return File(data, "application/pdf");
+        return File(data, IngressFormats.ContentTypeForFile(filename));
     }
     
     [HttpGet]

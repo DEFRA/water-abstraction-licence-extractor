@@ -18,4 +18,9 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.10" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
     </ItemGroup>
+
+    <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+        <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib" />
+    </Target>
 </Project>

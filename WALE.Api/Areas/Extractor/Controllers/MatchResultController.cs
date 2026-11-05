@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -8,7 +9,9 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [ApiController]
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
-public class MatchResultController(IOutputService outputService) : Controller
+public class MatchResultController(
+    IOutputService outputService,
+    IDocumentTextService documentTextService) : Controller
 {
     [HttpPost]
     public async Task<IActionResult> SaveAsync([FromBody] SaveMatchResultRequest request)
@@ -18,7 +21,9 @@ public class MatchResultController(IOutputService outputService) : Controller
             request.fileId,
             request.processRunId,
             request.isUpdate);
-        
+
+        await PopulateDocumentTextAsync(request.fileId);
+
         return Ok(matchResultId);
     }
     
@@ -50,5 +55,19 @@ public class MatchResultController(IOutputService outputService) : Controller
             status);
         
         return Ok(matchResultId);
+    }
+
+    private async Task PopulateDocumentTextAsync(Guid fileId)
+    {
+        try
+        {
+            await documentTextService.StoreDocumentTextAsync(fileId);
+        }
+        catch (Exception exception)
+        {
+            ConsoleHelper.WriteLine(
+                $"ERROR - {nameof(MatchResultController)} - could not store document text for " +
+                $"{fileId} - {exception.Message}");
+        }
     }
 }

@@ -1,4 +1,4 @@
-import {OutputListDataItem, OutputListDataItemLicenceSet} from "../api/generated/apiClient.ts";
+import {Aggregate, OutputListDataItem, OutputListDataItemLicenceSet} from "../api/generated/apiClient.ts";
 import {useEffect, useState, useMemo, type ReactNode} from "react";
 import {getLicenceSetTypeClass} from "../utils/licenceSetTypeUtils.ts";
 
@@ -12,6 +12,7 @@ interface LicenceSetsTableBodyProps {
 export interface LicenceSetsTotals {
     licenceSetsCount: number;
     licenceSetTypesCount: number;
+    aggregateSetsCount: number;
     licenceSetsLicenceNumberCount: number;
     licenceSetsFilenameCount: number;
 }
@@ -21,9 +22,14 @@ interface ExtendedLicenceSet extends OutputListDataItemLicenceSet {
     ancestors: ExtendedLicenceSet[];
 }
 
-export function LicenceSetsTableBody({data, onOpenReport, onOpenLicenceSetReport, onTotalsCalculated}: LicenceSetsTableBodyProps) {
+export function LicenceSetsTableBody({
+                                         data,
+                                         onOpenReport,
+                                         onOpenLicenceSetReport,
+                                         onTotalsCalculated
+                                     }: LicenceSetsTableBodyProps) {
     const [hierarchicalData, setHierarchicalData] = useState<ExtendedLicenceSet[]>([]);
-    
+
     useEffect(() => {
         const allLicenceSets = data.flatMap(item => item.licenceSets || []);
         const uniqueLicenceSetIds = new Set<string>();
@@ -45,27 +51,29 @@ export function LicenceSetsTableBody({data, onOpenReport, onOpenLicenceSetReport
     }, [data]);
 
     // Move all calculations into useMemo to prevent unnecessary work and potential loops
-    const { rows, totals } = useMemo(() => {
+    const {rows, totals} = useMemo(() => {
         const generatedRows: React.ReactNode[] = [];
         let rowIndex = 0;
         const stats = {
             licenceSetsCount: 0,
             licenceSetTypesCount: 0,
+            aggregateSetsCount: 0,
             licenceSetsLicenceNumberCount: 0,
             licenceSetsFilenameCount: 0
         };
 
         const processRowRecursive = (licenceSet: ExtendedLicenceSet, indentLevel: number) => {
             const currentRowsCountBefore = generatedRows.length;
-            
+
             // Assuming renderListRow returns a component or pushes to the array
             // Note: If renderListRow pushes to the array, ensure it adds a unique 'key'
             renderListRow(licenceSet, rowIndex++, generatedRows, data, indentLevel, onOpenReport, onOpenLicenceSetReport);
-            
+
             const rowsAdded = generatedRows.length - currentRowsCountBefore;
-            
+
             stats.licenceSetsCount++;
-            stats.licenceSetTypesCount += licenceSet.licenceSetTypes?.length ?? 0;
+            stats.licenceSetTypesCount += 1;
+            stats.aggregateSetsCount += licenceSet.aggregateSets?.length ?? 0;
             stats.licenceSetsLicenceNumberCount += rowsAdded;
 
             const licencesInSet = getLicencesInSet(data, licenceSet.licenceSetId!);
@@ -79,7 +87,7 @@ export function LicenceSetsTableBody({data, onOpenReport, onOpenLicenceSetReport
         const topLevel = getChildrenOf(hierarchicalData, null);
         topLevel.forEach(ls => processRowRecursive(ls, 0));
 
-        return { rows: generatedRows, totals: stats };
+        return {rows: generatedRows, totals: stats};
     }, [hierarchicalData, data, onOpenReport, onOpenLicenceSetReport]);
 
     // Trigger callback only when totals actually change
@@ -89,7 +97,7 @@ export function LicenceSetsTableBody({data, onOpenReport, onOpenLicenceSetReport
 
     return (
         <tbody>
-            {rows}
+        {rows}
         </tbody>
     );
 }
@@ -166,34 +174,39 @@ function renderListRow(
 
     rows.push(
         <tr key={`${licenceSetId}-0`} style={{backgroundColor}} className={`indent-level-${indentLevel}`}>
-            <td rowSpan={licencesInSet.length}>
-                <div className='indentDiv'></div>
-                {licencesInSet.map((item, idx) => (
-                    item.imagePath === undefined ? (
-                        <div key={idx} style={{display: 'inline-block', width: '57px', textAlign: 'center', fontSize: '80px', lineHeight: '60px', verticalAlign: 'top', color: '#EEE'}}>--</div>
-                    ) : 'TODO'
+            <td rowSpan={licencesInSet.length} style={{textAlign: 'center'}}>
+                {licencesInSet.map((item, _) => (
+                    !!item.thumbnailUrl ? (
+                        <img src={item.thumbnailUrl} width={80}/>
+                    ) : <div style={{'display': 'inline-block', 'width': '80px', 'color': '#888'}}>...</div>
                 ))}
             </td>
             <td rowSpan={licencesInSet.length}>
                 <span className='lsId' title={licenceSetId}>
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
-                        onOpenLicenceSetReport(licencesInSet[0].fileId!, licencesInSet[0].licenceId!, licencesInSet[0].matchesResultId!, licenceSetId);
+
+                        let bestLicence = licencesInSet.find(l => !!l.matchesResultId)!;
+                        onOpenLicenceSetReport(bestLicence.fileId!, bestLicence.licenceId!, bestLicence.matchesResultId!, licenceSetId);
                     }}>
                         {licenceSet.shortLicenceSetId}
                     </a>
                 </span>
             </td>
             <td rowSpan={licencesInSet.length}>
+                <span key={0}
+                      className={`ls-type ${getLicenceSetTypeClass(licenceSet.licenceSetType)}`}>{getLicenceSetTypeClass(licenceSet.licenceSetType)}</span>
+            </td>
+            <td rowSpan={licencesInSet.length}>
                 <ul>
-                    {licenceSet.licenceSetTypes?.map((type, idx) => (
-                        <li key={idx} className={`ls-type ${getLicenceSetTypeClass(type)}`}>{getLicenceSetTypeClass(type)}</li>
-                    ))}
+                    {licenceSet.aggregateSets.length > 0 ? licenceSet.aggregateSets.map((agg: Aggregate) => (
+                        <li>{agg.id}</li>
+                    )) : '--'}
                 </ul>
             </td>
             <td className={licenceInSetType}>{firstLicenceInSet.licenceNumber}</td>
             <td className='filename-cell'>
-                {firstLicenceInSet.filename !== '--' ? (
+                {!!firstLicenceInSet.filename && firstLicenceInSet.filename !== '--' ? (
                     <a href='#' onClick={(e) => {
                         e.preventDefault();
                         onOpenReport(firstLicenceInSet.fileId!, firstLicenceInSet.licenceId!, firstLicenceInSet.matchesResultId!,  firstLicenceInSet);
@@ -213,10 +226,10 @@ function renderListRow(
             <tr key={`${licenceSetId}-${j}`} style={{backgroundColor}} className={`indent-level-${indentLevel}`}>
                 <td className={currentLicenceInSetType}>{licenceInSet.licenceNumber}</td>
                 <td className='filename-cell'>
-                    {licenceInSet.filename !== '--' ? (
+                    {!!licenceInSet.filename && licenceInSet.filename !== '--' ? (
                         <a href='#' onClick={(e) => {   
                             e.preventDefault();
-                            onOpenReport(licenceInSet.fileId!, licenceInSet.licenceId!, licenceInSet.matcheResultId!, licenceInSet);
+                            onOpenReport(licenceInSet.fileId!, licenceInSet.licenceId!, licenceInSet.matchesResultId!, licenceInSet);
                         }} className='filenameSet'>
                             {licenceInSet.filename}
                         </a>

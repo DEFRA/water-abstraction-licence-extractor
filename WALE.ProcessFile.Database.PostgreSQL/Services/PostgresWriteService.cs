@@ -369,34 +369,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SavePageScreenshotAsync(
-        int pageNumber,
-        string noOcrServiceName,
-        Guid fileId,
-        byte[] data,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO page_screenshot (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
-                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
-                           """;
-        
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                PageNumber = pageNumber,
-                NoOcrServiceName = noOcrServiceName,
-                Data = data,
-                DateTimeUtc = DateTime.UtcNow,
-                ProcessRunId = processRunId
-            });
-    }
-
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(
         NoOcrServicePageCacheRequest request,
         string data,
@@ -474,6 +446,40 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         return request;
     }
 
+    public async Task SaveDocumentTextAsync(
+        Guid fileId,
+        string sourceService,
+        int formatVersion,
+        string text)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           INSERT INTO document_text
+                               (file_id, source_service, format_version, text, date_time_utc)
+                           VALUES
+                               (@FileId, @SourceService, @FormatVersion, @Text, @DateTimeUtc)
+                           ON CONFLICT (file_id) DO UPDATE SET
+                               source_service = EXCLUDED.source_service,
+                               format_version = EXCLUDED.format_version,
+                               text = EXCLUDED.text,
+                               date_time_utc = EXCLUDED.date_time_utc;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                SourceService = sourceService,
+                FormatVersion = formatVersion,
+                Text = text,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task SaveAllPagesTextAsync(
         string documentLinesStr,
         Guid fileId,
@@ -500,8 +506,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SaveImageOnPageAsync(
-        byte[] bytes,
+    public async Task SaveImageOnPageMetadataAsync(
         int width,
         int height,
         Guid fileId,
@@ -513,7 +518,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id) 
+                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id)
                            VALUES (@FileId, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Width, @Height, @Extension, @DateTimeUtc, @ProcessRunId)
                            """;
 
@@ -525,7 +530,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             {
                 FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
-                Data = bytes,
+                Data = Array.Empty<byte>(),
                 Width = width,
                 Height = height,
                 ImageNumber = imageNumber,
@@ -828,34 +833,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SavePageScreenshotThumbnailAsync(
-        int pageNumber,
-        string serviceName,
-        Guid fileId,
-        byte[] thumbnail,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO page_screenshot_thumbnail (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
-                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
-                           """;
-        
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                PageNumber = pageNumber,
-                NoOcrServiceName = serviceName,
-                Data = thumbnail,
-                DateTimeUtc = DateTime.UtcNow,
-                ProcessRunId = processRunId
-            });
-    }
-    
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         await using var connection = GetPostgresConnection();

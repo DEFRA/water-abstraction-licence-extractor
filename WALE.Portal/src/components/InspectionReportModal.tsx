@@ -5,6 +5,7 @@ import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {getImageUrl, getPdfUrl} from '../utils/images.ts';
 import type {MatchesResult} from '../api/generated/apiClient.ts';
 import {DraggableModal} from './DraggableModal';
+import {LicenceImages} from './LicenceImages';
 
 interface InspectionReportModalProps {
     fileId: string;
@@ -316,6 +317,11 @@ export function InspectionReportModal({fileId, processRunId, onClose}: Inspectio
                                     </div>
                                 );
                             })}
+
+                            <div style={{borderTop: '1px solid #ddd', marginTop: '20px', paddingTop: '20px'}}>
+                                <h3 style={{marginTop: 0}}>Images found in document</h3>
+                                <LicenceImages fileId={fileId}/>
+                            </div>
                         </div>
                     </div>
                 </div>

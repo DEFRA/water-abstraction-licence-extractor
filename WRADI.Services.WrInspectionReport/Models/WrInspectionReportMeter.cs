@@ -25,4 +25,6 @@ public class WrInspectionReportMeter
     public string? CalibrationCertificate { get; set; }
 
     public string? VerificationCertificate { get; set; }
+
+    public string? MaintenanceRecords { get; set; }
 }

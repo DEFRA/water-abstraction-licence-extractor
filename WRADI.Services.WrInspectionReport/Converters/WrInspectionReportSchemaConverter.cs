@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
@@ -5,6 +6,7 @@ using WALE.ProcessFile.Core.Models.Dms;
 using WRADI.DocumentType.WrInspectionReport.Constants;
 using WRADI.DocumentType.WrInspectionReport.Enums;
 using WRADI.DocumentType.WrInspectionReport.Models;
+using WRADI.DocumentType.WrInspectionReport.Services;
 
 namespace WRADI.DocumentType.WrInspectionReport.Converters;
 
@@ -12,34 +14,38 @@ public static class WrInspectionReportSchemaConverter
 {
     public const string AdditionalInformationTemplateKey = "WrInspectionReportTemplate";
 
-    // knownTemplate: 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="matchesResult"></param>
-    /// <param name="dmsFileData"></param>
-    /// <param name="knownTemplate">Pass this when the caller already classified the document (e.g.
-    /// WrInspectionReportExtractionOrchestrator's own pre-pass) - lets ClassifyTemplate's
-    /// TemplateMarker* fields be left out of whichever ruleset actually ran without losing
-    /// Metadata.Template, so GetT1Labels() can genuinely drop the T4/T6/T7/NonStandardNarrative-
-    /// only alternates a confirmed-T1 document will never need. Omit it (or pass null) to fall
-    /// back to the old self-contained behaviour - re-deriving Template from matchesResult itself
-    /// - for any caller that runs a single pass with no separate classification step.</param>
-    /// <returns></returns>
+    /// Constructed, not a named "en-GB": the container's ambient culture is InvariantCulture, and a
+    /// named culture throws under globalization-invariant mode.
+    private static readonly DateTimeFormatInfo DayFirst = new() { ShortDatePattern = "dd/MM/yyyy" };
+
+    /// <param name="knownTemplate">Supplied when the caller already classified the document, so
+    /// the TemplateMarker* fields can be left out of whichever ruleset ran without losing
+    /// Metadata.Template. Null re-derives it from <paramref name="matchesResult"/>.</param>
     public static Models.WrInspectionReport ToForm(
         MatchesResult matchesResult,
         DmsFileData? dmsFileData,
         WrTemplateType? knownTemplate = null)
     {
+        // Off the marker as well as knownTemplate: callers reading a stored result do not always
+        // pass one.
+        if (knownTemplate == WrTemplateType.V3 || IsV3Document(matchesResult))
+        {
+            WrInspectionV3SharedFieldMapper.Apply(matchesResult);
+        }
+
         var rawFormDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Date);
 
         DateOnly? formDate = null;
-        if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), out var tFormDate))
+        if (DateOnly.TryParse(NormaliseOrdinalDateSuffixes(rawFormDate), DayFirst, out var tFormDate))
         {
             formDate = tFormDate;
         }
 
         var rawInspectionDate = GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectionDate);
+
+        var inspectingOfficer = TruncateAtKnownSiblingLabel(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.InspectingOfficer),
+            "Inspection Date:");
         var rawInspectionTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.Time);
 
         var currentDay = DateTime.Today;
@@ -65,10 +71,8 @@ public static class WrInspectionReportSchemaConverter
                 .Replace("\r", string.Empty)
                 .Replace("  ", " ");
 
-            // A "Mon D" fragment and its year can land on different lines of the raw capture,
-            // in either order - neither parses alone, and the line-splitting heuristics below
-            // only ever keep one line as the date candidate. Recombine both into one candidate
-            // here, before that splitting runs.
+            // A "Mon D" fragment and its year can land on different lines in either order, and
+            // the splitting below keeps only one line, so recombine before it runs.
             var monthDayMatch = Regex.Match(
                 rawInspectionDateTweaked,
                 @"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}\b",
@@ -117,20 +121,16 @@ public static class WrInspectionReportSchemaConverter
                 var parts = rawInspectionDateTweaked.Split("Time");
                 rawInspectionDateTweaked = parts[0].Trim();
 
-                // "Time" usually trails the date ("22/01/2026 Time: 0930"), but some template
-                // layouts capture it first ("Time:\n27/01/26") - keep the existing before-Time
-                // behaviour as the primary value, and add whatever follows "Time" as a fallback
-                // candidate so that layout isn't silently discarded.
+                // "Time" usually trails the date ("22/01/2026 Time: 0930") but some layouts put it
+                // first ("Time:\n27/01/26"), so what follows "Time" is kept as a fallback.
                 var afterTime = parts.Length > 1 ? parts[^1].TrimStart(':').Trim() : string.Empty;
 
                 if (!string.IsNullOrWhiteSpace(afterTime))
                 {
                     potentialDates.Add(afterTime);
 
-                    // Some layouts glue a time value directly after "Time" with no colon,
-                    // and the actual date sits on the following line - e.g.
-                    // "Time 12.20\n20/01/2026". The whole afterTime blob won't parse as one
-                    // date, but its last line usually will.
+                    // "Time 12.20\n20/01/2026" - no colon, date on the next line. The blob will not
+                    // parse whole, but its last line usually does.
                     if (afterTime.Contains('\n'))
                     {
                         var lastLineAfterTime = afterTime.Split('\n').Last().Trim();
@@ -157,12 +157,8 @@ public static class WrInspectionReportSchemaConverter
                 rawInspectionDateTweaked = rawInspectionDateTweaked[..^2];
             }
             
-            // Meant for bare 4-digit military time with no separator ("0930" -> "09:30"), but
-            // the length-only check also matched any other 4-character raw time - e.g. "9 am"
-            // and "11am" (4 chars each) got a colon spliced into the middle of the letters
-            // ("9 :am", "11:am"), and an already-colon-separated "8:15" got a second colon
-            // inserted ("8::15"). Requiring all 4 characters to be digits restricts this to the
-            // bare-digits case it was actually written for.
+            // All four characters must be digits: a length-only check spliced a colon into "9 am"
+            // and "11am", and gave "8:15" a second one.
             if (rawInspectionTime?.Length == 4
                 && rawInspectionTime.All(char.IsDigit)
                 && !rawInspectionDateTweaked.Contains(':'))
@@ -184,10 +180,8 @@ public static class WrInspectionReportSchemaConverter
                 && rawInspectionDateTweaked.All(c => c != '/')
                 && rawInspectionDateTweaked.All(c => c != ' '))
             {
-                // e.g. "27.02:26" - one separator typoed as ':' instead of '.'. Normalise
-                // toward '.' (not the other way): confirmed via DateTime.TryParse that
-                // "27.02.26" parses fine but "27:02:26" (both separators as ':') doesn't -
-                // colon-separated numerics read as an invalid time, not a date.
+                // "27.02:26" - one separator typoed. Normalised toward '.' because "27:02:26"
+                // reads as an invalid time rather than a date.
                 potentialDates.Add(rawInspectionDateTweaked.Replace(":", "."));
             }
 
@@ -201,27 +195,7 @@ public static class WrInspectionReportSchemaConverter
             
             foreach (var potentialDate in potentialDates)
             {
-                if (!DateTime.TryParse(potentialDate, out var tInspectionDateTime))
-                {
-                    continue;
-                }
-                
-                // If we pulled a date that wasn't the current year, we must have contained a year
-                var year = tInspectionDateTime.Year.ToString();
-                var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
-                var containsYear = potentialDate.Contains($"/{year2Digits}")
-                    || potentialDate.Contains($"/{year}")
-                    || potentialDate.Contains($".{year2Digits}")
-                    || potentialDate.Contains($".{year}")
-                    || potentialDate.Contains($":{year2Digits}")
-                    || potentialDate.Contains($":{year}")
-                    || potentialDate.Contains($"-{year2Digits}")
-                    || potentialDate.Contains($"-{year}")
-                    || potentialDate.Contains($" {year2Digits}")
-                    || potentialDate.Contains($" {year}");
-                        
-                // Needs to contain a year and should never be today
-                if (!containsYear || tInspectionDateTime.Date == DateTime.Today)
+                if (!IsUsableInspectionDate(potentialDate, out var tInspectionDateTime))
                 {
                     continue;
                 }
@@ -229,11 +203,32 @@ public static class WrInspectionReportSchemaConverter
                 inspectionDateTime = tInspectionDateTime;
                 break;
             }
+
+            // Gated on everything above failing, so it cannot change a document that resolves.
+            // Two-column layouts leak the officer's name in here, stripped by value as the label
+            // itself is gone.
+            if (inspectionDateTime == null)
+            {
+                foreach (var salvaged in SalvageDateCandidates(rawInspectionDate, inspectingOfficer))
+                {
+                    if (!IsUsableInspectionDate(salvaged, out var tSalvagedDateTime))
+                    {
+                        continue;
+                    }
+
+                    inspectionDateTime = tSalvagedDateTime;
+                    break;
+                }
+            }
         }
+
+        // RawDate is exported and shown as the scraped value, so it has to be clean in its own
+        // right. Must stay after the parsing above, which runs against the captured text untouched.
+        rawInspectionDate = RemoveSiblingValue(rawInspectionDate, inspectingOfficer);
 
         var rawDateOfCertificateOrRecord = GetMultilineText(matchesResult, WrInspectionReportFieldNames.DateOfCertification);
         DateOnly? dateOfCertificateOrRecord = null;
-        if (DateOnly.TryParse(rawDateOfCertificateOrRecord, out var tDateOfCertificateOrRecord))
+        if (DateOnly.TryParse(rawDateOfCertificateOrRecord, DayFirst, out var tDateOfCertificateOrRecord))
         {
             dateOfCertificateOrRecord = tDateOfCertificateOrRecord;
         }
@@ -344,7 +339,8 @@ public static class WrInspectionReportSchemaConverter
             {
                 NameAndAddress = nameAndAddress,
                 TelephoneNumber = CollapseSpacedDigits(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TelephoneNumber)),
-                SiteAddress = siteAddress
+                SiteAddress = siteAddress,
+                Email = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3SiteContactEmail)
             },
             MetWith = new WrInspectionReportMetWith()
             {
@@ -356,7 +352,8 @@ public static class WrInspectionReportSchemaConverter
             {
                 DateTime = inspectionDateTime,
                 RawDate = rawInspectionDate,
-                RawTime = rawInspectionTime
+                RawTime = rawInspectionTime,
+                RawEndTime = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3InspectionEndTime)
             },
             LicenceProvisions = new WrInspectionReportLicenceProvisions
             {
@@ -372,7 +369,12 @@ public static class WrInspectionReportSchemaConverter
                 Quantities = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Quantities),
                 Records = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Records),
                 OtherProvisions = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.OtherProvisions),
-                Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period)
+                Period = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.Period),
+                HandsOffFlow = GetInOrderStatus(matchesResult, WrInspectionReportFieldNames.V3ConditionHandsOffFlow),
+                CompensationOrAugmentation = GetInOrderStatus(
+                    matchesResult, WrInspectionReportFieldNames.V3ConditionCompensationOrAugmentation),
+                FishAndEelScreening = GetInOrderStatus(
+                    matchesResult, WrInspectionReportFieldNames.V3ConditionFishAndEelScreening)
             },
             MeasurementDetails = new WrInspectionReportMeasurementDetails
             {
@@ -405,7 +407,17 @@ public static class WrInspectionReportSchemaConverter
                 WhereKept = whereKept
             },
             GeneralComments = GetMultilineText(matchesResult, WrInspectionReportFieldNames.GeneralComments),
-            Images = images
+            Images = images,
+            LicenceCriticality = GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3LicenceCriticality),
+            EnforcementResponse = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3EnforcementResponse)),
+            LicenceConditionsRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3LicenceConditionsBlock)),
+            NonCompliancesRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3NonCompliancesBlock)),
+            ActionsRaw = WrInspectionV3SharedFieldMapper.StripPageFurniture(
+                GetMultilineText(matchesResult, WrInspectionReportFieldNames.V3ActionsBlock)),
+            Actions = BuildActions(matchesResult)
         };
     }
 
@@ -420,10 +432,8 @@ public static class WrInspectionReportSchemaConverter
             .Text;
     }
     
-    // Some documents render a phone number with a stray space between individual digits
-    // (a PDF font/kerning artefact, not a real word-space) - e.g. "0 7 7 9 4 2 1 8 2 97"
-    // instead of "07794218297". Collapsing only spaces that sit directly between two
-    // digits leaves genuine word-spacing (unlikely here, but harmless) untouched.
+    // A kerning artefact spaces out the digits ("0 7 7 9 4 2 1 8 2 97"). Only spaces sitting
+    // directly between two digits are collapsed.
     private static string? CollapseSpacedDigits(string? text)
     {
         return string.IsNullOrEmpty(text)
@@ -431,16 +441,9 @@ public static class WrInspectionReportSchemaConverter
             : System.Text.RegularExpressions.Regex.Replace(text, @"(?<=\d) (?=\d)", string.Empty);
     }
 
-    // Splits a verbatim LicenceNumber cell on the delimiters seen across the real corpus
-    // ("X and Y", "X & Y", "X, Y, Z" - all three occur) and canonicalises each piece to
-    // alphanumeric-only/uppercase. A cleaned piece with no digits at all is dropped - real
-    // licence numbers always contain digits, but "and"/"," can occasionally split a site-name
-    // pair rather than two licence numbers (e.g. "...004 Brennand and Whitendale", where
-    // "Brennand"/"Whitendale" are reservoir names, not licences) - this heuristic keeps the
-    // genuine licence-shaped piece and drops the site-name fragment rather than mis-cleaning
-    // it into a false match key. Not perfect (a licence number's own site-name suffix stays
-    // glued to it if the split lands there instead), but no false-negative case has been seen
-    // in the corpus - see the LicenceNumberCleaned property comment for why this exists.
+    // Splits on "and", "&" and "," - all three occur. A cleaned piece with no digits is dropped,
+    // because those delimiters also join site names ("...004 Brennand and Whitendale", two
+    // reservoirs), and a site-name fragment would otherwise become a false match key.
     internal static List<string> CleanLicenceNumbers(string? rawLicenceNumber)
     {
         if (string.IsNullOrWhiteSpace(rawLicenceNumber))
@@ -460,13 +463,9 @@ public static class WrInspectionReportSchemaConverter
             .ToList();
     }
 
-    // Some documents render an ordinal date suffix with a stray space before it - e.g.
-    // "10 th February 2026" instead of "10th February 2026" - the same PDF font/kerning
-    // artefact class as CollapseSpacedDigits above, just for letters instead of digits.
-    // Neither form parses via DateOnly.TryParse - .NET doesn't accept an ordinal suffix at
-    // all, glued or not (confirmed: "10th February 2026" fails to parse, "10 February 2026"
-    // succeeds) - so the whole suffix needs stripping, not just the gap before it. Mirrors
-    // the ordinal handling already applied to InspectionDate further up this file.
+    // The same kerning artefact as CollapseSpacedDigits, for letters: "10 th February 2026".
+    // The whole suffix is stripped, not just the gap - DateOnly.TryParse rejects an ordinal
+    // either way, glued or spaced.
     private static string? NormaliseOrdinalDateSuffixes(string? text)
     {
         if (string.IsNullOrEmpty(text))
@@ -479,16 +478,104 @@ public static class WrInspectionReportSchemaConverter
             .Trim();
     }
 
-    // MetWith/InspectingOfficer share a row with a sibling field ("Position:"/"Inspection
-    // Date:" respectively) on some real documents. The usual fix for this shape
-    // (additionalSameLineEndTexts, bounding WalkSameLineColumns to exclude the sibling's own
-    // column) doesn't work here - traced via gated instrumentation on wr51__ne0220003014: the
-    // upstream row/column-grouping had already merged both fields' text into a SINGLE
-    // DocumentLineColumn before label-matching even runs, so there is no second column for
-    // WalkSameLineColumns' TextEnd bound to exclude - confirmed empirically (adding the same
-    // endText fix that worked for InspectionClass/SiteAddress had zero effect here). A plain
-    // string truncation at the known sibling-label marker works regardless of the upstream
-    // column structure, since it operates on the final joined text rather than columns.
+    /// <summary>
+    /// Must parse, must carry its own year (a bare "24 March" would otherwise become the current
+    /// year), and must not be today (TryParse falls back to today for a time-only string).
+    /// </summary>
+    private static bool IsUsableInspectionDate(string potentialDate, out DateTime parsed)
+    {
+        if (!DateTime.TryParse(potentialDate, DayFirst, DateTimeStyles.None, out parsed))
+        {
+            return false;
+        }
+
+        var year = parsed.Year.ToString();
+        var year2Digits = year.Length == 4 ? year.Substring(2, 2) : year;
+
+        var containsYear = potentialDate.Contains($"/{year2Digits}")
+            || potentialDate.Contains($"/{year}")
+            || potentialDate.Contains($".{year2Digits}")
+            || potentialDate.Contains($".{year}")
+            || potentialDate.Contains($":{year2Digits}")
+            || potentialDate.Contains($":{year}")
+            || potentialDate.Contains($"-{year2Digits}")
+            || potentialDate.Contains($"-{year}")
+            || potentialDate.Contains($" {year2Digits}")
+            || potentialDate.Contains($" {year}");
+
+        return containsYear && parsed.Date != DateTime.Today;
+    }
+
+    /// Most-specific first: a full numeric date beats a day/month needing a year from elsewhere.
+    private static IEnumerable<string> SalvageDateCandidates(string rawInspectionDate, string? inspectingOfficer)
+    {
+        var text = RemoveSpecialCharacters(rawInspectionDate) ?? rawInspectionDate;
+
+        if (!string.IsNullOrWhiteSpace(inspectingOfficer) && text.Contains(inspectingOfficer))
+        {
+            text = text.Replace(inspectingOfficer, " ");
+        }
+
+        text = text.Replace('\n', ' ').Replace("  ", " ").Trim();
+
+        foreach (Match m in Regex.Matches(text, @"\b\d{1,2}[/.\-:]\d{1,2}[/.\-:]\d{2,4}\b"))
+        {
+            yield return m.Value.Replace(':', '.');
+        }
+
+        // The year often wraps onto another line, so pair a bare day/month with any year found.
+        var dayMonth = Regex.Match(
+            text,
+            @"\b\d{1,2}\s*(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\b",
+            RegexOptions.IgnoreCase);
+
+        if (!dayMonth.Success)
+        {
+            yield break;
+        }
+
+        var cleanedDayMonth = Regex.Replace(dayMonth.Value, @"(?<=\d)\s*(?:st|nd|rd|th)", string.Empty, RegexOptions.IgnoreCase);
+        var year = Regex.Match(text, @"(?<![0-9])(19|20)\d{2}(?![0-9])");
+
+        if (year.Success)
+        {
+            yield return $"{cleanedDayMonth} {year.Value}";
+        }
+    }
+
+    // For when the sibling's label is absent and only its value is there. Skipped when that value
+    // is date- or time-like rather than a name ("2019", "Time: 10:50" both occur as
+    // InspectingOfficer): removing one would delete the date's own year from the text.
+    private static string? RemoveSiblingValue(string? text, string? siblingValue)
+    {
+        if (string.IsNullOrWhiteSpace(text)
+            || string.IsNullOrWhiteSpace(siblingValue)
+            || !siblingValue.Any(char.IsLetter)
+            || siblingValue.TrimStart().StartsWith("Time", StringComparison.OrdinalIgnoreCase))
+        {
+            return text;
+        }
+
+        var index = text.IndexOf(siblingValue, StringComparison.OrdinalIgnoreCase);
+
+        if (index < 0)
+        {
+            return text;
+        }
+
+        var cleaned = string.Concat(text.AsSpan(0, index), " ", text.AsSpan(index + siblingValue.Length))
+            .Replace("  ", " ")
+            .Trim();
+
+        // No date left to keep, and the original text is more use to a verifier than an empty cell.
+        return string.IsNullOrWhiteSpace(cleaned) ? text : cleaned;
+    }
+
+    // MetWith and InspectingOfficer share a row with a sibling label ("Position:", "Inspection
+    // Date:"). additionalSameLineEndTexts cannot fix it: traced on wr51__ne0220003014, the upstream
+    // row grouping has already merged both fields into a single DocumentLineColumn before label
+    // matching runs, so there is no second column to bound. Truncating the joined text works
+    // whatever the column structure.
     private static string? TruncateAtKnownSiblingLabel(string? text, string siblingLabel)
     {
         if (string.IsNullOrEmpty(text))
@@ -503,44 +590,23 @@ public static class WrInspectionReportSchemaConverter
             : text[..index].TrimEnd().TrimEnd(',');
     }
 
-    // v2 classifier - see WrTemplateType and the TemplateMarker* label groups in
-    // WrInspectionReportLabelConfiguration for the literal markers, sourced from the client's
-    // TemplateSpec_v5.0.xlsx (T4/T6/T7 sheets) plus the GeneralComments heading catalogue for
-    // the T1-vs-NonStandardNarrative check. Checked in order most-specific-first (Impounding and
-    // T4/T6/T7 are all positive, distinguishing markers).
+    // Checked most-specific-first. NonStandardNarrative is excluded on either signal - an
+    // alternate heading matching, or the baseline heading being absent - because the heading match
+    // alone avoided 2 false positives but cost 6 true positives on headingless documents. Plain
+    // T1 had been taking 86% against the client's own ~60% expectation.
     //
-    // v1 made T1 the plain default/fallback for anything not T4/T6/T7/Impounding, which measured
-    // at 86% of the real corpus against the client's own ~60% expectation - the gap was largely
-    // documents whose GeneralComments section uses an alternate heading, or none at all. v2
-    // (current) excludes on EITHER signal: a positive alternate-heading match, or the baseline
-    // heading being absent entirely.
-    //
-    // Deliberate choice over the narrower alternative (exclude on alternate-heading match
-    // alone): that avoided 2 false positives (`wr51__1041433013`, `wr51__nw0690016005` - tagged
-    // "baseline" but with nothing written in that section at all) but cost 6 true positives on
-    // genuinely non-standard, headingless documents that only "missing baseline heading" alone
-    // catches (`wr51__1955120809`, `wr51__1753001s427`, `wr51__sw0430023015`,
-    // `wr51__53114s0109`, `wr51__nw0760002001`, `wr51__25092`). Resolving the 2 remaining false
-    // positives would need a genuinely new signal (e.g. how much text sits between the last
-    // measurement field and "Form sent to") - not attempted, scope separately if it matters.
-    // Separately confirmed NOT a bug: wr51__83617s0016__... is tagged "desktop_review" but
-    // correctly stays T1 - that tag describes the inspection method (no site visit), not the
-    // comments-section shape, and the document genuinely has the standard heading.
-    // Deliberately NOT treated as anomalies (stay T1): all_blank_provisions,
-    // remote_meeting, no_telephone_field, compliance_only, temporal_meter_change,
-    // struck_through_measurement_section - these are content variation within a genuinely
-    // T1-shaped document, not a different comments-section structure. Not yet resolved: a
-    // handful of other documentShape tags found while labelling (Y_N_provisions_grid,
-    // narrative_provisions, checkbox_pair_grid, NI_provisions) describe how the LicenceProvisions
-    // grid itself is marked, not the comments section - no literal text marker distinguishes
-    // these the way a heading does, so they're not addressed by this pass.
-    // Unknown is reserved for documents where extraction didn't even recognise the WR51 header
-    // at all (DocumentHeader empty) - a parse failure, not a shape ambiguity.
-    // internal, not private: WrInspectionReportExtractionOrchestrator's classification pre-pass
-    // calls this directly against its own (smaller) MatchesResult, before deciding which full
-    // ruleset to extract with.
+    // Y_N_provisions_grid, narrative_provisions, checkbox_pair_grid and NI_provisions are not
+    // addressed: they describe the provisions grid, which no literal text marker distinguishes.
+    // Unknown means the WR51 header was not recognised at all.
     internal static WrTemplateType ClassifyTemplate(MatchesResult matchesResult, string? documentHeader)
     {
+        // Before the documentHeader guard: v3 prints "Form WR51", which RuleDocumentHeader never
+        // matches, so it would fall through to Unknown.
+        if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3)))
+        {
+            return WrTemplateType.V3;
+        }
+
         if (!string.IsNullOrWhiteSpace(GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerImpounding)))
         {
             return WrTemplateType.Impounding;
@@ -587,11 +653,43 @@ public static class WrInspectionReportSchemaConverter
         return string.Join("\n", matchedLabel.Text.Select(t => t.Text)!);
     }
 
-    // Same source as GetMultilineText, but as separate lines rather than one joined string -
-    // for a multi-meter table (WrInspectionReportLabelConfiguration.MeterTableNextLines) each
-    // line is one meter's value for this field, e.g. "Point 1, Yaxley: Honeywell" / "Point 2,
-    // Eye: Honeywell" / ... - see BuildMeters. Blank lines dropped (a table with fewer filled
-    // rows than the widened window fetched shouldn't produce empty meter entries).
+    private static bool IsV3Document(MatchesResult matchesResult) =>
+        !string.IsNullOrWhiteSpace(
+            GetMultilineText(matchesResult, WrInspectionReportFieldNames.TemplateMarkerV3));
+
+    /// A blank line means "this record has no value" rather than noise. Leading and trailing
+    /// blanks are still dropped, so a capture merely ending in empty lines invents no records.
+    private static List<string> GetMultilineTextLinesPreservingGaps(
+        MatchesResult matchesResult,
+        string name)
+    {
+        var matchedLabel = matchesResult.Matches?
+            .FirstOrDefault(m => m.MatchedLabelName == name);
+
+        if (matchedLabel?.Text == null)
+        {
+            return [];
+        }
+
+        var lines = matchedLabel.Text
+            .Select(t => t.Text?.Trim() ?? string.Empty)
+            .ToList();
+
+        while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines[0]))
+        {
+            lines.RemoveAt(0);
+        }
+
+        while (lines.Count > 0 && string.IsNullOrWhiteSpace(lines[^1]))
+        {
+            lines.RemoveAt(lines.Count - 1);
+        }
+
+        return lines;
+    }
+
+    // One line per meter for a multi-meter table, e.g. "Point 1, Yaxley: Honeywell". Blank lines
+    // are dropped, so a table with fewer filled rows than the window fetched invents no meters.
     private static List<string> GetMultilineTextLines(MatchesResult matchesResult, string name)
     {
         var matchedLabel = matchesResult.Matches?
@@ -609,29 +707,73 @@ public static class WrInspectionReportSchemaConverter
             .ToList();
     }
 
-    // One WrInspectionReportMeter per line, zipping corresponding lines across each field by
-    // index (line 1 of MeterMake pairs with line 1 of SerialNumber, etc.) - correct as long as a
-    // multi-meter table lists its points in the same order down every column, which is the only
-    // layout confirmed so far (spot-checked on a real multi-meter document).
-    // Always returns at least one entry, even when every field is empty, matching
-    // WrInspectionReportMeter's own single-meter-by-default contract. Doesn't attempt to parse
-    // the "Point N, <site>:" prefix some documents embed in each value out into MeterName - that
-    // format isn't confirmed universal, so the raw value ships as-is rather than guessing at a
-    // parse.
+    internal static List<WrInspectionReportMeter> BuildMetersForTests(MatchesResult matchesResult) =>
+        BuildMeters(matchesResult);
+
+    /// Null rather than empty when the grid was not read, so a caller can tell "no actions on this
+    /// document" from "this template's actions are not extracted".
+    private static List<WrInspectionReportAction>? BuildActions(MatchesResult matchesResult)
+    {
+        var reference = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionReference);
+        var type = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionType);
+        var action = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionDescription);
+        var completeBy = GetMultilineTextLinesPreservingGaps(
+            matchesResult, WrInspectionReportFieldNames.ActionCompleteBy);
+
+        var actionCount = new[] { reference.Count, type.Count, action.Count, completeBy.Count }.Max();
+
+        if (actionCount == 0)
+        {
+            return null;
+        }
+
+        return Enumerable.Range(0, actionCount)
+            .Select(i => new WrInspectionReportAction
+            {
+                Reference = Blank(reference.ElementAtOrDefault(i)),
+                Type = Blank(type.ElementAtOrDefault(i)),
+                Action = Blank(action.ElementAtOrDefault(i)),
+                CompleteBy = Blank(completeBy.ElementAtOrDefault(i))
+            })
+            .ToList();
+    }
+
+    private static string? Blank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
+
+    /// <summary>
+    /// Zipped by line index, which holds only while a multi-meter table lists its points in the
+    /// same order down every column - the one layout confirmed. Always returns at least one entry.
+    ///
+    /// Gap-preserving on v3 only, where position is the meter index. v1's lines come from line
+    /// rules, where an interior blank is noise: preserving it there invented phantom meter records.
+    /// </summary>
     private static List<WrInspectionReportMeter> BuildMeters(MatchesResult matchesResult)
     {
-        var meterName = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterName);
-        var meterMake = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterMake);
-        var serialNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.SerialNumber);
-        var meterAssetNumber = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber);
-        var reading = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Reading);
-        var flowRate = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.FlowRate);
-        var units = GetMultilineTextLines(matchesResult, WrInspectionReportFieldNames.Units);
+        Func<MatchesResult, string, List<string>> read = IsV3Document(matchesResult)
+            ? GetMultilineTextLinesPreservingGaps
+            : GetMultilineTextLines;
+
+        var meterName = read(matchesResult, WrInspectionReportFieldNames.MeterName);
+        var meterMake = read(matchesResult, WrInspectionReportFieldNames.MeterMake);
+        var serialNumber = read(matchesResult, WrInspectionReportFieldNames.SerialNumber);
+        var meterAssetNumber = read(matchesResult, WrInspectionReportFieldNames.MeterAssetNumber);
+        var reading = read(matchesResult, WrInspectionReportFieldNames.Reading);
+        var flowRate = read(matchesResult, WrInspectionReportFieldNames.FlowRate);
+        var units = read(matchesResult, WrInspectionReportFieldNames.Units);
+        var verificationCertificate = read(
+            matchesResult, WrInspectionReportFieldNames.VerificationCertificate);
+        var maintenanceRecords = read(
+            matchesResult, WrInspectionReportFieldNames.MaintenanceRecords);
 
         var meterCount = new[]
         {
             meterName.Count, meterMake.Count, serialNumber.Count, meterAssetNumber.Count,
-            reading.Count, flowRate.Count, units.Count
+            reading.Count, flowRate.Count, units.Count, verificationCertificate.Count,
+            maintenanceRecords.Count
         }.Max();
 
         meterCount = Math.Max(meterCount, 1);
@@ -645,7 +787,9 @@ public static class WrInspectionReportSchemaConverter
                 MeterAssetNumber = meterAssetNumber.ElementAtOrDefault(i),
                 Reading = reading.ElementAtOrDefault(i),
                 FlowRate = flowRate.ElementAtOrDefault(i),
-                Units = units.ElementAtOrDefault(i)
+                Units = units.ElementAtOrDefault(i),
+                VerificationCertificate = verificationCertificate.ElementAtOrDefault(i),
+                MaintenanceRecords = maintenanceRecords.ElementAtOrDefault(i)
             })
             .ToList();
     }
@@ -698,8 +842,7 @@ public static class WrInspectionReportSchemaConverter
             return InOrderStatus.Blank;
         }
 
-        // Paired-checkbox template: box position carries the meaning, not the glyph used to
-        // mark it - see GetInOrderField's Possibilities list for the full evidence and reasoning.
+        // Paired checkboxes: the box position carries the meaning, not the glyph marking it.
         if (text.Equals("☑ ☐", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("☒ ☐", StringComparison.InvariantCultureIgnoreCase))
         {
@@ -717,10 +860,8 @@ public static class WrInspectionReportSchemaConverter
             return InOrderStatus.Blank;
         }
 
-        // Tick glyph variants: real WR51 PDFs use whichever tick character the originating
-        // export toolchain happened to produce, not consistently ✓ - see
-        // WrInspectionReportLabelConfiguration's InOrderPossibilities list for the
-        // full evidence (corpus-wide symbol frequency behind each of these).
+        // WR51 PDFs carry whichever tick character the exporting toolchain produced, not
+        // consistently ✓. InOrderPossibilities holds the symbol frequency behind each of these.
         if (text.Equals("in", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✓", StringComparison.InvariantCultureIgnoreCase)
             || text.Equals("✔", StringComparison.InvariantCultureIgnoreCase)
@@ -747,6 +888,31 @@ public static class WrInspectionReportSchemaConverter
         if (text.Equals("n/a", StringComparison.InvariantCultureIgnoreCase))
         {
             return InOrderStatus.NotApplicable;
+        }
+
+        // v3 states the outcome in words where v1 ticked a box - the same question, so the same
+        // enum rather than a parallel status the CSV and portal would both have to learn.
+        if (text.Equals("compliant", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.InOrder;
+        }
+
+        // Observed on the samples: means of measurement on one document, records on another.
+        if (text.Equals("non-compliant", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("not compliant", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInOrder;
+        }
+
+        if (text.Equals("not applicable", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotApplicable;
+        }
+
+        if (text.Equals("not assessed", StringComparison.InvariantCultureIgnoreCase)
+            || text.Equals("not inspected", StringComparison.InvariantCultureIgnoreCase))
+        {
+            return InOrderStatus.NotInspected;
         }
 
         if (text.Equals("ni", StringComparison.InvariantCultureIgnoreCase))

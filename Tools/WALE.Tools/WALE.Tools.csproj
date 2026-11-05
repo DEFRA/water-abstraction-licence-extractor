@@ -29,6 +29,8 @@
       <ProjectReference Include="..\..\WRADI.Services.Cache.AbstractionLicence\WRADI.Services.Cache.AbstractionLicence.csproj" />
       <ProjectReference Include="..\..\WRADI.Services.Output.AbstractionLicence\WRADI.Services.Output.AbstractionLicence.csproj" />
       <ProjectReference Include="..\..\WRADI.Services.WrInspectionReport\WRADI.Services.WrInspectionReport.csproj" />
+      <ProjectReference Include="..\..\WRADI.Database.PostgreSQL.AbstractionLicence\WRADI.Database.PostgreSQL.AbstractionLicence.csproj" />
+      <ProjectReference Include="..\..\WRADI.Database.PostgreSQL.WrInspectionReport\WRADI.Database.PostgreSQL.WrInspectionReport.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -174,7 +174,7 @@ public class FileProcessSingleService(
             try
             {
                 await outputService
-                    .UpdateLicenceListProcessRunAsync(processRunId);
+                    .UpdateProcessRunListProjectionAsync(processRunId);
             }
             catch
             {
@@ -293,7 +293,6 @@ public class FileProcessSingleService(
         var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
             licenceSetGroups,
             lookupConfiguration,
-            abstractionLicenceCacheService,
             naldDataLookupService);
 
         ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");

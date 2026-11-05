@@ -33,13 +33,6 @@ public interface IDatabaseWriteService
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
-    public Task SavePageScreenshotAsync(
-        int pageNumber,
-        string noOcrServiceName,
-        Guid fileId, 
-        byte[] data,
-        int processRunId);
-
     Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
     Task SaveNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request, string imagesMetadataStr, int processRunId);
@@ -48,8 +41,12 @@ public interface IDatabaseWriteService
    
     Task SaveAllPagesTextAsync(string documentLinesStr, Guid fileId, string noOcrServiceName, int processRunId);
 
-    Task SaveImageOnPageAsync(
-        byte[] bytes,
+    Task SaveDocumentTextAsync(Guid fileId, string sourceService, int formatVersion, string text);
+
+    // Metadata only - image_on_page.data holds an empty placeholder for rows written this way.
+    // Real bytes live in S3 (see IImageService); this exists so GetImagesAsync's listing keeps
+    // working without a schema change.
+    Task SaveImageOnPageMetadataAsync(
         int width,
         int height,
         Guid fileId,
@@ -82,7 +79,4 @@ public interface IDatabaseWriteService
     Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
-
-    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
-        int processRunId);
 }

@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -127,6 +128,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                    JOIN public.dms_extract de
                        ON lower(lfr.permit_number) like CONCAT(lower(de.permit_number), '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
                        AND de.file_id = lfr.file_id
+                       AND de.extract_type = @ExtractType
                    WHERE
                        lfr.license_number = @LicenceNumber
                    LIMIT 1;
@@ -136,7 +138,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { LicenceNumber = licenceNumber });
+            new { LicenceNumber = licenceNumber, ExtractType = DocumentTypes.AbstractionLicence });
     }
     
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
@@ -252,6 +254,77 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId,
                 NoOcrServiceName = noOcrServiceName
             });
+    }
+
+    /// Keeping only the longest image per page instead was tried and loses text where a page's
+    /// images genuinely differ.
+    public async Task<StoredDocumentText?> GetStoredDocumentTextAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT source_service AS SourceService,
+                                  format_version AS FormatVersion,
+                                  text AS Text
+                           FROM document_text
+                           WHERE file_id = @FileId
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<StoredDocumentText>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId
+            });
+    }
+
+    public async Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(
+        Guid fileId,
+        string[] ocrServiceNamesByPreference)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           WITH chosen AS (
+                               SELECT ocr_service_name
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = ANY(@Services)
+                               GROUP BY ocr_service_name
+                               ORDER BY array_position(@Services, ocr_service_name)
+                               LIMIT 1
+                           ),
+                           deduplicated AS (
+                               SELECT
+                                   ocr_service_name AS OcrServiceName,
+                                   page_number AS PageNumber,
+                                   image_number AS ImageNumber,
+                                   data AS Data,
+                                   row_number() OVER (
+                                       PARTITION BY page_number, md5(data)
+                                       ORDER BY image_number) AS occurrence
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = (SELECT ocr_service_name FROM chosen)
+                           )
+                           SELECT OcrServiceName, PageNumber, ImageNumber, Data
+                           FROM deduplicated
+                           WHERE occurrence = 1
+                           ORDER BY PageNumber, ImageNumber;
+                           """;
+
+        var rows = await QueryAsync<OcrCachedPage>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Services = ocrServiceNamesByPreference
+            });
+
+        return rows.ToList();
     }
 
     public async Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request)
@@ -635,7 +708,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return matchesResult;
     }
     
-    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -664,6 +737,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                modified_date,
                                file_id
                            FROM public.dms_extract
+                           WHERE extract_type = @ExtractType
                            ORDER BY
                                site_collection,
                                library_name,
@@ -680,7 +754,8 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Skip = skip,
-                Take = take
+                Take = take,
+                ExtractType = extractType
             });
 
         return results.ToList();
@@ -773,6 +848,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            select
                                file_id,
+                               matches_result_id,
                                filename,
                                status
                            FROM public.matches_result

@@ -37,7 +37,7 @@ public interface IAbstractionLicenceOutputService
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take);
@@ -56,6 +56,8 @@ public interface IAbstractionLicenceOutputService
 
     Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
 
+    Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds);
+
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
@@ -65,8 +67,6 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
 
     Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId);
-    
-    Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync();
     
     Task FinishProcessRunAsync(ProcessRun processRun);
 

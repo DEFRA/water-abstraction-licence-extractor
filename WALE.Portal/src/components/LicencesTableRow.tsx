@@ -51,7 +51,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                     onOpenReport={onOpenReport}
                 />
             </td>
-            <td className='licenceSetTd default-hidden'>
+            <td className='licenceSetTd'>
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}

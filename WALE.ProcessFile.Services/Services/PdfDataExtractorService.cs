@@ -425,8 +425,10 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        const int minimumWordsPerPage = 18;
-        var wordsPerPage = (int)Math.Ceiling(pdfDocument.DocumentLines.Count / (double)pdfDocument.Pages.Count);
+        const int minimumWordsPerPage = 75;
+        var wordsPerPage = (int)Math.Ceiling(
+            pdfDocument.DocumentLines.SelectMany(l => l.Columns).Sum(c => c.Words.Count)
+            / (double)pdfDocument.Pages.Count);
 
         var isLikelyTextFile = wordsPerPage >= minimumWordsPerPage;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
@@ -1300,7 +1302,8 @@ public class PdfDataExtractorService(
                 }
 
                 if (!ShouldClaimLabelGroup(
-                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup))
+                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup,
+                        label.IgnoreBlockIfContains))
                 {
                     continue;
                 }
@@ -1408,7 +1411,8 @@ public class PdfDataExtractorService(
     internal static bool ShouldClaimLabelGroup(
         IReadOnlyList<LabelGroupResult> labelGroupMatch,
         bool requireTextToClaimGroup,
-        bool requireCompleteDateToClaimGroup = false)
+        bool requireCompleteDateToClaimGroup = false,
+        IReadOnlyList<string>? ignoreBlockIfContains = null)
     {
         if (labelGroupMatch.Count == 0)
         {
@@ -1422,6 +1426,16 @@ public class PdfDataExtractorService(
             {
                 var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
                 return CompleteNumericDateRegex.IsMatch(joined) || CompleteMonthNameDateRegex.IsMatch(joined);
+            }))
+        {
+            return false;
+        }
+
+        if (ignoreBlockIfContains is { Count: > 0 }
+            && labelGroupMatch.All(lgm =>
+            {
+                var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
+                return ignoreBlockIfContains.Any(term => joined.Contains(term, StringComparison.OrdinalIgnoreCase));
             }))
         {
             return false;

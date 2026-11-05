@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Services.Services;
 using System.IO.Compression;
 using Amazon.SQS;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -14,6 +15,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Output;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence;
+using WRADI.Database.PostgreSQL.WrInspectionReport;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Cache.WrInspectionReport;
 using WRADI.Services.Cache.WrInspectionReport.Interfaces;
@@ -60,7 +62,7 @@ app.UseResponseCompression();
 app.UseOutputCache();
 app.MapControllers();
 app.MapHealthChecks("/healthz");
-app.MapHub<ProcessHub>("/hubs/process");
+app.MapHub<ProcessHub>("/notificationshub/process");
 app.Run();
 
 return;
@@ -78,7 +80,10 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         options.AddDefaultPolicy(policy =>
         {
             policy
-                .SetIsOriginAllowed(_ => true)
+                .WithOrigins(
+                    "https://wli-portal-dev.aws-int.defra.cloud",
+                    "http://localhost:5173"
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials()
@@ -109,10 +114,24 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
     var awsAccessKey = config.GetValue<string>("AwsAccessKey");
     var awsSecretKey = config.GetValue<string>("AwsSecretKey");
     var awsSessionToken = config.GetValue<string>("AwsSessionToken");
+
+    // SQS and S3 are not necessarily in the same AWS account, so SQS takes its own credentials when
+    // supplied. Resolved as a whole set rather than key by key: an override access key paired with
+    // the shared session token is a credential for neither account, and long-term keys (AKIA) have
+    // no session token at all, so an absent one must mean absent rather than "inherit".
+    var awsSqsRegionName = config.GetValue<string>("AwsSqsRegionName") ?? awsRegionName;
+    var awsSqsAccessKey = config.GetValue<string>("AwsSqsAccessKey");
+
+    var (awsSqsSecretKey, awsSqsSessionToken) = string.IsNullOrEmpty(awsSqsAccessKey)
+        ? (awsSecretKey, awsSessionToken)
+        : (config.GetValue<string>("AwsSqsSecretKey"), config.GetValue<string>("AwsSqsSessionToken"));
+
+    awsSqsAccessKey = string.IsNullOrEmpty(awsSqsAccessKey) ? awsAccessKey : awsSqsAccessKey;
     
     services
         .AddPostgreSqlServices(dbHost, dbPort, dbDatabaseName, dbUsername, dbPassword)
         .AddAbstractionLicencePostgreSqlServices()
+        .AddWrInspectionReportPostgreSqlServices()
         .AddAwsS3Services(
             awsRegionName,
             s3IngressBucketName,
@@ -120,18 +139,27 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
             awsAccessKey,
             awsSecretKey,
             awsSessionToken)
-        .AddAwsSqsServices(
+        .AddTransient<IImageService>(_ => new S3ImageService(
             awsRegionName,
+            s3AssetsBucketName,
             awsAccessKey,
             awsSecretKey,
-            awsSessionToken)
+            awsSessionToken))
+        .AddAwsSqsServices(
+            awsSqsRegionName,
+            awsSqsAccessKey,
+            awsSqsSecretKey,
+            awsSqsSessionToken)
         .AddTransient<IOutputService, DatabaseOutputService>()
         .AddTransient<IAbstractionLicenceOutputService, DatabaseAbstractionLicenceOutputService>()
         .AddTransient<ICacheService, DatabaseCacheService>()
+        .AddTransient<IDocumentTextService, DocumentTextService>()
         .AddTransient<IInspectionReportFinderCacheService, DatabaseInspectionReportFinderCacheService>()
         .AddTransient<IAbstractionLicenceCacheService, DatabaseAbstractionLicenceCacheService>()
         .AddTransient<ILicenceListItemModelService, LicenceListItemModelService>()
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
+        .AddTransient<ILicenceEstateExportService, LicenceEstateExportService>()
+        .AddTransient<ILicenceEstateExportRunner, LicenceEstateExportRunner>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
         .Configure<VerificationConfig>(options =>
         {

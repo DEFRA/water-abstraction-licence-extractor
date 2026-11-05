@@ -7,6 +7,20 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class HttpHelper
 {
+    public static IAsyncPolicy<HttpResponseMessage> GetTooManyRequestsBackoffPolicy()
+    {
+        var jitter = new Random();
+
+        return Policy<HttpResponseMessage>
+            .HandleResult(res => res.StatusCode == HttpStatusCode.TooManyRequests)
+            .WaitAndRetryAsync(
+                5,
+                sleepDurationProvider: attempt =>
+                    TimeSpan.FromMilliseconds(Math.Pow(2, attempt) * 250 + jitter.Next(0, 250)),
+                onRetry: (_, delay, attempt, _) => ConsoleHelper.WriteLine(
+                    $"WARNING - HttpHelper - 429 received from API, retry {attempt} in {delay.TotalMilliseconds:F0}ms"));
+    }
+
     public static HttpClient GetResilientHttpClient(string baseUrl, int defaultConnectionLimit, int maxRequestsPerSecond)
     {
         Database.PostgreSQL.Helpers.HttpHelper.MaxRequestsPerSecond = maxRequestsPerSecond;
@@ -15,13 +29,7 @@ public static class HttpHelper
         ServicePointManager.DefaultConnectionLimit = defaultConnectionLimit;
         #pragma warning restore SYSLIB0014
     
-        var backoffPolicy = Policy<HttpResponseMessage>
-            .HandleResult(res => res.StatusCode == HttpStatusCode.TooManyRequests)
-            .WaitAndRetryAsync(2,
-                sleepDurationProvider: (_, _) => TimeSpan.FromMilliseconds(1000),
-                onRetry: (_, _, _) => { ConsoleHelper.WriteLine("WARNING - HttpHelper - 429 received from API, retrying"); });
-
-        var pollyHandler = new PolicyHttpMessageHandler(backoffPolicy)
+        var pollyHandler = new PolicyHttpMessageHandler(GetTooManyRequestsBackoffPolicy())
         {
             InnerHandler = new HttpClientHandler
             {

@@ -26,9 +26,9 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<(int LicenceSetId, LicenceSetType Type)>> GetLicenceSetTypesForProcessRun(int processRunId);
     
-    Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
+    Task<Aggregate[]?> GetAggregateSets(int licenceSetId);
     
-    Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
+    Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
 
     Task<Licence?> GetLicenceAsync(int licenceId);
     
@@ -38,7 +38,7 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
     
@@ -115,6 +115,4 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<int> GetCurrentBackupVerificationsCount();
     
     Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
-    
-    Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync();
 }

@@ -40,7 +40,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             throw new NullReferenceException("Page screenshot data returned null");
         }
 
-        return JsonSerializer.Deserialize<byte[]?>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<byte[]?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<List<byte[]>> GetPageScreenshotDataAsync(
@@ -59,7 +59,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             throw new NullReferenceException("Page screenshot data returned null");
         }
 
-        return JsonSerializer.Deserialize<List<byte[]>?>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<List<byte[]>?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
@@ -72,7 +72,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             processRun.NumberOfFiles,
             processRun.Status,
             processRun.DocumentType
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
 
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -92,7 +92,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             processRun.ProcessRunId,
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -100,7 +100,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
         
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<ProcessRun>(content, JsonHelper.GetSerializerOptions());
+        var result = JsonSerializer.Deserialize<ProcessRun>(content, JsonHelper.GetWireSerializerOptions());
         return result!;
     }
 
@@ -112,7 +112,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         {
             processRunFile.FileName,
             processRunFile.ProcessRunId,
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -134,7 +134,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             processRunFile.ProcessRunFileId,
             processRunFile.FileName,
             processRunFile.ProcessRunId,
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -156,7 +156,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             processRunFile.ProcessRunFileId,
             processRunFile.FileName,
             processRunFile.ProcessRunId,
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -176,7 +176,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         var json = JsonSerializer.Serialize(new
         {
             matches
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -193,8 +193,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             matchesResultId,
             labelName,
             labelGroupName,
-            data = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions())
-        }, JsonHelper.GetSerializerOptions());
+            data = JsonSerializer.Serialize(data, JsonHelper.GetWireSerializerOptions())
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -212,7 +212,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             fileId,
             ProcessRunId = processRunId,
             isUpdate
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -241,7 +241,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             error,
             isUpdate,
             status = status.ToString()
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -262,7 +262,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             FileId = fileId,
             ProcessRunId = processRunId,
             IsUpdate = isUpdate
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -284,7 +284,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         return JsonSerializer.Deserialize<List<MatchResultSimple>>(
             content,
-            JsonHelper.GetSerializerOptions())!;
+            JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<int> SavePageScreenshotAsync(
@@ -397,11 +397,11 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var json = JsonSerializer.Serialize(new
         {
-            documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetSerializerOptions()),
+            documentLines = JsonSerializer.Serialize(documentLines, JsonHelper.GetWireSerializerOptions()),
             fileId,
             noOcrServiceName,
             processRunId
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -418,7 +418,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetWireSerializerOptions());
 
         if (processRuns == null)
         {
@@ -437,7 +437,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetSerializerOptions());
+        var processRuns = JsonSerializer.Deserialize<List<ProcessRun>>(content, JsonHelper.GetWireSerializerOptions());
         
         if (processRuns == null)
         {
@@ -457,7 +457,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         return string.IsNullOrEmpty(content)
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
+            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
@@ -475,7 +475,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         return string.IsNullOrEmpty(content)
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetSerializerOptions())!;
+            : JsonSerializer.Deserialize<MatchesResult>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task SaveThumbnailAsync(Guid fileId)
@@ -531,7 +531,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         var json = JsonSerializer.Serialize(
             licenceNumbers,
-            JsonHelper.GetSerializerOptions());
+            JsonHelper.GetWireSerializerOptions());
 
         using var httpContent = new StringContent(
             json,
@@ -546,9 +546,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task UpdateLicenceListProcessRunAsync(int processRunId)
+    public async Task UpdateProcessRunListProjectionAsync(int processRunId)
     {
-        var path = $"/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
+        var path = $"/BFF/ProcessRuns/UpdateProcessRunListProjection/{processRunId}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));

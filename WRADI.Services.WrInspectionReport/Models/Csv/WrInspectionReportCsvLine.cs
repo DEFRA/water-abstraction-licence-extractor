@@ -1,3 +1,6 @@
+using System.Text.Json;
+using WALE.ProcessFile.Core.Helpers;
+
 namespace WRADI.DocumentType.WrInspectionReport.Models.Csv;
 
 public class WrInspectionReportCsvLine
@@ -64,6 +67,25 @@ public class WrInspectionReportCsvLine
     public string? GeneralComments { get; set; }
     public string? Images { get; set; }
 
+    // WrInspectionReportReportBuilder takes the column order from reflection declaration order,
+    // so inserting mid-class shifts every later column for anyone consuming the export. Append.
+    public string? LicenceCriticality { get; set; }
+    public string? Address__Email { get; set; }
+    public string? InspectionDate__RawEndTime { get; set; }
+    public string? EnforcementResponse { get; set; }
+    public string? LicenceConditionsRaw { get; set; }
+    public string? NonCompliancesRaw { get; set; }
+    public string? ActionsRaw { get; set; }
+    public string? LicenceProvisions__HandsOffFlow { get; set; }
+    public string? LicenceProvisions__CompensationOrAugmentation { get; set; }
+    public string? LicenceProvisions__FishAndEelScreening { get; set; }
+
+    /// <summary>
+    /// Must stay last: column order is reflection declaration order, so an earlier insertion shifts
+    /// every column after it for anyone already reading these files.
+    /// </summary>
+    public string? ExtractedJson { get; set; }
+
     public static WrInspectionReportCsvLine FromForm(Models.WrInspectionReport form)
     {
         return new WrInspectionReportCsvLine
@@ -128,7 +150,19 @@ public class WrInspectionReportCsvLine
             MeasurementDetails__ReadingsTaken__ByWhom = form.MeasurementDetails.ReadingsTaken.ByWhom,
             MeasurementDetails__WhereKept = form.MeasurementDetails.WhereKept,
             GeneralComments = form.GeneralComments,
-            Images = form.Images.Count > 0 ? string.Join("\n", form.Images) : null
+            Images = form.Images.Count > 0 ? string.Join("\n", form.Images) : null,
+            LicenceCriticality = form.LicenceCriticality,
+            Address__Email = form.Address.Email,
+            InspectionDate__RawEndTime = form.InspectionDate.RawEndTime,
+            EnforcementResponse = form.EnforcementResponse,
+            LicenceConditionsRaw = form.LicenceConditionsRaw,
+            NonCompliancesRaw = form.NonCompliancesRaw,
+            ActionsRaw = form.ActionsRaw,
+            LicenceProvisions__HandsOffFlow = form.LicenceProvisions.HandsOffFlow.ToString(),
+            LicenceProvisions__CompensationOrAugmentation =
+                form.LicenceProvisions.CompensationOrAugmentation.ToString(),
+            LicenceProvisions__FishAndEelScreening = form.LicenceProvisions.FishAndEelScreening.ToString(),
+            ExtractedJson = JsonSerializer.Serialize(form, JsonHelper.GetSerializerOptions())
         };
     }
 }

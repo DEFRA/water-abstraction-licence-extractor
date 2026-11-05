@@ -6,6 +6,7 @@ public class FileProcessAppSettings
     public string DotnetPath { get; set; } = string.Empty;
     public string ApiBaseUrl { get; set; } = string.Empty;
     public string PdfFolderPath { get; set; } = string.Empty;
+    public int? MaxFilesPerRun { get; set; }
     
     // Tesseract settings
     public string TesseractExeName { get; set; } = string.Empty;
@@ -29,6 +30,8 @@ public class FileProcessAppSettings
     // SQS settings
     public string SqsQueueOrchestrationUrl { get; set; } = null!;
     public string SqsQueueFileProcessUrl { get; set; } = null!;
+
+    public string SqSQueueLicenceFinderUrl { get; set; } = null!;
     public int SqsWaitTimeSeconds { get; set; } = 20;
     public int SqsMaxNumberOfMessages { get; set; } = 5;
     public int? SqsVisibilityTimeoutSeconds { get; set; }

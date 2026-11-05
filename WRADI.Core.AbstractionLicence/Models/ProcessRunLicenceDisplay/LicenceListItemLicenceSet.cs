@@ -15,6 +15,6 @@ public sealed class LicenceListItemLicenceSet
     public string? ShortLicenceSetId { get; set; }
 
     public LicenceSetType LicenceSetType { get; set; }
-
-    public List<LicenceListItemLicenceSetType> LicenceSetTypes { get; init; } = [];
+    
+    public Aggregate[]? AggregateSets { get; set; }
 }

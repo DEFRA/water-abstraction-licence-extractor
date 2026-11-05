@@ -45,7 +45,7 @@ export function ReportModalContainer({
                         />
                     ) : (
                         <LicenceSetReportContent
-                            fileId={modal.fileId}
+                            licenceId={modal.licenceId}
                             licenceSetId={modal.licenceSetId!}
                         />
                     )}

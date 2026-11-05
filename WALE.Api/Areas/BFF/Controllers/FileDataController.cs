@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Interfaces;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -11,6 +12,10 @@ using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.WrInspectionReport.Converters;
 using WRADI.DocumentType.WrInspectionReport.Models.Csv;
 using WRADI.DocumentType.WrInspectionReport.Enums;
+using WRADI.DocumentType.WrInspectionReport.Interfaces;
+using WRADI.DocumentType.WrInspectionReport.Services;
+using WRADI.Services.Cache.WrInspectionReport.Interfaces;
+using WRADI.DocumentType.WrInspectionReport.Models;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -21,8 +26,48 @@ public class FileDataController(
     IOutputService outputService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IUiProcessRunService uiProcessRunService,
+    IFileService fileService,
+    IInspectionReportFinderCacheService inspectionReportFinderCacheService,
+    IWrInspectionReportSummaryReadService wrInspectionReportSummaryReadService,
+    IDocumentTextService documentTextService,
     IMemoryCache memoryCache) : Controller
 {
+    [HttpGet]
+    public async Task<ActionResult> GetWrInspectionReportsByDateAsync(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] string? template,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 100)
+    {
+        // Served from wr_inspection_report_summary, so this is one query rather than a result
+        // fetch and a conversion per file, and it spans runs - a report is immutable, so the
+        // newest run's extraction of a file is the only one worth showing.
+        var summaries = await wrInspectionReportSummaryReadService.GetLatestPerFileAsync(
+            from, to, template, skip, take);
+
+        var discovery = await GetDiscoveryAsync();
+
+        return Ok(summaries.Select(summary => new
+        {
+            fileId = summary.FileId,
+            processRunId = summary.ProcessRunId,
+            matchesResultId = summary.MatchesResultId,
+            inspectionDate = summary.InspectionDate?.ToString("yyyy-MM-dd"),
+            formDate = summary.FormDate?.ToString("yyyy-MM-dd"),
+            dmsDocumentDate = summary.DmsDocumentDate?.ToString("yyyy-MM-dd"),
+            dmsUploadDate = summary.DmsUploadDate?.ToString("yyyy-MM-dd"),
+            sortDate = summary.SortDate?.ToString("yyyy-MM-dd"),
+            dateSource = summary.DateSource.ToString(),
+            dateWarning = summary.DateWarning.ToString(),
+            permitNumber = summary.PermitNumber,
+            originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
+            template = summary.Template,
+            completeness = summary.Completeness,
+            isScan = summary.IsScan
+        }));
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<(string filename, string status)>>> GetSimpleMatchResultsAsync(
         [FromQuery] int processRunId)
@@ -57,9 +102,94 @@ public class FileDataController(
         var matchesResult = await outputService.GetMatchesResultAsync(fileId, processRunId);
         if (matchesResult == null) return Ok((string?)null);
 
-        var result = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
+        var result = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, WrInspectionReportSummaryBuilder.GetKnownTemplate(matchesResult));
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
     }
+
+    [HttpGet]
+    public async Task<ActionResult> GetWrInspectionReportSummariesAsync(
+        [FromQuery] int processRunId)
+    {
+        var cacheKey = $"wr-inspection-report-summaries:{processRunId}";
+
+        var summaries = await memoryCache.GetOrCreateAsync(
+            cacheKey,
+            async cacheEntry =>
+            {
+                cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
+                return await BuildWrInspectionReportSummariesAsync(processRunId);
+            });
+
+        return Ok(summaries);
+    }
+
+    private async Task<List<object>> BuildWrInspectionReportSummariesAsync(int processRunId)
+    {
+        var discovery = await GetDiscoveryAsync();
+
+        // Written as a run completes, and rebuildable on demand, so every column this list shows
+        // comes back in one query.
+        var projected = await wrInspectionReportSummaryReadService.GetForProcessRunAsync(processRunId);
+
+        var rows = projected
+            .Select(summary => (object)new
+            {
+                fileId = summary.FileId,
+                originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
+                template = summary.Template,
+                date = summary.SortDate?.ToString("yyyy-MM-dd"),
+                dateSource = summary.DateSource.ToString(),
+                dateWarning = summary.DateWarning.ToString(),
+                completeness = summary.Completeness,
+                isScan = summary.IsScan
+            })
+            .ToList();
+
+        // A file that failed extraction has nothing to project, but its DMS name is known from
+        // discovery - without a row it appears in the list as a blank line.
+        var projectedFileIds = projected.Select(summary => summary.FileId).ToHashSet();
+
+        rows.AddRange((await outputService.GetSimpleMatchResults(processRunId))
+            .Where(result => !projectedFileIds.Contains(result.FileId))
+            .Select(result => (object)new
+            {
+                fileId = result.FileId,
+                originalFileName = discovery.GetValueOrDefault(result.FileId.ToString()).FileName,
+                template = (string?)null,
+                date = (string?)null,
+                dateSource = "None",
+                dateWarning = "None",
+                completeness = 0,
+                isScan = false
+            }));
+
+        return rows;
+    }
+
+    /// The list shows the ingress key, which says nothing about the document. The DMS name, the
+    /// permit number and the DMS date are all held only by the discovery result, keyed by the same
+    /// file id.
+    private async Task<Dictionary<string, DiscoveredFile>> GetDiscoveryAsync() =>
+        (await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue))
+            .Where(result => !string.IsNullOrWhiteSpace(result.FileId))
+            .GroupBy(result => result.FileId!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => new DiscoveredFile(
+                    group.First().FileName,
+                    group.First().PermitNumber,
+                    group.First().DocumentDate,
+                    // DMS holds an upload date for every file where a document date can be blank,
+                    // but the finder does not persist it yet, so some files have no date at all.
+                    UploadDate: null),
+                StringComparer.OrdinalIgnoreCase);
+
+    private record DiscoveredFile(
+        string? FileName,
+        string? PermitNumber,
+        string? DocumentDate,
+        string? UploadDate);
+
 
     [HttpGet]
     public async Task<ActionResult<MatchesResult?>> GetMatchesResultByMatchesResultIdAsync(
@@ -76,6 +206,40 @@ public class FileDataController(
     {
         var result = await outputService.GetMatchesResultAsync(matchesResultId);
         return Ok(JsonSerializer.Serialize(result, JsonHelper.GetSerializerOptions()));
+    }
+
+    /// <summary>
+    /// The dates bound sort_date, not the upload date a process run is scoped by, so the same
+    /// window gives a different count here. Omitting both is the only way to reach a document with
+    /// no date, which the query drops whenever a bound is given.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildLatestWrInspectionReportCsvLinesAsync(from, to, template);
+        var bytes = WrInspectionReportReportBuilder.BuildCsv(lines, excludeInternalColumns);
+
+        return File(bytes, "text/csv", $"WR51-Latest-{DescribeWindow(from, to)}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestXlsxAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null,
+        [FromQuery] bool excludeInternalColumns = false)
+    {
+        var lines = await BuildLatestWrInspectionReportCsvLinesAsync(from, to, template);
+        var bytes = WrInspectionReportReportBuilder.BuildXlsx(lines, excludeInternalColumns);
+
+        return File(
+            bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"WR51-Latest-{DescribeWindow(from, to)}.xlsx");
     }
 
     [HttpGet]
@@ -123,6 +287,12 @@ public class FileDataController(
         return Ok(result);
     }
     
+    [HttpGet]
+    public async Task<ActionResult<string?>> DocumentTextAsync([FromQuery] Guid fileId)
+    {
+        return Ok(await documentTextService.GetDocumentTextAsync(fileId));
+    }
+
     [HttpGet]
     public async Task<ActionResult<Licence?>> LicenceByLicenceIdAsync(
         [FromQuery] int licenceId,
@@ -238,9 +408,11 @@ public class FileDataController(
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LicenceSectionVerification>>> LicenceSectionVerifications(
-        [FromQuery] Guid licenceFileId)
+        [FromQuery] Guid licenceFileId,
+        [FromQuery] string sourceLicenceNumber)
     {
-        var results = await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(licenceFileId);
+        var results = await abstractionLicenceOutputService.GetLicenceSectionVerificationsAsync(
+            licenceFileId, sourceLicenceNumber);
         return Ok(results);
     }
 
@@ -266,7 +438,7 @@ public class FileDataController(
 
         if (result != 0)
         {
-           FireAndForgetDataRefresh(verification);
+            FireAndForgetDataRefresh(verification);
         }
 
         return Ok(result);
@@ -286,6 +458,28 @@ public class FileDataController(
 
         return Ok(result);
     }
+
+    [HttpPost]
+    public async Task<ActionResult<int>> DeleteLicenceSectionVerifications(
+        [FromBody] LicenceSectionVerification[] verifications)
+    {
+        if (verifications.Length == 0)
+        {
+            return BadRequest("No verifications supplied.");
+        }
+
+        var result = await abstractionLicenceOutputService.DeleteLicenceSectionVerificationsAsync(
+            verifications.Select(v => v.LicenceSectionVerificationId));
+
+        if (result != 0)
+        {
+            // Entries share a licence file and item ID, so refreshing from the earliest process run covers them all
+            FireAndForgetDataRefresh(verifications.MinBy(v => v.ProcessRunId)!);
+        }
+
+        return Ok(result);
+    }
+
     private void FireAndForgetDataRefresh(LicenceSectionVerification verification)
     {
         _ = Task.Run((Func<Task?>)(async () =>
@@ -300,7 +494,7 @@ public class FileDataController(
             }
         }));
     }
-    
+
     private async Task RefreshLicenceListData(LicenceSectionVerification verification)
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();
@@ -323,9 +517,14 @@ public class FileDataController(
                 }
             }
         }
+
+        if (processRunIds.Count == 0)
+        {
+            return;
+        }
         
-        var mainLicence = await GetLicenceNumberFromFileId(verification.LicenceFileId, verification.ProcessRunId);
-        
+        var mainLicence = verification.SourceLicenceNumber;
+
         if (!string.IsNullOrWhiteSpace(mainLicence))
         {
             var licenceList = new List<string> { mainLicence };
@@ -347,33 +546,144 @@ public class FileDataController(
     {
         var simpleResults = await outputService.GetSimpleMatchResults(processRunId);
 
+        return await BuildCsvLinesAsync(
+            simpleResults.Count,
+            simpleResults.Select(Func<Task<MatchesResult?>> (result) =>
+                () => outputService.GetMatchesResultAsync(result.FileId, processRunId)));
+    }
+
+    /// <summary>
+    /// The flattened export keeps a document's first meter and drops the rest - 45% of meters in a
+    /// sampled run.
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestMetersCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null)
+    {
+        var forms = await BuildLatestFormsAsync(from, to, template);
+        var lines = forms.SelectMany(WrInspectionReportMeterCsvLine.FromForm).ToList();
+
+        return File(
+            WrInspectionReportReportBuilder.BuildCsv(lines),
+            "text/csv",
+            $"WR51-Latest-Meters-{DescribeWindow(from, to)}.csv");
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> ExportWrInspectionReportLatestActionsCsvAsync(
+        [FromQuery] DateOnly? from = null,
+        [FromQuery] DateOnly? to = null,
+        [FromQuery] string? template = null)
+    {
+        var forms = await BuildLatestFormsAsync(from, to, template);
+        var lines = forms.SelectMany(WrInspectionReportActionCsvLine.FromForm).ToList();
+
+        return File(
+            WrInspectionReportReportBuilder.BuildCsv(lines),
+            "text/csv",
+            $"WR51-Latest-Actions-{DescribeWindow(from, to)}.csv");
+    }
+
+    private static string DescribeWindow(DateOnly? from, DateOnly? to) =>
+        (from, to) switch
+        {
+            ({ } start, { } end) => $"{start:yyyyMMdd}-{end:yyyyMMdd}",
+            ({ } start, null) => $"from-{start:yyyyMMdd}",
+            (null, { } end) => $"to-{end:yyyyMMdd}",
+            _ => "all"
+        };
+
+    private async Task<List<WrInspectionReportCsvLine>> BuildLatestWrInspectionReportCsvLinesAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? template)
+    {
+        var summaries = await wrInspectionReportSummaryReadService.GetLatestPerFileAsync(
+            from, to, template, 0, int.MaxValue);
+
+        return await BuildCsvLinesAsync(
+            summaries.Count,
+            summaries.Select(Func<Task<MatchesResult?>> (summary) =>
+                () => outputService.GetMatchesResultAsync(summary.MatchesResultId)));
+    }
+
+    private async Task<List<WrInspectionReport>> BuildLatestFormsAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? template)
+    {
+        var summaries = await wrInspectionReportSummaryReadService.GetLatestPerFileAsync(
+            from, to, template, 0, int.MaxValue);
+
         using var semaphore = new SemaphoreSlim(10);
 
-        var tasks = simpleResults.Select(async simpleResult =>
+        var tasks = summaries.Select(async summary =>
         {
             await semaphore.WaitAsync();
 
             try
             {
-                var matchesResult = await outputService.GetMatchesResultAsync(simpleResult.FileId, processRunId);
+                var matchesResult = await outputService.GetMatchesResultAsync(summary.MatchesResultId);
+
+                return matchesResult == null
+                    ? null
+                    : WrInspectionReportSchemaConverter.ToForm(
+                        matchesResult,
+                        null,
+                        WrInspectionReportSummaryBuilder.GetKnownTemplate(matchesResult));
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        });
+
+        var forms = await Task.WhenAll(tasks);
+
+        return forms.Where(form => form != null).Cast<WrInspectionReport>().ToList();
+    }
+
+    /// <summary>
+    /// A document whose matches result has gone is dropped rather than failing the whole export.
+    /// </summary>
+    private async Task<List<WrInspectionReportCsvLine>> BuildCsvLinesAsync(
+        int count,
+        IEnumerable<Func<Task<MatchesResult?>>> readers)
+    {
+        using var semaphore = new SemaphoreSlim(10);
+
+        var tasks = readers.Select(async read =>
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var matchesResult = await read();
                 if (matchesResult == null)
                 {
                     return null;
                 }
 
-                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, GetKnownTemplate(matchesResult));
+                var form = WrInspectionReportSchemaConverter.ToForm(matchesResult, null, WrInspectionReportSummaryBuilder.GetKnownTemplate(matchesResult));
                 var line = WrInspectionReportCsvLine.FromForm(form);
 
-                // A raw s3:// URI isn't clickable and needs direct bucket credentials nobody
-                // reading this export has - link through FilesController's own presigned-URL
-                // redirect instead, so it resolves to a real, working HTTPS download on click.
-                // Deliberately not embedding a presigned URL directly here: AwsS3FileService.
-                // GetPresignedUrlAsync expires in 2 minutes, which suits that redirect's
-                // generate-then-immediately-follow flow but would already have expired by the
-                // time anyone opens this CSV.
-                line.Metadata__FileUrl = matchesResult.Filename == null
-                    ? null
-                    : $"{Request.Scheme}://{Request.Host}/BFF/Files/GetAsync?filename={Uri.EscapeDataString(matchesResult.Filename)}";
+                // The file's own S3 address, not a link back through this API: durable, where a
+                // presigned URL lapses after an hour and a BFF link dies with API reachability.
+                // Needs the reader's own AWS credentials, which this export's pipeline consumer has.
+                if (matchesResult.Filename == null)
+                {
+                    line.Metadata__FileUrl = null;
+                }
+                else
+                {
+                    var fileUrl = fileService.GetHttpsUrl(matchesResult.Filename, StorageFolder.Ingress);
+
+                    line.Metadata__FileUrl = fileUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? fileUrl
+                        : $"{Request.Scheme}://{Request.Host}{fileUrl}";
+                }
 
                 return line;
             }
@@ -387,30 +697,6 @@ public class FileDataController(
         return lines.Where(line => line != null).Cast<WrInspectionReportCsvLine>().ToList();
     }
 
-    private static WrTemplateType? GetKnownTemplate(MatchesResult matchesResult)
-    {
-        if (matchesResult.AdditionalInformation == null
-            || !matchesResult.AdditionalInformation.TryGetValue(
-                WrInspectionReportSchemaConverter.AdditionalInformationTemplateKey, out var value))
-        {
-            return null;
-        }
-
-        var rawTemplate = value switch
-        {
-            string s => s,
-            JsonElement { ValueKind: JsonValueKind.String } element => element.GetString(),
-            _ => null
-        };
-
-        return Enum.TryParse<WrTemplateType>(rawTemplate, out var template) ? template : null;
-    }
-
-    private async Task<string> GetLicenceNumberFromFileId(Guid fileId, int processRunId)
-    {
-        var fileIdToLicenceNumberMapping = await GetLicenceFileIdsAsync(processRunId);
-        return fileIdToLicenceNumberMapping[fileId][0].LicenceNumber!;
-    }
 
     private async Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
     {

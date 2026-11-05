@@ -1,6 +1,7 @@
 ﻿using WALE.Tools._1stHalf;
 using WALE.Tools._2ndHalf;
 using WALE.Tools._2ndHalf.ImportNaldData;
+using WALE.ProcessFile.Core.Constants;
 using WALE.Tools.Config;
 
 string workflow;
@@ -17,7 +18,17 @@ string workflow;
 //workflow = "PurposeMapper";
 workflow = "GenerateS3Thumbnails";
 
-const int processRunId = 3453;//112;//1707;
+// Also selectable from the command line: "<workflow> [argument]".
+if (args.Length > 0)
+{
+    workflow = args[0];
+}
+
+// The second argument is whatever the chosen workflow wants, so it is only read as a run id
+// when it parses as one - ImportDmsData takes an extract type in the same slot.
+var processRunId = args.Length > 1 && int.TryParse(args[1], out var processRunIdArgument)
+    ? processRunIdArgument
+    : 3453;//112;//1707;
 var localPdfFolder = KeyConfig.PdfFolder5; //KeyConfig.PdfFolderForDuplicates; //KeyConfig.PdfFolder5;
 var duplicateResultsFilePath = Path.Combine(KeyConfig.PdfFolderForDuplicates, "Download_Info_20260218-2.xlsx"); // File comes from JP
 var folderPathUsername = "xxx";
@@ -28,10 +39,31 @@ switch (workflow)
         return await ImportNaldData.ImportAsync();
     
     case "ImportDmsData": // FREQUENT - Import needed to import DMS data from XLSX file (local fs) into the DB
-        return await ImportDmsData.ImportAsync();
+        // Second argument is the required extract type: "ImportDmsData WrInspectionReport".
+        return await ImportDmsData.ImportAsync(args.Length > 1 ? args[1] : null);
+
+    case "ConvertWordInspectionReportsToPdf": // FREQUENT - Convert the Word-format WR51 reports
+        // already in the ingress bucket to PDF, in place, so a run can read them
+        return await ConvertWordInspectionReportsToPdf.RunAsync();
+
+    case "RebuildWrInspectionReportSummaries": // FREQUENT - Project a WR51 process run's results into
+        // wr_inspection_report_summary, which the date-driven report list reads. Derived data, so
+        // re-running is safe, including against a run that is still in progress.
+        return await RebuildWrInspectionReportSummaries.RebuildAsync(processRunId);
 
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
         throw new NotImplementedException(); // TODO
+
+    case "GenerateLicenceEstateExport": // Hand another team the extraction output: a run as a zip
+        // of one JSON file per licence, or one licence with a third argument:
+        // "GenerateLicenceEstateExport 134 2/27/18/158/R01"
+        return await GenerateLicenceEstateExport.GenerateAsync(
+            processRunId,
+            args.Length > 2 ? args[2] : null);
+
+    case "RebuildDocumentText": // AFTER A FORMAT BUMP - Re-derive stored document text so reads
+        // and the estate export serve a stored row instead of deriving it per request
+        return await RebuildDocumentText.RebuildAsync();
  
     case "GenerateLicenceReaderExtract": // FREQUENT - Foreach file in storage, scrape (and feed into the DB);
         // - DOI (that will be used in Live Licence Identification)
@@ -100,7 +132,7 @@ switch (workflow)
         break;
     
     case "OverrideAddIncrements": // ONE OFF - Add increment info to override file
-        var overrideRootPath = $"/Users/{folderPathUsername}/Documents/GitHub/water-abstraction-licence-finder/WA.DMS.LicenceFinder.Services/Resources";
+        var overrideRootPath = $"/Users/{folderPathUsername}/Documents/GitHub/water-abstraction-licence-finder/WRADI.LicenceFinder.Cmd.Services/Resources";
         await OverrideAddIncrements.GenerateOverrideFileAsync(overrideRootPath);
         break;
     
@@ -118,6 +150,22 @@ switch (workflow)
     
     case "GenerateS3Thumbnails": // One-off
         await GenerateS3Thumbnails.RunAsync(processRunId);
+        break;
+
+    case "GenerateS3ThumbnailsWrInspectionReport": // Backfill - WR51 equivalent of the above
+        await GenerateS3ThumbnailsWrInspectionReport.RunAsync(processRunId);
+        break;
+
+    case "BackfillPageScreenshotThumbnailsToS3": // ONE-OFF - WRADI-377, run this one first (smallest table)
+        await BackfillImagesToS3.BackfillPageScreenshotThumbnailsAsync();
+        break;
+
+    case "BackfillImageOnPageToS3": // ONE-OFF - WRADI-377, run second
+        await BackfillImagesToS3.BackfillImageOnPageAsync();
+        break;
+
+    case "BackfillPageScreenshotsToS3": // ONE-OFF - WRADI-377, run last (86k rows)
+        await BackfillImagesToS3.BackfillPageScreenshotsAsync();
         break;
 }
 

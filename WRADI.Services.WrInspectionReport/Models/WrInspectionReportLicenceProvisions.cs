@@ -43,4 +43,15 @@ public class WrInspectionReportLicenceProvisions
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public InOrderStatus OtherProvisions { get; set; }
+
+    // Conditions v3 assesses that v1 never printed. They stay DidntMatch on a v1 document, which
+    // is the same thing the thirteen above say about a v3 document for the three v3 omits.
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public InOrderStatus HandsOffFlow { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public InOrderStatus CompensationOrAugmentation { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public InOrderStatus FishAndEelScreening { get; set; }
 }

@@ -26,10 +26,12 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [scrapedResetKey, setScrapedResetKey] = useState(0);
 
+    const sourceLicenceNumber = licence.licenceNumber?.value;
+
     const fetchHistory = useCallback(() => {
-        if (licence.dmsFileId) {
+        if (licence.dmsFileId && sourceLicenceNumber) {
             setIsLoadingHistory(true);
-            waleApiClient.licenceSectionVerifications(licence.dmsFileId)
+            waleApiClient.licenceSectionVerifications(licence.dmsFileId, sourceLicenceNumber)
                 .then((data) => {
                     setHistory(data);
                 })
@@ -40,7 +42,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     setIsLoadingHistory(false);
                 });
         }
-    }, [licence.dmsFileId]);
+    }, [licence.dmsFileId, sourceLicenceNumber]);
 
     const handleVerified = () => {
         fetchHistory();
@@ -102,6 +104,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                         title="Linked Licences" 
                         itemType="linked licence"
                         licenceFileId={licence.dmsFileId!} 
+                        sourceLicenceNumber={sourceLicenceNumber ?? ''}
                         processRunId={processRunId}
                         onRefresh={onRefresh}
                         onVerified={handleVerified}
@@ -122,6 +125,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                         title="Aggregates"
                         itemType="aggregate"
                         licenceFileId={licence.dmsFileId!}
+                        sourceLicenceNumber={sourceLicenceNumber ?? ''}
                         processRunId={processRunId}
                         onRefresh={onRefresh}
                         onVerified={handleVerified}

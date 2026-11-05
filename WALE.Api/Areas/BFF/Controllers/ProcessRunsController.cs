@@ -1,3 +1,5 @@
+using WRADI.DocumentType.WrInspectionReport.Interfaces;
+using WALE.ProcessFile.Core.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using WALE.Api.Areas.BFF.Models;
@@ -23,6 +25,7 @@ public class ProcessRunsController(
     ILicenceListItemModelService licenceListItemModelService,
     ILicenceListRepository licenceListRepository,
     IUiProcessRunService uiProcessRunService,
+    IWrInspectionReportProjectionService wrInspectionReportProjectionService,
     IFileService fileService,
     IMemoryCache memoryCache) : Controller
 {
@@ -75,31 +78,17 @@ public class ProcessRunsController(
         [FromRoute] int processRunId,
         [FromQuery] ProcessRunQuery query)
     { 
-        var getTotalsTask =
-            abstractionLicenceOutputService.GetTotalLicenceCountAsync(
-                processRunId,
-                query);
+        var getTotalsTask = abstractionLicenceOutputService.GetTotalLicenceCountAsync(
+            processRunId,
+            query);
 
-        var paginationDataTask =
-           uiProcessRunService.GetProcessRunRawDataList(
-                processRunId,
-                query);
+        var paginationDataTask = uiProcessRunService.GetProcessRunRawDataList(
+            processRunId,
+            query);
 
-        var issuersTask =
-            GetIssuers(processRunId);
-
-        var licenceSetIdsTask =
-            GetLicenceSetIds(processRunId);
-
-        var issueDatesTask =
-            GetIssueDates(processRunId);
-
-        await Task.WhenAll(
-            getTotalsTask,
-            paginationDataTask,
-            issuersTask,
-            licenceSetIdsTask,
-            issueDatesTask);
+        var issuersTask = GetIssuers(processRunId);
+        var licenceSetIdsTask = GetLicenceSetIds(processRunId);
+        var issueDatesTask = GetIssueDates(processRunId);
 
         var processRun = new ProcessRunResponse
         {
@@ -125,6 +114,7 @@ public class ProcessRunsController(
         var queryTake = query.Take;
         var querySkip = query.Skip;
 
+        query = query.Clone();
         query.Skip = 0;
         query.Take = int.MaxValue;
         
@@ -183,7 +173,7 @@ public class ProcessRunsController(
     }
 
     [HttpGet("{processRunId:int}")]
-    public ActionResult UpdateLicenceListProcessRunAsync(
+    public ActionResult UpdateProcessRunListProjectionAsync(
         [FromRoute] int processRunId)
     {
         if (processRunId != 0)
@@ -192,7 +182,7 @@ public class ProcessRunsController(
             {
                 try
                 {
-                    await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);
+                    await ProjectProcessRunListAsync(processRunId);
                 }
                 catch
                 {
@@ -202,6 +192,54 @@ public class ProcessRunsController(
         }
         
         return Ok();
+    }
+
+    /// The route this replaced. Kept because the call is fire-and-forget on both sides: a Lambda
+    /// still running the previous build would get a 404 here and nothing anywhere would report it,
+    /// so the licence list would quietly stop updating. Removable once every caller is rolled.
+    [HttpGet("{processRunId:int}")]
+    public ActionResult UpdateLicenceListProcessRunAsync(
+        [FromRoute] int processRunId) =>
+        UpdateProcessRunListProjectionAsync(processRunId);
+
+    private async Task ProjectProcessRunListAsync(int processRunId)
+    {
+        var processRuns = await outputService.GetAllProcessRunsAsync();
+        var processRun = processRuns.SingleOrDefault(run => run.ProcessRunId == processRunId);
+
+        if (processRun == null)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(ProcessRunsController)} - no process run "
+                + $"{processRunId}, nothing projected");
+
+            return;
+        }
+
+        switch (processRun.DocumentType)
+        {
+            case DocumentTypes.WrInspectionReport:
+                var outcome = await wrInspectionReportProjectionService.ProjectProcessRunAsync(processRunId);
+
+                ConsoleHelper.WriteLine($"INFO - {nameof(ProcessRunsController)} - projected "
+                    + $"{outcome.Written} WR51 summary rows for process run {processRunId}"
+                    + (outcome.SkippedUndeserializable > 0
+                        ? $", {outcome.SkippedUndeserializable} skipped as undeserializable"
+                        : string.Empty));
+
+                break;
+
+            case DocumentTypes.AbstractionLicence:
+                await uiProcessRunService.UpdateLicenceListProcessRunAsync(processRunId);
+
+                break;
+
+            default:
+                ConsoleHelper.WriteLine($"WARNING - {nameof(ProcessRunsController)} - process run "
+                    + $"{processRunId} has document type '{processRun.DocumentType}', which has no "
+                    + "list projection; nothing rebuilt");
+
+                break;
+        }
     }
 
     [HttpGet]

@@ -8,4 +8,6 @@ public class AwsSqsQueueConfig
     public string? OrchestratorQueue { get; set; }
 
     public string? FileProcessQueue { get; set; }
+
+    public string? LicenceFinderQueue { get; set; }
 }

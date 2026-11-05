@@ -65,11 +65,6 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
 
-    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
-    {
-        throw new NotImplementedException();
-    }
-
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
@@ -151,7 +146,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
@@ -208,6 +203,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
     }
 
     public Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId)
+    {
+        return Task.FromResult(0);
+    }
+
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
     {
         return Task.FromResult(0);
     }

@@ -7,6 +7,7 @@ using WALE.ProcessFile.Services.Cache;
 using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
+using WALE.ProcessFile.Services.Tabula;
 using WALE.ProcessFile.Services.Services;
 using WRADI.DocumentType.WrInspectionReport.Configuration;
 using WRADI.DocumentType.WrInspectionReport.Constants;
@@ -21,9 +22,9 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// <summary>
 /// Ported from origin/task/wr51s (the pre-rewrite WR51 branch), which had 10 hand-crafted
 /// "dummy" WR51 documents with known, verified expected values - unlike the real 789-file
-/// corpus (WRADI.Services.WrInspectionReport.Tests), which has no ground truth and can only
+/// files (WRADI.Services.WrInspectionReport.Tests), which have no ground truth and can only
 /// measure coverage percentages. These are exact-value regression tests against fixed,
-/// synthetic content, so a failure here means a real behaviour change, not corpus noise.
+/// synthetic content, so a failure here means a real behaviour change, not document noise.
 ///
 /// The dummy files use "dummy" instead of a real DMS GUID in their filename
 /// (WR51__&lt;licence&gt;__dummy.pdf), so FileHelper.ExtractFileId can't parse an id from
@@ -33,7 +34,7 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 ///
 /// Assertions here were translated from the original branch's raw MatchesResult.Matches
 /// list (positional index into an implementation-specific ordering) to lookups by
-/// LabelGroupName, and re-verified against the current WrInspectionReportLabelConfiguration
+/// LabelGroupName, and re-verified against the current WrInspectionReportTextBasedLabelConfiguration
 /// rule set (a full rewrite) rather than carried over blind. Where current output still
 /// matches the original hand-verified ground truth, the
 /// assertion is kept as-is. Where it doesn't, the assertion still reflects the correct
@@ -42,6 +43,9 @@ namespace WRADI.Services.WrInspectionReport.Tests;
 /// </summary>
 public class Wr51PdfPigNoOcrPdfTests
 {
+    private static readonly ITableExtractorService TableExtractorService =
+        new TabulaTableExtractorService(new FileSystemCacheService("Cache/"));
+
     private static readonly ICacheService CacheService = new FileSystemCacheService("Cache/");
     private static readonly IOutputService OutputService = new FileSystemOutputService("Output/");
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
@@ -58,13 +62,14 @@ public class Wr51PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             new NullLicenceNumberService(),
-            null,
-            null,
+            // The consolidated ruleset reads table free text, so an extractor is required.
+            TableExtractorService,
+            TableExtractorService,
             new DmsLookupService(),
             GeneralConstants.UnsetRegionCode,
             DateTime.Now);
 
-        WrInspectionReportLabelConfiguration.ConfigurationPropertiesToSet(config);
+        WrInspectionReportTextBasedLabelConfiguration.ConfigurationPropertiesToSet(config);
         return config;
     }
 

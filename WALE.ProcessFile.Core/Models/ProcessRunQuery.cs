@@ -42,4 +42,30 @@ public class ProcessRunQuery
     public bool SortAscending { get; init; }
     
     public string[]? LicenceNumbers { get; init; }
+
+    public ProcessRunQuery Clone()
+    {
+        return new ProcessRunQuery
+        {
+            SearchTerm = SearchTerm,
+            Skip = Skip,
+            Take = Take,
+            Issuer = Issuer,
+            LimitsEmpty = LimitsEmpty,
+            AggregatesFilter = AggregatesFilter,
+            OcrScan = OcrScan,
+            PurposesEmpty = PurposesEmpty,
+            PointsEmpty = PointsEmpty,
+            IssueYear = IssueYear,
+            MeansFound = MeansFound,
+            IsLicenceNumberFlagged = IsLicenceNumberFlagged,
+            IsIssueDateFlagged = IsIssueDateFlagged,
+            ShortLicenceSetId = ShortLicenceSetId,
+            LinkedLicencesType = LinkedLicencesType,
+            VerificationType = VerificationType,
+            SortField = SortField,
+            SortAscending = SortAscending,
+            LicenceNumbers = LicenceNumbers
+        };
+    }
 }

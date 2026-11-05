@@ -9,6 +9,6 @@ public class OutputListDataItemLicenceSet
     public string? ShortLicenceSetId { get; set; }
     
     public LicenceSetType LicenceSetType { get; init; }
-
-    public LicenceSetType[] LicenceSetTypes { get; init; } = [];
+    
+    public Aggregate[]? AggregateSets { get; init; }
 }

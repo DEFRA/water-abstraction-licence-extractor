@@ -25,8 +25,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         {
             fileId,
             processRunId,
-            licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetSerializerOptions())
-        }, JsonHelper.GetSerializerOptions());
+            licenceSets = JsonSerializer.Serialize(licenceSets, JsonHelper.GetWireSerializerOptions())
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -42,13 +42,15 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         }
         
         var path = "/Extractor/Licence/SaveLicenceSet";
+        
+        var licenceSetSerialised = JsonSerializer.Serialize(licenceSet, JsonHelper.GetWireSerializerOptions());
 
         var json = JsonSerializer.Serialize(new
         {
             fileId,
             processRunId,
-            licenceSet = JsonSerializer.Serialize(licenceSet, JsonHelper.GetSerializerOptions())
-        }, JsonHelper.GetSerializerOptions());
+            licenceSet = licenceSetSerialised
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -64,8 +66,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         {
             fileId = licence.DmsFileId,
             processRunId,
-            licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
-        }, JsonHelper.GetSerializerOptions());
+            licence = JsonSerializer.Serialize(licence, JsonHelper.GetWireSerializerOptions())
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -84,8 +86,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         {
             licenceId,
             processRunId,
-            licence = JsonSerializer.Serialize(licence, JsonHelper.GetSerializerOptions())
-        }, JsonHelper.GetSerializerOptions());
+            licence = JsonSerializer.Serialize(licence, JsonHelper.GetWireSerializerOptions())
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -99,11 +101,6 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceNumberFileIdMapEntry>> GetLicenceNumberFileIdMapAsync()
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task FinishProcessRunAsync(ProcessRun processRun)
     {
         var path = "/Extractor/ProcessRun/Finish";
@@ -111,7 +108,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         var json = JsonSerializer.Serialize(new
         {
             processRun.ProcessRunId
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -129,7 +126,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
 
         var json = JsonSerializer.Serialize(
             licenceNumbers,
-            JsonHelper.GetSerializerOptions());
+            JsonHelper.GetWireSerializerOptions());
 
         using var httpContent = new StringContent(
             json,
@@ -163,7 +160,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<DocumentNaldPurposeMap>>(
             content,
-            JsonHelper.GetSerializerOptions())!;
+            JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task AddDocumentNaldPurposeMapAsync(
@@ -180,7 +177,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
                 NaldPurpose = naldPurpose,
                 MatchType = matchType
             },
-            JsonHelper.GetSerializerOptions());
+            JsonHelper.GetWireSerializerOptions());
 
         using var httpContent = new StringContent(
             json,
@@ -211,7 +208,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
                 NaldPurpose = naldPurpose,
                 MatchType = matchType
             },
-            JsonHelper.GetSerializerOptions());
+            JsonHelper.GetWireSerializerOptions());
 
         using var httpContent = new StringContent(
             json,
@@ -237,7 +234,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         {
             fileIds,
             templateUrl = "thumbnail_{0}.jpg"
-        }, JsonHelper.GetSerializerOptions());
+        }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(requestBodyJson, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
@@ -260,7 +257,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             throw new NullReferenceException("Get all licences returned null");
         }
 
-        return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<List<Licence>>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public Task<List<Licence>> GetLicencesSearchAsync(int processRunId, ProcessRunQuery processRunQuery)
@@ -285,7 +282,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(content, JsonHelper.GetSerializerOptions());
+        var licenceSets = JsonSerializer.Deserialize<Dictionary<string, LicenceSet>>(content, JsonHelper.GetWireSerializerOptions());
         
         if (licenceSets == null)
         {
@@ -320,7 +317,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             return null;
         }
 
-        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false)
@@ -338,7 +335,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             return null;
         }
 
-        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false)
@@ -356,7 +353,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             return null;
         }
 
-        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<Licence>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber)
@@ -364,16 +361,16 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
-    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public async Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
-        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}";
+        var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}&sourceLicenceNumber={Uri.EscapeDataString(sourceLicenceNumber)}";
         
         var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetWireSerializerOptions());
         
         if (licenceSectionVerifications == null)
         {
@@ -392,7 +389,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
 
         var content = await response.Content.ReadAsStringAsync();
 
-        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetSerializerOptions());
+        var licenceSectionVerifications = JsonSerializer.Deserialize<IEnumerable<LicenceSectionVerification>>(content, JsonHelper.GetWireSerializerOptions());
         
         if (licenceSectionVerifications == null)
         {
@@ -453,6 +450,11 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
         throw new NotImplementedException();
     }
 
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         var path = $"/BFF/ProcessRuns/GetTotalLicenceCount?processRunId={processRunId}";
@@ -466,7 +468,7 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
             throw new NullReferenceException("Total licence count returned null");
         }
 
-        return JsonSerializer.Deserialize<int>(content, JsonHelper.GetSerializerOptions())!;
+        return JsonSerializer.Deserialize<int>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public Task<List<string>> GetDistinctIssuersAsync(int processRunId)

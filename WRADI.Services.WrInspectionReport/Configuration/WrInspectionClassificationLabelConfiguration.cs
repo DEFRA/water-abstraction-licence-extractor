@@ -17,6 +17,7 @@ public static class WrInspectionClassificationLabelConfiguration
     private static readonly string[] ClassificationLabelGroupNames =
     [
         WrInspectionReportFieldNames.DocumentHeader,
+        WrInspectionReportFieldNames.TemplateMarkerV3,
         WrInspectionReportFieldNames.TemplateMarkerT4,
         WrInspectionReportFieldNames.TemplateMarkerT6,
         WrInspectionReportFieldNames.TemplateMarkerT7,

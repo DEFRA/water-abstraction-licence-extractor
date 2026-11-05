@@ -40,6 +40,8 @@ public class NoOcrDatabaseTests
             TestConfig.PostgresPassword,
             maxPoolSize: 10);
     
+    private static readonly IImageService ImageService = A.Fake<IImageService>();
+
     private static IDatabaseReadService ReadService =>
         new PostgresReadService(NpgsqlDataSourceProvider);
 
@@ -48,7 +50,8 @@ public class NoOcrDatabaseTests
 
     private static readonly ICacheService CacheService = new DatabaseCacheService(
         ReadService,
-        WriteService);
+        WriteService,
+        ImageService);
     
     private static IAbstractionLicenceDatabaseReadService AbsLicReadService =>
         new PostgresAbstractionLicenceReadService(NpgsqlDataSourceProvider);
@@ -69,7 +72,7 @@ public class NoOcrDatabaseTests
             null!);
     
     private static readonly INaldDataLookupService NaldDataLookupService;
-    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService);
+    private static readonly IOutputService OutputService = new DatabaseOutputService(ReadService, WriteService, ImageService);
     private static readonly INoOcrPdfDocumentService DocumentService = new PdfPigNoOcrPdfDocumentService();
     private static readonly INoOcrAlternativePdfDocumentService DocnetAlternativeDocumentService =
         new DocnetNoOcrAlternativePdfDocumentService();
@@ -348,7 +351,7 @@ public class NoOcrDatabaseTests
         Assert.Equal(new DateTime(1968, 05, 15), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2022, 07, 05), agreedSchemaLicence.LicenceVersion.IssueDate);
 
-        Assert.Equal("12504059-LV20220705", agreedSchemaLicenceGroup.Last().LicenceSetId);
+        Assert.Equal("12504059", agreedSchemaLicenceGroup.Last().LicenceSetId);
 
         Assert.NotNull(agreedSchemaLicenceGroup.Last().Licences);
         Assert.Single(agreedSchemaLicenceGroup.Last().Licences);

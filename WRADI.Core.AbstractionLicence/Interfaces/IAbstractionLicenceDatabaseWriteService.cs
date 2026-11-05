@@ -17,6 +17,8 @@ public interface IAbstractionLicenceDatabaseWriteService
 
     Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
 
+    Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds);
+
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
     Task ClearLicenceFinderResultsAsync();
@@ -39,7 +41,8 @@ public interface IAbstractionLicenceDatabaseWriteService
         string status,
         string? filename,
         string? permitNumber,
-        string? licenceNumber);
+        string? licenceNumber,
+        int matchesResultId);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,

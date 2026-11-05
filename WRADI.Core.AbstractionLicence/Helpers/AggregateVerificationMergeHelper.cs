@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -86,7 +85,8 @@ public static class AggregateVerificationMergeHelper
         IEnumerable<Aggregate>? scrapedAggregates,
         IEnumerable<LicenceSectionVerification> verifications)
     {
-        var aggregates = (scrapedAggregates ?? []).ToList();
+        var scrapedAggregateList = (scrapedAggregates ?? []).ToList();
+        var aggregates = scrapedAggregateList.ToList();
 
         foreach (var verification in OrderVerifications(verifications))
         {
@@ -122,7 +122,7 @@ public static class AggregateVerificationMergeHelper
                         }
 
                         var verificationAggregate =
-                            JsonSerializer.Deserialize<Aggregate>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                            VerificationMergeHelper.DeserializeVerificationValue<Aggregate>(json, out var verificationNode);
 
                         if (verificationAggregate == null)
                         {
@@ -130,6 +130,9 @@ public static class AggregateVerificationMergeHelper
                                 $"ERROR - {nameof(AggregateVerificationMergeHelper)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
                             continue;
                         }
+
+                        VerificationMergeHelper.ApplyCurrentRunValuesForMissingProperties(verificationAggregate,
+                            scrapedAggregateList.FirstOrDefault(a => a.Id == itemId), verificationNode!);
 
                         if (existingAggregate != null)
                         {

@@ -467,7 +467,7 @@ export class Client {
      * @param take (optional) 
      * @return OK
      */
-    getExtract(skip: number | undefined, take: number | undefined): Promise<void> {
+    getExtract(skip: number | undefined, take: number | undefined, extractType: string): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/Dms/GetExtract?";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
@@ -477,6 +477,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'take' cannot be null.");
         else if (take !== undefined)
             url_ += "take=" + encodeURIComponent("" + take) + "&";
+        if (extractType === undefined || extractType === null)
+            throw new globalThis.Error("The parameter 'extractType' must be defined and cannot be null.");
+        else
+            url_ += "extractType=" + encodeURIComponent("" + extractType) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -3493,6 +3497,64 @@ export class Client {
     }
 
     /**
+     * @param from (optional) 
+     * @param to (optional) 
+     * @param template (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getWrInspectionReportsByDate(from: Date | undefined, to: Date | undefined, template: string | undefined, skip: number | undefined, take: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetWrInspectionReportsByDate?";
+        if (from === null)
+            throw new globalThis.Error("The parameter 'from' cannot be null.");
+        else if (from !== undefined)
+            url_ += "from=" + encodeURIComponent(from ? "" + from.toISOString() : "") + "&";
+        if (to === null)
+            throw new globalThis.Error("The parameter 'to' cannot be null.");
+        else if (to !== undefined)
+            url_ += "to=" + encodeURIComponent(to ? "" + to.toISOString() : "") + "&";
+        if (template === null)
+            throw new globalThis.Error("The parameter 'template' cannot be null.");
+        else if (template !== undefined)
+            url_ += "template=" + encodeURIComponent("" + template) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWrInspectionReportsByDate(_response);
+        });
+    }
+
+    protected processGetWrInspectionReportsByDate(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param processRunId (optional) 
      * @return OK
      */
@@ -3677,6 +3739,44 @@ export class Client {
             });
         }
         return Promise.resolve<string>(null as any);
+    }
+
+    /**
+     * @param processRunId (optional) 
+     * @return OK
+     */
+    getWrInspectionReportSummaries(processRunId: number | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/FileData/GetWrInspectionReportSummaries?";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetWrInspectionReportSummaries(_response);
+        });
+    }
+
+    protected processGetWrInspectionReportSummaries(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
     }
 
     /**
@@ -4395,14 +4495,19 @@ export class Client {
 
     /**
      * @param licenceFileId (optional) 
+     * @param sourceLicenceNumber (optional) 
      * @return OK
      */
-    licenceSectionVerifications(licenceFileId: string | undefined): Promise<LicenceSectionVerification[]> {
+    licenceSectionVerifications(licenceFileId: string | undefined, sourceLicenceNumber: string | undefined): Promise<LicenceSectionVerification[]> {
         let url_ = this.baseUrl + "/BFF/FileData/LicenceSectionVerifications?";
         if (licenceFileId === null)
             throw new globalThis.Error("The parameter 'licenceFileId' cannot be null.");
         else if (licenceFileId !== undefined)
             url_ += "licenceFileId=" + encodeURIComponent("" + licenceFileId) + "&";
+        if (sourceLicenceNumber === null)
+            throw new globalThis.Error("The parameter 'sourceLicenceNumber' cannot be null.");
+        else if (sourceLicenceNumber !== undefined)
+            url_ += "sourceLicenceNumber=" + encodeURIComponent("" + sourceLicenceNumber) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -4605,6 +4710,48 @@ export class Client {
     }
 
     protected processDeleteLicenceSectionVerification(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    deleteLicenceSectionVerifications(body: LicenceSectionVerification[]): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/DeleteLicenceSectionVerifications";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processDeleteLicenceSectionVerifications(_response);
+        });
+    }
+
+    protected processDeleteLicenceSectionVerifications(response: Response): Promise<number> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -5202,6 +5349,47 @@ export class Client {
             });
         }
         return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    sendFileProcessSingleMessages(body: FileProcessSingleRequest[]): Promise<SendFileProcessSingleMessagesResponse> {
+        let url_ = this.baseUrl + "/BFF/Message/SendFileProcessSingleMessages";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSendFileProcessSingleMessages(_response);
+        });
+    }
+
+    protected processSendFileProcessSingleMessages(response: Response): Promise<SendFileProcessSingleMessagesResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = SendFileProcessSingleMessagesResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<SendFileProcessSingleMessagesResponse>(null as any);
     }
 
     /**
@@ -5806,6 +5994,42 @@ export class Client {
     /**
      * @return OK
      */
+    updateProcessRunListProjection(processRunId: number): Promise<void> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateProcessRunListProjection/{processRunId}";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateProcessRunListProjection(_response);
+        });
+    }
+
+    protected processUpdateProcessRunListProjection(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     updateLicenceListProcessRun(processRunId: number): Promise<void> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/UpdateLicenceListProcessRun/{processRunId}";
         if (processRunId === undefined || processRunId === null)
@@ -6244,6 +6468,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6277,6 +6502,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6316,6 +6542,7 @@ export class AbstractionLimitGroup implements IAbstractionLimitGroup {
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6336,6 +6563,7 @@ export interface IAbstractionLimitGroup {
     timeCutoff?: TimeCutoff | undefined;
     limits?: AbstractionLimit2[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6528,7 +6756,6 @@ export interface IAddDocumentNaldPurposeMatchRequest {
 
 export class Aggregate implements IAggregate {
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6536,11 +6763,13 @@ export class Aggregate implements IAggregate {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -6562,7 +6791,6 @@ export class Aggregate implements IAggregate {
                     this[property] = _data[property];
             }
             this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
             this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
             this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
@@ -6573,6 +6801,11 @@ export class Aggregate implements IAggregate {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
                     this.linkedLicences!.push(item);
+            }
+            if (Array.isArray(_data["variations"])) {
+                this.variations = [] as any;
+                for (let item of _data["variations"])
+                    this.variations!.push(AggregateVariation.fromJS(item));
             }
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
@@ -6587,6 +6820,7 @@ export class Aggregate implements IAggregate {
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6614,7 +6848,6 @@ export class Aggregate implements IAggregate {
                 data[property] = this[property];
         }
         data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
         data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
         data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
@@ -6625,6 +6858,11 @@ export class Aggregate implements IAggregate {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
                 data["linkedLicences"].push(item);
+        }
+        if (Array.isArray(this.variations)) {
+            data["variations"] = [];
+            for (let item of this.variations)
+                data["variations"].push(item ? item.toJSON() : undefined as any);
         }
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
@@ -6639,6 +6877,7 @@ export class Aggregate implements IAggregate {
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6655,7 +6894,6 @@ export class Aggregate implements IAggregate {
 
 export interface IAggregate {
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6663,80 +6901,22 @@ export interface IAggregate {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: AggregateVariation[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
     limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
     [key: string]: any;
 }
 
-export class AggregateSet implements IAggregateSet {
-    aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
-
-    [key: string]: any;
-
-    constructor(data?: IAggregateSet) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-            this.aggregateSetId = _data["aggregateSetId"];
-            if (Array.isArray(_data["aggregates"])) {
-                this.aggregates = [] as any;
-                for (let item of _data["aggregates"])
-                    this.aggregates!.push(AggregateWithContext.fromJS(item));
-            }
-        }
-    }
-
-    static fromJS(data: any): AggregateSet {
-        data = typeof data === 'object' ? data : {};
-        let result = new AggregateSet();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        data["aggregateSetId"] = this.aggregateSetId;
-        if (Array.isArray(this.aggregates)) {
-            data["aggregates"] = [];
-            for (let item of this.aggregates)
-                data["aggregates"].push(item ? item.toJSON() : undefined as any);
-        }
-        return data;
-    }
-}
-
-export interface IAggregateSet {
-    aggregateSetId?: string | undefined;
-    aggregates?: AggregateWithContext[];
-
-    [key: string]: any;
-}
-
-export class AggregateWithContext implements IAggregateWithContext {
+export class AggregateVariation implements IAggregateVariation {
+    difference?: string | undefined;
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6744,17 +6924,19 @@ export class AggregateWithContext implements IAggregateWithContext {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: any[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
+    limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
     [key: string]: any;
 
-    constructor(data?: IAggregateWithContext) {
+    constructor(data?: IAggregateVariation) {
         if (data) {
             for (var property in data) {
                 if (data.hasOwnProperty(property))
@@ -6769,8 +6951,8 @@ export class AggregateWithContext implements IAggregateWithContext {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
+            this.difference = _data["difference"];
             this.id = _data["id"];
-            this.aggregateSetId = _data["aggregateSetId"];
             this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.sourceLicenceVersionId = _data["sourceLicenceVersionId"];
             this.isExplicitlyAggregate = _data["isExplicitlyAggregate"];
@@ -6782,19 +6964,25 @@ export class AggregateWithContext implements IAggregateWithContext {
                 for (let item of _data["linkedLicences"])
                     this.linkedLicences!.push(item);
             }
+            if (Array.isArray(_data["variations"])) {
+                this.variations = [] as any;
+                for (let item of _data["variations"])
+                    this.variations!.push(item);
+            }
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
             if (Array.isArray(_data["limits"])) {
                 this.limits = [] as any;
                 for (let item of _data["limits"])
-                    this.limits!.push(AbstractionLimit2.fromJS(item));
+                    this.limits!.push(item);
             }
             if (Array.isArray(_data["containedIn"])) {
                 this.containedIn = [] as any;
                 for (let item of _data["containedIn"])
                     this.containedIn!.push(item);
             }
+            this.containsLegalText = _data["containsLegalText"];
             if (Array.isArray(_data["points"])) {
                 this.points = [] as any;
                 for (let item of _data["points"])
@@ -6808,9 +6996,9 @@ export class AggregateWithContext implements IAggregateWithContext {
         }
     }
 
-    static fromJS(data: any): AggregateWithContext {
+    static fromJS(data: any): AggregateVariation {
         data = typeof data === 'object' ? data : {};
-        let result = new AggregateWithContext();
+        let result = new AggregateVariation();
         result.init(data);
         return result;
     }
@@ -6821,8 +7009,8 @@ export class AggregateWithContext implements IAggregateWithContext {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
+        data["difference"] = this.difference;
         data["id"] = this.id;
-        data["aggregateSetId"] = this.aggregateSetId;
         data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["sourceLicenceVersionId"] = this.sourceLicenceVersionId;
         data["isExplicitlyAggregate"] = this.isExplicitlyAggregate;
@@ -6834,19 +7022,25 @@ export class AggregateWithContext implements IAggregateWithContext {
             for (let item of this.linkedLicences)
                 data["linkedLicences"].push(item);
         }
+        if (Array.isArray(this.variations)) {
+            data["variations"] = [];
+            for (let item of this.variations)
+                data["variations"].push(item);
+        }
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
         if (Array.isArray(this.limits)) {
             data["limits"] = [];
             for (let item of this.limits)
-                data["limits"].push(item ? item.toJSON() : undefined as any);
+                data["limits"].push(item);
         }
         if (Array.isArray(this.containedIn)) {
             data["containedIn"] = [];
             for (let item of this.containedIn)
                 data["containedIn"].push(item);
         }
+        data["containsLegalText"] = this.containsLegalText;
         if (Array.isArray(this.points)) {
             data["points"] = [];
             for (let item of this.points)
@@ -6861,9 +7055,9 @@ export class AggregateWithContext implements IAggregateWithContext {
     }
 }
 
-export interface IAggregateWithContext {
+export interface IAggregateVariation {
+    difference?: string | undefined;
     id?: string | undefined;
-    aggregateSetId?: string | undefined;
     sourceLicenceNumber?: string | undefined;
     sourceLicenceVersionId?: string | undefined;
     isExplicitlyAggregate?: boolean | undefined;
@@ -6871,11 +7065,13 @@ export interface IAggregateWithContext {
     subType?: NullableOfSubType | undefined;
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
+    variations?: any[] | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
-    limits?: AbstractionLimit2[];
+    limits?: any[];
     containedIn?: any[] | undefined;
+    containsLegalText?: boolean | undefined;
     points?: any[] | undefined;
     purposes?: any[] | undefined;
 
@@ -7108,6 +7304,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
     licenceSets?: number | undefined;
     status?: number | undefined;
     licenceSectionVerifications?: number | undefined;
+    ocr?: number | undefined;
 
     [key: string]: any;
 
@@ -7139,6 +7336,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
             this.licenceSets = _data["licenceSets"];
             this.status = _data["status"];
             this.licenceSectionVerifications = _data["licenceSectionVerifications"];
+            this.ocr = _data["ocr"];
         }
     }
 
@@ -7168,6 +7366,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
         data["licenceSets"] = this.licenceSets;
         data["status"] = this.status;
         data["licenceSectionVerifications"] = this.licenceSectionVerifications;
+        data["ocr"] = this.ocr;
         return data;
     }
 }
@@ -7186,6 +7385,7 @@ export interface ICumulativeFilterCounts {
     licenceSets?: number | undefined;
     status?: number | undefined;
     licenceSectionVerifications?: number | undefined;
+    ocr?: number | undefined;
 
     [key: string]: any;
 }
@@ -7855,6 +8055,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
     fileSize?: string | undefined;
     fileId?: string | undefined;
     documentDate?: string | undefined;
+    uploadDate?: string | undefined;
     otherReference?: string | undefined;
     disclosureStatus?: string | undefined;
     processRunId?: number;
@@ -7884,6 +8085,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
             this.fileSize = _data["fileSize"];
             this.fileId = _data["fileId"];
             this.documentDate = _data["documentDate"];
+            this.uploadDate = _data["uploadDate"];
             this.otherReference = _data["otherReference"];
             this.disclosureStatus = _data["disclosureStatus"];
             this.processRunId = _data["processRunId"];
@@ -7911,6 +8113,7 @@ export class InspectionReportFinderResult implements IInspectionReportFinderResu
         data["fileSize"] = this.fileSize;
         data["fileId"] = this.fileId;
         data["documentDate"] = this.documentDate;
+        data["uploadDate"] = this.uploadDate;
         data["otherReference"] = this.otherReference;
         data["disclosureStatus"] = this.disclosureStatus;
         data["processRunId"] = this.processRunId;
@@ -7927,6 +8130,7 @@ export interface IInspectionReportFinderResult {
     fileSize?: string | undefined;
     fileId?: string | undefined;
     documentDate?: string | undefined;
+    uploadDate?: string | undefined;
     otherReference?: string | undefined;
     disclosureStatus?: string | undefined;
     processRunId?: number;
@@ -8704,6 +8908,7 @@ export interface ILicenceSectionItemSummary {
 export class LicenceSectionVerification implements ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
+    sourceLicenceNumber?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
@@ -8734,6 +8939,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
             }
             this.licenceSectionVerificationId = _data["licenceSectionVerificationId"];
             this.licenceFileId = _data["licenceFileId"];
+            this.sourceLicenceNumber = _data["sourceLicenceNumber"];
             this.processRunId = _data["processRunId"];
             this.licenceSectionName = _data["licenceSectionName"];
             this.licenceSectionScrapedValue = _data["licenceSectionScrapedValue"];
@@ -8762,6 +8968,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
         }
         data["licenceSectionVerificationId"] = this.licenceSectionVerificationId;
         data["licenceFileId"] = this.licenceFileId;
+        data["sourceLicenceNumber"] = this.sourceLicenceNumber;
         data["processRunId"] = this.processRunId;
         data["licenceSectionName"] = this.licenceSectionName;
         data["licenceSectionScrapedValue"] = this.licenceSectionScrapedValue;
@@ -8779,6 +8986,7 @@ export class LicenceSectionVerification implements ILicenceSectionVerification {
 export interface ILicenceSectionVerification {
     licenceSectionVerificationId?: number;
     licenceFileId?: string;
+    sourceLicenceNumber?: string;
     processRunId?: number;
     licenceSectionName?: string | undefined;
     licenceSectionScrapedValue?: string | undefined;
@@ -8859,8 +9067,8 @@ export interface ILicenceSectionVerificationSummary {
 export class LicenceSet implements ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
-    licenceSetTypes?: number[];
-    aggregateSets?: AggregateSet[] | undefined;
+    licenceSetType?: LicenceSetType;
+    aggregateSets?: Aggregate[] | undefined;
     licences?: Licence[];
 
     [key: string]: any;
@@ -8882,15 +9090,11 @@ export class LicenceSet implements ILicenceSet {
             }
             this.licenceSetId = _data["licenceSetId"];
             this.shortLicenceSetId = _data["shortLicenceSetId"];
-            if (Array.isArray(_data["licenceSetTypes"])) {
-                this.licenceSetTypes = [] as any;
-                for (let item of _data["licenceSetTypes"])
-                    this.licenceSetTypes!.push(item);
-            }
+            this.licenceSetType = _data["licenceSetType"];
             if (Array.isArray(_data["aggregateSets"])) {
                 this.aggregateSets = [] as any;
                 for (let item of _data["aggregateSets"])
-                    this.aggregateSets!.push(AggregateSet.fromJS(item));
+                    this.aggregateSets!.push(Aggregate.fromJS(item));
             }
             if (Array.isArray(_data["licences"])) {
                 this.licences = [] as any;
@@ -8915,11 +9119,7 @@ export class LicenceSet implements ILicenceSet {
         }
         data["licenceSetId"] = this.licenceSetId;
         data["shortLicenceSetId"] = this.shortLicenceSetId;
-        if (Array.isArray(this.licenceSetTypes)) {
-            data["licenceSetTypes"] = [];
-            for (let item of this.licenceSetTypes)
-                data["licenceSetTypes"].push(item);
-        }
+        data["licenceSetType"] = this.licenceSetType;
         if (Array.isArray(this.aggregateSets)) {
             data["aggregateSets"] = [];
             for (let item of this.aggregateSets)
@@ -8937,8 +9137,8 @@ export class LicenceSet implements ILicenceSet {
 export interface ILicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
-    licenceSetTypes?: number[];
-    aggregateSets?: AggregateSet[] | undefined;
+    licenceSetType?: LicenceSetType;
+    aggregateSets?: Aggregate[] | undefined;
     licences?: Licence[];
 
     [key: string]: any;
@@ -8997,7 +9197,10 @@ export interface ILicenceSetReference {
 }
 
 export enum LicenceSetType {
+    Unknown = "Unknown",
     SingleLicenceOnly = "SingleLicenceOnly",
+    LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
+    Others = "Others",
     AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
     AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
     AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
@@ -9781,6 +9984,7 @@ export enum NullableOfInformationDirection {
     Unknown = "Unknown",
     Incoming = "Incoming",
     Outgoing = "Outgoing",
+    InSameGroup = "InSameGroup",
 }
 
 export enum NullableOfLabelPosition {
@@ -12023,6 +12227,71 @@ export enum ScrapeStatus {
     FileIdMissing = "FileIdMissing",
     InProgress = "InProgress",
     Error = "Error",
+    NotScraped = "NotScraped",
+}
+
+export class SendFileProcessSingleMessagesResponse implements ISendFileProcessSingleMessagesResponse {
+    requested?: number;
+    enqueued?: number;
+    failedFileIds?: string[];
+
+    [key: string]: any;
+
+    constructor(data?: ISendFileProcessSingleMessagesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.requested = _data["requested"];
+            this.enqueued = _data["enqueued"];
+            if (Array.isArray(_data["failedFileIds"])) {
+                this.failedFileIds = [] as any;
+                for (let item of _data["failedFileIds"])
+                    this.failedFileIds!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): SendFileProcessSingleMessagesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new SendFileProcessSingleMessagesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["requested"] = this.requested;
+        data["enqueued"] = this.enqueued;
+        if (Array.isArray(this.failedFileIds)) {
+            data["failedFileIds"] = [];
+            for (let item of this.failedFileIds)
+                data["failedFileIds"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ISendFileProcessSingleMessagesResponse {
+    requested?: number;
+    enqueued?: number;
+    failedFileIds?: string[];
+
+    [key: string]: any;
 }
 
 export class TimeCutoff implements ITimeCutoff {

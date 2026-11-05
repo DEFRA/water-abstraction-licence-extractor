@@ -8,6 +8,7 @@ public enum ScrapeStatus
     FileIdMissing,
     InProgress,
     Error,
+    NotScraped,
 
     /// <summary>
     /// Processing failed for a reason expected to clear on its own (e.g. an OCR provider was

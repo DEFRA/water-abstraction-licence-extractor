@@ -115,7 +115,9 @@ export function ExportLicenceEstate({ processRunId }: ExportLicenceEstateProps) 
 
             if (!response.ok) throw new Error(`The API returned ${response.status}.`);
 
-            if (statusRef.current === 'starting') {
+            // Not === 'starting': completion can land before the POST returns, and the early
+            // return above has already narrowed 'starting' out of the type.
+            if (statusRef.current !== 'completed' && statusRef.current !== 'failed') {
                 updateStatus('exporting');
                 setMessage(`Exporting process run ${processRunId}. This takes a few minutes.`);
             }

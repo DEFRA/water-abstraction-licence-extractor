@@ -70,7 +70,7 @@ public class LocalFileService(string folderPath) : IFileService
         return null;
     }
     
-    public Task DeleteAsync(string filename)
+    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
     {
         throw new NotImplementedException();
     }

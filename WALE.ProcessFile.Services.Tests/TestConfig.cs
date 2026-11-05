@@ -100,7 +100,7 @@ public static class TestConfig
     }
 
     [field: AllowNull, MaybeNull]
-    public static string ApiBaseUrl
+    public static string TextractBucket
     {
         get
         {
@@ -109,7 +109,7 @@ public static class TestConfig
                 return field;
             }
 
-            field = Config["ApiBaseUrl"] ?? "http://localhost:8080";
+            field = Config["AwsS3BucketName"] ?? "wradi-s3-assets-dev";
             return field;
         }
     }

@@ -14,7 +14,7 @@ public class SingletonAwsTextractFixture : BaseFixture
         AwsTextractOcrDataExtractorService.Instance(
             TestConfig.AwsAccessKey,
             TestConfig.AwsSecretKey,
-            TestConfig.ApiBaseUrl,
+            TestConfig.TextractBucket,
             CacheService,
             OutputService);
 }

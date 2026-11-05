@@ -23,13 +23,13 @@ public class AwsTextractOcrDataExtractorService
     private AwsTextractOcrDataExtractorService(
         string? accessKey,
         string? secretKey,
-        string apiBaseUrl,
+        string bucket,
         ICacheService cacheService,
         IOutputService outputService)
     {
         _accessKey = accessKey;
         _secretKey = secretKey;
-        _apiBaseUrl = apiBaseUrl;
+        _bucket = bucket;
         _cacheService = cacheService;
         _outputService = outputService;
     }
@@ -38,7 +38,7 @@ public class AwsTextractOcrDataExtractorService
     public static AwsTextractOcrDataExtractorService Instance(
         string? accessKey,
         string? secretKey,
-        string apiBaseUrl,
+        string bucket,
         ICacheService cacheService,
         IOutputService outputService)
     {
@@ -50,7 +50,7 @@ public class AwsTextractOcrDataExtractorService
         _instance = new AwsTextractOcrDataExtractorService(
             accessKey,
             secretKey,
-            apiBaseUrl,
+            bucket,
             cacheService,
             outputService);
         
@@ -60,7 +60,7 @@ public class AwsTextractOcrDataExtractorService
     private readonly ICacheService _cacheService;
     private readonly IOutputService _outputService;
     
-    private readonly string _apiBaseUrl;
+    private readonly string _bucket;
 
     // These 2 properties are only set in a certain auth mode
     private readonly string? _accessKey;
@@ -74,9 +74,8 @@ public class AwsTextractOcrDataExtractorService
     private static readonly Lock ClientInitialisationLock = new();
 
     // Account quotas divided by the Lambda's reserved concurrency, because the limiters are per
-    // instance and every instance calls Textract. Raise these only with the quotas: over them,
-    // pages fail OCR and the file still reports success. The synchronous DetectDocumentText is
-    // 1/sec, which is why this uses the asynchronous operations instead.
+    // instance and every instance calls Textract. Raise these only with the quotas: over them
+    // every page throttles, which fails the file and sends it round the queue again.
     private const int AccountStartRequestsPerSecond = 15;
     private const int AccountPollRequestsPerSecond = 20;
     private const int AccountConcurrentJobs = 100;
@@ -99,53 +98,6 @@ public class AwsTextractOcrDataExtractorService
     // times that rather than generous.
     private static readonly TimeSpan JobTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan PollEvery = TimeSpan.FromSeconds(2);
-
-    private static readonly SemaphoreSlim BucketLock = new(1, 1);
-    private static string? _assetsBucket;
-
-    /// The function has no bucket of its own - AwsS3BucketName is not set on it and
-    /// ApiFileService reports "N/A" - so the name comes from the API, once per instance.
-    private async Task<string> GetAssetsBucketAsync()
-    {
-        if (_assetsBucket != null)
-        {
-            return _assetsBucket;
-        }
-
-        await BucketLock.WaitAsync();
-
-        try
-        {
-            if (_assetsBucket != null)
-            {
-                return _assetsBucket;
-            }
-
-            using var httpClient = new HttpClient { BaseAddress = new Uri(_apiBaseUrl) };
-            var response = await httpClient.GetAsync("/Extractor/Files/GetBuckets");
-
-            // Transient rather than swallowed: without a bucket there is no OCR, and the file
-            // saving as a success without it is the failure this provider exists to avoid.
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new OcrServiceTransientException(
-                    nameof(AwsTextract),
-                    $"{(int)response.StatusCode} asking the API for the bucket names",
-                    new HttpRequestException($"{(int)response.StatusCode}"));
-            }
-
-            using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-
-            _assetsBucket = document.RootElement.GetProperty("assets").GetString()
-                ?? throw new InvalidOperationException("The API returned no assets bucket name");
-
-            return _assetsBucket;
-        }
-        finally
-        {
-            BucketLock.Release();
-        }
-    }
 
     private async Task UploadAsync(string bucket, string key, byte[] bytes)
     {
@@ -171,7 +123,8 @@ public class AwsTextractOcrDataExtractorService
         }
         catch (Exception exception)
         {
-            // The page has its text; losing the temp object to a lifecycle rule is the lesser harm.
+            // The page has its text, so a stray object is the lesser harm - but nothing else
+            // clears them: the bucket expires only noncurrent versions.
             ConsoleHelper.WriteLine($"WARNING - {nameof(AwsTextract)} - could not delete {key}"
                 + $" - {exception.Message}");
         }
@@ -269,9 +222,11 @@ public class AwsTextractOcrDataExtractorService
             {
                 var maxNumberOfWords = -1;
                 
-                foreach (var bytes in bytesList)
+                foreach (var (bytes, candidate) in bytesList.Select((b, i) => (b, i)))
                 {
-                    var returnList = await GetDataFromTextractAsync(bytes);
+                    var returnList = await GetDataFromTextractAsync(
+                        bytes,
+                        $"{pdfDocument.FileId:N}-{processRunId}-{pageNumber}-{imageNumber}-{candidate}");
                     var numberOfWords = returnList.Sum(line => line.Words!.Count);
 
                     if (numberOfWords <= maxNumberOfWords)
@@ -347,16 +302,14 @@ public class AwsTextractOcrDataExtractorService
 
     /// The asynchronous operations only read from S3 - DocumentLocation has no inline bytes - so
     /// the image goes to a temp object for the length of the job.
-    private async Task<List<Block>> DetectDocumentTextAsync(AmazonTextractClient client, byte[] bytes)
+    private async Task<List<Block>> DetectDocumentTextAsync(
+        AmazonTextractClient client,
+        byte[] bytes,
+        string jobToken)
     {
-        var bucket = await GetAssetsBucketAsync();
+        var key = TempPrefix + jobToken;
 
-        // ClientRequestToken takes ^[a-zA-Z0-9-_]+$, so it is the id alone - the key's prefix
-        // carries a slash, which S3 accepts and Textract rejects.
-        var id = Guid.NewGuid().ToString("N");
-        var key = TempPrefix + id;
-
-        await UploadAsync(bucket, key, bytes);
+        await UploadAsync(_bucket, key, bytes);
 
         try
         {
@@ -364,7 +317,7 @@ public class AwsTextractOcrDataExtractorService
 
             try
             {
-                var jobId = await StartJobAsync(client, bucket, key, id);
+                var jobId = await StartJobAsync(client, _bucket, key, jobToken);
                 return await CollectBlocksAsync(client, jobId);
             }
             finally
@@ -374,7 +327,7 @@ public class AwsTextractOcrDataExtractorService
         }
         finally
         {
-            await DeleteAsync(bucket, key);
+            await DeleteAsync(_bucket, key);
         }
     }
 
@@ -387,8 +340,9 @@ public class AwsTextractOcrDataExtractorService
         var response = await StartLimiter.Enqueue(() => client.StartDocumentTextDetectionAsync(
             new StartDocumentTextDetectionRequest
             {
-                // Same token for the same object, so an SQS redelivery joins the existing job
-                // rather than starting a second one against the concurrent-jobs ceiling.
+                // Derived from the image's identity, so a redelivered message joins the job the
+                // first attempt started instead of paying for the page twice. Not the key - its
+                // prefix has a slash, and the token takes ^[a-zA-Z0-9-_]+$.
                 ClientRequestToken = requestToken,
                 DocumentLocation = new DocumentLocation
                 {
@@ -477,12 +431,12 @@ public class AwsTextractOcrDataExtractorService
         }
     }
     
-    private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes)
+    private async Task<List<LineAndWords>> GetDataFromTextractAsync(byte[] bytes, string jobToken)
     {
         const double coordinatesFormatMultiplier = 1_000.0;
 
         var client = GetTextractClient(_accessKey, _secretKey);
-        var blocks = await DetectDocumentTextAsync(client, bytes);
+        var blocks = await DetectDocumentTextAsync(client, bytes, jobToken);
         
         var returnList = new List<LineAndWords>();
         

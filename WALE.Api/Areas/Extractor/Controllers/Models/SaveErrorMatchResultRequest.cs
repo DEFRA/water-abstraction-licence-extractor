@@ -12,8 +12,5 @@ public class SaveErrorMatchResultRequest
     
     public bool isUpdate { get; set; }
 
-    /// <summary>
-    /// "Error" (default, terminal for the run) or "TransientError" (a retry may reclaim the row).
-    /// </summary>
     public string? status { get; set; }
 }

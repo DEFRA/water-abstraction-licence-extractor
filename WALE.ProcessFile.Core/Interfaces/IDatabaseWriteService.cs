@@ -1,9 +1,8 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.NoOcrService;
-using WALE.ProcessFile.Core.Models.OcrService;
-
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.ProcessFile.Core.Interfaces;
 

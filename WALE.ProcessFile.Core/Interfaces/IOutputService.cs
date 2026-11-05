@@ -39,12 +39,8 @@ public interface IOutputService
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
 
-    /// <param name="isUpdate">True to reclaim an existing row for this file/run (e.g. one left in
-    /// <see cref="ScrapeStatus.TransientError"/> by an earlier attempt) instead of inserting a second one.</param>
     public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false);
     
-    /// <param name="status"><see cref="ScrapeStatus.Error"/> (terminal for the run) or
-    /// <see cref="ScrapeStatus.TransientError"/> (a retry may reclaim the row).</param>
     public Task<int> SaveErrorMatchesResultAsync(
         string filename,
         Guid fileId,

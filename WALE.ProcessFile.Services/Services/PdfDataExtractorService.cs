@@ -58,8 +58,6 @@ public class PdfDataExtractorService(
                 return (true, null, null);
             }
 
-            // A TransientError row (e.g. an OCR provider was throttled last time) does not hold the
-            // lock: this retry reclaims it in place and processes the file from scratch.
             var reclaimingTransientError =
                 matchesResult?.Status == nameof(ScrapeStatus.TransientError);
 

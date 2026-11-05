@@ -23,7 +23,7 @@ public class MessageController(
         [FromQuery] int delayInSeconds = 0,
         [FromQuery] string documentType = "AbstractionLicence")
     {
-        var payload = JsonSerializer.Serialize(new WALE.ProcessFile.Core.Models.FileProcessOrchestrationRequest
+        var payload = JsonSerializer.Serialize(new FileProcessOrchestrationRequest
         {
             DocumentType = documentType,
             RequestedAt = DateTime.UtcNow

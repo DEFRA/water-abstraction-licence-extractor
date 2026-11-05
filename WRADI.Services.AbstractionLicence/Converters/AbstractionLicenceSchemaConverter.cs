@@ -838,10 +838,9 @@ public static class AbstractionLicenceSchemaConverter
     private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
     {
         return limitLeft.PeriodType == limitRight.PeriodType
-               && UnitsForComparison(limitLeft.Units) == UnitsForComparison(limitRight.Units)
-               && AreValuesEqual(
-                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
-                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
+            && AreValuesEqual(
+               ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
+               ValueInBaseUnits(limitRight.Value, limitRight.Units));
     }
     
     private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
@@ -906,17 +905,11 @@ public static class AbstractionLicenceSchemaConverter
 
     private static double? ValueInBaseUnits(double? value, string? units)
     {
-        if (string.IsNullOrEmpty(units))
-        {
-            return value;
-        }
+        const string baseUnit = "litres";
         
-        if (units is "thousand cubic metres")
-        {
-            return value * 1000.0;
-        }
-        
-        return value;
+        return string.IsNullOrEmpty(units)
+            ? value
+            : UnitHelper.Convert(value!.Value, units, baseUnit);
     }
 
     private static void HoistContainedInSections(
@@ -4875,21 +4868,6 @@ public static class AbstractionLicenceSchemaConverter
         
         return value2 >= minValue1
             && value2 <= maxValue1;
-    }
-    
-    private static string? UnitsForComparison(string? units)
-    {
-        if (string.IsNullOrEmpty(units))
-        {
-            return units;
-        }
-        
-        if (units is "cubic meters" or "thousand cubic metres")
-        {
-            return "cubic metres";
-        }
-
-        return units;
     }
     
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(

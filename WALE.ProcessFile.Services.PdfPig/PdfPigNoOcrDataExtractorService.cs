@@ -44,7 +44,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,
-            metadata != null,
+            // Not just metadata != null: an error response deserialises into a collection whose
+            // properties are all null, and taking that as a hit skips the fetch and reads nothing.
+            // An empty AllDocumentLines is a hit - a scanned file has no text layer, which is why
+            // it goes to OCR. Null is the read not having happened.
+            metadata is { PagesMetadata: not null, AllDocumentLines: not null },
             null,
             metadata?.SizeBytes,
             outputService,
@@ -52,10 +56,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             noOcrAlternativePdfDocumentService,
             configuration);
         
-        if (pdfDocument.FromCache)
+        if (metadata is { PagesMetadata: { } pagesMetadata, AllDocumentLines: { } allDocumentLines })
         {
             pdfDocument.Pages = GetPages(
-                metadata!.PagesMetadata!,
+                pagesMetadata,
                 fileId,
                 outputService,
                 configuration.SkipFileWhenMoreThenPages);
@@ -65,8 +69,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
                 pdfDocument,
                 configuration,
-                metadata.PagesMetadata,
-                metadata.AllDocumentLines!);
+                pagesMetadata,
+                allDocumentLines);
         
             return pdfDocument;
         }

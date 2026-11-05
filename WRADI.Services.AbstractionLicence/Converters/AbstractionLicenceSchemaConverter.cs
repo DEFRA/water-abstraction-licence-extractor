@@ -790,51 +790,6 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    /*private static bool IsLimitGroupEqual(
-        List<AbstractionLimit> limitsLeft,
-        List<AbstractionLimit> limitsRight,
-        out List<AbstractionLimit> toAdd)
-    {
-        toAdd = [];
-        
-        var onlyOnLeft = limitsLeft
-            .Where(ll => limitsRight.All(lr => lr.PeriodType != ll.PeriodType))
-            .ToList();
-        
-        var onlyOnRight = limitsRight
-            .Where(lr => limitsLeft.All(ll => ll.PeriodType != lr.PeriodType))
-            .ToList();
-        
-        var orderedLimitsLeft = limitsLeft
-            .Where(ll => !onlyOnLeft.Contains(ll))
-            .OrderBy(l => l.PeriodType)
-            .ToList();
-        
-        var orderedLimitsRight = limitsRight
-            .Where(lr => !onlyOnRight.Contains(lr))
-            .OrderBy(l => l.PeriodType)
-            .ToList();
-
-        if (orderedLimitsLeft.Count < 2)
-        {
-            return false;
-        }
-        
-        for (var idx = 0; idx < orderedLimitsLeft.Count; idx++)
-        {
-            var limitLeft  = orderedLimitsLeft[idx];
-            var limitRight = orderedLimitsRight[idx];
-
-            if (!AreLimitsEqual(limitLeft, limitRight))
-            {
-                return false;
-            }
-        }
-
-        toAdd = onlyOnRight;
-        return true;
-    }*/
-
     private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
     {
         return limitLeft.PeriodType == limitRight.PeriodType
@@ -865,6 +820,27 @@ public static class AbstractionLicenceSchemaConverter
             {
                 foreach (var matchingIndividualGroup in matchingIndividualGroups)
                 {
+                    // At the group level
+                    if (matchingIndividualGroup.ContainedIn?.Length >= 1)
+                    {
+                        var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
+
+                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                        {
+                            // Already have it in contained in
+                            continue;
+                        }
+
+                        containedInList.Add(new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        });
+
+                        matchingIndividualGroup.ContainedIn = containedInList.ToArray();
+                        continue;
+                    }
+                    
+                    // At a limit level
                     foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
                     {
                         var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();

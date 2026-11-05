@@ -14,9 +14,18 @@ public class LicenceEstateExportController(
     ILicenceEstateExportRunner licenceEstateExportRunner) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> GetLicenceAsync([FromQuery] int licenceId)
+    public Task<IActionResult> GetLicenceAsync([FromQuery] int licenceId) =>
+        RespondAsync(licenceEstateExportService.ExportLicenceAsync(licenceId));
+
+    [HttpGet]
+    public Task<IActionResult> GetLicenceByNumberAsync(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int processRunId) =>
+        RespondAsync(licenceEstateExportService.ExportLicenceAsync(licenceNumber, processRunId));
+
+    private async Task<IActionResult> RespondAsync(Task<LicenceExport?> exporting)
     {
-        var licence = await licenceEstateExportService.ExportLicenceAsync(licenceId);
+        var licence = await exporting;
 
         if (licence == null)
         {

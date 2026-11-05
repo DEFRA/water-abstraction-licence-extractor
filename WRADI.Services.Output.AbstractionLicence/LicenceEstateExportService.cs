@@ -22,11 +22,21 @@ public class LicenceEstateExportService(
             licenceId,
             applyVerifications: true);
 
-        if (licence == null)
-        {
-            return null;
-        }
+        return licence == null ? null : await ExportAsync(licence, licenceId);
+    }
 
+    public async Task<LicenceExport?> ExportLicenceAsync(string licenceNumber, int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(
+            licenceNumber,
+            processRunId,
+            applyVerifications: true);
+
+        return licence == null ? null : await ExportAsync(licence, licence.LicenceId);
+    }
+
+    private async Task<LicenceExport> ExportAsync(Licence licence, int licenceId)
+    {
         var documentText = licence.DmsFileId == null
             ? null
             : await documentTextService.GetDocumentTextAsync(licence.DmsFileId.Value);

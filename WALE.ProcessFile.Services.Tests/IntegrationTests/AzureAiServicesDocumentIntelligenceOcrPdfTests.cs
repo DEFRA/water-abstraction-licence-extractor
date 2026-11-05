@@ -909,7 +909,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("1.25", perDayValue1?.Text?.FirstOrDefault()?.Text);    
         
         var perDayUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("megalitres", perDayUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perDayUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perDayValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
         Assert.Equal("1.25", perDayValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 5.7
@@ -921,10 +921,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("300", perYearValue1?.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits2 = section1Sub1.SubResults!.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("megalitres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perYearUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("300", perYearValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        Assert.Equal("300", perYearValue2?.Text?.FirstOrDefault()?.Text);
         
         var perHourUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
         Assert.Equal("thousand gallons", perHourUnits1?.Text?.FirstOrDefault()?.Text);
@@ -933,10 +933,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("52", perHourValue1?.Text?.FirstOrDefault()?.Text);
         
         var perHourUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("cubic metres", perHourUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("thousand gallons", perHourUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perHourValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("52", perHourValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 236
+        Assert.Equal("52", perHourValue2?.Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

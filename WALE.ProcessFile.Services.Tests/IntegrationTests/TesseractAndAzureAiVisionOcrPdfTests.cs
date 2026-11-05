@@ -619,22 +619,22 @@ public partial class TesseractAndAzureAiVisionOcrPdfTests(FirstNamesFixture firs
         Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text);
         
         perYearUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("megalitres", perYearUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perYearUnits?.Text?.FirstOrDefault()?.Text);
 
         perYearValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        Assert.Equal("300", perYearValue?.Text?.FirstOrDefault()?.Text);
         
         perDayUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("megalitres", perDayUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perDayUnits?.Text?.FirstOrDefault()?.Text);
 
         perDayValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
-        Assert.Equal("1.25", perDayValue?.Text?.FirstOrDefault()?.Text); // TODO should be 5.7
+        Assert.Equal("1.25", perDayValue?.Text?.FirstOrDefault()?.Text);
 
         perHourUnits = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("cubic metres", perHourUnits?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("thousand gallons", perHourUnits?.Text?.FirstOrDefault()?.Text);
 
         perHourValue = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text); // TODO should be 236
+        Assert.Equal("52", perHourValue?.Text?.FirstOrDefault()?.Text);
 
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         

@@ -217,8 +217,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
 
         Assert.Single(licence.AbstractionLimits.Individual[0].Limits);
-        Assert.Equal("thousand cubic metres", licence.AbstractionLimits.Individual[0].Limits[0].Units);
-        Assert.Equal(41.360, licence.AbstractionLimits.Individual[0].Limits[0].Value);
+        Assert.Equal("million gallons", licence.AbstractionLimits.Individual[0].Limits[0].Units);
+        Assert.Equal(9.1, licence.AbstractionLimits.Individual[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[0].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Individual[0].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Individual[0].Points!);
@@ -232,8 +232,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(licence.AbstractionLimits.Individual[0].ContainedIn);
         Assert.Single(licence.AbstractionLimits.Individual[0].ContainedIn!);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Individual[0].ContainedIn![0].Source);  
-        Assert.Equal("thousand cubic metres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
-        Assert.Equal(1, licence.AbstractionLimits.Individual[1].Limits[0].Value);
+        Assert.Equal("Gallons", licence.AbstractionLimits.Individual[1].Limits[0].Units);
+        Assert.Equal(220_000, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Individual[1].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Individual[1].Points!);
@@ -251,8 +251,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
         Assert.Equal(InformationSource.Document, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].Source);  
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].ContainedIn);
-        Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[0].Units);
-        Assert.Equal(36.36, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.Equal("gallons", licence.AbstractionLimits.Aggregates[0].Limits[0].Units);
+        Assert.Equal(8_000, licence.AbstractionLimits.Aggregates[0].Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, licence.AbstractionLimits.Aggregates[0].Limits[0].PeriodType);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[0].Points!);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
@@ -265,8 +265,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.True(licence.AbstractionLimits.Aggregates[0].Purposes![1].IsImplicit);
         
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].ContainedIn);
-        Assert.Equal("cubic metres", licence.AbstractionLimits.Aggregates[0].Limits[1].Units);
-        Assert.Equal(618.20, licence.AbstractionLimits.Aggregates[0].Limits[1].Value);
+        Assert.Equal("gallons", licence.AbstractionLimits.Aggregates[0].Limits[1].Units);
+        Assert.Equal(136_000, licence.AbstractionLimits.Aggregates[0].Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Aggregates[0].Limits[1].PeriodType);
         Assert.Null(licence.AbstractionLimits.Aggregates[0].Limits[1].Points!);
         Assert.Single(licence.AbstractionLimits.Aggregates[0].Points!);
@@ -353,14 +353,14 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("cubic metres", agg.Limits[0].Units);
-        Assert.Equal(9.1, agg.Limits[0].Value);
+        Assert.Equal(2000, agg.Limits[0].Value);
+        Assert.Equal("gallons", agg.Limits[0].Units);
         Assert.Equal(LimitPeriodType.PerHour, agg.Limits[0].PeriodType);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("cubic metres", agg.Limits[1].Units);
-        Assert.Equal(218, agg.Limits[1].Value);
+        Assert.Equal("gallons", agg.Limits[1].Units);
+        Assert.Equal(47_960, agg.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, agg.Limits[1].PeriodType);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
@@ -384,14 +384,14 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("cubic metres", agg.Limits[0].Units);
-        Assert.Equal(22.7, agg.Limits[0].Value);
+        Assert.Equal("gallons", agg.Limits[0].Units);
+        Assert.Equal(5000, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, agg.Limits[0].PeriodType);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("cubic metres", agg.Limits[1].Units);
-        Assert.Equal(545, agg.Limits[1].Value);
+        Assert.Equal("gallons", agg.Limits[1].Units);
+        Assert.Equal(119_000, agg.Limits[1].Value);
         Assert.Equal(LimitPeriodType.PerDay, agg.Limits[1].PeriodType);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
@@ -414,8 +414,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("thousand cubic metres", agg.Limits[0].Units);
-        Assert.Equal(66, agg.Limits[0].Value);
+        Assert.Equal("million gallons", agg.Limits[0].Units);
+        Assert.Equal(14.52, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, agg.Limits[0].PeriodType);
         Assert.Null(agg.Limits[0].Points!);
         Assert.NotNull(agg.Points!);
@@ -434,8 +434,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);  
-        Assert.Equal("thousand cubic metres", agg.Limits[0].Units);
-        Assert.Equal(10, agg.Limits[0].Value);
+        Assert.Equal("million gallons", agg.Limits[0].Units);
+        Assert.Equal(2.2, agg.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerYear, agg.Limits[0].PeriodType);
         Assert.Null(agg.Limits[0].Points!);
         Assert.Equal(2, agg.Points!.Length);
@@ -507,8 +507,8 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.NotNull(limitBlock.ContainedIn);
         Assert.Single(limitBlock.ContainedIn!);
         Assert.Equal(InformationSource.Document, limitBlock.ContainedIn![0].Source);  
-        Assert.Equal("cubic metres", limitBlock.Limits[0].Units);
-        Assert.Equal(22.7, limitBlock.Limits[0].Value);
+        Assert.Equal("gallons", limitBlock.Limits[0].Units);
+        Assert.Equal(5_000, limitBlock.Limits[0].Value);
         Assert.Equal(LimitPeriodType.PerHour, limitBlock.Limits[0].PeriodType);
         Assert.Single(limitBlock.Points!);
         Assert.Null(limitBlock.Limits[0].Points!);

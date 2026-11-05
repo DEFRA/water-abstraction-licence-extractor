@@ -352,17 +352,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.Equal("9.3", licence.AbstractionLimits.Individual[1].DocumentIdentifier);
         Assert.Null(licence.AbstractionLimits.Individual[1].TimeCutoff);
-        /*Assert.Equal(2, licence.AbstractionLimits.Individual[1].Limits.Count); // TODO Fix
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].ContainedIn);
-        Assert.Single(licence.AbstractionLimits.Individual[1].ContainedIn!);
-        Assert.Equal(InformationSource.MixedSourcesOrMixedReasons, licence.AbstractionLimits.Individual[1].ContainedIn![0].Source);
-        Assert.NotNull(licence.AbstractionLimits.Individual[1].Limits[0].ContainedIn);
-        Assert.Equal(30, licence.AbstractionLimits.Individual[1].Limits[0].Value);
+        Assert.Equal(2, licence.AbstractionLimits.Individual[1].Limits.Count);
         Assert.Equal("megalitres", licence.AbstractionLimits.Individual[1].Limits[0].Units);
-        Assert.Equal(LimitPeriodType.PerDay, licence.AbstractionLimits.Individual[1].Limits[0].PeriodType);
-        Assert.Equal(0.347, licence.AbstractionLimits.Individual[1].Limits[1].Value);
+        Assert.Equal(30, licence.AbstractionLimits.Individual[1].Limits[0].Value);
         Assert.Equal("cubic metres", licence.AbstractionLimits.Individual[1].Limits[1].Units);
-        Assert.Equal(LimitPeriodType.PerSecond, licence.AbstractionLimits.Individual[1].Limits[1].PeriodType);*/
+        Assert.Equal(0.347, licence.AbstractionLimits.Individual[1].Limits[1].Value);
         
         Assert.Equal("9.5", licence.AbstractionLimits.Individual[2].DocumentIdentifier);
         Assert.Null(licence.AbstractionLimits.Individual[2].TimeCutoff);
@@ -370,7 +364,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         Assert.Equal("9.6", licence.AbstractionLimits.Individual[3].DocumentIdentifier);
         Assert.Null(licence.AbstractionLimits.Individual[3].TimeCutoff);
         
-        Assert.Null(licence.AbstractionLimits.Individual[4].DocumentIdentifier); // TODO can we set this to something
+        Assert.Null(licence.AbstractionLimits.Individual[4].DocumentIdentifier);
         Assert.Null(licence.AbstractionLimits.Individual[4].TimeCutoff);
         Assert.Single(licence.AbstractionLimits.Individual[4].Limits);
         Assert.NotNull(licence.AbstractionLimits.Individual[4].ContainedIn);

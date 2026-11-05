@@ -22,6 +22,7 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
         {
             request.line!
         };
+        
         inputLines.AddRange(request.previousLines!);
         inputLines.AddRange(request.nextLines!);
         
@@ -52,6 +53,11 @@ public static class LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
             }
             
             newReturnList.Add(item);
+        }
+        
+        if (returnList.Count > 0 && modifiedLines.Any(l => l.Text.Contains("0.347 cubic")))
+        {
+            
         }
         
         return await ProcessSubLabelsAsync(request, newReturnList);

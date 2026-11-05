@@ -10,6 +10,15 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class FilesController(IFileService fileService) : Controller
 {
+    /// The Lambdas reach S3 directly for Textract but have no bucket name of their own:
+    /// ApiFileService cannot know one, and AwsS3BucketName is not set on the function.
+    [HttpGet]
+    public ActionResult GetBuckets() => Ok(new
+    {
+        ingress = fileService.IngressFolderPath,
+        assets = fileService.AssetsFolderPath
+    });
+
     [HttpGet]
     public async Task<ActionResult> GetAsync(
         [FromQuery] string filename,

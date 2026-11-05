@@ -123,6 +123,7 @@ public class CompareOcrPdfTests
             AwsTextractOcrDataExtractorService.Instance(
                 TestConfig.AwsAccessKey,
                 TestConfig.AwsSecretKey,
+                TestConfig.ApiBaseUrl,
                 CacheService,
                 OutputService)
         },

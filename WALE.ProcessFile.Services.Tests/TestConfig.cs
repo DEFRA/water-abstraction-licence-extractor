@@ -100,6 +100,21 @@ public static class TestConfig
     }
 
     [field: AllowNull, MaybeNull]
+    public static string ApiBaseUrl
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+
+            field = Config["ApiBaseUrl"] ?? "http://localhost:8080";
+            return field;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
     public static string AwsAccessKey
     {
         get

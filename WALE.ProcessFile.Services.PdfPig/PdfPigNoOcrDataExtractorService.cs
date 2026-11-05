@@ -44,10 +44,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,
-            // Not just metadata != null: an error response deserialises into a collection whose
-            // properties are all null, and taking that as a hit skips the fetch and reads nothing.
-            // An empty AllDocumentLines is a hit - a scanned file has no text layer, which is why
-            // it goes to OCR. Null is the read not having happened.
+            // Not metadata != null: a failed fetch yields a collection with every property null.
+            // An empty AllDocumentLines is still a hit - a scanned file has no text layer, which
+            // is why it goes to OCR. Null means the read did not happen.
             metadata is { PagesMetadata: not null, AllDocumentLines: not null },
             null,
             metadata?.SizeBytes,

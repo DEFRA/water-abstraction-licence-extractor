@@ -25,8 +25,8 @@ public sealed class LicenceFinderService(
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var apiBaseUrl = _configuration["LicenceFinder:ApiBaseUrl"]
-            ?? throw new InvalidOperationException("LicenceFinder:ApiBaseUrl is required.");
+        var apiBaseUrl = _configuration["ApiBaseUrl"]
+            ?? throw new InvalidOperationException("ApiBaseUrl is required.");
       
         // API - DMS data file export ~240k records (originally from Consolidate file)
         // dms_extract holds one extract per document type, so the flow decides which to read.

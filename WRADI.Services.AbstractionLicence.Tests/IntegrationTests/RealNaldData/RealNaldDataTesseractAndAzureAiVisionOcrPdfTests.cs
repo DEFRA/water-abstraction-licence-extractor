@@ -350,9 +350,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         
         agg = licence.AbstractionLimits.Aggregates[3];
         Assert.NotNull(agg.ContainedIn);
-        //Assert.Equal(2, agg.ContainedIn!.Length);
+        Assert.Equal(2, agg.ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);
-        //Assert.Equal(InformationSource.Nald, agg.ContainedIn![1].Source);
+        Assert.Equal(InformationSource.Nald, agg.ContainedIn![1].Source);
         
         Assert.Single(agg.Limits);
         Assert.Equal(2.2, agg.Limits[0].Value);
@@ -416,7 +416,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("Spray Irrigation - Direct", licence.Purposes[0].NaldLevel3Description);
         
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        //Assert.Single(licence.AbstractionLimits.Individual!);
+        Assert.Single(licence.AbstractionLimits.Individual!);
 
         var limitBlock = licence.AbstractionLimits.Individual[0];
         

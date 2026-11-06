@@ -231,13 +231,12 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             setFrozenOrder(null);
         };
 
-        const linkedLicenceOptions = (currentLicence?.linkedLicences ?? [])
-            .filter(ll => hasAnyOutgoingSections(ll.containedIn))
-            .map(ll => ll.licenceNumber)
-            .filter((n): n is string => !!n);
+        const sourceLicence = scrapedView ? licence : currentLicence;
+
+        const linkedLicenceOptions = (sourceLicence?.linkedLicences ?? [])
+            .filter(ll => hasAnyOutgoingSections(ll.containedIn));
 
         // Aggregate points/purposes carry only ids; descriptions live on the licence's top-level lists.
-        const sourceLicence = scrapedView ? licence : currentLicence;
         const pointDescriptions = new Map((sourceLicence?.points ?? [])
             .filter(p => p.id && p.description)
             .map(p => [p.id!.trim(), p.description!]));

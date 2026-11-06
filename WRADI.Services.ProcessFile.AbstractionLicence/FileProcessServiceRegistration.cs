@@ -122,7 +122,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
         
         services
             .AddHttpClient<IAbstractionLicenceCacheService, ApiAbstractionLicenceCacheService>((sp, client) =>
@@ -133,7 +134,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services
             .AddHttpClient<IOutputService, ApiOutputService>((sp, client) =>
@@ -144,7 +146,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
         
         services
             .AddHttpClient<IAbstractionLicenceOutputService, ApiAbstractionLicenceOutputService>((sp, client) =>
@@ -155,7 +158,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
         
         services
             .AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
@@ -250,10 +254,11 @@ public static class FileProcessServiceRegistration
         services.AddSingleton<INaldDataLookupService, NaldDataLookupService>();
         
         services.AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
-        {
-            var settings = sp.GetRequiredService<FileProcessAppSettings>();
-            client.BaseAddress = new Uri(settings.ApiBaseUrl);
-        });
+            {
+                var settings = sp.GetRequiredService<FileProcessAppSettings>();
+                client.BaseAddress = new Uri(settings.ApiBaseUrl);
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services.AddAbstractionLicenceServices(configuration);
         services.AddSingleton<IFileProcessSingleService, FileProcessSingleService>();

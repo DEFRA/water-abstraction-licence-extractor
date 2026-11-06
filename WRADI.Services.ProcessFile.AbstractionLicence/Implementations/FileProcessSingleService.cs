@@ -101,7 +101,7 @@ public class FileProcessSingleService(
 
         try
         {
-            var (stopExecution, licenceSets) = await ScrapeDocumentAsync(
+            var (stopExecution, licenceSets, errorMessage) = await ScrapeDocumentAsync(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
@@ -112,6 +112,12 @@ public class FileProcessSingleService(
             if (stopExecution)
             {
                 return true;
+            }
+
+            if (errorMessage != null)
+            {
+                processRunFile.ErrorMessage = errorMessage;
+                await outputService.ReportErrorProcessRunFileAsync(processRunFile);
             }
             
             if (licenceSets.Count > 0)
@@ -127,6 +133,8 @@ public class FileProcessSingleService(
                     $"{fileProcessSingleRequest.FilePath} processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             }
             
+            // Marked complete even on failure: MarkProcessRunCompleteIfCompleteAsync waits for
+            // every file to carry an end date before the run reports finished.
             await outputService.MarkProcessRunFileCompleteAsync(processRunFile);
 
             ConsoleHelper.WriteLine(
@@ -138,8 +146,11 @@ public class FileProcessSingleService(
             var processRunCompleted = processRun is { EndDateTimeUtc: not null }
                 && processRun.EndDateTimeUtc > DateTime.MinValue;
 
-            ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            ConsoleHelper.WriteLine(errorMessage == null
+                ? $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing " +
+                    $"{fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}"
+                : $"ERROR - {nameof(FileProcessSingleService)} - Finished {fileProcessSingleRequest.FilePath} " +
+                    $"without extracting it at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             if (!processRunCompleted)
             {
@@ -183,7 +194,7 @@ public class FileProcessSingleService(
         }));
     }
     
-    private async Task<(bool StopExecution, List<LicenceSet> LicenceSets)> ScrapeDocumentAsync(
+    private async Task<(bool StopExecution, List<LicenceSet> LicenceSets, string? ErrorMessage)> ScrapeDocumentAsync(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
@@ -211,7 +222,7 @@ public class FileProcessSingleService(
 
             if (stopExecution)
             {
-                return (stopExecution, []);
+                return (stopExecution, [], null);
             }
 
             if (alreadySaved != true)
@@ -235,21 +246,21 @@ public class FileProcessSingleService(
                 abstractionLicenceCacheService,
                 naldDataLookupService,
                 dmsDataForFile,
-                naldLicenceNumber));
+                naldLicenceNumber), null);
         }
         catch (TooManyPagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many pages");
             
-            return (false, []);
+            return (false, [], null);
         }
         catch (TooManyImagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many images");
             
-            return (false, []);
+            return (false, [], null);
         }
         catch (OcrServiceTransientException ex)
         {
@@ -265,7 +276,9 @@ public class FileProcessSingleService(
             ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
                 $"fatal error - {ex}");
             
-            return (false, []);
+            // Recorded rather than marked failed: which failures earn a redelivery, and which are
+            // a permanently unreadable file that would cycle the queue instead, is not decided yet.
+            return (false, [], ex.ToString());
         }
         finally
         {

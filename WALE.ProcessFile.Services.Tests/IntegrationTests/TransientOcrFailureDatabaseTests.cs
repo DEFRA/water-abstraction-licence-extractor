@@ -201,6 +201,15 @@ public class TransientOcrFailureDatabaseTests
             new { ProcessRunFileId = processRunFileId });
     }
 
+    private static async Task<string?> GetProcessRunFileErrorAsync(int processRunFileId)
+    {
+        await using var connection = await NpgsqlDataSourceProvider.DataSource.OpenConnectionAsync();
+
+        return await connection.ExecuteScalarAsync<string?>(
+            "SELECT error_message FROM process_run_file WHERE process_run__file_id = @ProcessRunFileId",
+            new { ProcessRunFileId = processRunFileId });
+    }
+
     [Fact]
     public async Task WhenProviderIsThrottled_ThenFileFailsAndTheRetryReclaimsTheSameRow()
     {
@@ -361,5 +370,30 @@ public class TransientOcrFailureDatabaseTests
         await OutputService.MarkProcessRunFileCompleteAsync(second);
 
         Assert.NotNull(await GetProcessRunFileEndAsync(second.ProcessRunFileId));
+    }
+
+    [Fact]
+    public async Task WhenAFileFailsFatally_ThenTheErrorIsRecordedAndTheFileStillCompletes()
+    {
+        // Arrange
+        var processRun = await StartRunAsync();
+
+        var processRunFile = await OutputService.AddProcessRunFileAsync(new ProcessRunFile
+        {
+            ProcessRunId = processRun.ProcessRunId,
+            FileName = $"{Guid.NewGuid()}.pdf"
+        });
+
+        // Act
+        processRunFile.ErrorMessage = "System.Net.Http.HttpRequestException: 429 (Too Many Requests).";
+        await OutputService.ReportErrorProcessRunFileAsync(processRunFile);
+        await OutputService.MarkProcessRunFileCompleteAsync(processRunFile);
+
+        // Assert
+        Assert.Equal(
+            "System.Net.Http.HttpRequestException: 429 (Too Many Requests).",
+            await GetProcessRunFileErrorAsync(processRunFile.ProcessRunFileId));
+
+        Assert.NotNull(await GetProcessRunFileEndAsync(processRunFile.ProcessRunFileId));
     }
 }

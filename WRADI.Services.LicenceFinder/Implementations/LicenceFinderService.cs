@@ -25,8 +25,8 @@ public sealed class LicenceFinderService(
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var apiBaseUrl = _configuration["LicenceFinder:ApiBaseUrl"]
-            ?? throw new InvalidOperationException("LicenceFinder:ApiBaseUrl is required.");
+        var apiBaseUrl = _configuration["ApiBaseUrl"]
+            ?? throw new InvalidOperationException("ApiBaseUrl is required.");
       
         // API - DMS data file export ~240k records (originally from Consolidate file)
         // dms_extract holds one extract per document type, so the flow decides which to read.
@@ -61,19 +61,20 @@ public sealed class LicenceFinderService(
                 // API - Licence finder previous iteration run matches
                 var licenceFinderLastIterationMatchesTask = GetLicenceFinderResultsAsync(generalApiClient);
 
-                // Spreadsheet - DMS change audit overrides by our team (e.g. Overrides.xlsx)
-                var dmsChangeAuditOverrides = readExtractService.GetDmsChangeAuditOverrides("Override_");
+                // API - DMS change audit overrides by our team (ImportOverrideData loads the spreadsheet)
+                var overridesTask = GetOverridesAsync(generalApiClient);
 
                 // Spreadsheet - DMS manual fixes by our team/SamD (e.g. Manual_Fix_Extract.xlsx) - The 'Sam D' file
                 // - doesn't often change
                 var dmsManualFixes = readExtractService.GetDmsManualFixes();
 
+                var (overrides, overridesImportDate) = await overridesTask;
                 var (naldRecordsToProcess, naldAbsLicencesAndVersions, naldImportDate) = await naldDataTask;
 
                 var licenceMatchResultsFilePath = await licenceFileFinder.FindLicenceFilesAsync(
                     dmsRecordsData,
                     dmsManualFixes,
-                    dmsChangeAuditOverrides.Item1,
+                    overrides,
                     await dmsFileIdInformationTask,
                     generalApiClient,
                     naldRecordsToProcess,
@@ -82,7 +83,7 @@ public sealed class LicenceFinderService(
                     await licenceFinderLastIterationMatchesTask,
                     await wradiAllLocalFilesInventoryTask,
                     messageRequest.RegionName,
-                    dmsChangeAuditOverrides.Item2,
+                    overridesImportDate,
                     naldImportDate,
                     dmsRecords.ImportDate);
 
@@ -134,15 +135,17 @@ public sealed class LicenceFinderService(
                 // API - Licence finder previous iteration run matches
                 var licenceFinderLastIterationMatchesTask = GetLicenceFinderResultsAsync(generalApiClient);
 
-                // Spreadsheet - DMS change audit overrides by our team (e.g. Overrides.xlsx)
-                var dmsChangeAuditOverrides = readExtractService.GetDmsChangeAuditOverrides("Override_");
+                // API - DMS change audit overrides by our team (ImportOverrideData loads the spreadsheet)
+                var overridesTask = GetOverridesAsync(generalApiClient);
 
                 // Spreadsheet - File version results (e.g. LicenceVersionResults.xlsx) - Comes from JP
                 var jpFileVersionResults = readExtractService.ReadFileVersionResultsFile();
 
+                var (overrides, _) = await overridesTask;
+
                 var resultFilePath = licenceFileFinder.BuildFileTemplateIdentificationExtract(
                     await licenceFinderLastIterationMatchesTask,
-                    dmsChangeAuditOverrides.Item1,
+                    overrides,
                     jpFileVersionResults);
 
                 return resultFilePath;
@@ -216,6 +219,25 @@ public sealed class LicenceFinderService(
         }
 
         return licenceFindResults;
+    }
+
+    // Nothing else reports an un-run ImportOverrideData, and an empty table would silently stop
+    // every override firing.
+    private static async Task<(List<Override> Data, string ImportDate)> GetOverridesAsync(
+        IGeneralApiClient generalApiClient)
+    {
+        var (overrides, importDate) = await generalApiClient.GetOverridesAsync();
+
+        if (overrides.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "No overrides were returned by the API - run 'ImportOverrideData' in WALE.Tools "
+                + "against this environment before finding licence files.");
+        }
+
+        Console.WriteLine($"{overrides.Count} overrides loaded (imported {importDate})");
+
+        return (overrides, importDate);
     }
 
     private static async Task<(List<DmsExtract> Data, string ImportDate)> GetDmsExtractAsync(

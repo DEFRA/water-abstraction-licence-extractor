@@ -11,4 +11,6 @@ public class SaveErrorMatchResultRequest
     public string? error { get; set; }
     
     public bool isUpdate { get; set; }
+
+    public string? status { get; set; }
 }

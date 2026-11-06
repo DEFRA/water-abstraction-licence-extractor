@@ -5273,15 +5273,35 @@ export class Client {
 
     /**
      * @param delayInSeconds (optional) 
+     * @param regionId (optional) 
+     * @param maxLicencesToTake (optional) 
+     * @param uploadedFrom (optional) 
+     * @param uploadedTo (optional) 
      * @param documentType (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, documentType: string | undefined): Promise<void> {
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: string | undefined, uploadedTo: string | undefined, documentType: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
         if (delayInSeconds === null)
             throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
         else if (delayInSeconds !== undefined)
             url_ += "delayInSeconds=" + encodeURIComponent("" + delayInSeconds) + "&";
+        if (regionId === null)
+            throw new globalThis.Error("The parameter 'regionId' cannot be null.");
+        else if (regionId !== undefined)
+            url_ += "regionId=" + encodeURIComponent("" + regionId) + "&";
+        if (maxLicencesToTake === null)
+            throw new globalThis.Error("The parameter 'maxLicencesToTake' cannot be null.");
+        else if (maxLicencesToTake !== undefined)
+            url_ += "maxLicencesToTake=" + encodeURIComponent("" + maxLicencesToTake) + "&";
+        if (uploadedFrom === null)
+            throw new globalThis.Error("The parameter 'uploadedFrom' cannot be null.");
+        else if (uploadedFrom !== undefined)
+            url_ += "uploadedFrom=" + encodeURIComponent("" + uploadedFrom) + "&";
+        if (uploadedTo === null)
+            throw new globalThis.Error("The parameter 'uploadedTo' cannot be null.");
+        else if (uploadedTo !== undefined)
+            url_ += "uploadedTo=" + encodeURIComponent("" + uploadedTo) + "&";
         if (documentType === null)
             throw new globalThis.Error("The parameter 'documentType' cannot be null.");
         else if (documentType !== undefined)

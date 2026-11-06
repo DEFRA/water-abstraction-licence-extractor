@@ -79,7 +79,7 @@ public class FileProcessSingleService(
                 DestinationFileName = fileProcessSingleRequest.DestinationFileName
             };
 
-            var stopExecution = await ScrapeDocumentAsync(
+            var (stopExecution, errorMessage) = await ScrapeDocumentAsync(
                 fileProcessSingleRequest.FilePath,
                 lookupConfig,
                 dmsFileData,
@@ -90,6 +90,14 @@ public class FileProcessSingleService(
                 return true;
             }
 
+            if (errorMessage != null)
+            {
+                processRunFile.ErrorMessage = errorMessage;
+                await outputService.ReportErrorProcessRunFileAsync(processRunFile);
+            }
+
+            // Marked complete even on failure: MarkProcessRunCompleteIfCompleteAsync waits for
+            // every file to carry an end date before the run reports finished.
             await outputService.MarkProcessRunFileCompleteAsync(processRunFile);
 
             ConsoleHelper.WriteLine(
@@ -98,8 +106,11 @@ public class FileProcessSingleService(
 
             processRun = await outputService.MarkProcessRunCompleteIfCompleteAsync(processRun);
 
-            ConsoleHelper.WriteLine(
-                $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing {fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            ConsoleHelper.WriteLine(errorMessage == null
+                ? $"INFO - {nameof(FileProcessSingleService)} - Successfully finished processing " +
+                    $"{fileProcessSingleRequest.FilePath} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}"
+                : $"ERROR - {nameof(FileProcessSingleService)} - Finished {fileProcessSingleRequest.FilePath} " +
+                    $"without extracting it at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
             var processRunCompleted = processRun is { EndDateTimeUtc: not null }
                 && processRun.EndDateTimeUtc > DateTime.MinValue;
@@ -170,7 +181,7 @@ public class FileProcessSingleService(
         }));
     }
 
-    private async Task<bool> ScrapeDocumentAsync(
+    private async Task<(bool StopExecution, string? ErrorMessage)> ScrapeDocumentAsync(
         string pdfFilename,
         LookupConfiguration lookupConfig,
         DmsFileData dmsDataForFile,
@@ -205,7 +216,7 @@ public class FileProcessSingleService(
 
             if (stopExecution)
             {
-                return true;
+                return (true, null);
             }
 
             if (alreadySaved != true && item != null)
@@ -221,28 +232,39 @@ public class FileProcessSingleService(
             ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessSingleService)} - Finished ({pdfFilename} in " +
                 $"{duration}ms at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-            return false;
+            return (false, null);
         }
         catch (TooManyPagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many pages");
 
-            return false;
+            return (false, null);
         }
         catch (TooManyImagesException)
         {
             ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - Skipped '{pdfFilename}' " +
                 $"as too many images");
+            
+            return (false, null);
+        }
+        catch (OcrServiceTransientException ex)
+        {
+            // Deliberately not swallowed: the matches_result row has been left as TransientError and
+            // the queue message must be marked failed so SQS redelivers it once the throttle passes.
+            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessSingleService)} - '{pdfFilename}' failed on a " +
+                $"transient OCR error from {ex.ServiceName}, leaving for retry - {ex.Message}");
 
-            return false;
+            throw;
         }
         catch (Exception ex)
         {
             ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
                 $"fatal error - {ex}");
 
-            return false;
+            // Recorded rather than marked failed: which failures earn a redelivery, and which are
+            // a permanently unreadable file that would cycle the queue instead, is not decided yet.
+            return (false, ex.ToString());
         }
         finally
         {

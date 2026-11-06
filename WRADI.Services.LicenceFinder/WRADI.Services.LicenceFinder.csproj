@@ -79,19 +79,6 @@
     <None Remove="Resources\WaterPdfs_Inventory_20260415.csv" />
     <None Remove="Resources\Current_Iteration_Matches_LicenceMatchResults_20260414_111430.xlsx" />
     <None Remove="Resources\LicenceReader-20260430.csv" />
-    <None Remove="Resources\Override_Master_Provided_2026_05_13.xlsx" />
-    <None Remove="Resources\Override_Master_May_29_2026.xlsx" />
-    <None Remove="Resources\Override_Master_2026_086_08_2.xlsx" />
-    <None Remove="Resources\New_Override_Master.xlsx" />
-    <EmbeddedResource Include="Resources\New_Override_Master.xlsx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <None Remove="Resources\Old_Override_Master.xlsx" />
-    <None Remove="Resources\Override_Master_2026_09_14.xlsx" />
-    <None Remove="Resources\Override_Master_20261013.xlsx" />
-    <EmbeddedResource Include="Resources\Override_Master_20261013.xlsx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

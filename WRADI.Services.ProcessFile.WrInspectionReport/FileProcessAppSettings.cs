@@ -8,7 +8,8 @@ public class FileProcessAppSettings
     public string PdfFolderPath { get; set; } = string.Empty;
     public int? MaxFilesPerRun { get; set; }
 
-    /// Restricts a run to documents DMS recorded as uploaded in this window, either end optional.
+    /// Restricts a run to documents DMS recorded as uploaded in this window, either end optional,
+    /// unless the orchestration message names a window of its own, which replaces this one.
     /// Unlike MaxFilesPerRun, which takes whatever the candidate order happens to put first, this
     /// describes the subset it selects, so a run can be repeated and reasoned about.
     public DateOnly? UploadedFrom { get; set; }

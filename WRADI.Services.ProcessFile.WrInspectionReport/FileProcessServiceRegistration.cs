@@ -141,7 +141,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services
             .AddHttpClient<IInspectionReportFinderCacheService, ApiInspectionReportFinderCacheService>((sp, client) =>
@@ -152,7 +153,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services
             .AddHttpClient<IOutputService, ApiOutputService>((sp, client) =>
@@ -163,7 +165,8 @@ public static class FileProcessServiceRegistration
             .ConfigurePrimaryHttpMessageHandler(_ => new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.Brotli | DecompressionMethods.GZip | DecompressionMethods.Deflate
-            });
+            })
+            .AddPolicyHandler(HttpHelper.GetTooManyRequestsBackoffPolicy());
 
         services
             .AddHttpClient<IMessageQueueService, ApiMessageQueueService>((sp, client) =>
@@ -203,7 +206,7 @@ public static class FileProcessServiceRegistration
             return pdfDataExtractor;
         });
 
-        services.AddSingleton<IFileProcessOrchestrator, FileProcessOrchestrationService>();
+        services.AddSingleton<IFileProcessOrchestrator, WrInspectionReportFileProcessOrchestrationService>();
         services.AddSingleton<IFileProcessSingleService, FileProcessSingleService>();
 
         return services;

@@ -40,12 +40,6 @@ public interface IReadExtract
     Dictionary<string, DmsManualFixExtract> GetDmsManualFixes();
 
     /// <summary>
-    /// Reads Change_Audit.xlsx file from the resources folder
-    /// </summary>
-    /// <returns>List of change audit records</returns>
-    (List<Override>, string) GetDmsChangeAuditOverrides(string filename);
-
-    /// <summary>
     /// Reads LicenceVersionResult.xlsx file from the resources folder
     /// </summary>
     /// <returns>List of licence version records</returns>

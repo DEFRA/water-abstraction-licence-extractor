@@ -18,13 +18,13 @@ using var host = Host.CreateDefaultBuilder(args)
 using var scope = host.Services.CreateScope();
 var service = scope.ServiceProvider.GetRequiredService<ILicenceFinderService>();
 var config = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-var flow = args.FirstOrDefault() ?? config["LicenceFinder:FlowToRun"] ?? "FindLicenceFilesAsync";
+var flow = args.FirstOrDefault() ?? config["FlowToRun"] ?? "FindLicenceFilesAsync";
 
 var messageRequest = new LicenceFinderMessageRequest
 {
     FlowToRun = flow,
-    RegionName = config["LicenceFinder:RegionName"],
-    RestrictToRegionName = config["LicenceFinder:RestrictToRegionName"]
+    RegionName = config["RegionName"],
+    RestrictToRegionName = config["RestrictToRegionName"]
 
 };
 var output = await service.ExecuteAsync(messageRequest);

@@ -76,7 +76,7 @@ public class MessageReceivedFunction
                 using var scope = serviceProvider.CreateScope();
                 var orchestrator = scope.ServiceProvider.GetRequiredService<IFileProcessOrchestrator>();
 
-                var result = await orchestrator.RunAsync(CancellationToken.None);
+                var result = await orchestrator.RunAsync(orchestrationRequest, CancellationToken.None);
 
                 context.Logger.LogInformation($"Completed Orchestration service with result : {result}");
 

@@ -8,7 +8,7 @@ using WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
 namespace WRADI.Services.WrInspectionReport.Tests;
 
-public class FileProcessOrchestrationServiceTests
+public class WrInspectionReportFileProcessOrchestrationServiceTests
 {
     /// The orchestrator selects on what is in ingress, so a fake listing nothing filters every
     /// candidate out and a send assertion fails for the wrong reason.
@@ -73,7 +73,7 @@ public class FileProcessOrchestrationServiceTests
                 });
             });
 
-        var service = new FileProcessOrchestrationService(
+        var service = new WrInspectionReportFileProcessOrchestrationService(
             settings,
             cacheService,
             inspectionReportFinderCacheService,
@@ -82,7 +82,12 @@ public class FileProcessOrchestrationServiceTests
             FileServiceHolding(candidate));
 
         // Act
-        var result = await service.RunAsync(CancellationToken.None);
+        var result = await service.RunAsync(
+            new FileProcessOrchestrationRequest
+            {
+                MaxLicencesToTake = 100_000
+            },
+            CancellationToken.None);
 
         // Assert
         Assert.True(result);
@@ -197,7 +202,8 @@ public class FileProcessOrchestrationServiceTests
     private static async Task<(List<FileProcessSingleRequest> Enqueued, ProcessRun? Run)>
         RunWithCandidatesAsync(
             FileProcessAppSettings settings,
-            List<InspectionReportFinderResult> candidates)
+            List<InspectionReportFinderResult> candidates,
+            FileProcessOrchestrationRequest? request = null)
     {
         var inspectionReportFinderCacheService = A.Fake<IInspectionReportFinderCacheService>();
         var outputService = A.Fake<IOutputService>();
@@ -231,7 +237,7 @@ public class FileProcessOrchestrationServiceTests
                 });
             });
 
-        var service = new FileProcessOrchestrationService(
+        var service = new WrInspectionReportFileProcessOrchestrationService(
             settings,
             A.Fake<ICacheService>(),
             inspectionReportFinderCacheService,
@@ -239,9 +245,132 @@ public class FileProcessOrchestrationServiceTests
             messageQueueService,
             FileServiceHolding(candidates.ToArray()));
 
-        await service.RunAsync(CancellationToken.None);
+        await service.RunAsync(request ?? new FileProcessOrchestrationRequest(), CancellationToken.None);
 
         return (enqueuedRequests, startedProcessRun);
+    }
+
+    /// A cap spent on documents the window then removes sends fewer than were asked for.
+    [Fact]
+    public async Task WhenAWindowAndARequestCapAreBothSet_ThenTheCapAppliesToTheWindowedCandidates()
+    {
+        // Arrange
+        var settings = new FileProcessAppSettings
+        {
+            UploadedFrom = new DateOnly(2025, 1, 1)
+        };
+
+        var candidates = new[]
+            {
+                ("OUTSIDE-1", "2024-01-01 00:00:00"),
+                ("OUTSIDE-2", "2024-02-01 00:00:00"),
+                ("INSIDE-1", "2025-03-01 00:00:00"),
+                ("INSIDE-2", "2025-04-01 00:00:00"),
+                ("INSIDE-3", "2025-05-01 00:00:00")
+            }
+            .Select(candidate => new InspectionReportFinderResult
+            {
+                PermitNumber = candidate.Item1,
+                FileId = Guid.NewGuid().ToString(),
+                FileName = "report.pdf",
+                UploadDate = candidate.Item2
+            })
+            .ToList();
+
+        // Act
+        var (enqueuedRequests, startedProcessRun) = await RunWithCandidatesAsync(
+            settings,
+            candidates,
+            new FileProcessOrchestrationRequest { MaxLicencesToTake = 2 });
+
+        // Assert
+        Assert.Equal(2, enqueuedRequests.Count);
+        Assert.Equal(2, startedProcessRun?.NumberOfFiles);
+        Assert.All(enqueuedRequests, request => Assert.StartsWith("INSIDE-", request.PermitNumber));
+    }
+
+    [Theory]
+    // Open-ended end, so 2026 is included: inheriting the configured 2025 end would drop it
+    [InlineData("2024-01-01", null, 4)]
+    // Open-ended start: inheriting the configured 2025 start would leave an empty window
+    [InlineData(null, "2024-12-31", 2)]
+    // No request window at all, so configuration's 2025 window still applies
+    [InlineData(null, null, 1)]
+    public async Task WhenTheRequestNamesAWindow_ThenItReplacesTheConfiguredOneAsAPair(
+        string? requestedFrom,
+        string? requestedTo,
+        int expectedSent)
+    {
+        // Arrange
+        var settings = new FileProcessAppSettings
+        {
+            UploadedFrom = new DateOnly(2025, 1, 1),
+            UploadedTo = new DateOnly(2025, 12, 31)
+        };
+
+        var candidates = new[]
+            {
+                ("OLD-1", "2024-03-01 00:00:00"),
+                ("OLD-2", "2024-04-01 00:00:00"),
+                ("NEW-1", "2025-06-15 00:00:00"),
+                ("FUTURE-1", "2026-02-01 00:00:00")
+            }
+            .Select(candidate => new InspectionReportFinderResult
+            {
+                PermitNumber = candidate.Item1,
+                FileId = Guid.NewGuid().ToString(),
+                FileName = "report.pdf",
+                UploadDate = candidate.Item2
+            })
+            .ToList();
+
+        // Act
+        var (enqueuedRequests, _) = await RunWithCandidatesAsync(
+            settings,
+            candidates,
+            new FileProcessOrchestrationRequest
+            {
+                UploadedFrom = requestedFrom == null ? null : DateOnly.Parse(requestedFrom),
+                UploadedTo = requestedTo == null ? null : DateOnly.Parse(requestedTo)
+            });
+
+        // Assert
+        Assert.Equal(expectedSent, enqueuedRequests.Count);
+    }
+
+    public static TheoryData<int?, int> RequestLimits => new()
+    {
+        { null, 3 },
+        { 0, 3 },
+        { 2, 2 }
+    };
+
+    [Theory]
+    [MemberData(nameof(RequestLimits))]
+    public async Task WhenTheRequestCapsLicences_ThenOnlyThatManyAreSent(
+        int? maxLicencesToTake,
+        int expectedSent)
+    {
+        // Arrange
+        var candidates = new[] { "PERMIT-1", "PERMIT-2", "PERMIT-3" }
+            .Select(permitNumber => new InspectionReportFinderResult
+            {
+                PermitNumber = permitNumber,
+                FileId = Guid.NewGuid().ToString(),
+                FileName = "report.pdf",
+                UploadDate = "2025-06-15 00:00:00"
+            })
+            .ToList();
+
+        // Act
+        var (enqueuedRequests, startedProcessRun) = await RunWithCandidatesAsync(
+            new FileProcessAppSettings(),
+            candidates,
+            new FileProcessOrchestrationRequest { MaxLicencesToTake = maxLicencesToTake });
+
+        // Assert
+        Assert.Equal(expectedSent, enqueuedRequests.Count);
+        Assert.Equal(expectedSent, startedProcessRun?.NumberOfFiles);
     }
 
     /// NumberOfFiles is written before anything is sent, so a skipped candidate must be absent
@@ -299,7 +428,7 @@ public class FileProcessOrchestrationServiceTests
                 });
             });
 
-        var service = new FileProcessOrchestrationService(
+        var service = new WrInspectionReportFileProcessOrchestrationService(
             settings,
             A.Fake<ICacheService>(),
             inspectionReportFinderCacheService,
@@ -308,7 +437,7 @@ public class FileProcessOrchestrationServiceTests
             inIngress ? FileServiceHolding(candidate) : FileServiceHoldingNothing());
 
         // Act
-        await service.RunAsync(CancellationToken.None);
+        await service.RunAsync(new FileProcessOrchestrationRequest(), CancellationToken.None);
 
         // Assert
         Assert.Equal(expectSent ? 1 : 0, enqueuedRequests.Count);
@@ -365,7 +494,7 @@ public class FileProcessOrchestrationServiceTests
                 });
             });
 
-        var service = new FileProcessOrchestrationService(
+        var service = new WrInspectionReportFileProcessOrchestrationService(
             settings,
             cacheService,
             inspectionReportFinderCacheService,
@@ -374,7 +503,7 @@ public class FileProcessOrchestrationServiceTests
             FileServiceHolding(candidates.ToArray()));
 
         // Act
-        var result = await service.RunAsync(CancellationToken.None);
+        var result = await service.RunAsync(new FileProcessOrchestrationRequest(), CancellationToken.None);
 
         // Assert - the run completes, and the 15 files after the failed batch still went
         Assert.True(result);

@@ -21,19 +21,28 @@ public class MessageController(
     [HttpPost]
     public async Task<IActionResult> SendFileProcessOrchestrationMessageAsync(
         [FromQuery] int delayInSeconds = 0,
+        [FromQuery] int regionId = 0,
+        [FromQuery] int maxLicencesToTake = 0,
+        [FromQuery] DateOnly? uploadedFrom = null,
+        [FromQuery] DateOnly? uploadedTo = null,
         [FromQuery] string documentType = "AbstractionLicence")
     {
-        var payload = JsonSerializer.Serialize(new WALE.ProcessFile.Core.Models.FileProcessOrchestrationRequest
-        {
-            DocumentType = documentType,
-            RequestedAt = DateTime.UtcNow
-        });
+        var messagePayload = JsonSerializer.Serialize(
+            new FileProcessOrchestrationRequest
+            {
+                DocumentType = documentType,
+                RequestedAt = DateTime.UtcNow,
+                RegionId = regionId != 0 ? regionId : null,
+                MaxLicencesToTake = maxLicencesToTake != 0 ? maxLicencesToTake : null,
+                UploadedFrom = uploadedFrom,
+                UploadedTo = uploadedTo
+            });
 
         await sqsClient.SendMessageAsync(
             new SendMessageRequest
             {
                 QueueUrl = awsQueueConfig.Value.OrchestratorQueue,
-                MessageBody = payload,
+                MessageBody = messagePayload,
                 DelaySeconds = delayInSeconds > 0 ? delayInSeconds : null
             });
 

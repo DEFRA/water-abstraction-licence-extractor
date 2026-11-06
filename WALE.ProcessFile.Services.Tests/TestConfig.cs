@@ -100,6 +100,21 @@ public static class TestConfig
     }
 
     [field: AllowNull, MaybeNull]
+    public static string TextractBucket
+    {
+        get
+        {
+            if (field != null)
+            {
+                return field;
+            }
+
+            field = Config["AwsS3BucketName"] ?? "wradi-s3-assets-dev";
+            return field;
+        }
+    }
+
+    [field: AllowNull, MaybeNull]
     public static string AwsAccessKey
     {
         get

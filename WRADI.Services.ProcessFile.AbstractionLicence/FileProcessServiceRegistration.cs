@@ -231,6 +231,7 @@ public static class FileProcessServiceRegistration
                 var awsTextract = AwsTextractOcrDataExtractorService.Instance(
                     settings.AwsAccessKey,
                     settings.AwsSecretKey,
+                    settings.AwsS3IngressBucketName!,
                     cacheService,
                     outputService);
                 

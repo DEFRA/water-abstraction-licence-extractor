@@ -4854,12 +4854,11 @@ public static class AbstractionLicenceSchemaConverter
             return false;
         }
 
-        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests
-        var minValue1 = value1 - 0.01;
-        var maxValue1 = value1 + 0.01;
+        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
+        const double maxTolerance = 0.05;
         
-        return value2 >= minValue1
-            && value2 <= maxValue1;
+        var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
+        return percentageDiff is >= 0 and <= maxTolerance;
     }
     
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(

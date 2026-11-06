@@ -89,7 +89,7 @@ public static class UnitHelper
     private static double ConvertToGallons(double sourceValue, string sourceUnits)
     {
         const double litresToGallons = 0.21997;
-        const double megaGallonsToGallons = 0.000_001;
+        const double megaGallonsToGallons = 1_000_000;
         const double cubicMetresToGallons = 219.969;
 
         return sourceUnits switch
@@ -106,7 +106,7 @@ public static class UnitHelper
     
     private static double ConvertToMegaGallons(double sourceValue, string sourceUnits)
     {
-        const double gallonsToMegaGallons = 1_000_000;
+        const double gallonsToMegaGallons = 0.000_001;
         return ConvertToGallons(sourceValue, sourceUnits) * gallonsToMegaGallons;
     }
 }

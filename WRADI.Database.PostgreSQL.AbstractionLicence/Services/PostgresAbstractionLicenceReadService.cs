@@ -796,7 +796,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                WHERE
                                    previous_licence.licence_number = current_licence.licence_number
                                    AND previous_licence.process_run_id < current_licence.process_run_id
-                                   AND (previous_licence.status = 'Ok'
+                                   AND previous_licence.status = 'Ok'
                                ORDER BY previous_licence.process_run_id DESC
                                LIMIT 1
                            ) previous_run ON TRUE
@@ -804,11 +804,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                previous_run_by_file_id.process_run_id = previous_run.process_run_id
                                AND previous_run_by_file_id.licence_number = current_licence.licence_number
                                AND previous_run_by_file_id.file_id = current_licence.file_id
-                               AND (previous_run_by_file_id.status = 'Ok'
+                               AND previous_run_by_file_id.status = 'Ok'
                            WHERE
                                current_licence.process_run_id = @ProcessRunId
                                AND current_licence.licence_number IS NOT NULL
-                               AND (current_licence.status = 'Ok'
+                               AND current_licence.status = 'Ok'
                                AND (previous_run.process_run_id IS NULL
                                     OR previous_run_by_file_id.process_run_id IS NULL);
                            """;

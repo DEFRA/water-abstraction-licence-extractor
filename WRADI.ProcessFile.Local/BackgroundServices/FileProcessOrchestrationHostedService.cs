@@ -66,6 +66,7 @@ public sealed class FileProcessOrchestrationHostedService(
                             .GetRequiredService<IFileProcessOrchestrator>();
 
                         var result = await fileProcessOrchestrator.RunAsync(
+                            orchestrationRequest,
                             cancellationToken);
 
                         if (!result)

@@ -6,7 +6,7 @@ using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.ProcessFile.AbstractionLicence.Implementations;
 
-public class FileProcessOrchestrationService(
+public class AbstractionLicenceFileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IAbstractionLicenceCacheService abstractionLicenceCacheService,
@@ -15,15 +15,15 @@ public class FileProcessOrchestrationService(
     IMessageQueueService messageQueueService)
     : IFileProcessOrchestrator
 {
-    public async Task<bool> RunAsync(CancellationToken cancellationToken)
+    public async Task<bool> RunAsync(FileProcessOrchestrationRequest request, CancellationToken cancellationToken)
     {
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Started");
 
         if (settings.RefreshCache)
         {
             await cacheService.ClearCacheAsync();
         }
-        
+
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
@@ -34,19 +34,36 @@ public class FileProcessOrchestrationService(
                 false,
                 abstractionLicenceCacheService);
 
+        if (request.RegionId != null)
+        {
+            dmsFilesToProcess = dmsFilesToProcess
+                .Where(entry => entry.Value.NaldLicence.RegionCode == request.RegionId.Value)
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
+        }
+
+        if (request.MaxLicencesToTake is > 0 && dmsFilesToProcess.Count > request.MaxLicencesToTake.Value)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - capping this run at "
+                + $"{request.MaxLicencesToTake} of {dmsFilesToProcess.Count} files (MaxLicencesToTake)");
+
+            dmsFilesToProcess = dmsFilesToProcess
+                .Take(request.MaxLicencesToTake.Value)
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
+        }
+
         if (dmsFilesToProcess.Count == 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - No DMS files to process");
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - No DMS files to process");
             return true;
         }
-        
+
         // SQS's own batch limit, mirrored here so the orchestrator sends whole batches.
         const int QueueBatchSize = 10;
 
         // Before the run is created, so NumberOfFiles matches what is actually sent.
         if (settings.MaxFilesPerRun is > 0 && dmsFilesToProcess.Count > settings.MaxFilesPerRun)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - capping this run at "
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - capping this run at "
                 + $"{settings.MaxFilesPerRun} of {dmsFilesToProcess.Count} files (MaxFilesPerRun)");
 
             dmsFilesToProcess = dmsFilesToProcess
@@ -96,7 +113,7 @@ public class FileProcessOrchestrationService(
 
                 foreach (var failedFileId in result.FailedFileIds)
                 {
-                    ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - SQS rejected "
+                    ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - SQS rejected "
                         + $"file {failedFileId}, not queued");
                 }
             }
@@ -104,12 +121,12 @@ public class FileProcessOrchestrationService(
             {
                 failed += batch.Length;
 
-                ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error sending a batch of "
+                ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Error sending a batch of "
                     + $"{batch.Length} to the single file processing queue, continuing with the rest: {exception}");
             }
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
             + $"files sent to the single process file queue, {failed} failed");
 
         // NumberOfFiles is written before sending, because every message needs the run id, so a send
@@ -117,13 +134,13 @@ public class FileProcessOrchestrationService(
         // path for it on IOutputService today, and adding one is its own change.
         if (failed > 0)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessOrchestrationService)} - process run "
+            ConsoleHelper.WriteLine($"WARNING - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - process run "
                 + $"{processRun.ProcessRunId} records {requests.Count} files but only {enqueued} were queued");
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Finished processing " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceFileProcessOrchestrationService)} - Finished processing " +
             $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        
+
         return true;
     }
 }

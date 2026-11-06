@@ -8,7 +8,7 @@ using WRADI.Services.Cache.WrInspectionReport.Interfaces;
 
 namespace WRADI.Services.ProcessFile.WrInspectionReport.Implementations;
 
-public class FileProcessOrchestrationService(
+public class WrInspectionReportFileProcessOrchestrationService(
     FileProcessAppSettings settings,
     ICacheService cacheService,
     IInspectionReportFinderCacheService inspectionReportFinderCacheService,
@@ -17,9 +17,9 @@ public class FileProcessOrchestrationService(
     IFileService fileService)
     : IFileProcessOrchestrator
 {
-    public async Task<bool> RunAsync(CancellationToken cancellationToken)
+    public async Task<bool> RunAsync(FileProcessOrchestrationRequest request, CancellationToken cancellationToken)
     {
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Started");
+        ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Started");
 
         if (settings.RefreshCache)
         {
@@ -29,11 +29,13 @@ public class FileProcessOrchestrationService(
         await cacheService.SetupAsync();
         await outputService.SetupAsync();
 
-        var candidates = await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue);
+        var candidates =
+            await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue);
+
 
         if (candidates.Count == 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - No inspection report files to process");
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - No inspection report files to process");
             return true;
         }
 
@@ -53,14 +55,14 @@ public class FileProcessOrchestrationService(
 
         if (selection.WithoutIdentity > 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - "
                 + $"{selection.WithoutIdentity} of {candidates.Count} candidates skipped for a missing "
                 + "permit number or an unparseable file id");
         }
 
         if (selection.NotInIngress > 0)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - "
                 + $"{selection.NotInIngress} of {candidates.Count} candidates skipped because the ingress "
                 + "bucket has no object for them yet - not collected, or a Word document not yet converted");
         }
@@ -74,7 +76,7 @@ public class FileProcessOrchestrationService(
                     candidate, settings.UploadedFrom, settings.UploadedTo))
                 .ToList();
 
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - "
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - "
                 + $"{withinWindow.Count} of {sendable.Count} candidates uploaded "
                 + $"{WrInspectionReportCandidateSelector.DescribeUploadWindow(settings.UploadedFrom, settings.UploadedTo)}");
 
@@ -84,7 +86,7 @@ public class FileProcessOrchestrationService(
 
             if (undated > 0)
             {
-                ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessOrchestrationService)} - "
+                ConsoleHelper.WriteLine($"WARNING - {nameof(WrInspectionReportFileProcessOrchestrationService)} - "
                     + $"{undated} candidates excluded for having no usable upload date");
             }
 
@@ -92,9 +94,17 @@ public class FileProcessOrchestrationService(
         }
 
         // Applied after filtering, before the run is created, so NumberOfFiles matches what is sent.
+        if (request.MaxLicencesToTake is > 0 && sendable.Count > request.MaxLicencesToTake.Value)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - capping this run at "
+                + $"{request.MaxLicencesToTake} of {sendable.Count} files (MaxLicencesToTake)");
+
+            sendable = sendable.Take(request.MaxLicencesToTake.Value).ToList();
+        }
+
         if (settings.MaxFilesPerRun is > 0 && sendable.Count > settings.MaxFilesPerRun)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - capping this run at "
+            ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - capping this run at "
                 + $"{settings.MaxFilesPerRun} of {sendable.Count} files (MaxFilesPerRun)");
 
             sendable = sendable.Take(settings.MaxFilesPerRun.Value).ToList();
@@ -158,7 +168,7 @@ public class FileProcessOrchestrationService(
 
                 foreach (var failedFileId in result.FailedFileIds)
                 {
-                    ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - SQS rejected "
+                    ConsoleHelper.WriteLine($"ERROR - {nameof(WrInspectionReportFileProcessOrchestrationService)} - SQS rejected "
                         + $"file {failedFileId}, not queued");
                 }
             }
@@ -166,12 +176,12 @@ public class FileProcessOrchestrationService(
             {
                 failed += batch.Length;
 
-                ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessOrchestrationService)} - Error sending a batch of "
+                ConsoleHelper.WriteLine($"ERROR - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Error sending a batch of "
                     + $"{batch.Length} to the single file processing queue, continuing with the rest: {exception}");
             }
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
+        ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
             + $"files sent to the single process file queue, {failed} failed, uploaded "
             + WrInspectionReportCandidateSelector.DescribeUploadWindow(
                 settings.UploadedFrom, settings.UploadedTo));
@@ -181,11 +191,11 @@ public class FileProcessOrchestrationService(
         // write path for it on IOutputService today, and adding one is its own change.
         if (failed > 0)
         {
-            ConsoleHelper.WriteLine($"WARNING - {nameof(FileProcessOrchestrationService)} - process run "
+            ConsoleHelper.WriteLine($"WARNING - {nameof(WrInspectionReportFileProcessOrchestrationService)} - process run "
                 + $"{processRun.ProcessRunId} records {requests.Count} files but only {enqueued} were queued");
         }
 
-        ConsoleHelper.WriteLine($"INFO - {nameof(FileProcessOrchestrationService)} - Finished processing " +
+        ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - Finished processing " +
             $"at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         return true;

@@ -800,22 +800,22 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                ORDER BY previous_licence.process_run_id DESC
                                LIMIT 1
                            ) previous_run ON TRUE
+                           LEFT JOIN LATERAL (
+                               SELECT previous_licence.process_run_id
+                               FROM licence previous_licence
+                               WHERE
+                                   previous_licence.process_run_id = previous_run.process_run_id
+                                   AND previous_licence.licence_number = current_licence.licence_number
+                                   AND previous_licence.file_id = current_licence.file_id
+                                   AND (previous_licence.data::jsonb ->> 'status') = 'Ok'
+                               LIMIT 1
+                           ) previous_run_by_file_id ON TRUE
                            WHERE
                                current_licence.process_run_id = @ProcessRunId
                                AND current_licence.licence_number IS NOT NULL
                                AND (current_licence.data::jsonb ->> 'status') = 'Ok'
-                               AND (
-                                   previous_run.process_run_id IS NULL
-                                   OR NOT EXISTS (
-                                       SELECT 1
-                                       FROM licence previous_licence
-                                       WHERE
-                                           previous_licence.process_run_id = previous_run.process_run_id
-                                           AND previous_licence.licence_number = current_licence.licence_number
-                                           AND previous_licence.file_id = current_licence.file_id
-                                           AND (previous_licence.data::jsonb ->> 'status') = 'Ok'
-                                   )
-                               );
+                               AND (previous_run.process_run_id IS NULL
+                                    OR previous_run_by_file_id.process_run_id IS NULL);
                            """;
 
         var results = await QueryAsync<(int LicenceId, string FlagReason)>(

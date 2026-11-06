@@ -119,6 +119,21 @@ public static class ReadSqlHelper
             parameters.Add("NaldAggregate", naldAggregates);
         }
     }
+
+    public static void AddAggregatePrimaryTypeFilter(
+        StringBuilder sql,
+        string? primaryTypeFilter)
+    {
+        if (primaryTypeFilter is "InLicence" or "Both")
+        {
+            sql.AppendLine("  AND has_in_licence_aggregate");
+        }
+
+        if (primaryTypeFilter is "LicenceToLicence" or "Both")
+        {
+            sql.AppendLine("  AND has_licence_to_licence_aggregate");
+        }
+    }
     
     public static void AddIssueYearFilter(
         StringBuilder sql,

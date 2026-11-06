@@ -26,6 +26,10 @@ public sealed class UpsertLicenceListItem
 
     public string[] AggregateIds { get; init; } = [];
 
+    public bool HasInLicenceAggregate { get; init; }
+
+    public bool HasLicenceToLicenceAggregate { get; init; }
+
     public bool NaldAggregate { get; init; }
 
     public bool Ocr { get; init; }

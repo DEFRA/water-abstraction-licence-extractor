@@ -52,7 +52,7 @@ switch (workflow)
         return await RebuildWrInspectionReportSummaries.RebuildAsync(processRunId);
 
     case "ImportOverrideData": // FREQUENT - Import needed to import override data from XLSX file (local fs) into the DB
-        throw new NotImplementedException(); // TODO
+        return await ImportOverrideData.ImportAsync();
 
     case "GenerateLicenceEstateExport": // Hand another team the extraction output: a run as a zip
         // of one JSON file per licence, or one licence with a third argument:

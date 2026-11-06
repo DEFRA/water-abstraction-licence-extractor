@@ -761,6 +761,33 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         return results.ToList();
     }
 
+    public async Task<List<Override>> GetOverridesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        // The NALD columns are aliased because the model drops the prefix. The licence finder
+        // calls .Equals on these strings, so a null would throw a long way from its cause.
+        const string sql = """
+                           SELECT
+                               COALESCE(permit_number, '') AS permit_number,
+                               COALESCE(licence_reference, '') AS licence_reference,
+                               COALESCE(file_url, '') AS file_url,
+                               COALESCE(nald_issue_no, '') AS IssueNo,
+                               NULLIF(nald_increment_no, '')::int AS IncrementNo,
+                               COALESCE(override_type, '') AS override_type,
+                               COALESCE(file_id, '') AS file_id
+                           FROM public.override_master
+                           ORDER BY permit_number
+                           """;
+
+        var results = await QueryAsync<Override>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
     public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
         await using var connection = GetPostgresConnection();

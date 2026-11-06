@@ -108,6 +108,8 @@ public interface ICacheService
 
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType);
 
+    Task<List<Override>> GetOverridesAsync();
+
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();

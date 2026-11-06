@@ -33,4 +33,6 @@ public interface IGeneralApiClient
     public Task<List<LicenceMatchResult>> GetLicenceFinderResultsAsync(int skip, int take);
 
     public Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
+
+    public Task<(List<Override> Data, string ImportDate)> GetOverridesAsync();
 }

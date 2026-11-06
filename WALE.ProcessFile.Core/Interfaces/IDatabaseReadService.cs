@@ -51,6 +51,8 @@ public interface IDatabaseReadService
     
     Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType);
 
+    Task<List<Override>> GetOverridesAsync();
+
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
     
     Task<string?> GetImportRunDateAsync(string dataSource);

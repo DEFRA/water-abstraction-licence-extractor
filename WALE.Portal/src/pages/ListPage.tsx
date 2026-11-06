@@ -40,6 +40,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         issuer: '',
         limitsEmpty: undefined,
         aggregatesFilter: undefined,
+        aggregatePrimaryTypeFilter: undefined,
         purposesEmpty: undefined,
         pointsEmpty: undefined,
         ocrScan: undefined,
@@ -95,6 +96,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.issuer +
                 currentQuery.limitsEmpty +
                 currentQuery.aggregatesFilter +
+                currentQuery.aggregatePrimaryTypeFilter +
                 currentQuery.ocrScan +
                 currentQuery.purposesEmpty +
                 currentQuery.pointsEmpty +
@@ -129,6 +131,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.issuer,
                 currentQuery.limitsEmpty,
                 currentQuery.aggregatesFilter,
+                currentQuery.aggregatePrimaryTypeFilter,
                 currentQuery.ocrScan,
                 currentQuery.purposesEmpty,
                 currentQuery.pointsEmpty,
@@ -188,6 +191,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                     'N/A',
                     '',
                     0,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,

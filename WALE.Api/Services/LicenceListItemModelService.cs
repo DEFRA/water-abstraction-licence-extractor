@@ -69,6 +69,8 @@ public class LicenceListItemModelService
             LimitsCount = source.limitsCount,
             AggregatesCount = source.aggregatesCount,
             AggregateIds = source.aggregateIds ?? [],
+            HasInLicenceAggregate = HasAggregateOfType(source.aggregates, PrimaryType.InLicence),
+            HasLicenceToLicenceAggregate = HasAggregateOfType(source.aggregates, PrimaryType.LicenceToLicence),
             Ocr = source.ocr,
             IssueDate = ParseDateOnly(source.issueDate),
             NaldOrigSignatureDate = ParseDateOnly(source.naldOrigSignatureDate),
@@ -93,6 +95,11 @@ public class LicenceListItemModelService
                 ? source.licenceSectionVerifications?.ToArray() ?? []
                 : [],
         };
+    }
+
+    private static bool HasAggregateOfType(Aggregate[]? aggregates, PrimaryType primaryType)
+    {
+        return aggregates?.Any(agg => agg.PrimaryType == primaryType) ?? false;
     }
 
     private static OutputListDataItem ConvertFromAggregate(LicenceListItemAggregate source)

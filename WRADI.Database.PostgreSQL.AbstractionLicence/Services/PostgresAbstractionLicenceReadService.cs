@@ -727,6 +727,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             "individual");
 
         AddAggregatesFilter(sql, query.AggregatesFilter);
+        AddAggregatePrimaryTypeFilter(sql, query.AggregatePrimaryTypeFilter);
 
         AddIssueYearFilter(
             sql,
@@ -3269,6 +3270,38 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         }
     }
 
+    private static void AddAggregatePrimaryTypeFilter(StringBuilder sql, string? primaryTypeFilter)
+    {
+        if (primaryTypeFilter is "InLicence" or "Both")
+        {
+            AddAggregateOfPrimaryTypeExists(sql, "InLicence");
+        }
+
+        if (primaryTypeFilter is "LicenceToLicence" or "Both")
+        {
+            AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence");
+        }
+    }
+
+    private static void AddAggregateOfPrimaryTypeExists(StringBuilder sql, string primaryType)
+    {
+        sql.AppendLine(
+            $"""
+               AND EXISTS (
+                   SELECT 1
+                   FROM jsonb_array_elements(
+                       COALESCE(
+                           data::jsonb
+                               -> 'abstractionLimits'
+                               -> 'aggregates',
+                           '[]'::jsonb
+                       )
+                   ) item
+                   WHERE item ->> 'primaryType' = '{primaryType}'
+               )
+             """);
+    }
+
     public async Task<List<LicenceListItemAggregate>>
         GetLicencesListSearchAsync(
             int processRunId,
@@ -3957,6 +3990,10 @@ private static void AddLicenceListItemFilters(
         sql,
         parameters,
         query.AggregatesFilter);
+
+    ReadSqlHelper.AddAggregatePrimaryTypeFilter(
+        sql,
+        query.AggregatePrimaryTypeFilter);
 
     ReadSqlHelper.AddIssueYearFilter(
         sql,

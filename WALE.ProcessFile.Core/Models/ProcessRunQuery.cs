@@ -19,6 +19,8 @@ public class ProcessRunQuery
 
     public string? AggregatesFilter { get; init; }
 
+    public string? AggregatePrimaryTypeFilter { get; init; }
+
     public bool? OcrScan { get; init; }
     
     public bool? PurposesEmpty { get; init; }
@@ -53,6 +55,7 @@ public class ProcessRunQuery
             Issuer = Issuer,
             LimitsEmpty = LimitsEmpty,
             AggregatesFilter = AggregatesFilter,
+            AggregatePrimaryTypeFilter = AggregatePrimaryTypeFilter,
             OcrScan = OcrScan,
             PurposesEmpty = PurposesEmpty,
             PointsEmpty = PointsEmpty,

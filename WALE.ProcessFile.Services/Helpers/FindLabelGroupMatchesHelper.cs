@@ -632,16 +632,6 @@ public static class FindLabelGroupMatchesHelper
                 partialLine!,
                 singleValueWanted);
 
-            if (request.label.Name == "PerDayUnits")
-            {
-                
-            }
-            
-            if (request.label.Name == "PerSecondUnits")
-            {
-                
-            }
-            
             if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
             {
                 ConsoleHelper.WriteLine(

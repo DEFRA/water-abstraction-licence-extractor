@@ -12,11 +12,6 @@ public static class Units
         bool lineNumbersAreDescending,
         LabelGroupResult labelGroupResult)
     {
-        if (lines.Any(l => l.Text.Contains("0.347 cubic")))
-        {
-            
-        }
-        
         if (label.Possibilities == null)
         {
             return [];

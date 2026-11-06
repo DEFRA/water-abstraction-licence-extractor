@@ -82,7 +82,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(200)
+        .Take(100)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);

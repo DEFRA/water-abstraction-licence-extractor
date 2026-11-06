@@ -30,7 +30,7 @@ public static class ServiceCollectionExtensions
                 var configuration =
                     serviceProvider.GetRequiredService<IConfiguration>();
 
-                var apiBaseUrl = configuration["LicenceFinder:ApiBaseUrl"]
+                var apiBaseUrl = configuration["ApiBaseUrl"]
                                  ?? throw new InvalidOperationException("ApiBaseUrl is missing.");
 
                 client.BaseAddress = new Uri(apiBaseUrl);

@@ -88,7 +88,7 @@ export const LinkedLicenceItem = ({
                 source: InformationSource.Document,
                 direction: NullableOfInformationDirection.Outgoing,
                 sectionName: '',
-                linkReason: '',
+                linkReason: 'N/A',
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
             onUpdate(new LinkedLicence({...linkedLicence, containedIn: newSections}));
@@ -105,22 +105,27 @@ export const LinkedLicenceItem = ({
     const handleEdit = () => {
         const newErrors: Record<string, string> = {};
 
+        const updatedSections = (linkedLicence.containedIn || []).map(section =>
+            new ContainedInInformation({
+                ...section,
+                linkReason: section.linkReason?.trim() || 'N/A'
+            })
+        );
+
         if (isAddingNew) {
-            if (!linkedLicence.licenceNumber || !linkedLicence.licenceNumber.trim()) {
+            if (!linkedLicence.licenceNumber?.trim()) {
                 newErrors.licenceNumber = 'Licence Number is required';
             }
-            if (!linkedLicence.permitNumber || !linkedLicence.permitNumber.trim()) {
+
+            if (!linkedLicence.permitNumber?.trim()) {
                 newErrors.permitNumber = 'Permit Number is required';
             }
         }
 
-        (linkedLicence.containedIn || []).forEach((section, idx) => {
+        updatedSections.forEach((section, idx) => {
             if (section.direction === NullableOfInformationDirection.Outgoing) {
-                if (!section.sectionName || !section.sectionName.trim()) {
+                if (!section.sectionName?.trim()) {
                     newErrors[`section_${idx}_sectionName`] = 'Section Name is required';
-                }
-                if (!section.linkReason || !section.linkReason.trim()) {
-                    newErrors[`section_${idx}_linkReason`] = 'Link Reason is required';
                 }
             }
         });
@@ -128,6 +133,11 @@ export const LinkedLicenceItem = ({
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0 && onOverride) {
+            onUpdate?.(new LinkedLicence({
+                ...linkedLicence,
+                containedIn: updatedSections
+            }));
+
             onOverride();
         }
     };

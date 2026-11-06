@@ -178,6 +178,14 @@ public static class AbstractionLicenceSchemaConverter
         noneSchemaData.Add("ocr", ocr);
 
         noneSchemaData.Add("servicesUsed", matchesResult.ServicesUsed.ToArray());
+
+        if (matchesResult.ServicesFailed.Count > 0)
+        {
+            noneSchemaData.Add("servicesFailed", matchesResult.ServicesFailed
+                .Select(failure => $"{failure.ServiceName} P{failure.PageNumber} I{failure.ImageNumber} " +
+                    $"{(failure.IsTransient ? "transient" : "permanent")} {failure.ErrorType}")
+                .ToArray());
+        }
         
         var (naldStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldAbstractionDataLine);
 
@@ -4691,7 +4699,9 @@ public static class AbstractionLicenceSchemaConverter
                     : string.Empty;
 
                 if (individualGroup.Limits.Count > 0
-                    && (groupPointsStr != limitPointsStr || groupPurposesStr != limitPurposesStr))
+                    && (groupPointsStr != limitPointsStr
+                        || groupPurposesStr != limitPurposesStr
+                        || documentIdentifier != individualGroup.DocumentIdentifier))
                 {
                     individualGroup = individualGroups.FirstOrDefault(ig =>
                     {
@@ -4703,7 +4713,9 @@ public static class AbstractionLicenceSchemaConverter
                             ? string.Join(',', ig.Purposes.Select(p => p.Id))
                             : string.Empty;
 
-                        return groupPointsStr == limitPointsStr && groupPurposesStr == limitPurposesStr;
+                        return groupPointsStr == limitPointsStr
+                            && groupPurposesStr == limitPurposesStr
+                            && ig.DocumentIdentifier == documentIdentifier;
                     });
 
                     if (individualGroup == null)
@@ -5027,14 +5039,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         return null;
-    }
-
-    private static MatchesResult ToMatchesResult(LabelGroupResult labelGroupResult)
-    {
-        return new MatchesResult
-        {
-            Matches = labelGroupResult.SubResults.ToList()
-        };
     }
 
     private static PeriodOfAbstraction[] GetPeriods(

@@ -411,17 +411,30 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
+
+        // A 429 or 500 body deserialises into a MetadataCollection with every property null, and
+        // the caller reads a non-null return as a cache hit - so the miss has to be returned here.
+        if (!response.IsSuccessStatusCode)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(ApiCacheService)} - "
+                + $"{(int)response.StatusCode} getting metadata for {fileId}, treating as a miss");
+
+            return null;
+        }
+
         var content = await response.Content.ReadAsStringAsync();
 
         var metadata = !string.IsNullOrEmpty(content)
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
 
-        if (metadata != null)
+        if (metadata?.PagesMetadata == null)
         {
-            metadata.SizeBytes = content.Length;
+            return null;
         }
-        
+
+        metadata.SizeBytes = content.Length;
+
         return metadata;
     }
     

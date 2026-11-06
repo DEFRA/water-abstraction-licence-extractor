@@ -22,6 +22,7 @@ public class TesseractOcrDataExtractorService(
     : IOcrDataExtractorService, IDisposable
 {
     public bool HasDirectCost => false;
+    public OcrServiceFailurePolicy FailurePolicy => OcrServiceFailurePolicy.DegradeOnError;
     public string Name => $"TesseractOcr-{pageSegMode}";
     public int Id { get; set; } = id;
     

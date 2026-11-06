@@ -224,13 +224,13 @@ public class AwsS3FileService(
         return uploadId;
     }
     
-    public Task DeleteAsync(string filename)
+    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
     {
         var client = GetS3Client();
         
         return client.DeleteObjectAsync(new DeleteObjectRequest
         {
-            BucketName = IngressFolderPath,
+            BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
             Key = filename
         });
     }

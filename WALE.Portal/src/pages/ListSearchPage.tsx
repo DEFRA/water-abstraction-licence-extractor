@@ -313,7 +313,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             {activeTab === 'licences' && (
                 <div id="licences">
                     <RefreshLicenceListData processRunId={processRunId} />
-                    <ExportLicenceEstate processRunId={processRunId} />
                     <div style={{ clear: 'both', display: 'block', width: '100%', marginTop: '10px' }}>
                    
                         <Paging
@@ -388,6 +387,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             {activeTab === 'actions' && (
                 <div id="actions">
                     <ScrapeDocuments documentType="AbstractionLicence"/>
+                    <ExportLicenceEstate processRunId={processRunId} />
                     <ExportImportVerifications />
                     <LicenceFinderAction />
                 </div>

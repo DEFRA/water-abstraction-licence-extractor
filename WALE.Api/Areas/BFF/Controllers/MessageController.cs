@@ -23,6 +23,8 @@ public class MessageController(
         [FromQuery] int delayInSeconds = 0,
         [FromQuery] int regionId = 0,
         [FromQuery] int maxLicencesToTake = 0,
+        [FromQuery] DateOnly? uploadedFrom = null,
+        [FromQuery] DateOnly? uploadedTo = null,
         [FromQuery] string documentType = "AbstractionLicence")
     {
         var messagePayload = JsonSerializer.Serialize(
@@ -31,7 +33,9 @@ public class MessageController(
                 DocumentType = documentType,
                 RequestedAt = DateTime.UtcNow,
                 RegionId = regionId != 0 ? regionId : null,
-                MaxLicencesToTake = maxLicencesToTake != 0 ? maxLicencesToTake : null
+                MaxLicencesToTake = maxLicencesToTake != 0 ? maxLicencesToTake : null,
+                UploadedFrom = uploadedFrom,
+                UploadedTo = uploadedTo
             });
 
         await sqsClient.SendMessageAsync(

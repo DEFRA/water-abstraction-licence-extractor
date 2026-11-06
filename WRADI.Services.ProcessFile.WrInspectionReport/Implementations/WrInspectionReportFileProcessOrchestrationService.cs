@@ -32,6 +32,12 @@ public class WrInspectionReportFileProcessOrchestrationService(
         var candidates =
             await inspectionReportFinderCacheService.GetInspectionReportFinderResultsAsync(0, int.MaxValue);
 
+        // The message's window replaces configuration's as a pair, not bound by bound: a request
+        // naming only a start must stay open-ended, not inherit configuration's end.
+        var (uploadedFrom, uploadedTo) = request.UploadedFrom != null || request.UploadedTo != null
+            ? (request.UploadedFrom, request.UploadedTo)
+            : (settings.UploadedFrom, settings.UploadedTo);
+
 
         if (candidates.Count == 0)
         {
@@ -67,18 +73,18 @@ public class WrInspectionReportFileProcessOrchestrationService(
                 + "bucket has no object for them yet - not collected, or a Word document not yet converted");
         }
 
-        // Before MaxFilesPerRun, so a capped run takes its files from the chosen window rather
+        // Before either cap, so a capped run takes its files from the chosen window rather
         // than from every discovered document.
-        if (WrInspectionReportCandidateSelector.HasUploadWindow(settings.UploadedFrom, settings.UploadedTo))
+        if (WrInspectionReportCandidateSelector.HasUploadWindow(uploadedFrom, uploadedTo))
         {
             var withinWindow = sendable
                 .Where(candidate => WrInspectionReportCandidateSelector.IsWithinUploadWindow(
-                    candidate, settings.UploadedFrom, settings.UploadedTo))
+                    candidate, uploadedFrom, uploadedTo))
                 .ToList();
 
             ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - "
                 + $"{withinWindow.Count} of {sendable.Count} candidates uploaded "
-                + $"{WrInspectionReportCandidateSelector.DescribeUploadWindow(settings.UploadedFrom, settings.UploadedTo)}");
+                + $"{WrInspectionReportCandidateSelector.DescribeUploadWindow(uploadedFrom, uploadedTo)}");
 
             // Counted separately because a date filter silently drops them: the column is free
             // text from DMS, so a row whose value will not parse has no date to compare.
@@ -116,9 +122,9 @@ public class WrInspectionReportFileProcessOrchestrationService(
                 Description = "Batch process request for WR51 single file process from "
                     + "inspection_report_finder_result"
                     + (WrInspectionReportCandidateSelector.HasUploadWindow(
-                            settings.UploadedFrom, settings.UploadedTo)
+                            uploadedFrom, uploadedTo)
                         ? ", uploaded " + WrInspectionReportCandidateSelector.DescribeUploadWindow(
-                            settings.UploadedFrom, settings.UploadedTo)
+                            uploadedFrom, uploadedTo)
                         : string.Empty),
                 StartDateTimeUtc = DateTime.UtcNow,
                 NumberOfFiles = sendable.Count,
@@ -184,7 +190,7 @@ public class WrInspectionReportFileProcessOrchestrationService(
         ConsoleHelper.WriteLine($"INFO - {nameof(WrInspectionReportFileProcessOrchestrationService)} - {enqueued} of {requests.Count} "
             + $"files sent to the single process file queue, {failed} failed, uploaded "
             + WrInspectionReportCandidateSelector.DescribeUploadWindow(
-                settings.UploadedFrom, settings.UploadedTo));
+                uploadedFrom, uploadedTo));
 
         // NumberOfFiles is written before sending, because every message needs the run id, so a
         // send failure leaves the row overstating the run. Logged rather than corrected: there is no

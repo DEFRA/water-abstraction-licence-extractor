@@ -12,6 +12,12 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
     const [isStarting, setIsStarting] = useState(false);
     const [regionId, setRegionId] = useState(0);
     const [maxLicences, setMaxLicences] = useState<number | undefined>(undefined);
+    const [uploadedFrom, setUploadedFrom] = useState('');
+    const [uploadedTo, setUploadedTo] = useState('');
+
+    // Each orchestrator reads only its own: AbstractionLicence has no upload date and
+    // WrInspectionReport carries no region.
+    const isInspectionReport = documentType === 'WrInspectionReport';
 
     const client = new Client(waleApiBaseUrl);
     const startScrapingProcess = async () => {
@@ -24,6 +30,8 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
                 undefined,
                 regionId,
                 maxLicences,
+                uploadedFrom === '' ? undefined : uploadedFrom,
+                uploadedTo === '' ? undefined : uploadedTo,
                 documentType);
 
             setSuccessMessage('Scraping orchestration process started successfully.');
@@ -57,28 +65,72 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
                     position: 'relative'
                 }}
             >
-                <div>
-                    <label
-                        htmlFor="region"
-                        style={{
-                            display: "block",
-                            marginBottom: "4px",
-                            fontWeight: 600
-                        }}
-                    >
-                        Region
-                    </label>
+                {!isInspectionReport && (
+                    <div>
+                        <label
+                            htmlFor="region"
+                            style={{
+                                display: "block",
+                                marginBottom: "4px",
+                                fontWeight: 600
+                            }}
+                        >
+                            Region
+                        </label>
 
-                    <select style={{
-                        width: '200px'
-                    }}
-                            id="region"
-                            value={regionId}
-                            onChange={e => setRegionId(Number(e.target.value))}>
-                        <option value="0">All regions</option>
-                        <option value="3">North East</option>
-                    </select>
-                </div>
+                        <select style={{
+                            width: '200px'
+                        }}
+                                id="region"
+                                value={regionId}
+                                onChange={e => setRegionId(Number(e.target.value))}>
+                            <option value="0">All regions</option>
+                            <option value="3">North East</option>
+                        </select>
+                    </div>
+                )}
+
+                {isInspectionReport && (
+                    <div>
+                        <label
+                            htmlFor="uploadedFrom"
+                            style={{
+                                display: "block",
+                                marginBottom: "4px",
+                                fontWeight: 600
+                            }}
+                        >
+                            Uploaded from
+                        </label>
+
+                        <input
+                            type="date"
+                            id="uploadedFrom"
+                            value={uploadedFrom}
+                            onChange={e => setUploadedFrom(e.target.value)} />
+                    </div>
+                )}
+
+                {isInspectionReport && (
+                    <div>
+                        <label
+                            htmlFor="uploadedTo"
+                            style={{
+                                display: "block",
+                                marginBottom: "4px",
+                                fontWeight: 600
+                            }}
+                        >
+                            Uploaded to
+                        </label>
+
+                        <input
+                            type="date"
+                            id="uploadedTo"
+                            value={uploadedTo}
+                            onChange={e => setUploadedTo(e.target.value)} />
+                    </div>
+                )}
 
                 <div>
                     <label

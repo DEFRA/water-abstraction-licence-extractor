@@ -289,6 +289,55 @@ public class WrInspectionReportFileProcessOrchestrationServiceTests
         Assert.All(enqueuedRequests, request => Assert.StartsWith("INSIDE-", request.PermitNumber));
     }
 
+    [Theory]
+    // Open-ended end, so 2026 is included: inheriting the configured 2025 end would drop it
+    [InlineData("2024-01-01", null, 4)]
+    // Open-ended start: inheriting the configured 2025 start would leave an empty window
+    [InlineData(null, "2024-12-31", 2)]
+    // No request window at all, so configuration's 2025 window still applies
+    [InlineData(null, null, 1)]
+    public async Task WhenTheRequestNamesAWindow_ThenItReplacesTheConfiguredOneAsAPair(
+        string? requestedFrom,
+        string? requestedTo,
+        int expectedSent)
+    {
+        // Arrange
+        var settings = new FileProcessAppSettings
+        {
+            UploadedFrom = new DateOnly(2025, 1, 1),
+            UploadedTo = new DateOnly(2025, 12, 31)
+        };
+
+        var candidates = new[]
+            {
+                ("OLD-1", "2024-03-01 00:00:00"),
+                ("OLD-2", "2024-04-01 00:00:00"),
+                ("NEW-1", "2025-06-15 00:00:00"),
+                ("FUTURE-1", "2026-02-01 00:00:00")
+            }
+            .Select(candidate => new InspectionReportFinderResult
+            {
+                PermitNumber = candidate.Item1,
+                FileId = Guid.NewGuid().ToString(),
+                FileName = "report.pdf",
+                UploadDate = candidate.Item2
+            })
+            .ToList();
+
+        // Act
+        var (enqueuedRequests, _) = await RunWithCandidatesAsync(
+            settings,
+            candidates,
+            new FileProcessOrchestrationRequest
+            {
+                UploadedFrom = requestedFrom == null ? null : DateOnly.Parse(requestedFrom),
+                UploadedTo = requestedTo == null ? null : DateOnly.Parse(requestedTo)
+            });
+
+        // Assert
+        Assert.Equal(expectedSent, enqueuedRequests.Count);
+    }
+
     public static TheoryData<int?, int> RequestLimits => new()
     {
         { null, 3 },

@@ -2080,7 +2080,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                 Possibilities = new List<TextToMatch>
                                 {
                                     new("megalitres"),
-                                    new("mega litres"),                                    
+                                    new("mega litres"),
                                     new("litres"),
                                     new("cubic metres"),
                                     new("cubic meters"),

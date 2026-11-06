@@ -13,6 +13,8 @@ namespace WALE.ProcessFile.Services.Helpers;
 
 public static class FindLabelGroupMatchesHelper
 {
+    public static readonly string BeforeLabel = "BeforeLabel";
+    
     public static async Task<IReadOnlyList<LabelGroupResult>> FindLabelGroupMatchesInTablesAsync(
         IReadOnlyList<DocumentTable> tables,
         IReadOnlyList<LabelToMatch> labels,
@@ -629,7 +631,7 @@ public static class FindLabelGroupMatchesHelper
                 request,
                 partialLine!,
                 singleValueWanted);
-            
+
             if ((DateTime.Now - dtStart).TotalMilliseconds > 100)
             {
                 ConsoleHelper.WriteLine(
@@ -1312,7 +1314,7 @@ public static class FindLabelGroupMatchesHelper
                     {
                         ColumnsText = beforeColumns,
                         Label = beforeLabel,
-                        Position = "BeforeLabel"
+                        Position = BeforeLabel
                     });
                 }
                 
@@ -1390,7 +1392,7 @@ public static class FindLabelGroupMatchesHelper
             {
                 ColumnsText = [textBeforeLabel],
                 Label = returnLabel,
-                Position = "BeforeLabel"
+                Position = BeforeLabel
             });
         }
 

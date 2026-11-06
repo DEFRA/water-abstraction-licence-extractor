@@ -482,6 +482,7 @@ public static class AbstractionLicenceSchemaConverter
                     var newContainedIn = existing.ContainedIn?.ToList() ?? [];
                     newContainedIn.AddRange(linkedLicence.ContainedIn!);
                     
+                    existing.ContainedIn = newContainedIn.ToArray();
                     continue;
                 }
                 
@@ -798,58 +799,12 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    /*private static bool IsLimitGroupEqual(
-        List<AbstractionLimit> limitsLeft,
-        List<AbstractionLimit> limitsRight,
-        out List<AbstractionLimit> toAdd)
-    {
-        toAdd = [];
-        
-        var onlyOnLeft = limitsLeft
-            .Where(ll => limitsRight.All(lr => lr.PeriodType != ll.PeriodType))
-            .ToList();
-        
-        var onlyOnRight = limitsRight
-            .Where(lr => limitsLeft.All(ll => ll.PeriodType != lr.PeriodType))
-            .ToList();
-        
-        var orderedLimitsLeft = limitsLeft
-            .Where(ll => !onlyOnLeft.Contains(ll))
-            .OrderBy(l => l.PeriodType)
-            .ToList();
-        
-        var orderedLimitsRight = limitsRight
-            .Where(lr => !onlyOnRight.Contains(lr))
-            .OrderBy(l => l.PeriodType)
-            .ToList();
-
-        if (orderedLimitsLeft.Count < 2)
-        {
-            return false;
-        }
-        
-        for (var idx = 0; idx < orderedLimitsLeft.Count; idx++)
-        {
-            var limitLeft  = orderedLimitsLeft[idx];
-            var limitRight = orderedLimitsRight[idx];
-
-            if (!AreLimitsEqual(limitLeft, limitRight))
-            {
-                return false;
-            }
-        }
-
-        toAdd = onlyOnRight;
-        return true;
-    }*/
-
     private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
     {
         return limitLeft.PeriodType == limitRight.PeriodType
-               && UnitsForComparison(limitLeft.Units) == UnitsForComparison(limitRight.Units)
-               && AreValuesEqual(
-                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
-                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
+            && AreValuesEqual(
+               ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
+               ValueInBaseUnits(limitRight.Value, limitRight.Units));
     }
     
     private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
@@ -874,6 +829,27 @@ public static class AbstractionLicenceSchemaConverter
             {
                 foreach (var matchingIndividualGroup in matchingIndividualGroups)
                 {
+                    // At the group level
+                    if (matchingIndividualGroup.ContainedIn?.Length >= 1)
+                    {
+                        var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
+
+                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
+                        {
+                            // Already have it in contained in
+                            continue;
+                        }
+
+                        containedInList.Add(new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        });
+
+                        matchingIndividualGroup.ContainedIn = containedInList.ToArray();
+                        continue;
+                    }
+                    
+                    // At a limit level
                     foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
                     {
                         var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();
@@ -914,17 +890,11 @@ public static class AbstractionLicenceSchemaConverter
 
     private static double? ValueInBaseUnits(double? value, string? units)
     {
-        if (string.IsNullOrEmpty(units))
-        {
-            return value;
-        }
+        const string baseUnit = "litres";
         
-        if (units is "thousand cubic metres")
-        {
-            return value * 1000.0;
-        }
-        
-        return value;
+        return string.IsNullOrEmpty(units)
+            ? value
+            : UnitHelper.Convert(value!.Value, units, baseUnit);
     }
 
     private static void HoistContainedInSections(
@@ -3724,11 +3694,19 @@ public static class AbstractionLicenceSchemaConverter
 
     private static string? GetLinkReason(string? text, string? textToFind)
     {
-        if (string.IsNullOrEmpty(textToFind)
-            || string.IsNullOrEmpty(text)
-            || !text.Contains(textToFind))
+        if (string.IsNullOrEmpty(text) || (!string.IsNullOrEmpty(textToFind) && !text.Contains(textToFind)))
         {
             return null;
+        }
+
+        if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.ReleaseOfWater;
+        }
+        
+        if (text.Contains("quantity of water released", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.ReleaseOfWater;
         }
         
         if (text.Contains("rate of flow", StringComparison.OrdinalIgnoreCase))
@@ -4027,6 +4005,13 @@ public static class AbstractionLicenceSchemaConverter
         
         var containsLegalText = abstractionLimitPointSub.SubResults
             .Any(x => x.MatchedLabelName == "LegalText");
+
+        var sectionReason = GetLinkReason([abstractionLimitPointSub], string.Empty);
+
+        if (IsExcludedLinkReason(sectionReason))
+        {
+            return;
+        }
         
         if (limitPointTable != null)
         {
@@ -4870,34 +4855,18 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
     
-    private static bool AreValuesEqual(double? value1, double? value2)
+    public static bool AreValuesEqual(double? value1, double? value2)
     {
         if (value1 == null || value2 == null)
         {
             return false;
         }
 
-        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests
-        var minValue1 = value1 - 0.01;
-        var maxValue1 = value1 + 0.01;
+        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
+        const double maxTolerance = 0.75;
         
-        return value2 >= minValue1
-            && value2 <= maxValue1;
-    }
-    
-    private static string? UnitsForComparison(string? units)
-    {
-        if (string.IsNullOrEmpty(units))
-        {
-            return units;
-        }
-        
-        if (units is "cubic meters" or "thousand cubic metres")
-        {
-            return "cubic metres";
-        }
-
-        return units;
+        var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
+        return percentageDiff is >= 0 and <= maxTolerance;
     }
     
     private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
@@ -4992,8 +4961,9 @@ public static class AbstractionLicenceSchemaConverter
             or LinkReason.ReadingsDischargedAugmentationCondition
             or LinkReason.CompensationFlow
             or LinkReason.RateOfFlow
-            or LinkReason.WhenTheFlow            
-            or LinkReason.MinimumValue;
+            or LinkReason.WhenTheFlow
+            or LinkReason.MinimumValue
+            or LinkReason.ReleaseOfWater;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)

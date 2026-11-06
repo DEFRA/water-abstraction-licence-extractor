@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
+using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Models;
 using static WALE.ProcessFile.Services.Methods.BaseMethod;
 
@@ -417,6 +418,8 @@ public static class ApplicableToMost
                             request.label?.AutoCorrect ?? false)
                         : words;
 
+                    var outputPossibilities = new List<(TextToMatch, int)>();
+                    
                     foreach (var possibility in matchedLabel.Possibilities)
                     {
                         if (!MatchesPossibility(outputText, possibility)
@@ -426,17 +429,35 @@ public static class ApplicableToMost
                             continue;
                         }
 
-                        outputText = possibility.Text;
+                        var distanceFromLabel = item.Position == FindLabelGroupMatchesHelper.BeforeLabel
+                            ? outputText.Length
+                              - outputText.IndexOf(possibility.Text, StringComparison.OrdinalIgnoreCase)
+                              - possibility.Text.Length
+                            : outputText.IndexOf(possibility.Text, StringComparison.OrdinalIgnoreCase);
+                        
+                        outputPossibilities.Add((possibility, distanceFromLabel));
+                    }
+
+                    if (outputPossibilities.Count > 0)
+                    {
                         loopIsPossiblity = true;
+                        isPossiblity = true;
 
-                        if (loopIsPossiblity)
-                        {
-                            isPossiblity = true;
-                        }
-
+                        var closestPreferred = request.label?.Position is
+                            LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeBefore
+                            or LabelPosition.LabelIsBeforeAndOrAfterTextToFindPreferLabelToBeAfter;
+                        
+                        var possibility = closestPreferred ?
+                            outputPossibilities
+                                .OrderBy(op => op.Item2)
+                                .Select(op => op.Item1)
+                                .First()
+                            : outputPossibilities
+                                .Select(op => op.Item1)
+                                .First();
+                        
+                        outputText = possibility.Text;
                         matchedPossibility = possibility;
-
-                        break;
                     }
                 }
 

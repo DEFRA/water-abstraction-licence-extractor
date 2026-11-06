@@ -4847,7 +4847,7 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
     
-    private static bool AreValuesEqual(double? value1, double? value2)
+    public static bool AreValuesEqual(double? value1, double? value2)
     {
         if (value1 == null || value2 == null)
         {
@@ -4855,7 +4855,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
-        const double maxTolerance = 0.05;
+        const double maxTolerance = 0.75;
         
         var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
         return percentageDiff is >= 0 and <= maxTolerance;

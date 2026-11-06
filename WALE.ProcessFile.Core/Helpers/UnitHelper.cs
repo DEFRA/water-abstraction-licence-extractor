@@ -27,12 +27,38 @@ public static class UnitHelper
     private const string CubicMetres = "cubicmetres";
     private const string ThousandCubicMetres = "thousandcubicmetres";
 
+    //Misspelling
+    private const string MisspellingLitres = "liters";
+    private const string MisspellingCubicMetres = "cubicmeters";
+    private const string MisspellingThousandCubicMetres = "thousandcubicmeters";
+    
     private static string LoweredUnits(string units)
     {
         units = units.Replace(" ", string.Empty).ToLower();
+        
         if (units == MillionGallons)
         {
             units = MegaGallons;
+        }
+        
+        if (units == MillionGallons)
+        {
+            units = MegaGallons;
+        }
+        
+        if (units == MisspellingLitres)
+        {
+            units = Litres;
+        }
+        
+        if (units == MisspellingCubicMetres)
+        {
+            units = CubicMetres;
+        }
+        
+        if (units == MisspellingThousandCubicMetres)
+        {
+            units = ThousandCubicMetres;
         }
         
         return units;
@@ -42,7 +68,7 @@ public static class UnitHelper
     {
         const double gallonsToCubicMetres = 0.00454609;
         const double litresToCubicMetres = 0.001;
-        const double thousandCubicMetresToCubicMetres = 0.001;
+        const double thousandCubicMetresToCubicMetres = 1_000;
         
         return sourceUnits switch
         {
@@ -58,7 +84,7 @@ public static class UnitHelper
     
     private static double ConvertToThousandCubicMetres(double sourceValue, string sourceUnits)
     {
-        const double cubicMetresToThousandCubicMetres = 1_000;
+        const double cubicMetresToThousandCubicMetres = 0.001;
         return ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetresToThousandCubicMetres;
     }
     
@@ -82,7 +108,7 @@ public static class UnitHelper
 
     private static double ConvertToMegaLitres(double sourceValue, string sourceUnits)
     {
-        const double litresToMegaLitres = 1_000_000;
+        const double litresToMegaLitres = 1e-6;
         return ConvertToLitres(sourceValue, sourceUnits) * litresToMegaLitres;
     }
     

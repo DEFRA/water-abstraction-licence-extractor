@@ -150,12 +150,13 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public async Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         var path = "/Extractor/ProcessRun/ReportErrorProcessRunFile";
-      
+
         var json = JsonSerializer.Serialize(new
         {
             processRunFile.ProcessRunFileId,
             processRunFile.FileName,
             processRunFile.ProcessRunId,
+            processRunFile.ErrorMessage,
         }, JsonHelper.GetWireSerializerOptions());
         
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");

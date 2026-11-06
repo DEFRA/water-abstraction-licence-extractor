@@ -371,8 +371,6 @@ public static class AbstractionLicenceSchemaConverter
 
             if (!found && licenceHistoryLinkedLicences.Count > 0)
             {
-                // TODO this needs updating so it only excludes them if there from the licnce history line number
-
                 found = licenceHistoryLinkedLicences
                     .Any(lhLinkedLicence =>
                     {
@@ -422,9 +420,12 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     foreach (var l in licenceContainsOther)
                     {
+                        var licenceHistoryLicence = licenceHistoryLinkedLicences
+                            .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
+                        
                         var newContainedIn = new List<ContainedInInformation>();
                         newContainedIn.AddRange(l.ContainedIn!);
-                        newContainedIn.Add(anywhereInDocumentLinkedLicence.ContainedIn![0]);
+                        newContainedIn.Add((licenceHistoryLicence ?? anywhereInDocumentLinkedLicence).ContainedIn![0]);
 
                         l.ContainedIn = newContainedIn.ToArray();
                     }

@@ -474,6 +474,7 @@ public static class AbstractionLicenceSchemaConverter
                     var newContainedIn = existing.ContainedIn?.ToList() ?? [];
                     newContainedIn.AddRange(linkedLicence.ContainedIn!);
                     
+                    existing.ContainedIn = newContainedIn.ToArray();
                     continue;
                 }
                 
@@ -3685,11 +3686,19 @@ public static class AbstractionLicenceSchemaConverter
 
     private static string? GetLinkReason(string? text, string? textToFind)
     {
-        if (string.IsNullOrEmpty(textToFind)
-            || string.IsNullOrEmpty(text)
-            || !text.Contains(textToFind))
+        if (string.IsNullOrEmpty(text) || (!string.IsNullOrEmpty(textToFind) && !text.Contains(textToFind)))
         {
             return null;
+        }
+
+        if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.ReleaseOfWater;
+        }
+        
+        if (text.Contains("quantity of water released", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.ReleaseOfWater;
         }
         
         if (text.Contains("rate of flow", StringComparison.OrdinalIgnoreCase))
@@ -3988,6 +3997,13 @@ public static class AbstractionLicenceSchemaConverter
         
         var containsLegalText = abstractionLimitPointSub.SubResults
             .Any(x => x.MatchedLabelName == "LegalText");
+
+        var sectionReason = GetLinkReason([abstractionLimitPointSub], string.Empty);
+
+        if (IsExcludedLinkReason(sectionReason))
+        {
+            return;
+        }
         
         if (limitPointTable != null)
         {
@@ -4938,8 +4954,9 @@ public static class AbstractionLicenceSchemaConverter
             or LinkReason.ReadingsDischargedAugmentationCondition
             or LinkReason.CompensationFlow
             or LinkReason.RateOfFlow
-            or LinkReason.WhenTheFlow            
-            or LinkReason.MinimumValue;
+            or LinkReason.WhenTheFlow
+            or LinkReason.MinimumValue
+            or LinkReason.ReleaseOfWater;
     }
 
     private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)

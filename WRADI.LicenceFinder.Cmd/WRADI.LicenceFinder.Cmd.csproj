@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <UserSecretsId>cc1de03e-272a-4682-b391-8585cfb82c81</UserSecretsId>
+        <RootNamespace>WA.DMS.LicenceFinder</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\WRADI.Services.LicenceFinder\WRADI.Services.LicenceFinder.csproj" />
+      <ProjectReference Include="..\WALE.ProcessFile.Core\WALE.ProcessFile.Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.7.25380.108" />
+    </ItemGroup>
+</Project>

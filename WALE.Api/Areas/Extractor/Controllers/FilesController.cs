@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using WALE.Api.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 
 namespace WALE.Api.Areas.Extractor.Controllers;
@@ -36,13 +38,20 @@ public class FilesController(IFileService fileService) : Controller
             throw new Exception("Stream is null");
         }
         
-        return File(data, "application/pdf");
+        return File(data, IngressFormats.ContentTypeForFile(filename));
     }
     
     [HttpGet]
-    public async Task<ActionResult> ExistsAsync([FromQuery] string filename)
+    public async Task<ActionResult> ExistsAsync(
+        [FromQuery] string filename,
+        [FromQuery] string folder)
     {
-        var data = await fileService.ExistsAsync(filename);
+        var isAssets = "assets".Equals(folder, StringComparison.OrdinalIgnoreCase);
+        
+        var data = await fileService.ExistsAsync(
+            filename,
+            isAssets ? StorageFolder.Assets : StorageFolder.Ingress);
+        
         return Ok(data);
     }
 }

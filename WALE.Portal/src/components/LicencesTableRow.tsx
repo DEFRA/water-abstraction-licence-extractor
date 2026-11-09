@@ -1,15 +1,16 @@
 import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import {getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import { getVerificationWithNotesFirstPart, getVerificationWithNotesTooltip, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
+import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
     oddRow: boolean;
-    onOpenReport: (fileId: string) => void;
-    onOpenLicenceSetReport: (fileId: string, licenceSetId: string) => void;
+    onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
 }
 
@@ -17,15 +18,16 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
-                .
+                <img src={item.thumbnailUrl} width={80} />
             </td>
             <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(item.fileId!);
+                       onOpenReport(item.fileId!, item.licenceId!, item.matchesResultId!);
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
+                {item.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={item.licenceNumberFlagReason}/>}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
@@ -35,7 +37,12 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 <strong>File:</strong> {(item.aggregatesCount ?? 0) > 0 ? "True" : "False"} ({dashesIfNull(item.aggregatesCount)})
                 <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
             <td>{(item.ocr ? "True" : "False")}</td>
-            <td>{dashesIfNullOrEmpty(item.issueDate)}</td>
+            <td>
+                <strong>Doc:</strong><br /> {dashesIfNullOrEmpty(item.issueDate)}
+                {item.isIssueDateFlagged && <span title="Issue date mismatch with NALD"> 🚩</span>}
+                <br /><strong>Nald:</strong><br /> {dashesIfNullOrEmpty(item.naldSignatureDate)}
+                <br /><strong>Nald OG:</strong><br /> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
+            </td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
             <td>
@@ -44,7 +51,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                     onOpenReport={onOpenReport}
                 />
             </td>
-            <td className='licenceSetTd default-hidden'>
+            <td className='licenceSetTd'>
                 <LicenceSetsList 
                     item={item} 
                     onOpenLicenceSetReport={onOpenLicenceSetReport}
@@ -66,9 +73,11 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                             return (
                                                 <span key={itemId}>
                                                     {itemId}{' '}
-                                                    {(v.verificationTypes || []).map((vt: string, idx: number) => (
-                                                        <span key={idx} title={vt ?? ''} style={{
-                                                            backgroundColor: getVerificationTypeBackgroundColor(vt),
+                                                    {(v.verificationTypesWithNotes?.length
+                                                        ? v.verificationTypesWithNotes
+                                                        : v.verificationTypes || []).map((vt: string, idx: number) => (
+                                                        <span key={idx} title={getVerificationWithNotesTooltip(vt)} style={{
+                                                            backgroundColor: getVerificationTypeBackgroundColor(getVerificationWithNotesFirstPart(vt)),
                                                             color: 'white',
                                                             fontSize: '0.7em',
                                                             padding: '1px 3px',
@@ -78,10 +87,10 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                                                             fontWeight: 'bold',
                                                             fontFamily: 'sans-serif'
                                                         }}>
-                                                            {getVerificationTypeInitials(vt)}
+                                                            {getVerificationTypeInitials(getVerificationWithNotesFirstPart(vt))}
                                                         </span>
                                                     ))}
-                                                    {v.scrapedDataIsDifferent && '🚩'}
+                                                    {v.isFlagged && <span title={v.flagReason || undefined}>🚩</span>}
                                                 </span>
                                             );
                                         })

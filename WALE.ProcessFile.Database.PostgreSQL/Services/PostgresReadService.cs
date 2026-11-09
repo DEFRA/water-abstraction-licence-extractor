@@ -1,8 +1,8 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dapper;
 using Npgsql;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -128,6 +128,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                    JOIN public.dms_extract de
                        ON lower(lfr.permit_number) like CONCAT(lower(de.permit_number), '%') -- TODO change this in future for performance (we shouldnt have to lower or use a partial match)
                        AND de.file_id = lfr.file_id
+                       AND de.extract_type = @ExtractType
                    WHERE
                        lfr.license_number = @LicenceNumber
                    LIMIT 1;
@@ -137,7 +138,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             connection,
             sql,
             0,
-            new { LicenceNumber = licenceNumber });
+            new { LicenceNumber = licenceNumber, ExtractType = DocumentTypes.AbstractionLicence });
     }
     
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync(Guid fileId)
@@ -253,6 +254,77 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId,
                 NoOcrServiceName = noOcrServiceName
             });
+    }
+
+    /// Keeping only the longest image per page instead was tried and loses text where a page's
+    /// images genuinely differ.
+    public async Task<StoredDocumentText?> GetStoredDocumentTextAsync(Guid fileId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT source_service AS SourceService,
+                                  format_version AS FormatVersion,
+                                  text AS Text
+                           FROM document_text
+                           WHERE file_id = @FileId
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<StoredDocumentText>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId
+            });
+    }
+
+    public async Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(
+        Guid fileId,
+        string[] ocrServiceNamesByPreference)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           WITH chosen AS (
+                               SELECT ocr_service_name
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = ANY(@Services)
+                               GROUP BY ocr_service_name
+                               ORDER BY array_position(@Services, ocr_service_name)
+                               LIMIT 1
+                           ),
+                           deduplicated AS (
+                               SELECT
+                                   ocr_service_name AS OcrServiceName,
+                                   page_number AS PageNumber,
+                                   image_number AS ImageNumber,
+                                   data AS Data,
+                                   row_number() OVER (
+                                       PARTITION BY page_number, md5(data)
+                                       ORDER BY image_number) AS occurrence
+                               FROM ocr_image_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = (SELECT ocr_service_name FROM chosen)
+                           )
+                           SELECT OcrServiceName, PageNumber, ImageNumber, Data
+                           FROM deduplicated
+                           WHERE occurrence = 1
+                           ORDER BY PageNumber, ImageNumber;
+                           """;
+
+        var rows = await QueryAsync<OcrCachedPage>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                Services = ocrServiceNamesByPreference
+            });
+
+        return rows.ToList();
     }
 
     public async Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request)
@@ -440,22 +512,38 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               (
-                               SELECT COUNT(*)
-                                   FROM licence
-                                   WHERE process_run_id = process_run.process_run_id
-                           ) AS number_of_files,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM licence_list_item
-                                       WHERE process_run_id = process_run.process_run_id
-                                         AND status = 'Live'
-                               ) AS SuccessCount
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
+                               end_date_time_utc,
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                   )
+                               END AS number_of_files,
+                               document_type,
+                               CASE document_type
+                                   WHEN 'AbstractionLicence' THEN (
+                                       SELECT COUNT(*)
+                                           FROM licence_list_item
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Live'
+                                   )
+                                   ELSE (
+                                       SELECT COUNT(*)
+                                           FROM matches_result
+                                           WHERE process_run_id = process_run.process_run_id
+                                             AND status = 'Ok'
+                                   )
+                               END AS SuccessCount
                            FROM process_run
                            WHERE end_date_time_utc IS NOT NULL;
                            """;
@@ -479,8 +567,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            FROM licence l
                            JOIN process_run pr
                                ON l.process_run_id = pr.process_run_id 
-                           WHERE file_id = @FileId 
-                           ORDER BY l.process_run_id DESC
+                           WHERE
+                               file_id = @FileId 
+                           ORDER BY
+                               l.process_run_id DESC
                            LIMIT 1;
                            """;
 
@@ -493,13 +583,78 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 FileId = fileId
             });
     }
-    
+
+    public async Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT 
+                               l.process_run_id, 
+                               pr.description, 
+                               pr.start_date_time_utc, 
+                               pr.end_date_time_utc, 
+                               pr.number_of_files 
+                           FROM licence l
+                           JOIN process_run pr
+                               ON l.process_run_id = pr.process_run_id 
+                           WHERE
+                               licence_id = @LicenceId 
+                           ORDER BY
+                               l.process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<ProcessRun>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceId = licenceId
+            });
+    }
+
+    public async Task<MatchesResult?> GetMatchesResult(int matchesResultId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               data 
+                           FROM matches_result 
+                           WHERE
+                               matches_result_id = @MatchesResultId
+                           ORDER BY
+                               process_run_id DESC
+                           LIMIT 1;
+                           """;
+
+        var result = await QuerySingleOrDefaultAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                MatchesResultId = matchesResultId
+            });
+
+        var matchesResult = result == null
+            ? null
+            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = matchesResultId;
+        }
+
+        return matchesResult;
+    }
+
     public async Task<MatchesResult?> GetMatchesResult(Guid fileId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
-                           FROM matches_result 
+                           SELECT data
+                           FROM matches_result
                            WHERE file_id = @FileId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
@@ -520,7 +675,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data 
+                           SELECT
+                               matches_result_id,
+                               data 
                            FROM matches_result 
                            WHERE
                                file_id = @FileId
@@ -529,7 +686,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<string>(
+        var result = await QuerySingleOrDefaultAsync<(int MatchesResultId, string? Data)>(
             connection,
             sql,
             0,
@@ -539,12 +696,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId
             });
 
-        return result == null
+        var matchesResult = result.Data == null
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+            : JsonSerializer.Deserialize<MatchesResult>(result.Data, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.MatchesResultId = result.MatchesResultId;
+        }
+
+        return matchesResult;
     }
     
-    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -573,6 +737,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                modified_date,
                                file_id
                            FROM public.dms_extract
+                           WHERE extract_type = @ExtractType
                            ORDER BY
                                site_collection,
                                library_name,
@@ -589,12 +754,40 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 Skip = skip,
-                Take = take
+                Take = take,
+                ExtractType = extractType
             });
 
         return results.ToList();
     }
-    
+
+    public async Task<List<Override>> GetOverridesAsync()
+    {
+        await using var connection = GetPostgresConnection();
+
+        // The NALD columns are aliased because the model drops the prefix. The licence finder
+        // calls .Equals on these strings, so a null would throw a long way from its cause.
+        const string sql = """
+                           SELECT
+                               COALESCE(permit_number, '') AS permit_number,
+                               COALESCE(licence_reference, '') AS licence_reference,
+                               COALESCE(file_url, '') AS file_url,
+                               COALESCE(nald_issue_no, '') AS IssueNo,
+                               NULLIF(nald_increment_no, '')::int AS IncrementNo,
+                               COALESCE(override_type, '') AS override_type,
+                               COALESCE(file_id, '') AS file_id
+                           FROM public.override_master
+                           ORDER BY permit_number
+                           """;
+
+        var results = await QueryAsync<Override>(
+            connection,
+            sql,
+            0);
+
+        return results.ToList();
+    }
+
     public async Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync()
     {
         await using var connection = GetPostgresConnection();
@@ -659,12 +852,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT 
-                               process_run_id, 
-                               description, 
-                               start_date_time_utc, 
-                               end_date_time_utc, 
-                               number_of_files
+                           SELECT
+                               process_run_id,
+                               description,
+                               start_date_time_utc,
+                               end_date_time_utc,
+                               number_of_files,
+                               status,
+                               document_type
                            FROM process_run
                            """;
 
@@ -679,8 +874,9 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            select
-                               filename,
                                file_id,
+                               matches_result_id,
+                               filename,
                                status
                            FROM public.matches_result
                            where

@@ -10,11 +10,11 @@ import ImpoundmentTag from "./ImpoundmentTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
-    onOpenReport: (filename: string) => void;
+    onOpenReport: (filename: string, licenceId: number, matchesResultId: number) => void;
 }
 
 export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
-    const {getFileId} = useFileIdMap();
+    const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
@@ -33,16 +33,18 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
             ? "lightseagreen"
             : "black";
 
-    let linkedFilename = getFileId(licenceNumber);
+    let linkedFileId = getFileId(licenceNumber);
+    let linkedLicenceId = getLicenceId(licenceNumber);
+    let linkedMatchesResultId = getMatchesResultId(licenceNumber);
 
-    if (linkedFilename) {
+    if (linkedFileId) {
         return (
             <li title={text}>
                 <a style={{color}}
                    href="#"
                    onClick={(e) => {
                        e.preventDefault();
-                       onOpenReport(linkedFilename);
+                       onOpenReport(linkedFileId, linkedLicenceId!, linkedMatchesResultId!);
                    }}>{styledLicenceNumber}
                 </a>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>

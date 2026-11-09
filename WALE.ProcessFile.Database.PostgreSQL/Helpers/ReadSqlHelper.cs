@@ -201,6 +201,33 @@ public static class ReadSqlHelper
 
             return;
         }
+        
+        if (string.Equals(
+                linkedLicencesType,
+                "NoDocument",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                      AND NOT EXISTS
+                      (
+                          SELECT 1
+                          FROM licence_list_item licence
+                          WHERE licence.licence_number = linked_licence.licence_number
+                            AND licence.process_run_id = @ProcessRunId
+                            AND licence.file_id IS NOT NULL
+                      )
+                )
+                """);
+
+            return;
+        }
 
         if (string.Equals(
                 linkedLicencesType,
@@ -243,6 +270,32 @@ public static class ReadSqlHelper
                        AND COUNT(*) FILTER (
                            WHERE link_location.direction = 'Incoming'
                        ) = 1
+                )
+                """);
+
+            return;
+        }
+
+        if (string.Equals(
+                linkedLicencesType,
+                "NaldOnly",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            sql.AppendLine(
+                """
+                AND EXISTS
+                (
+                    SELECT 1
+                    FROM licence_list_item_linked_licence linked_licence
+                    INNER JOIN licence_list_item_link_location link_location
+                        ON link_location.linked_licence_id =
+                           linked_licence.linked_licence_id
+                    WHERE linked_licence.licence_list_item_id =
+                          licence_list_item.licence_list_item_id
+                    GROUP BY linked_licence.linked_licence_id
+                    HAVING COUNT(*) = COUNT(*) FILTER (
+                        WHERE link_location.source = 'Nald'
+                    )
                 )
                 """);
 
@@ -324,7 +377,9 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
-                        AND item.scraped_data_is_different = true
+                        AND item.is_flagged = true
+                        -- WRADI-400: Aggregates flags suppressed; remove this line to restore
+                        AND section.licence_section_name <> 'Aggregates'
                   )
                 """);
 
@@ -345,12 +400,13 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
+                        AND cardinality(item.verification_types) > 0
                   )
                 """);
 
             return;
         }
-        
+
         if (verificationType.Equals(
                 "AllVerifications",
                 StringComparison.OrdinalIgnoreCase))
@@ -365,6 +421,7 @@ public static class ReadSqlHelper
                              section.verification_section_id
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
+                        AND cardinality(item.verification_types) > 0
                   )
                 """);
 

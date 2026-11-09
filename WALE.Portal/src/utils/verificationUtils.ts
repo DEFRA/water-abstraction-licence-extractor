@@ -1,5 +1,31 @@
+import {LicenceFileMapEntry, LicenceSectionItemSummary, OutputListDataItem} from "../api/generated/apiClient.ts";
+
+export const getFlaggedItem = (
+    outputListDataItem: OutputListDataItem | undefined,
+    licenceSectionName: string,
+    licenceSectionItemId: string | undefined,
+): LicenceSectionItemSummary | undefined => {
+    if (!outputListDataItem || !licenceSectionItemId) return undefined;
+    return (outputListDataItem.licenceSectionVerifications ?? [])
+        .filter(s => s.licenceSectionName === licenceSectionName)
+        .flatMap(s => s.licenceSectionItems ?? [])
+        .find(i => i.licenceSectionItemId === licenceSectionItemId && !!i.isFlagged);
+};
+
 export const getVerificationTypeColor = (type: string): string =>
     getVerificationTypeBackgroundColor(type);
+
+export const getVerificationWithNotesFirstPart = (value: string): string => {
+    return value.split("::")[0];
+};
+
+// Value is "Type::ProcessRunId[::Notes]", or legacy "Type[::Notes]" without the process run
+export const getVerificationWithNotesTooltip = (value: string): string => {
+    const [type, second, ...rest] = value.split("::");
+    const hasProcessRun = second !== undefined && /^\d+$/.test(second);
+    const notes = hasProcessRun ? rest.join("::") : [second, ...rest].filter(x => x !== undefined).join("::");
+    return `${type}${hasProcessRun ? ` (PR ${second})` : ''}${notes ? ` #${notes}` : ''}`;
+};
 
 export const getVerificationTypeBackgroundColor = (type: string): string => {
     switch (type) {
@@ -61,10 +87,44 @@ export const hasAnyOutgoingSections = (containedIn?: any[]): boolean => {
     return containedIn.filter(s => s.direction === 'Outgoing').length > 0;
 };
 
-export function getFileId(fileIdMap: Record<string, string> | undefined, licenceNumber: string | undefined): string | false {
+export function getFileId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): string | false {
     if (!licenceNumber || !fileIdMap) {
         return false;
     }
 
-    return fileIdMap[licenceNumber] ?? false;
+    let list = fileIdMap[licenceNumber];
+    
+    if (!list) {
+        return false;
+    }
+    
+    return list[0].fileId ?? false;
+}
+
+export function getLicenceId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): number | undefined {
+    if (!licenceNumber || !fileIdMap) {
+        return undefined;
+    }
+
+    let list = fileIdMap[licenceNumber];
+
+    if (!list) {
+        return undefined;
+    }
+
+    return list[0].licenceId;
+}
+
+export function getMatchesResultId(fileIdMap: Record<string, LicenceFileMapEntry[]> | undefined, licenceNumber: string | undefined): number | undefined {
+    if (!licenceNumber || !fileIdMap) {
+        return undefined;
+    }
+
+    let list = fileIdMap[licenceNumber];
+
+    if (!list) {
+        return undefined;
+    }
+
+    return list[0].matchesResultId;
 }

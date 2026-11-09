@@ -15,7 +15,7 @@ import {waleApiClient} from "../../../api/apiClient.ts";
 import {type ILicenceSectionBody, type LicenceSectionBodyProps, type VerificationRequestPayload} from "../LicenceSection";
 import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
-import {getVerificationTypeBackgroundColor} from "../../../utils/verificationUtils.ts";
+import {getVerificationTypeBackgroundColor, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
@@ -29,7 +29,7 @@ interface AggregatesProps extends LicenceSectionBodyProps {
 }
 
 export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
-    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, scrapedView, history}, ref) => {
+    ({licence, currentLicence, onJumpToPage, onItemVerificationRequested, onOpenReport, outputListDataItem, scrapedView, history}, ref) => {
         const [aggregates, setAggregates] = useState<Aggregate[]>([]);
         const [scrapedData, setScrapedData] = useState<Aggregate[] | null>(null);
         const [snapshotData, setSnapshotData] = useState<Aggregate[] | null>(null);
@@ -48,12 +48,24 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 return dateB - dateA;
             })[0];
 
+        const latestNoAggregatesType = noAggregatesVerification?.verificationType;
+        const canConfirmNoAggregates = latestNoAggregatesType !== 'RequestBusinessReview';
+        const canRequestNoAggregatesBusinessReview = latestNoAggregatesType !== 'RequestBusinessReview';
+        const canCompleteNoAggregatesBusinessReview = latestNoAggregatesType !== 'CompleteBusinessReview';
+
         const [isLoading, setIsLoading] = useState(false);
         const [error, setError] = useState<string | null>(null);
         const [editingIndex, setEditingIndex] = useState<number | null>(null);
         const [originalItem, setOriginalItem] = useState<Aggregate | null>(null);
         const [isAddingNew, setIsAddingNew] = useState(false);
         const [isWaitingForVerification, setIsWaitingForVerification] = useState(false);
+        const [frozenOrder, setFrozenOrder] = useState<number[] | null>(null);
+
+        const getSortedIndices = () => aggregates
+            .map((_, i) => i)
+            .sort((a, b) =>
+                compareAlphanumeric(aggregates[a].documentIdentifier, aggregates[b].documentIdentifier)
+                || compareAlphanumeric(aggregateIds[a], aggregateIds[b]));
 
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
@@ -166,13 +178,14 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 sourceLicenceVersionId: licence?.licenceVersion?.licenceVersionId,
                 primaryType: PrimaryType.NotSet,
                 subType: NullableOfSubType.NotSet,
-                linkedLicences: [''],
+                linkedLicences: [],
                 containedIn: [new ContainedInInformation({source: InformationSource.Document, sectionName: '', linkReason: ''})],
                 points: [new Point({id: '', description: ''})],
                 purposes: [new Purpose({id: '', description: ''})],
                 limits: [new AbstractionLimit({points: [], purposes: []})]
             });
             const newList = [...aggregates, newAggregate];
+            setFrozenOrder([...getSortedIndices(), newList.length - 1]);
             setAggregates(newList);
             setEditingIndex(newList.length - 1);
             setIsAddingNew(true);
@@ -193,7 +206,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 setEditingIndex(null);
                 setIsAddingNew(false);
                 setOriginalItem(null);
-            } else if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(null);
+            } else {
+                if (editingIndex !== null && editingIndex > index) setEditingIndex(editingIndex - 1);
+                setFrozenOrder(prev => prev && prev.filter(i => i !== index).map(i => i > index ? i - 1 : i));
+            }
         };
 
         const handleDiscard = () => {
@@ -211,7 +228,22 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 setEditingIndex(null);
             }
             setIsAddingNew(false);
+            setFrozenOrder(null);
         };
+
+        const linkedLicenceOptions = (currentLicence?.linkedLicences ?? [])
+            .filter(ll => hasAnyOutgoingSections(ll.containedIn))
+            .map(ll => ll.licenceNumber)
+            .filter((n): n is string => !!n);
+
+        // Aggregate points/purposes carry only ids; descriptions live on the licence's top-level lists.
+        const sourceLicence = scrapedView ? licence : currentLicence;
+        const pointDescriptions = new Map((sourceLicence?.points ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
+        const purposeDescriptions = new Map((sourceLicence?.purposes ?? [])
+            .filter(p => p.id && p.description)
+            .map(p => [p.id!.trim(), p.description!]));
 
         return (
             <div className="aggregates-container" style={{padding: '8px'}}>
@@ -226,22 +258,65 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                 <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                             )}
                             {!scrapedView && (
-                                <button
-                                    onClick={() => onItemVerificationRequested?.('ConfirmNone', NO_AGGREGATES_ITEM_ID)}
-                                    style={{
-                                        padding: '6px 20px',
-                                        backgroundColor: getVerificationTypeBackgroundColor('Confirmed'),
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer',
-                                        fontWeight: '600',
-                                        fontSize: '0.85rem',
-                                        marginTop: noAggregatesVerification ? '12px' : '0'
-                                    }}
-                                >
-                                    Confirm No Aggregates
-                                </button>
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginTop: noAggregatesVerification ? '12px' : '0'
+                                }}>
+                                    <button
+                                        disabled={!canConfirmNoAggregates}
+                                        onClick={() => onItemVerificationRequested?.('ConfirmNone', NO_AGGREGATES_ITEM_ID)}
+                                        style={{
+                                            padding: '6px 20px',
+                                            backgroundColor: getVerificationTypeBackgroundColor('Confirmed'),
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: canConfirmNoAggregates ? 'pointer' : 'not-allowed',
+                                            opacity: canConfirmNoAggregates ? 1 : 0.5,
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Confirm No Aggregates
+                                    </button>
+                                    <button
+                                        disabled={!canRequestNoAggregatesBusinessReview}
+                                        onClick={() => onItemVerificationRequested?.('RequestBusinessReview', NO_AGGREGATES_ITEM_ID)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: getVerificationTypeBackgroundColor('RequestBusinessReview'),
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: canRequestNoAggregatesBusinessReview ? 'pointer' : 'not-allowed',
+                                            opacity: canRequestNoAggregatesBusinessReview ? 1 : 0.5,
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Request Business Review - No Aggregates
+                                    </button>
+                                    <button
+                                        disabled={!canCompleteNoAggregatesBusinessReview}
+                                        onClick={() => onItemVerificationRequested?.('CompleteBusinessReview', NO_AGGREGATES_ITEM_ID)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            backgroundColor: getVerificationTypeBackgroundColor('CompleteBusinessReview'),
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            cursor: canCompleteNoAggregatesBusinessReview ? 'pointer' : 'not-allowed',
+                                            opacity: canCompleteNoAggregatesBusinessReview ? 1 : 0.5,
+                                            fontWeight: '600',
+                                            fontSize: '0.85rem'
+                                        }}
+                                    >
+                                        Complete Business Review - No Aggregates
+                                    </button>
+                                </div>
                             )}
                         </div>
                     )}
@@ -255,9 +330,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                             <LicenceSectionVerificationInfo verification={noAggregatesVerification}/>
                         </div>
                     )}
-                    {!isLoading && !error && aggregates
-                        .map((_, i) => i)
-                        .sort((a, b) => compareAlphanumeric(aggregateIds[a], aggregateIds[b]))
+                    {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                         .map((index) => {
                             const aggregate = aggregates[index];
                             const itemId = aggregateIds[index];
@@ -266,6 +339,9 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     key={index}
                                     aggregate={aggregate}
                                     itemId={itemId}
+                                    linkedLicenceOptions={linkedLicenceOptions}
+                                    pointDescriptions={pointDescriptions}
+                                    purposeDescriptions={purposeDescriptions}
                                     isEditing={editingIndex === index && !isWaitingForVerification}
                                     isAddingNew={isAddingNew && editingIndex === index && !isWaitingForVerification}
                                     onUpdate={(updated) => handleUpdateAggregate(index, updated)}
@@ -282,6 +358,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                             const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
                                             onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
                                         } else {
+                                            setFrozenOrder(getSortedIndices());
                                             setEditingIndex(index);
                                             setIsAddingNew(false);
                                             setOriginalItem(Aggregate.fromJS(aggregate));
@@ -289,6 +366,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                         }
                                     }}
                                     onOpenReport={onOpenReport}
+                                    outputListDataItem={outputListDataItem}
                                     scrapedView={scrapedView}
                                     history={history}
                                 />

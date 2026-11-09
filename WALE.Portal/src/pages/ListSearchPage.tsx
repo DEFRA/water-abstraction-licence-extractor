@@ -1,5 +1,5 @@
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem } from "../api/generated/apiClient.ts";
+import {OutputListDataItem, CumulativeFilterCounts } from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableRow from "../components/LicencesTableRow";
@@ -16,7 +16,10 @@ import Paging from "../components/Paging.tsx";
 import type {ProcessRunQuery} from "../class/ProcessRunQuery.tsx";
 import ProcessRunLicenceFilters from "../components/ProcessRunLicenceFilters";
 import ScrapeDocuments from "../components/ScrapeDocuments.tsx";
+import ExportImportVerifications from "../components/ExportImportVerifications.tsx";
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
+import ExportLicenceEstate from "../components/ExportLicenceEstate.tsx";
+import LicenceFinderAction from "../components/LicenceFinderAction";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListSearchPage() {
@@ -52,6 +55,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         ocrScan: undefined,
         issueYear: undefined,
         meansFound: undefined,
+        isLicenceNumberFlagged: undefined,
+        isIssueDateFlagged: undefined,
         ShortLicenceSetId: '',
         linkedLicencesType: '',
         verificationType: undefined,
@@ -60,6 +65,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         licenceNumbers: []
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
+    const [cumulativeFilterCounts, setCumulativeFilterCounts] = useState<CumulativeFilterCounts | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -98,6 +104,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty +
                 currentQuery.issueYear +
                 currentQuery.meansFound +
+                currentQuery.isLicenceNumberFlagged +
+                currentQuery.isIssueDateFlagged +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
                 currentQuery.verificationType +
@@ -128,6 +136,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty,
                 currentQuery.issueYear,
                 currentQuery.meansFound,
+                currentQuery.isLicenceNumberFlagged,
+                currentQuery.isIssueDateFlagged,
                 currentQuery.ShortLicenceSetId,
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
@@ -137,6 +147,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             );
 
             setOutputList(listDataItems.records);
+            setCumulativeFilterCounts(listDataItems.cumulativeFilterCounts);
             setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
@@ -167,9 +178,16 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string) => {
+    const openReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number) => {
         const knownItem = outputList.find(item => item.fileId === fileId);
-        openReport(fileId, processRunId, knownItem, openReportWithId);
+        
+        // If we know just the file ID, we can often get the rest of the stuff we need
+        if (!!knownItem && !licenceId && !matchesResultId) {
+            licenceId = knownItem.licenceId!;
+            matchesResultId = knownItem.matchesResultId!;
+        }
+        
+        openReport(fileId, licenceId, matchesResultId, processRunId, knownItem, openReportWithId);
 
         if (!knownItem) {
             const licenceNumber = getLicenceNumber(fileId);
@@ -179,6 +197,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     'N/A',
                     '',
                     0,
+                    undefined,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,
@@ -206,8 +226,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         }
     }, [openReport, processRunId, outputList, getLicenceNumber, updateModalOutputItem]);
 
-    const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
-        openLicenceSetReport(fileId, licenceSetId, processRunId);
+    const openLicenceSetReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => {
+        openLicenceSetReport(fileId, licenceId, matchesResultId, licenceSetId, processRunId);
     }, [openLicenceSetReport, processRunId]);
 
     const updateQuery = <K extends keyof ProcessRunQuery>(
@@ -315,17 +335,17 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     </div>
                     <table id="licencesTable">
                         <thead>
-                        <ProcessRunLicenceFilters
-                            query={query}
-                            setQuery={setQuery}
-                            issuers={issuers}
-                            shortLicenceIds={shortLicenceIds}
-                            issueDates={issueDates}
-                            setPageNumber={setPageNumber}
-                            showSingles={showSingles}
-                            onToggleSingles={setShowSingles}
-                        />
-                   </thead>
+                            <ProcessRunLicenceFilters
+                                query={query}
+                                setQuery={setQuery}
+                                issuers={issuers}
+                                shortLicenceIds={shortLicenceIds}
+                                issueDates={issueDates}
+                                setPageNumber={setPageNumber}
+                                showSingles={showSingles}
+                                onToggleSingles={setShowSingles}
+                            />
+                       </thead>
                         <tbody>
                         {outputList.map((item, index) => (
                             <LicencesTableRow
@@ -338,14 +358,14 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                             />
                         ))}
                         </tbody>
-                        <tfoot><LicencesTableFooters totals={totals}/></tfoot>
+                        <tfoot><LicencesTableFooters cumulativeTotals={cumulativeFilterCounts} totals={totals}/></tfoot>
                     </table>
                 </div>
             )}
 
             {activeTab === 'licenceSets' && (
                 <div id="licenceSets">
-                    <table>
+                    <table style={{'marginTop': '30px', 'width': '100%'}}>
                         <thead><LicenceSetsTableHeaders/></thead>
                         <LicenceSetsTableBody 
                             data={outputList} 
@@ -355,7 +375,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                         />
                         <tfoot><LicenceSetsTableFooters totals={licenceSetsTotals}/></tfoot>
                     </table>
-                    <p style={{fontStyle: 'italic'}}>NOTE - Only showing licence sets containing multiple licences</p>
                 </div>
             )}
 
@@ -367,7 +386,10 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
             {activeTab === 'actions' && (
                 <div id="actions">
-                    <ScrapeDocuments/>
+                    <ScrapeDocuments documentType="AbstractionLicence"/>
+                    <ExportLicenceEstate processRunId={processRunId} />
+                    <ExportImportVerifications />
+                    <LicenceFinderAction />
                 </div>
             )}
 
@@ -378,7 +400,6 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 onMinimize={minimizeModal}
                 onPositionChange={updateModalPosition}
                 onRefresh={() => fetchOutputList(true)}
-                /*onOpenLinkedLicence={openReportWithId}*/
             />
         </div>);
 }

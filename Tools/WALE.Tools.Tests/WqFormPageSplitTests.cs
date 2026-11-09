@@ -178,6 +178,8 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             outputService,
             null!,
             null!,
+            null!,
+            null!,
             WALE.ProcessFile.Core.Constants.GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             skipFileIfMoreThenPages: 100,
@@ -255,6 +257,8 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
             outputService,
             null!,
             null!,
+            null!,
+            null!,
             WALE.ProcessFile.Core.Constants.GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             skipFileIfMoreThenPages: 100,
@@ -277,7 +281,7 @@ public class WqFormPageSplitTests(ITestOutputHelper testOutputHelper)
 
         var lines = await noOcrDataExtractorService
             .GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
-                pdfDocument, cacheService, outputService, -1);
+                pdfDocument, lookupConfiguration, cacheService, outputService, -1);
 
         var highestClauseLine = lines
             .Select(line => (Line: line, Match: ClauseNumberRegex.Match(line.Text)))

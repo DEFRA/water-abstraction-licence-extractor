@@ -101,6 +101,8 @@ public class FileTypeIdentifierServiceTests
             new FileSystemOutputService(""),
             null,
             null,
+            null,
+            null,
             1,
             DateTime.Now);
     }

@@ -21,4 +21,6 @@ public class FileProcessSingleRequest
     public DateTime RequestedAt { get; set; }
     
     public int LockRetryCount { get; set; }
+    
+    public string DocumentType { get; set; } = "AbstractionLicence";
 }

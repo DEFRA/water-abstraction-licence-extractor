@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Core.Models.OcrService;
+
 namespace WALE.ProcessFile.Core.Models;
 
 public class MatchesResult : MatchResultSimple
@@ -11,6 +13,8 @@ public class MatchesResult : MatchResultSimple
     public bool ScannedFile { get; set; }
     
     public List<string> ServicesUsed { get; set; } = [];
+
+    public List<OcrServiceFailure> ServicesFailed { get; set; } = [];
     
     public IReadOnlyList<PdfPage> Pages { get; set; } = [];
     

@@ -5,6 +5,10 @@ public sealed class LicenceListItem
     public long LicenceListItemId { get; set; }
 
     public int ProcessRunId { get; set; }
+    
+    public int LicenceId { get; set; }
+    
+    public int MatchesResultId { get; set; }
 
     public Guid FileId { get; set; }
 
@@ -27,6 +31,12 @@ public sealed class LicenceListItem
     public DateOnly? IssueDate { get; set; }
 
     public short? IssueYear { get; set; }
+
+    public DateOnly? NaldOrigSignatureDate { get; set; }
+
+    public DateOnly? NaldSignatureDate { get; set; }
+
+    public bool IsIssueDateFlagged { get; set; }
 
     public string? Issuer { get; set; }
 
@@ -51,6 +61,10 @@ public sealed class LicenceListItem
     public int VerificationItemsCount { get; set; }
 
     public bool HasVerifications { get; set; }
+
+    public bool IsLicenceNumberFlagged { get; set; }
+
+    public string? LicenceNumberFlagReason { get; set; }
 
     public string? SearchText { get; set; }
 

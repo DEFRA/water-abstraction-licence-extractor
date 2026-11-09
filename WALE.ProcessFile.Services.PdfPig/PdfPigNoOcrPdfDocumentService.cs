@@ -26,6 +26,7 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
                 UseLenientParsing = true,
                 SkipMissingFonts = true,
                 FilterProvider = ExpandedPdfPigFilterProvider.Instance,
+                ClipPaths = true
             });
 
         document.AddSkiaPageFactory();

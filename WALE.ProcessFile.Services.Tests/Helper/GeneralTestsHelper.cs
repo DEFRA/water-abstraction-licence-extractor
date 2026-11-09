@@ -11,6 +11,19 @@ namespace WALE.ProcessFile.Services.Tests.Helper;
 
 public static class GeneralTestsHelper
 {
+    /// Matched for classification, not for the schema these counts assert. Duplicates
+    /// TemplateHeaderLabels.GetLabelGroups - keep the two in step or every count here shifts by
+    /// however many groups a document happens to hit.
+    private static readonly string[] TemplateClassificationGroupNames =
+    [
+        "Licence Header", "Addendum", "EALabel",
+        "NESplitLabels", "AnglianSplitLabels", "NWSplitLabels",
+        "NationalRivers",
+        "NENRAModern1", "NENRAModern2",
+        "AnglianNRAModern1", "AnglianNRAModern2",
+        "NWNRAModern1", "NRAOld", "NWNRAOld"
+    ];
+
     public static List<LabelGroupResult> ExcludeSomeMatches(List<LabelGroupResult> matches)
     {
         return matches
@@ -19,7 +32,8 @@ public static class GeneralTestsHelper
                 && m.LabelGroupName != "SourceOfSupply"
                 && m.LabelGroupName != "ReasonsForConditions"
                 && m.LabelGroupName != "ScheduleOfConditionsA"
-                && m.LabelGroupName != "ScheduleOfConditionsB")
+                && m.LabelGroupName != "ScheduleOfConditionsB"
+                && !TemplateClassificationGroupNames.Contains(m.LabelGroupName))
             .ToList();
         }
 

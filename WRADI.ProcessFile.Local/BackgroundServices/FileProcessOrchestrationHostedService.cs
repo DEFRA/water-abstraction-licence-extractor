@@ -1,0 +1,107 @@
+using Amazon.SQS;
+using Amazon.SQS.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
+using WRADI.Services.ProcessFile.AbstractionLicence;
+
+namespace WRADI.ProcessFile.Local.BackgroundServices;
+
+public sealed class FileProcessOrchestrationHostedService(
+    IAmazonSQS sqsClient,
+    DocumentTypeServiceProviders documentTypeServiceProviders,
+    FileProcessAppSettings settings,
+    ILogger<FileProcessOrchestrationHostedService> logger)
+    : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        var request = new ReceiveMessageRequest
+        {
+            QueueUrl = settings.SqsQueueOrchestrationUrl,
+            MaxNumberOfMessages = settings.SqsMaxNumberOfMessages,
+            WaitTimeSeconds = settings.SqsWaitTimeSeconds
+        };
+
+        if (settings.SqsVisibilityTimeoutSeconds.HasValue)
+        {
+            request.VisibilityTimeout = settings.SqsVisibilityTimeoutSeconds.Value;
+        }
+        
+        logger.LogInformation("{ServiceName} started. Queue: {QueueUrl}",
+            nameof(FileProcessOrchestrationHostedService),
+            request.QueueUrl);
+        
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var response = await sqsClient.ReceiveMessageAsync(request, cancellationToken);
+
+                if (response.Messages == null || response.Messages.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (var message in response.Messages
+                    .TakeWhile(_ => !cancellationToken.IsCancellationRequested))
+                {
+                    try
+                    {
+                        logger.LogInformation("Processing message {MessageId}", message.MessageId);
+                        logger.LogInformation("Message body: {Body}", message.Body);
+
+                        var orchestrationRequest =
+                            JsonConvert.DeserializeObject<FileProcessOrchestrationRequest>(message.Body)
+                            ?? new FileProcessOrchestrationRequest();
+
+                        var serviceProvider = documentTypeServiceProviders.Get(
+                            orchestrationRequest.DocumentType, logger);
+
+                        using var scope = serviceProvider.CreateScope();
+                        var fileProcessOrchestrator = scope.ServiceProvider
+                            .GetRequiredService<IFileProcessOrchestrator>();
+
+                        var result = await fileProcessOrchestrator.RunAsync(
+                            orchestrationRequest,
+                            cancellationToken);
+
+                        if (!result)
+                        {
+                            continue;
+                        }
+                        
+                        await sqsClient.DeleteMessageAsync(
+                            new DeleteMessageRequest
+                            {
+                                QueueUrl = request.QueueUrl,
+                                ReceiptHandle = message.ReceiptHandle
+                            },
+                            cancellationToken);
+                           
+                        logger.LogInformation("Deleted message {MessageId}", message.MessageId);
+                    }
+                    catch (Exception ex)
+                    { 
+                        logger.LogError(ex, "Failed to process message {MessageId}", message.MessageId);
+                        // Leave message on queue so it can be retried
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unhandled error while polling SQS");
+                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+            }
+        }
+
+        logger.LogInformation("{ServiceName} stopped.", nameof(FileProcessOrchestrationHostedService));
+    }
+}

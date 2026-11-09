@@ -10,6 +10,10 @@ public class Licence
 {
     public int? ProcessRunId { get; set; }
     
+    public int LicenceId { get; set; }
+    
+    public int MatchesResultId { get; set; }
+    
     public string Id
     {
         get
@@ -42,6 +46,10 @@ public class Licence
     
     public string? Filename { get; set; }
 
+    public string? TemplateType { get; set; }
+
+    public string? Template { get; set; }
+
     public LicenceVersion LicenceVersion { get; init; } = new();
     
     public PointOfAbstraction[] Points { get; init; } = [];
@@ -67,6 +75,8 @@ public class Licence
         return new Licence
         {
             ProcessRunId = ProcessRunId,
+            LicenceId = LicenceId,
+            MatchesResultId = MatchesResultId,
             Status = Status,
             LicenceNumber = LicenceNumber,
             RegionId = RegionId,
@@ -77,6 +87,8 @@ public class Licence
             NaldStatus = NaldStatus,
             NaldHasAggregateCondition = NaldHasAggregateCondition,
             Filename = Filename,
+            TemplateType = TemplateType,
+            Template = Template,
             LicenceVersion = LicenceVersion,
             Points = Points,
             Purposes = Purposes,

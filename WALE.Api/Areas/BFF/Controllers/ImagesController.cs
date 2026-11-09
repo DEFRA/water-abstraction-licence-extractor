@@ -5,6 +5,7 @@ using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.OcrService;
+using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.Api.Areas.BFF.Controllers;
 
@@ -13,56 +14,24 @@ namespace WALE.Api.Areas.BFF.Controllers;
 [Route("/[area]/[controller]/[action]")]
 public class ImagesController(
     IOutputService outputService,
-    ICacheService cacheService) : Controller
+    ICacheService cacheService,
+    IImageService imageService) : Controller
 {
-    [HttpGet]
-    [ResponseCache(VaryByHeader = "User-Agent", Duration = int.MaxValue)]
-    public async Task<ActionResult> Thumbnail(
-        [FromQuery] Guid fileId,
-        [FromQuery] int pageNumber,
-        [FromQuery] string serviceName)
-    {
-        var thumbnail = await outputService.GetPageScreenshotThumbnailAsync(
-            pageNumber,
-            serviceName,
-            fileId);
-
-        if (thumbnail != null)
-        {
-            return File(thumbnail, "image/jpeg");
-        }
-        
-        var data = await outputService.GetPageScreenshotDataAsync(
-            pageNumber,
-            serviceName,
-            fileId);
-
-        var originalResImage = SKImage.FromEncodedData(data[0]);
-        var originalRegBitmap = SKBitmap.FromImage(originalResImage);
-        var resizedBitmap = originalRegBitmap.Resize(
-            new SKSizeI(120, 160),
-            SKSamplingOptions.Default);
-
-        var resizedImage = SKImage.FromBitmap(resizedBitmap);
-        var resizedJpg = resizedImage.Encode(SKEncodedImageFormat.Jpeg, 60);
-
-        thumbnail = resizedJpg.AsSpan().ToArray();
-        await outputService.SavePageScreenshotThumbnailAsync(
-            pageNumber,
-            serviceName,
-            fileId,
-            thumbnail,
-            -1);
-
-        return File(thumbnail, "image/jpeg");
-    }
-
     [HttpGet]
     public async Task<ActionResult> Image(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,
         [FromQuery] string serviceName)
     {
+        // Redirect to S3 directly when this row has been migrated. Falls
+        // back to proxying Postgres bytes for rows not yet backfilled to S3.
+        var s3Key = ImageReferenceHelper.GetPageScreenshotS3Key(fileId, serviceName, pageNumber);
+
+        if (await imageService.ExistsAsync(s3Key))
+        {
+            return Redirect(await imageService.GetPresignedUrlAsync(s3Key));
+        }
+
         var data = await outputService.GetPageScreenshotDataAsync(
             pageNumber,
             serviceName,
@@ -108,6 +77,15 @@ public class ImagesController(
         [FromQuery] int pageNumber,
         [FromQuery] int imageNumber)
     {
+        // Same S3-redirect-first, Postgres-proxy-fallback shape as Image() above.
+        var s3Key = ImageReferenceHelper.GetImageOnPageS3Key(
+            fileId, GeneralConstants.PdfPigDataExtractorServiceName, pageNumber, imageNumber, extension);
+
+        if (await imageService.ExistsAsync(s3Key))
+        {
+            return Redirect(await imageService.GetPresignedUrlAsync(s3Key));
+        }
+
         var bytes = await cacheService.GetImageBytesAsync(
             new OcrServiceImageDataCacheRequest
             {
@@ -122,7 +100,7 @@ public class ImagesController(
         {
             return NotFound();
         }
-    
+
         return File(bytes, "image/jpeg");
     }
 }

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Services.ProcessFile.AbstractionLicence;
+using WRADI.Services.ProcessFile.WrInspectionReport;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -16,7 +17,7 @@ namespace WRADI.Lambda.FileProcess.Single;
 [UsedImplicitly]
 public class MessageReceivedFunction
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IReadOnlyDictionary<string, IServiceProvider> _serviceProvidersByDocumentType;
 
     public MessageReceivedFunction()
     {
@@ -24,26 +25,33 @@ public class MessageReceivedFunction
             .AddEnvironmentVariables()
             .Build();
 
-        var services = new ServiceCollection()
+        var abstractionLicenceServices = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
-            .AddFileProcessServices(configuration);
+            .AddFileProcessServices(configuration)
+            .BuildServiceProvider();
 
-        _serviceProvider = services.BuildServiceProvider();
+        var wrInspectionReportServices = new ServiceCollection()
+            .AddSingleton<IConfiguration>(configuration)
+            .AddWrInspectionReportFileProcessServices(configuration)
+            .BuildServiceProvider();
+
+        _serviceProvidersByDocumentType = new Dictionary<string, IServiceProvider>
+        {
+            ["AbstractionLicence"] = abstractionLicenceServices,
+            ["WrInspectionReport"] = wrInspectionReportServices
+        };
     }
-    
+
     [UsedImplicitly]
     public async Task<SQSBatchResponse> FunctionHandler(SQSEvent sqsEvent, ILambdaContext context)
     {
         context.Logger.LogInformation($"File Process Single - " +
             $"Received {sqsEvent.Records.Count} SQS message(s).");
-        
+
         context.Logger.LogInformation($"AwsRequestId: {context.AwsRequestId}");
-        
-        using var scope = _serviceProvider.CreateScope();
-        var scrapeFileService = scope.ServiceProvider.GetRequiredService<IFileProcessSingleService>();
 
         var failures = new List<SQSBatchResponse.BatchItemFailure>();
-        
+
         foreach (var record in sqsEvent.Records)
         {
             try
@@ -53,7 +61,7 @@ public class MessageReceivedFunction
                     $"ApproxReceiveCount={GetAttribute(record, "ApproximateReceiveCount")}");
 
                 context.Logger.LogInformation($"Body: {record.Body}");
-                
+
                 var singleFileProcessRequest =
                     JsonConvert.DeserializeObject<FileProcessSingleRequest>(record.Body);
 
@@ -61,9 +69,22 @@ public class MessageReceivedFunction
                 {
                     continue;
                 }
-             
+
+                if (!_serviceProvidersByDocumentType.TryGetValue(
+                        singleFileProcessRequest.DocumentType, out var serviceProvider))
+                {
+                    context.Logger.LogWarning(
+                        $"Unrecognised DocumentType '{singleFileProcessRequest.DocumentType}' - " +
+                        $"falling back to AbstractionLicence. MessageId={record.MessageId}");
+
+                    serviceProvider = _serviceProvidersByDocumentType["AbstractionLicence"];
+                }
+
+                using var scope = serviceProvider.CreateScope();
+                var scrapeFileService = scope.ServiceProvider.GetRequiredService<IFileProcessSingleService>();
+
                 context.Logger.LogInformation($"Scrapping service starting for : {singleFileProcessRequest.FilePath}");
-                
+
                 var result = await scrapeFileService.RunAsync(
                     singleFileProcessRequest,
                     CancellationToken.None);

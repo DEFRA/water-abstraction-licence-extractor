@@ -123,6 +123,7 @@ public class CompareOcrPdfTests
             AwsTextractOcrDataExtractorService.Instance(
                 TestConfig.AwsAccessKey,
                 TestConfig.AwsSecretKey,
+                TestConfig.TextractBucket,
                 CacheService,
                 OutputService)
         },
@@ -175,6 +176,8 @@ public class CompareOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync((short)regionCode),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);
@@ -246,11 +249,11 @@ public class CompareOcrPdfTests
         
         // Number of matches
 
-        Assert.Equal(11, resultListTesseractSparseTextOsd.Count);
-        Assert.Equal(11, resultListTesseractAutoOsd.Count);
-        Assert.Equal(14, resultListAwsTextract.Count);
-        Assert.Equal(14, resultListDocumentIntelligence.Count);
-        Assert.Equal(14, resultListAiVision.Count);
+        Assert.Equal(20, resultListTesseractSparseTextOsd.Count);
+        Assert.Equal(20, resultListTesseractAutoOsd.Count);
+        Assert.Equal(23, resultListAwsTextract.Count);
+        Assert.Equal(23, resultListDocumentIntelligence.Count);
+        Assert.Equal(23, resultListAiVision.Count);
         
         // Records
 

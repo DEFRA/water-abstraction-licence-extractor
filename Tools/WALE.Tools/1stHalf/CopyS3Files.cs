@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Services.Helpers;
 using WALE.ProcessFile.Services.Services;
 using WALE.ProcessFile.Services.Types;
@@ -144,7 +145,11 @@ public static class CopyS3Files
             }
             else
             {
-                await destinationFileService.UploadFileAsStreamAsync(filename, sourceFileStream);
+                await destinationFileService.UploadFileAsStreamAsync(
+                    filename,
+                    sourceFileStream,
+                    "application/pdf",
+                    StorageFolder.Ingress);
             }
 
             var tsDuration = (DateTime.UtcNow - dtStart).TotalSeconds;

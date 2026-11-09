@@ -34,15 +34,28 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
-    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status)
+    public async Task UpdateLicenceAsync(
+        int licenceId,
+        string licenceData,
+        Guid fileId,
+        int processRunId,
+        string status,
+        string? filename,
+        string? permitNumber,
+        string? licenceNumber,
+        int matchesResultId)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
                            UPDATE licence
                            SET
-                               file_id = @FileId
-                               , status = @Status
-                               , data = @Data
+                               filename = @Filename
+                               ,permit_number = @PermitNumber
+                               ,licence_number = @LicenceNumber
+                               ,file_id = @FileId
+                               ,status = @Status
+                               ,data = @Data
+                               ,matches_result_id = case when @MatchesResultId is null then matches_result_id else @MatchesResultId end
                            WHERE
                                 licence_id = @LicenceId
                                 AND process_run_id = @ProcessRunId
@@ -55,15 +68,20 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             new
             {
                 FileId = fileId,
+                Filename = filename,
+                PermitNumber = permitNumber,
+                LicenceNumber = licenceNumber,
                 LicenceId = licenceId,
                 Data = licenceData,
                 ProcessRunId = processRunId,
-                Status = status
+                Status = status,
+                MatchesResultId = matchesResultId != 0 ? matchesResultId : (int?)null
             });
     }
 
     public async Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        int matchesResultId,
         string? filename,
         string status,
         string licenceData,
@@ -73,8 +91,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence (file_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
+                           INSERT INTO licence (file_id, matches_result_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
+                           VALUES (@FileId, @MatchesResultId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
                            RETURNING licence_id
                            """;
 
@@ -84,6 +102,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             0,
             new {
                 FileId = fileId,
+                MatchesResultId = matchesResultId,
                 LicenceNumber = licenceNumber,
                 Filename = filename,
                 Status = status,
@@ -98,11 +117,14 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           UPDATE licence_set_licence 
-                           SET licence_id = @LicenceId 
-                           WHERE licence_set_id = @LicenceSetId 
-                             AND licence_number = @LicenceNumber 
-                             AND process_run_id = @ProcessRunId
+                           UPDATE
+                                licence_set_licence
+                           SET
+                                licence_id = @LicenceId
+                           WHERE
+                                licence_set_id = @LicenceSetId
+                                AND licence_number = @LicenceNumber
+                                AND process_run_id = @ProcessRunId
                            """;
 
         await ExecuteAsync(
@@ -386,8 +408,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO licence_section_verification (licence_file_id, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_snapshot_value, licence_section_override_value, verification_type, licence_section_item_id, notes, created_date_time_utc)
-                           VALUES (@LicenceFileId, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionSnapshotValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @LicenceSectionItemId, @Notes, @CreatedDateTimeUtc)
+                           INSERT INTO licence_section_verification (licence_file_id, source_licence_number, process_run_id, licence_section_name, licence_section_scraped_value, licence_section_snapshot_value, licence_section_override_value, verification_type, licence_section_item_id, notes, created_date_time_utc)
+                           VALUES (@LicenceFileId, @SourceLicenceNumber, @ProcessRunId, @LicenceSectionName, CAST(@LicenceSectionScrapedValue AS jsonb), CAST(@LicenceSectionSnapshotValue AS jsonb), CAST(@LicenceSectionOverrideValue AS jsonb), @VerificationType, @LicenceSectionItemId, @Notes, @CreatedDateTimeUtc)
                            RETURNING licence_section_verification_id
                            """;
 
@@ -398,6 +420,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             new
             {
                 verification.LicenceFileId,
+                verification.SourceLicenceNumber,
                 verification.ProcessRunId,
                 verification.LicenceSectionName,
                 verification.LicenceSectionScrapedValue,
@@ -428,6 +451,31 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             new
             {
                 LicenceSectionVerificationId = licenceSectionVerificationId,
+                DeletedDateTimeUtc = DateTime.UtcNow
+            });
+    }
+
+    public async Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           WITH deleted AS (
+                               UPDATE licence_section_verification
+                               SET deleted_date_time_utc = @DeletedDateTimeUtc
+                               WHERE licence_section_verification_id = ANY(@LicenceSectionVerificationIds)
+                                 AND deleted_date_time_utc IS NULL
+                               RETURNING licence_section_verification_id
+                           )
+                           SELECT COUNT(*)::int FROM deleted
+                           """;
+
+        return await ExecuteScalarAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                LicenceSectionVerificationIds = licenceSectionVerificationIds.ToArray(),
                 DeletedDateTimeUtc = DateTime.UtcNow
             });
     }
@@ -603,6 +651,206 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
 
+    public Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification>  verifications)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        await using var connection = GetPostgresConnection();
+        // Get backup version
+      var versionNumber =  await GetBackupVersionNumber(connection);
+
+        // Backup current Data set
+        var savedBackupCount = await BackupCurrentDataSet(connection, versionNumber);
+        
+       // Validate Export
+       var currentVerificationsCount = await GetCurrentVerificationCount(connection);
+
+       if (savedBackupCount != currentVerificationsCount)
+       {
+           // rollback export and exit
+           await DeleteBackedUpVersionData(connection, versionNumber);
+           
+           await DeleteBackupVersion(connection, versionNumber);
+           
+           throw new Exception("Import failed");
+       }
+       
+       // Delete current data set
+       await DeleteAllVerifications(connection);
+       
+       // Import verifications
+       await BatchVerifications(verifications, connection);
+
+       return true;
+    }
+
+    private async Task BatchVerifications(IEnumerable<LicenceSectionVerification> verifications, NpgsqlConnection connection)
+    {
+        const int batchSize = 100;
+        const int maxRetries = 3;
+        var licenceSectionVerifications = verifications.ToList();
+
+        foreach (var batch in licenceSectionVerifications.Chunk(batchSize))
+        {
+            var attempt = 0;
+
+            while (true)
+            {
+                try
+                {
+                    await ImportNewVerifications(connection, batch);
+
+                    break;
+                }
+                catch (HttpRequestException ex)
+                    when (attempt < maxRetries)
+                {
+                    attempt++;
+
+                    var delay = TimeSpan.FromSeconds(
+                        Math.Pow(2, attempt)
+                    );
+
+                    await Task.Delay(
+                        delay);
+                }
+            }
+        }
+    }
+
+    private static async Task ImportNewVerifications(NpgsqlConnection connection,
+        IEnumerable<LicenceSectionVerification> verifications)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification
+                           (
+                               licence_file_id,
+                               source_licence_number,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_snapshot_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               deleted_date_time_utc
+                           )
+                           VALUES
+                           (
+                               @LicenceFileId,
+                               @SourceLicenceNumber,
+                               @ProcessRunId,
+                               @LicenceSectionName,
+                               @VerificationType,
+                               @CreatedDateTimeUtc,
+                               NULLIF(@LicenceSectionScrapedValue, '')::jsonb,
+                               NULLIF(@LicenceSectionSnapshotValue, '')::jsonb,
+                               NULLIF(@LicenceSectionOverrideValue, '')::jsonb,
+                               @Notes,
+                               @LicenceSectionItemId,
+                               @DeletedDateTimeUtc
+                           );
+                           """;
+
+        await connection.ExecuteAsync(sql, verifications);
+    }
+
+    private static async Task DeleteAllVerifications(NpgsqlConnection connection)
+    {
+        await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification;
+            """);
+    }
+
+    private static async Task DeleteBackupVersion(NpgsqlConnection connection, int versionNumber)
+    {
+       await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification_backup_version
+            WHERE backup_version = @BackupVersion;
+            """,
+            new { BackupVersion = versionNumber });
+    }
+
+    private static async Task DeleteBackedUpVersionData(NpgsqlConnection connection, int versionNumber)
+    {
+        await connection.ExecuteAsync(
+            """
+            DELETE FROM licence_section_verification_backup
+            WHERE backup_version = @BackupVersion;
+            """,
+            new { BackupVersion = versionNumber });
+    }
+
+    private static async Task<int> GetCurrentVerificationCount(NpgsqlConnection connection)
+    {
+        const string sql = """
+                           SELECT COUNT(*)
+                           FROM licence_section_verification;
+                           """;
+
+        return await connection.ExecuteScalarAsync<int>(sql);
+    }
+
+    private static async Task<int> BackupCurrentDataSet(NpgsqlConnection connection, int backupVersion)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification_backup
+                           (
+                               backup_version,
+                               licence_section_verification_id,
+                               licence_file_id,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               licence_section_snapshot_value,
+                               deleted_date_time_utc
+                           )
+                           SELECT
+                               @BackupVersion,
+                               licence_section_verification_id,
+                               licence_file_id,
+                               process_run_id,
+                               licence_section_name,
+                               verification_type,
+                               created_date_time_utc,
+                               licence_section_scraped_value,
+                               licence_section_override_value,
+                               notes,
+                               licence_section_item_id,
+                               licence_section_snapshot_value,
+                               deleted_date_time_utc
+                           FROM licence_section_verification;
+                           """;
+
+        return await connection.ExecuteAsync(sql, new
+        {
+            BackupVersion = backupVersion
+        });
+    }
+
+    private static async Task<int> GetBackupVersionNumber(NpgsqlConnection connection)
+    {
+        const string sql = """
+                           INSERT INTO licence_section_verification_backup_version
+                           DEFAULT VALUES
+                           RETURNING backup_version;
+                           """;
+
+        return await connection.QuerySingleAsync<int>(sql);
+    }
+
     private static async Task<long>
         UpsertLicenceListItemInternalAsync(
             NpgsqlConnection connection,
@@ -643,7 +891,6 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.LicenceSectionVerifications,
             cancellationToken);
 
-
         return licenceListItemId;
     }
 
@@ -660,6 +907,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 process_run_id,
                 file_id,
+                licence_id,
+                matches_result_id,
                 filename,
                 licence_number,
                 licence_holder,
@@ -670,6 +919,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 ocr,
                 issue_date,
                 issue_year,
+                nald_orig_signature_date,
+                nald_signature_date,
+                is_issue_date_flagged,
                 issuer,
                 means_found,
                 status,
@@ -682,6 +934,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_sections_count,
                 verification_items_count,
                 has_verifications,
+                is_licence_number_flagged,
+                licence_number_flag_reason,
                 search_text,
                 source_data,
                 created_date_time_utc,
@@ -691,6 +945,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             (
                 @ProcessRunId,
                 @FileId,
+                @LicenceId,
+                @MatchesResultId,
                 @Filename,
                 @LicenceNumber,
                 @LicenceHolder,
@@ -701,6 +957,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @Ocr,
                 @IssueDate,
                 @IssueYear,
+                @NaldOrigSignatureDate,
+                @NaldSignatureDate,
+                @IsIssueDateFlagged,
                 @Issuer,
                 @MeansFound,
                 @Status,
@@ -713,6 +972,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 @VerificationSectionsCount,
                 @VerificationItemsCount,
                 @HasVerifications,
+                @IsLicenceNumberFlagged,
+                @LicenceNumberFlagReason,
                 @SearchText,
                 CAST(@SourceData AS jsonb),
                 NOW(),
@@ -725,6 +986,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 licence_number
             )
             DO UPDATE SET
+                licence_id = @LicenceId,
+                matches_result_id = @MatchesResultId,
                 filename = EXCLUDED.filename,
                 licence_holder = EXCLUDED.licence_holder,
                 limits_count = EXCLUDED.limits_count,
@@ -734,6 +997,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 ocr = EXCLUDED.ocr,
                 issue_date = EXCLUDED.issue_date,
                 issue_year = EXCLUDED.issue_year,
+                nald_orig_signature_date = EXCLUDED.nald_orig_signature_date,
+                nald_signature_date = EXCLUDED.nald_signature_date,
+                is_issue_date_flagged = EXCLUDED.is_issue_date_flagged,
                 issuer = EXCLUDED.issuer,
                 means_found = EXCLUDED.means_found,
                 status = EXCLUDED.status,
@@ -751,6 +1017,10 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     EXCLUDED.verification_items_count,
                 has_verifications =
                     EXCLUDED.has_verifications,
+                is_licence_number_flagged =
+                    EXCLUDED.is_licence_number_flagged,
+                licence_number_flag_reason =
+                    EXCLUDED.licence_number_flag_reason,
                 search_text = EXCLUDED.search_text,
                 source_data = EXCLUDED.source_data,
                 updated_date_time_utc = NOW()
@@ -761,6 +1031,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         {
             item.ProcessRunId,
             item.FileId,
+            item.LicenceId,
+            item.MatchesResultId,
             item.Filename,
             item.LicenceNumber,
             item.LicenceHolder,
@@ -771,6 +1043,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             item.Ocr,
             IssueDate = ToDateTime(item.IssueDate),
             IssueYear = item.IssueDate?.Year,
+            NaldOrigSignatureDate = ToDateTime(item.NaldOrigSignatureDate),
+            NaldSignatureDate = ToDateTime(item.NaldSignatureDate),
+            item.IsIssueDateFlagged,
             item.Issuer,
             item.MeansFound,
             item.Status,
@@ -783,6 +1058,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             summary.VerificationSectionsCount,
             summary.VerificationItemsCount,
             summary.HasVerifications,
+            item.IsLicenceNumberFlagged,
+            item.LicenceNumberFlagReason,
             summary.SearchText,
             SourceData = NullIfWhiteSpace(item.SourceData)
         };
@@ -1091,34 +1368,33 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 connection,
                 transaction,
                 licenceSetRowId,
-                licenceSet.LicenceSetTypes,
+                [licenceSet.LicenceSetType!],
+                cancellationToken);
+            
+            await InsertLicenceSetAggregateSetsAsync(
+                connection,
+                transaction,
+                licenceSetRowId,
+                licenceSet.AggregateSets ?? [],
                 cancellationToken);
         }
     }
     private static UpsertLicenceSetItem MergeLicenceSets(
         IGrouping<string, UpsertLicenceSetItem> group)
     {
-        var first = group.First();
-
         return new UpsertLicenceSetItem
         {
             LicenceSetId = group.Key,
-
             ShortLicenceSetId = group
                 .Select(x => x.ShortLicenceSetId)
                 .FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x)),
-
             LicenceSetType = group
                 .Select(x => x.LicenceSetType)
                 .FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x)),
-
-            LicenceSetTypes = group
-                .SelectMany(x => x.LicenceSetTypes ?? [])
-                .Where(x => !string.IsNullOrWhiteSpace(x))
-                .Select(x => x.Trim())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+            AggregateSets = group
+                .SelectMany(x => x.AggregateSets ?? [])
                 .ToArray()
         };
     }
@@ -1166,6 +1442,52 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 },
                 transaction,
                 cancellationToken: cancellationToken));
+    }
+    
+    private static async Task InsertLicenceSetAggregateSetsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long licenceSetRowId,
+        IReadOnlyCollection<Aggregate> aggregates,
+        CancellationToken cancellationToken)
+    {
+        if (aggregates.Count == 0)
+        {
+            return;
+        }
+
+        const string sql =
+            """
+            INSERT INTO licence_list_item_licence_set_aggregate_set
+            (
+                licence_list_item_licence_set_id,
+                licence_list_item_licence_set_aggregate_set_id,
+                data
+            )
+            VALUES
+            (
+                @LicenceListItemLicenceSetId,
+                @LicenceListItemLicenceSetAggregateSetId,
+                CAST(@Data AS jsonb)
+            );
+            """;
+
+        foreach (var aggregate in aggregates)
+        {
+            var parameters = new
+            {
+                LicenceListItemLicenceSetId = licenceSetRowId,
+                LicenceListItemLicenceSetAggregateSetId = aggregate.Id,
+                Data = JsonSerializer.Serialize(aggregate, JsonHelper.GetSerializerOptions())
+            };
+            
+            await connection.ExecuteAsync(
+                new CommandDefinition(
+                    sql,
+                    parameters,
+                    transaction,
+                    cancellationToken: cancellationToken));
+        }
     }
 
     private static async Task InsertLicenceSetTypesAsync(
@@ -1330,16 +1652,20 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                 verification_section_id,
                 licence_section_item_id,
                 verification_types,
-                scraped_data_is_different,
-             current_verification_type
+                is_flagged,
+                flag_reason,
+             current_verification_type,
+             verification_types_with_notes
             )
             VALUES
             (
                 @VerificationSectionId,
                 @LicenceSectionItemId,
                 @VerificationTypes,
-                @ScrapedDataIsDifferent,
-             @CurrentVerificationType
+                @IsFlagged,
+                @FlagReason,
+             @CurrentVerificationType,
+             @VerificationTypesWithNotes
             )
             ON CONFLICT
             (
@@ -1349,10 +1675,14 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             DO UPDATE SET
                 verification_types =
                     EXCLUDED.verification_types,
+                verification_types_with_notes =
+                EXCLUDED.verification_types_with_notes,
                 current_verification_type = 
                 EXCLUDED.current_verification_type,
-                scraped_data_is_different =
-                    EXCLUDED.scraped_data_is_different;
+                is_flagged =
+                    EXCLUDED.is_flagged,
+                flag_reason =
+                    EXCLUDED.flag_reason;
             """;
 
         var verificationTypes =
@@ -1364,6 +1694,15 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
+        var verificationTypesWithNotes =
+            item.VerificationTypesWithNotes?
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim())
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToArray() ?? [];
+        
         return connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
@@ -1378,9 +1717,14 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                     VerificationTypes =
                         verificationTypes,
 
-                    item.ScrapedDataIsDifferent,
+                    item.IsFlagged,
+
+                    item.FlagReason,
                     
-                    item.CurrentVerificationType
+                    item.CurrentVerificationType,
+                   
+                    VerificationTypesWithNotes =
+                        verificationTypesWithNotes,
                 },
                 transaction,
                 cancellationToken: cancellationToken));

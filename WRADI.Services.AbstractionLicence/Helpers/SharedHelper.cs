@@ -120,7 +120,7 @@ public static class SharedHelper
         foreach (var licenceSetGroup in licenceSetGroups)
         {
             ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - UpdateAndSaveLicenceSetsAsync {idx++} " +
-                $"of {licenceSetGroups.Count} done");
+                $"of {licenceSetGroups.Count} in progress....");
             
             if (licenceSetGroup.Count == 0)
             {
@@ -215,6 +215,9 @@ public static class SharedHelper
 
                     foreach (var licenceSet in newLicenceSetsLoop)
                     {
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - UpdateAndSaveLicenceSetsAsync {idx} " +
+                            $"saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
+                        
                         // Not batched as we get a 413 on the server
                         await outputService.SaveLicenceSetAsync(
                             licenceSet.Value,

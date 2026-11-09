@@ -4,7 +4,7 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class AbstractionLimitGroup : PeriodAndPointRestricted
 {
-    public string? DocumentIdentifier { get; init; }
+    public string? DocumentIdentifier { get; set; }
     
     public TimePeriod? TimePeriod { get; set; }
     
@@ -13,19 +13,21 @@ public class AbstractionLimitGroup : PeriodAndPointRestricted
     public List<AbstractionLimit> Limits { get; set; } = [];
     
     public ContainedInInformation[]? ContainedIn { get; set; }
+    
+    public bool? ContainsLegalText { get; set; }
 
-    public AbstractionLimitGroup Clone()
+    protected static void CloneProperties(
+        AbstractionLimitGroup sourceGroup,
+        AbstractionLimitGroup destinationGroup)
     {
-        return new AbstractionLimitGroup
-        {
-            DocumentIdentifier = DocumentIdentifier,
-            TimePeriod = TimePeriod,
-            TimeCutoff = TimeCutoff,
-            Limits = Limits.ToList(),
-            Points = Points?.ToArray(),
-            Purposes = Purposes?.ToArray(),
-            ContainedIn = ContainedIn?.ToArray()
-        };
+        destinationGroup.DocumentIdentifier = sourceGroup.DocumentIdentifier;
+        destinationGroup.TimePeriod = sourceGroup.TimePeriod;
+        destinationGroup.TimeCutoff = sourceGroup.TimeCutoff;
+        destinationGroup.Limits = sourceGroup.Limits.ToList();
+        destinationGroup.ContainedIn = sourceGroup.ContainedIn?.ToArray();
+        destinationGroup.ContainsLegalText = sourceGroup.ContainsLegalText;
+        
+        PeriodAndPointRestricted.CloneProperties(sourceGroup, destinationGroup);
     }
     
     public static AbstractionLimitGroup Template => new()

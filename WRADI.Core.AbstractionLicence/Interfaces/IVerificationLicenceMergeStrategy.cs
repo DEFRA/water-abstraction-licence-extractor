@@ -9,6 +9,5 @@ public interface IVerificationLicenceMergeStrategy
     Licence ApplyVerifications(
         Licence licence,
         LicenceVerificationLookups sectionVerificationLookups,
-        Guid fileId,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping);
+        Guid fileId);
 }

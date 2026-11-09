@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
@@ -294,7 +295,8 @@ public static class GenerateLicenceReaderExtract
             var skip = take * loopIdx++;
             ConsoleHelper.WriteLine($"Getting dms extracts - starting at {skip}");
             
-            dmsExtractPartial = await cacheService.GetDmsExtractAsync(skip, take);
+            dmsExtractPartial = await cacheService.GetDmsExtractAsync(
+                skip, take, DocumentTypes.AbstractionLicence);
             dmsExtractInfoRaw.AddRange(dmsExtractPartial);
         }
         
@@ -366,7 +368,8 @@ public static class GenerateLicenceReaderExtract
 
         // TODO - May need to implement paging above soon
         
-        var licenceFinderResultsRaw = await abstractionLicenceCacheService.GetLicenceFinderResultsAsync(0, int.MaxValue);
+        var licenceFinderResultsRaw = await abstractionLicenceCacheService
+            .GetLicenceFinderResultsAsync(0, int.MaxValue);
         var licenceFinderResultsByFileId = new Dictionary<Guid, List<LicenceFinderResult>>();
         
         foreach (var licenceFinderResult in licenceFinderResultsRaw)
@@ -485,6 +488,8 @@ public static class GenerateLicenceReaderExtract
             cacheService,
             outputService,
             licenceNumberService,
+            null,
+            null,
             dmsLookupService,
             -1,
             DateTime.Now,

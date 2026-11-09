@@ -105,6 +105,8 @@ public class AzureOpenAiOcrPdfTests
             CacheService,
             OutputService,
             await GetLicenceNumbersAsync(4),
+            null,
+            null,
             new DmsLookupService(),
             4,
             DateTime.Now); // TODO - whatever Hampshire & IOW is
@@ -207,6 +209,7 @@ public class AzureOpenAiOcrPdfTests
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(2, agreedSchemaLicenceGroup.Last().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
         Assert.Equal("11/42/28.2/7", agreedSchemaLicence.LicenceNumber?.Value);

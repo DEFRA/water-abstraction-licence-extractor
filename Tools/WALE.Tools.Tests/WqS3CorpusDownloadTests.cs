@@ -107,6 +107,7 @@ public class WqS3CorpusDownloadTests(ITestOutputHelper testOutputHelper)
         var service = new AwsS3FileService(
             regionName!,
             bucketName!,
+            bucketName!,
             accessKey,
             secretKey,
             sessionToken);

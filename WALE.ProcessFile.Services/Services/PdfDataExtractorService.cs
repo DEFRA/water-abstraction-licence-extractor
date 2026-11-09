@@ -1,6 +1,9 @@
+using System.Data;
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -20,7 +23,8 @@ public class PdfDataExtractorService(
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
     IMessageQueueService  apiMessageQueueService,
-    int id = -1) : IPdfDataExtractorService
+    int id = -1,
+    string documentType = "AbstractionLicence") : IPdfDataExtractorService
 {
     public int Id { get; set; } = id;
     public bool InUse { get; set; } = false;
@@ -54,17 +58,22 @@ public class PdfDataExtractorService(
                 return (true, null, null);
             }
 
-            if (matchesResult != null)
+            var reclaimingTransientError =
+                matchesResult?.Status == nameof(ScrapeStatus.TransientError);
+
+            if (matchesResult != null && !reclaimingTransientError)
             {
                 return (false, true, matchesResult);
             }
 
-            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock) for {dmsDataForFile.FileId}");
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - Save stub matches result (took out lock" +
+                $"{(reclaimingTransientError ? ", reclaiming TransientError" : string.Empty)}) for {dmsDataForFile.FileId}");
             
             await outputService.SaveStubMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
-                processRunId);
+                processRunId,
+                isUpdate: reclaimingTransientError);
         }
 
         try
@@ -78,12 +87,19 @@ public class PdfDataExtractorService(
         }
         catch (Exception ex)
         {
+            // Transient (e.g. OCR throttling): leave the row reclaimable so the queue's retry of this
+            // message re-OCRs the file. Anything else is terminal for this run, as before.
+            var status = ex is OcrServiceTransientException
+                ? ScrapeStatus.TransientError
+                : ScrapeStatus.Error;
+
             await outputService.SaveErrorMatchesResultAsync(
                 pdfFileName,
                 dmsDataForFile.FileId,
                 processRunId,
                 ex.ToString(),
-                configuration.UseLockExclusivity);
+                configuration.UseLockExclusivity,
+                status);
 
             throw;
         }
@@ -97,6 +113,7 @@ public class PdfDataExtractorService(
             processRunId,
             isUpdate);
 
+        matchesResult.MatchesResultId = matchResultId;
         var dtStartSaveMatches = DateTime.Now;
 
         if (matchesResult.Matches == null)
@@ -190,7 +207,8 @@ public class PdfDataExtractorService(
                 ProcessRunId = processRunId,
                 RegionId = regionId,
                 RequestedAt = DateTime.Now,
-                LockRetryCount = currentLockRetryCount + 1
+                LockRetryCount = currentLockRetryCount + 1,
+                DocumentType = documentType
             });
 
         return (true, null);
@@ -212,6 +230,7 @@ public class PdfDataExtractorService(
         var returnResult = new MatchesResult
         {
             Filename = pdfFileName,
+            MatchesResultId = -1,
             FileId = fileId,
             RegionCode = configuration.RegionId,
             Status = nameof(ScrapeStatus.Ok),
@@ -243,7 +262,7 @@ public class PdfDataExtractorService(
             return returnResult;
         }
         
-        var sizeKb = (pdfDocument.SizeBytes / 1024.0).ToString("0.0");
+        var sizeKb = ((pdfDocument.SizeBytes ?? -1) / 1024.0).ToString("0.0");
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
         
         if (pdfDocument.FromCache)
@@ -277,9 +296,83 @@ public class PdfDataExtractorService(
         returnResult.Pages = pdfDocument.Pages;
         
         var isOcr = false;
+
+        List<DocumentLine>? documentLines = null;
+        var documentTables = new List<DocumentTable>();
+
+        var allLabels = configuration
+            .Labels
+            .SelectMany(label => label.Labels)
+            .ToList();
+        
+        var needsToParseStructuredTables = allLabels
+            .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
+                or LayoutExtractor.LetterBasedAndTableBased
+                && label.LayoutExtractorTableShape is LayoutExtractorTableShape.Default
+                    or LayoutExtractorTableShape.Structured);
+        
+        var needsToParseUnstructuredTables = allLabels
+            .Any(label => label.LayoutExtractor is LayoutExtractor.TableBased
+                or LayoutExtractor.LetterBasedAndTableBased
+                && label.LayoutExtractorTableShape is LayoutExtractorTableShape.Unstructured);
+
+        var needsToParseText = allLabels
+            .Any(label => label.LayoutExtractor is LayoutExtractor.Default
+                or LayoutExtractor.LetterBased
+                or LayoutExtractor.LetterBasedAndTableBased);
+        
+        if (needsToParseStructuredTables)
+        {
+            if (configuration.StructuredTableExtractorService == null)
+            {
+                throw new NoNullAllowedException(
+                    $"{nameof(configuration.StructuredTableExtractorService)} cannot be null when config requires structured tables");
+            }
+            
+            var structuredDocumentTables =
+                await configuration.StructuredTableExtractorService.GetTablesAsync(
+                    pdfDocument,
+                    fileId,
+                    processRunId);
+            
+            foreach (var table in structuredDocumentTables)
+            {
+                table.TableType = DocumentTableType.Structured;
+            }
+            
+            documentTables.AddRange(structuredDocumentTables);
+        }
+        
+        if (needsToParseUnstructuredTables)
+        {
+            if (configuration.UnstructuredTableExtractorService == null)
+            {
+                throw new NoNullAllowedException(
+                    $"{nameof(configuration.UnstructuredTableExtractorService)} cannot be null when config requires unstructured tables");
+            }
+            
+            var unstructuredDocumentTables =
+                await configuration.UnstructuredTableExtractorService.GetTablesAsync(
+                    pdfDocument,
+                    fileId,
+                    processRunId);
+            
+            foreach (var table in unstructuredDocumentTables)
+            {
+                table.TableType = DocumentTableType.Unstructured;
+            }
+            
+            documentTables.AddRange(unstructuredDocumentTables);
+        }
+        
+        if (needsToParseText)
+        {
+            documentLines = pdfDocument.DocumentLines;
+        }
         
         var labelGroupMatches = await GetLabelGroupMatchesAsync(
-            pdfDocument.DocumentLines,
+            documentLines,
+            documentTables,
             configuration.Labels,
             isOcr,
             noOcrDataExtractorService.Name,
@@ -312,6 +405,12 @@ public class PdfDataExtractorService(
 
         labelGroupMatches = newLabelGroupMatches;
         dtStart = DateTime.Now;
+
+        if (!needsToParseText)
+        {
+            returnResult.Matches = labelGroupMatches;
+            return returnResult;
+        }
         
         var allImagesInDocument = await cacheService.GetImagesAsync(
             new OcrServiceImageDataCacheRequest
@@ -324,7 +423,12 @@ public class PdfDataExtractorService(
             $"DEBUG - {nameof(PdfDataExtractorService)} - Getting all images in document metadata took {(DateTime.Now - dtStart).TotalMilliseconds}ms" +
             $" - {pdfDocument.PdfFilename}");
         
-        var isLikelyTextFile = pdfDocument.DocumentLines.Count >= 100;
+        const int minimumWordsPerPage = 75;
+        var wordsPerPage = (int)Math.Ceiling(
+            pdfDocument.DocumentLines.SelectMany(l => l.Columns).Sum(c => c.Words.Count)
+            / (double)pdfDocument.Pages.Count);
+
+        var isLikelyTextFile = wordsPerPage >= minimumWordsPerPage;
         var totalPagesToProcess = pdfDocument.ImagesMetadata!.Pages.Count;
         
         if (!isLikelyTextFile
@@ -346,7 +450,7 @@ public class PdfDataExtractorService(
 
             var anyImageLargeEnoughToBePageScan = false;
 
-            const int maxPagesToDetermineIfScan = 4;
+            const int maxPagesToDetermineIfScan = 3;
 
             var maxPagesToLookAt = totalPagesToProcess;
             if (maxPagesToLookAt > maxPagesToDetermineIfScan)
@@ -413,7 +517,7 @@ public class PdfDataExtractorService(
                 $" - {pdfDocument.PdfFilename}");
         }
 
-        var documentLines = new List<DocumentLine>();
+        var foundDocumentLines = new List<DocumentLine>();
         
         for (var pageNumber = 1; pageNumber <= totalPagesToProcess; pageNumber++)
         {
@@ -461,6 +565,14 @@ public class PdfDataExtractorService(
                     continue;
                 }
                 
+                var image = allImagesInDocument
+                    .FirstOrDefault(i => i.pageNumber == pageNumber && i.imageNumber == imageNumber);
+                
+                if (image != null && !IsPageScan(image.width, image.height))
+                {
+                    continue;
+                }
+                
                 var breakImageLoop = false;
 
                 var serviceImageLines = new List<DocumentLine>();
@@ -471,11 +583,6 @@ public class PdfDataExtractorService(
                 {
                     servicesUsed.TryAdd(ocrService.Name, 0);
                     var serviceStartTimeUtc = DateTime.UtcNow;
-                    
-                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
-                    {
-                        returnResult.ServicesUsed.Add(ocrService.Name);
-                    }
 
                     try
                     {
@@ -495,9 +602,43 @@ public class PdfDataExtractorService(
 
                         var serviceDurationMs = (DateTime.UtcNow - serviceStartTimeUtc).TotalMilliseconds;
                         servicesUsed[ocrService.Name] += serviceDurationMs;
-                        
-                        // Don't rethrow - just carry on with the other providers and pages
+
+                        var isTransient = ex is OcrServiceTransientException;
+
+                        // Record it on the result so a page that lost this provider is visible, rather
+                        // than the file saving as a normal success that happens to extract differently.
+                        returnResult.ServicesFailed.Add(new OcrServiceFailure
+                        {
+                            ServiceName = ocrService.Name,
+                            PageNumber = pageNumber,
+                            ImageNumber = imageNumber,
+                            IsTransient = isTransient,
+                            ErrorType = (ex.InnerException ?? ex).GetType().Name,
+                            Message = ex.Message
+                        });
+
+                        if (isTransient && ocrService.FailurePolicy == OcrServiceFailurePolicy.FailFileOnTransientError)
+                        {
+                            // Fail the whole file: the caller marks the queue message as failed and SQS
+                            // redelivers it once the visibility timeout passes, by which time the
+                            // throttle has usually cleared. Nothing has been cached for this page.
+                            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - {ocrService.Name} " +
+                                $"transient failure on page {pageNumber} image {imageNumber}, failing file for retry " +
+                                $"- {pdfDocument.PdfFilename}");
+
+                            throw;
+                        }
+
+                        // Permanent error, or a supplementary provider: carry on with the other
+                        // providers and pages.
                         continue;
+                    }
+
+                    // Only counts as "used" once a call has actually completed, so ServicesUsed is
+                    // never claimed for a provider that contributed nothing.
+                    if (!returnResult.ServicesUsed.Contains(ocrService.Name))
+                    {
+                        returnResult.ServicesUsed.Add(ocrService.Name);
                     }
                     
                     // No lines found, no point processing that with the other services
@@ -533,11 +674,12 @@ public class PdfDataExtractorService(
                         break;
                     }
                     
-                    var allLinesSoFar = documentLines.ToList();
+                    var allLinesSoFar = foundDocumentLines.ToList();
                     allLinesSoFar.AddRange(serviceImageLines);
                     
                     var serviceMatches = await GetLabelGroupMatchesAsync(
                         allLinesSoFar,
+                        documentTables,
                         unmatchedOrMoreWantedLabelLookups,
                         isOcr,
                         ocrService.Name,
@@ -604,7 +746,7 @@ public class PdfDataExtractorService(
                     servicesUsed[ocrService.Name] += serviceDurationMs1;
                 }
                 
-                documentLines.AddRange(serviceImageLines);
+                foundDocumentLines.AddRange(serviceImageLines);
 
                 var uniqueServiceMatches = GetUniqueServiceMatches(serviceMatchesDict);
                 var uniqueServiceMatchesNotInLabelGroupMatches = new List<LabelGroupResult>();
@@ -690,7 +832,7 @@ public class PdfDataExtractorService(
     private static bool IsPageScan(int imageWidth, int imageHeight)
     {
         const int minWidth = 1800;
-        const int minHeightWhenWidthEnough = 130;
+        const int minHeightWhenWidthEnough = 150;
 
         var wideEnough = imageWidth >= minWidth && imageHeight >= minHeightWhenWidthEnough;
 
@@ -700,7 +842,7 @@ public class PdfDataExtractorService(
         }
 
         const int minHeight = 1800;
-        const int minWidthWhenHeightEnough = 130;
+        const int minWidthWhenHeightEnough = 150;
 
         var tallEnough = imageHeight >= minHeight && imageWidth >= minWidthWhenHeightEnough;
         return tallEnough;
@@ -1053,7 +1195,8 @@ public class PdfDataExtractorService(
     }
     
     private async Task<List<LabelGroupResult>> GetLabelGroupMatchesAsync(
-        List<DocumentLine> documentLines,
+        List<DocumentLine>? documentLines,
+        IReadOnlyList<DocumentTable>? documentTables,
         IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups,
         bool isOcr,
         string serviceName,
@@ -1065,16 +1208,21 @@ public class PdfDataExtractorService(
     {
         var labelGroupMatches = new List<LabelGroupResult>();
 
-        if (documentLines.Count == 0)
+        var linesEmpty = documentLines == null || documentLines.Count == 0;
+        var tablesEmpty = documentTables == null || documentTables.Count == 0;
+        
+        if (linesEmpty && tablesEmpty)
         {
             return labelGroupMatches;
         }
 
         var lines = StandardiseLines(documentLines);
         var wrappedLines = DocumentLineWrapped.WrapLines(lines, false);
-        var joinedLines = string.Join(',', lines.Select(line => line.Text));
-        var documentLineService = new DocumentLineService(lines);
-        
+        var joinedLines = lines != null ? string.Join(',', lines.Select(line => line.Text)) : null;
+        var documentLineService = lines != null ? new DocumentLineService(lines) : null;
+
+        var labelPositionIndex = BuildLabelPositionIndex(wrappedLines, labelLookups);
+
         foreach (var (labelGroupName, labels) in labelLookups)
         {
             if (AlreadyMatchedLabelGroup(labelGroupMatches, labelGroupName))
@@ -1084,40 +1232,86 @@ public class PdfDataExtractorService(
             
             foreach (var label in labels)
             {
+                var isTextLabel = label.LayoutExtractor is 
+                    LayoutExtractor.Default
+                    or LayoutExtractor.LetterBased
+                    or LayoutExtractor.LetterBasedAndTableBased;
+                
+                var isTableLabel = label.LayoutExtractor is 
+                    LayoutExtractor.TableBased
+                    or LayoutExtractor.LetterBasedAndTableBased;
+                
                 var isRegularExpression = label.TextToMatch?.Any(text => text.Regex != null) == true;
+                var labelIsInDocumentLines = isTextLabel
+                    && (isRegularExpression || LabelIsInDocumentLines(label, joinedLines));
+                var labelIsInDocumentTables = isTableLabel
+                    && (isRegularExpression || LabelIsInDocumentTables(label, documentTables));
                 
-                if (!isRegularExpression && !LabelIsInDocument(label, joinedLines))
-                {
-                    continue;
-                }
-                
-                var labelGroupMatch =
-                    await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
-                        wrappedLines,
-                        [label],
-                        isOcr,
-                        serviceName,
-                        labelGroupName,
-                        labelGroupMatches,
-                        previouslyParsedPaths,
-                        regionCode,
-                        processRunId,
-                        lookupConfiguration,
-                        this,
-                        documentLineService,
-                        additionalInformationStore);
-                
-                if (labelGroupMatch.Count == 0)
+                if (!labelIsInDocumentLines && !labelIsInDocumentTables)
                 {
                     continue;
                 }
 
-                foreach (var labelGroup in labelGroupMatch)
+                IReadOnlyList<LabelGroupResult> labelGroupMatchResult = [];
+
+                if (labelIsInDocumentTables)
                 {
-                    labelGroup.LabelGroupName = labelGroupName;    
+                    labelGroupMatchResult =
+                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInTablesAsync(
+                            documentTables!,
+                            [label],
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            labelGroupMatches,
+                            previouslyParsedPaths,
+                            regionCode,
+                            processRunId,
+                            lookupConfiguration,
+                            this,
+                            documentLineService,
+                            additionalInformationStore,
+                            labelPositionIndex);
                 }
                 
-                labelGroupMatches.AddRange(labelGroupMatch);
+                if (labelIsInDocumentLines && labelGroupMatchResult.Count == 0)
+                {
+                    labelGroupMatchResult =
+                        await FindLabelGroupMatchesHelper.FindLabelGroupMatchesInLinesAsync(
+                            wrappedLines!,
+                            [label],
+                            isOcr,
+                            serviceName,
+                            labelGroupName,
+                            labelGroupMatches,
+                            previouslyParsedPaths,
+                            regionCode,
+                            processRunId,
+                            lookupConfiguration,
+                            this,
+                            documentLineService,
+                            additionalInformationStore,
+                            labelPositionIndex);
+                }
+                
+                if (!labelIsInDocumentTables && !labelIsInDocumentLines)
+                {
+                    throw new Exception("Neither lines nor tables passed");
+                }
+
+                if (!ShouldClaimLabelGroup(
+                        labelGroupMatchResult, label.RequireTextToBePresent, label.RequireCompleteDateToClaimGroup,
+                        label.IgnoreBlockIfContains))
+                {
+                    continue;
+                }
+
+                foreach (var labelGroup in labelGroupMatchResult)
+                {
+                    labelGroup.LabelGroupName = labelGroupName;
+                }
+
+                labelGroupMatches.AddRange(labelGroupMatchResult);
                 break;
             }
         }
@@ -1125,11 +1319,133 @@ public class PdfDataExtractorService(
         return labelGroupMatches;
     }
 
+    /// <summary>
+    /// For LabelToMatch.BoundSameLineWalkByOtherLabelPositions - each label group's own (X, Y)
+    /// position at its first occurrence in the document. First occurrence wins: grid fields
+    /// render at a consistent X down a section, so it's a reasonable proxy without a more
+    /// expensive median calculation. Y is recorded so callers can restrict to the same section
+    /// (see FindSectionEndTop) rather than any coincidentally similar X.
+    /// </summary>
+    private static Dictionary<string, (double Left, double Top)>? BuildLabelPositionIndex(
+        IReadOnlyList<DocumentLineWrapped>? lines,
+        IReadOnlyList<(string LabelGroupName, List<LabelToMatch> Labels)> labelLookups)
+    {
+        if (lines == null)
+        {
+            return null;
+        }
+        
+        var index = new Dictionary<string, (double Left, double Top)>();
+
+        foreach (var wrappedLine in lines)
+        {
+            var line = wrappedLine.Line;
+
+            if (line == null)
+            {
+                continue;
+            }
+
+            foreach (var column in line.Columns)
+            {
+                var firstWord = column.Words.FirstOrDefault();
+
+                if (firstWord == null || string.IsNullOrEmpty(column.Text))
+                {
+                    continue;
+                }
+
+                foreach (var (labelGroupName, labelAlternates) in labelLookups)
+                {
+                    if (index.ContainsKey(labelGroupName))
+                    {
+                        continue;
+                    }
+
+                    var matchesThisGroup = labelAlternates
+                        .SelectMany(label => label.TextStart ?? [])
+                        .Any(textStart =>
+                            !string.IsNullOrWhiteSpace(textStart.Text)
+                            && column.Text.StartsWith(textStart.Text, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchesThisGroup)
+                    {
+                        index[labelGroupName] = (firstWord.Coordinates.Left, line.Top);
+                    }
+                }
+            }
+        }
+
+        return index;
+    }
+
     private static bool AlreadyMatchedLabelGroup(
         IEnumerable<LabelGroupResult> returnList,
         string type)
     {
         return returnList.Any(returnItem => returnItem.LabelGroupName == type);
+    }
+
+    // Numeric date: 2-4 groups separated by /.- , last group 2 or 4 digits
+    // ("25/03/26", "06/05/2026", "25.03.2026").
+    private static readonly Regex CompleteNumericDateRegex = new(@"\b\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\b");
+
+    // Month-name date: month+day or day+month (with an optional ordinal suffix, itself
+    // possibly a separate token e.g. "15 th May") followed by a 2-4 digit year
+    // ("Jul 26 2019", "26 Jul 19", "15 th May 2026").
+    private static readonly Regex CompleteMonthNameDateRegex = new(
+        @"\b((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*,?\s*\d{1,2}" +
+        @"|\d{1,2}\s*(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?)" +
+        @"\s*,?\s*\d{2,4}\b",
+        RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Decides whether an alternate's match result is good enough to claim its label group
+    /// and stop trying further alternates. An empty result never claims. A non-empty result
+    /// claims unless the label opted into RequireTextToClaimGroup and every matched line's
+    /// Text is blank, or opted into RequireCompleteDateToClaimGroup and the joined text of no
+    /// alternate looks like a complete date.
+    /// </summary>
+    internal static bool ShouldClaimLabelGroup(
+        IReadOnlyList<LabelGroupResult> labelGroupMatch,
+        bool requireTextToClaimGroup,
+        bool requireCompleteDateToClaimGroup = false,
+        IReadOnlyList<string>? ignoreBlockIfContains = null)
+    {
+        if (labelGroupMatch.Count == 0)
+        {
+            return false;
+        }
+
+        // Joined, not per-line: a day/month fragment and its year can land on separate lines
+        // of the same match (e.g. a wrapped continuation).
+        if (requireCompleteDateToClaimGroup
+            && !labelGroupMatch.Any(lgm =>
+            {
+                var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
+                return CompleteNumericDateRegex.IsMatch(joined) || CompleteMonthNameDateRegex.IsMatch(joined);
+            }))
+        {
+            return false;
+        }
+
+        if (ignoreBlockIfContains is { Count: > 0 }
+            && labelGroupMatch.All(lgm =>
+            {
+                var joined = string.Join(" ", lgm.Text?.Select(t => t.Text) ?? []);
+                return ignoreBlockIfContains.Any(term => joined.Contains(term, StringComparison.OrdinalIgnoreCase));
+            }))
+        {
+            return false;
+        }
+
+        if (!requireTextToClaimGroup)
+        {
+            return true;
+        }
+
+        return labelGroupMatch.Any(lgm =>
+            lgm.Text?.Any(line => !string.IsNullOrWhiteSpace(line.Text)) == true);
     }
 
     public async Task<List<LabelGroupResult>> ProcessSubLabelsAsync(
@@ -1286,8 +1602,13 @@ public class PdfDataExtractorService(
         return subResultsToKeep;
     }
 
-    private static List<DocumentLine> StandardiseLines(IReadOnlyList<DocumentLine> lines)
+    private static List<DocumentLine>? StandardiseLines(IReadOnlyList<DocumentLine>? lines)
     {
+        if (lines == null)
+        {
+            return null;
+        }
+        
         var newLines = lines.ToList();
 
         foreach (var line in newLines)
@@ -1298,10 +1619,42 @@ public class PdfDataExtractorService(
         return newLines;
     }
     
-    private static bool LabelIsInDocument(
+    private static bool LabelIsInDocumentTables(
         LabelToMatch label,
-        string joinedLines)
+        IReadOnlyList<DocumentTable>? tables)
     {
+        if (tables == null)
+        {
+            return false;
+        }
+        
+        var labelText = label.TextToMatch!
+            .Select(labelTextMatch => labelTextMatch.Text
+                .Replace(PositionConstants.EndOfLineMarker, string.Empty)
+                .Replace(PositionConstants.EndOfColumnMarker, string.Empty))
+            .ToList();
+        
+        if (labelText.Contains(PositionConstants.StartOfBlockMarker, StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return
+            labelText.Any(text =>
+                tables.Any(table =>
+                    table.Cells.Any(cell =>
+                        cell.Content?.Contains(text, StringComparison.OrdinalIgnoreCase) == true)));
+    }
+    
+    private static bool LabelIsInDocumentLines(
+        LabelToMatch label,
+        string? joinedLines)
+    {
+        if (joinedLines == null)
+        {
+            return false;
+        }
+        
         var labelText = label.TextToMatch!
             .Select(labelTextMatch => labelTextMatch.Text
                 .Replace(PositionConstants.EndOfLineMarker, string.Empty)

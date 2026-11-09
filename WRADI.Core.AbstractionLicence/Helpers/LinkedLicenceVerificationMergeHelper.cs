@@ -1,6 +1,4 @@
-using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -10,6 +8,9 @@ public static class LinkedLicenceVerificationMergeHelper
 {
     public const string NoneOutgoing = "None Outgoing";
     public const string Review = "Review";
+
+    // Placeholder for verifications whose file ID couldn't be matched to a licence when backfilled
+    public const string UnknownSourceLicenceNumber = "UNKNOWN";
 
     public static List<LicenceSectionItemSummary> MergeOutgoing(
         List<LinkedLicence> linkedLicences,
@@ -30,7 +31,7 @@ public static class LinkedLicenceVerificationMergeHelper
 
             // Ignore review and auto-warn/fail - we just want the tags to appear to flag them for review
             if (verification.LicenceSectionItemId == Review
-                || IsAutoOrBusinessReview(verification.VerificationType))
+                || IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 continue;
             }
@@ -41,30 +42,33 @@ public static class LinkedLicenceVerificationMergeHelper
                                             l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing)))
                 {
                     // Flag this because the verification confirmed there are zero outgoing LLs but actually there are some
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
+                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, "'None Outgoing' verification contradicted by existence of LLs");
                     foreach (var linkedLicence in linkedLicences)
                     {
                         RemoveAllLinksForDirection(linkedLicence, InformationDirection.Outgoing);
+                    }
+
+                    // These licences' active state is now contradicted by the newer NoneOutgoing confirmation
+                    var staleItemIds = sectionSummaries
+                        .Where(s => s.LicenceSectionItemId != NoneOutgoing
+                                    && s.LicenceSectionItemId != Review
+                                    && s.CurrentVerificationType != "Removed")
+                        .Select(s => s.LicenceSectionItemId)
+                        .ToList();
+
+                    foreach (var staleItemId in staleItemIds)
+                    {
+                        SimulateRemoval(sectionSummaries, staleItemId);
                     }
                 }
 
                 continue;
             }
 
-            // Apply data changed flag check
-            if (verification.ProcessRunId < processRunId)
+            if (VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
             {
-                var wasScrapedThisRun = (originalLinkedLicences ?? [])
-                    .Any(x => x.LicenceNumber == verification.LicenceSectionItemId
-                              && x.ContainedIn != null
-                              && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
-
-                var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
-
-                if (wasScrapedThisRun != wasScrapedOnVerificationRun)
-                {
-                    FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId);
-                }
+                FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, VerificationMergeHelper.MissingJsonFlagReason);
+                continue;
             }
 
             // Apply verification
@@ -82,7 +86,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 var verificationLicence =
-                    JsonSerializer.Deserialize<LinkedLicence>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                    VerificationMergeHelper.DeserializeVerificationValue<LinkedLicence>(json, out var verificationNode);
 
                 if (verificationLicence == null)
                 {
@@ -91,12 +95,66 @@ public static class LinkedLicenceVerificationMergeHelper
                     continue;
                 }
 
+                var scrapedLinkedLicence = (originalLinkedLicences ?? [])
+                    .FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId
+                                         && x.ContainedIn != null
+                                         && x.ContainedIn.Any(c => c.Direction == InformationDirection.Outgoing));
+
+                VerificationMergeHelper.ApplyCurrentRunValuesForMissingProperties(verificationLicence,
+                    scrapedLinkedLicence, verificationNode!);
+
+                // Apply data changed flag check
+                if (verification.ProcessRunId < processRunId)
+                {
+                    var wasScrapedThisRun = scrapedLinkedLicence != null;
+                    var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
+
+                    string? flagReason = null;
+
+                    if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+                    {
+                        flagReason = wasScrapedThisRun
+                            ? "LL added to scraper output since the verification run"
+                            : "LL removed from scraper output since the verification run";
+                    }
+                    else if (scrapedLinkedLicence != null)
+                    {
+                        var changes = new List<string>();
+
+                        if (IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
+                            && !IsDeadNaldStatus(verificationLicence.NaldStatus))
+                        {
+                            changes.Add(scrapedLinkedLicence.NaldStatus.ToString());
+                        }
+
+                        if (IsSuperseded(scrapedLinkedLicence)
+                            && !IsSuperseded(verificationLicence))
+                        {
+                            changes.Add("Superseded");
+                        }
+
+                        if (changes.Count > 0)
+                        {
+                            flagReason = $"Linked Licence {string.Join(" & ", changes)}";
+                        }
+                    }
+
+                    if (flagReason != null)
+                    {
+                        FlagItemSummary(sectionSummaries, verification.LicenceSectionItemId, flagReason);
+                    }
+
+                    // Some properties must reflect the current run, not the run the verification was made against
+                    ApplyCurrentRunValues(verificationLicence, scrapedLinkedLicence);
+                }
+
                 var existingLinkedLicence =
                     linkedLicences.FirstOrDefault(x => x.LicenceNumber == verification.LicenceSectionItemId);
 
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
+                    case "CompleteBusinessReview":
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
@@ -109,6 +167,14 @@ public static class LinkedLicenceVerificationMergeHelper
                                 .Union(existingLinkedLicence.ContainedIn?.Where(c =>
                                     c.Direction != InformationDirection.Outgoing) ?? []).ToArray();
                             linkedLicences.Remove(existingLinkedLicence);
+                        }
+
+                        var noneOutgoingSummary =
+                            sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == NoneOutgoing);
+                        if (noneOutgoingSummary != null && noneOutgoingSummary.CurrentVerificationType != "Removed")
+                        {
+                            // This outgoing licence contradicts the earlier "confirmed none outgoing" state
+                            SimulateRemoval(sectionSummaries, NoneOutgoing);
                         }
 
                         break;
@@ -132,8 +198,7 @@ public static class LinkedLicenceVerificationMergeHelper
 
     public static void MergeIncoming(
         List<LinkedLicence> linkedLicences,
-        IEnumerable<LicenceSectionVerification> verifications,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        IEnumerable<LicenceSectionVerification> verifications)
     {
         var orderedVerifications = verifications
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -142,7 +207,8 @@ public static class LinkedLicenceVerificationMergeHelper
         foreach (var verification in orderedVerifications)
         {
             var fileId = verification.LicenceFileId;
-            if (!fileIdToLicenceNumberMapping.TryGetValue(fileId, out var sourceLicenceNumber))
+            var licenceNumber = verification.SourceLicenceNumber;
+            if (string.IsNullOrEmpty(licenceNumber) || licenceNumber == UnknownSourceLicenceNumber)
             {
                 ConsoleHelper.WriteLine(
                     $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Incoming LL Verifications - No licence number found for {fileId}");
@@ -150,7 +216,8 @@ public static class LinkedLicenceVerificationMergeHelper
             }
 
             // Ignore auto-warn/fail - it has no effect on incoming LLs
-            if (IsAutoOrBusinessReview(verification.VerificationType))
+            if (IsAutoOrRequestBusinessReview(verification.VerificationType)
+                || VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
             {
                 continue;
             }
@@ -169,7 +236,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 var verificationLicence =
-                    JsonSerializer.Deserialize<LinkedLicence>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                    VerificationMergeHelper.DeserializeVerificationValue<LinkedLicence>(json, out _);
 
                 if (verificationLicence == null)
                 {
@@ -179,12 +246,12 @@ public static class LinkedLicenceVerificationMergeHelper
                 }
 
                 var existingLinkedLicence =
-                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == sourceLicenceNumber);
+                    linkedLicences.FirstOrDefault(x => x.LicenceNumber == licenceNumber);
 
                 // TODO: We need to convert the verification licence to an incoming link - use the logic in WalSchemaConverter - but much of this will require looking up
                 var convertedToIncoming = new LinkedLicence
                 {
-                    LicenceNumber = sourceLicenceNumber,
+                    LicenceNumber = licenceNumber,
                     DmsFileId = fileId,
                     ContainedIn = verificationLicence.ContainedIn?.Select(c => new ContainedInInformation
                     {
@@ -208,6 +275,7 @@ public static class LinkedLicenceVerificationMergeHelper
                 switch (verification.VerificationType)
                 {
                     case "Confirmed":
+                    case "CompleteBusinessReview":
                     case "AutoConfirm":
                     case "Edited":
                     case "Added":
@@ -245,6 +313,17 @@ public static class LinkedLicenceVerificationMergeHelper
         => linkedLicence.ContainedIn = linkedLicence.ContainedIn?
             .Where(c => c.Direction != directionToRemove).ToArray();
 
+    private static void SimulateRemoval(List<LicenceSectionItemSummary> sectionSummaries, string itemId)
+    {
+        var syntheticVerification = new LicenceSectionVerification
+        {
+            LicenceSectionItemId = itemId,
+            VerificationType = "Removed"
+        };
+
+        UpdateSectionSummaries(sectionSummaries, syntheticVerification);
+    }
+
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
     {
@@ -270,42 +349,60 @@ public static class LinkedLicenceVerificationMergeHelper
             {
                 LicenceSectionItemId = verification.LicenceSectionItemId!,
                 VerificationTypes = [verification.VerificationType!],
-                CurrentVerificationType = verification.VerificationType!
+                CurrentVerificationType = verification.VerificationType!,
+                VerificationTypesWithNotes = [VerificationMergeHelper.GetVerificationWithNotes(verification)]
             });
         }
         else
         {
             // New business review tags should override previous ones - clear the previous ones first
-            if (IsBusinessReview(verification.VerificationType))
+            if (VerificationMergeHelper.IsBusinessReview(verification.VerificationType))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Where(x => !IsBusinessReview(x))
+                    .Where(x => !VerificationMergeHelper.IsBusinessReview(x))
+                    .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsBusinessReviewWithNotes(x))
                     .ToArray();
             }
 
             existingSummary.CurrentVerificationType = verification.VerificationType!;
             if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
             {
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
+            }
+            else
+            {
+                // remove existing and re add
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Append(verification.VerificationType!)
+                    .Where(x => x != verification.VerificationType!)
                     .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsExistingVerificationType(x, verification.VerificationType!))
+                    .ToArray();
+                
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
             }
 
-            if (!IsAutoOrBusinessReview(verification.VerificationType))
+            if (!IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
-                existingSummary.ScrapedDataIsDifferent = false;
+                existingSummary.IsFlagged = false;
+                existingSummary.FlagReason = null;
             }
         }
     }
 
-    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)
     {
         var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
 
         if (summary != null)
         {
-            summary.ScrapedDataIsDifferent = true;
+            summary.IsFlagged = true;
+            summary.FlagReason = flagReason;
             return;
         }
 
@@ -313,10 +410,22 @@ public static class LinkedLicenceVerificationMergeHelper
             $"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - Flag was not set - no summary found for {itemId}");
     }
 
-    private static bool IsAutoOrBusinessReview(string? verificationType)
+    private static bool IsAutoOrRequestBusinessReview(string? verificationType)
         => verificationType is "AutoWarn" or "AutoFail"
-           || IsBusinessReview(verificationType);
+           or "RequestBusinessReview";
 
-    private static bool IsBusinessReview(string? verificationType)
-        => verificationType is "RequestBusinessReview" or "CompleteBusinessReview";
+    // Properties that a verification from an earlier run must not overwrite
+    private static void ApplyCurrentRunValues(LinkedLicence verificationLicence, LinkedLicence? currentRunLinkedLicence)
+    {
+        verificationLicence.NaldStatus = currentRunLinkedLicence?.NaldStatus ?? NaldLicenceStatus.Unknown;
+    }
+
+    private static bool IsDeadNaldStatus(NaldLicenceStatus naldStatus)
+        => naldStatus is NaldLicenceStatus.Expired or NaldLicenceStatus.Revoked or NaldLicenceStatus.Lapsed;
+
+    private static bool IsSuperseded(LinkedLicence linkedLicence)
+        => linkedLicence.ContainedIn?
+            .SelectMany(c => c.History ?? [])
+            .Any(h => h.LicenceNumber == linkedLicence.LicenceNumber
+                      && h.FollowOnLicenceNumbers.Count > 0) == true;
 }

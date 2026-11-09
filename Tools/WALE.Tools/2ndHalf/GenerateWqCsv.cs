@@ -262,6 +262,8 @@ public static class GenerateWqCsv
             outputService,
             null!,
             null!,
+            null!,
+            null!,
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             skipFileIfMoreThenPages: 100,

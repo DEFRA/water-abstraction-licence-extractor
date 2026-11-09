@@ -77,12 +77,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        .Where(x => x.Key.Contains("NE0270023036", StringComparison.OrdinalIgnoreCase))
+        //.Where(x => x.Key.Contains("22723032s__5f2cfe7d-1151-4310-8780-794b33093c35.pdf", StringComparison.OrdinalIgnoreCase))
         //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(10)
+        .Take(100)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -90,7 +90,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
-            Description = $"Run using {services.FileService!.FolderPath}",
+            Description = $"Run using {services.FileService!.IngressFolderPath}",
             StartDateTimeUtc = startDateTimeUtc,
             NumberOfFiles = filesToProcess.Count
         });
@@ -120,6 +120,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
         services.CacheService!,
         services.OutputService!,
         services.LicenceNumberService!,
+        null,
+        null,
         services.DmsLookupService!,
         GeneralConstants.UnsetRegionCode,
         DateTime.Now,
@@ -220,7 +222,6 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var allLicenceSets = await AbstractionLicenceSchemaConverter.AddAdditionalLicenceSetsAsync(
         licenceSetGroups,
         lookupConfig,
-        abstractionLicenceCacheService,
         services.NaldDataLookupService!);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Converted into all licence sets at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -465,13 +466,18 @@ ConfiguredServices ConfigureServices(
                 configurationForServices.GetRequiredValue<string>(
                     "AwsRegionName");
 
-            var bucketName =
+            var ingressBucketName =
                 configurationForServices.GetRequiredValue<string>(
                     "AwsS3BucketName");
+            
+            var assetsBucketName =
+                configurationForServices.GetRequiredValue<string>(
+                    "AwsS3AssetsBucketName");            
 
             fileService = new AwsS3FileService(
                 regionName,
-                bucketName,
+                ingressBucketName,
+                assetsBucketName,
                 accessKey,
                 secretKey,
                 null);

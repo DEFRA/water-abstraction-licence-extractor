@@ -14,6 +14,8 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(int processRunId);
 
+    Task<List<LicenceSetTable>> GetLicenceSetsSimpleByLicenceIdAsync(int licenceId);    
+    
     Task<List<LicenceSetTable>> GetLicenceSetsSimpleAsync(Guid fileId, int processRunId);
     
     Task<List<LicenceSetLicence>> GetLicenceSetLicencesAsync(int processRunId);
@@ -24,9 +26,11 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<(int LicenceSetId, LicenceSetType Type)>> GetLicenceSetTypesForProcessRun(int processRunId);
     
-    Task<AggregateSet[]?> GetAggregateSets(int licenceSetId);
+    Task<Aggregate[]?> GetAggregateSets(int licenceSetId);
     
-    Task<List<(int LicenceSetId, AggregateSet AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
+    Task<List<(int LicenceSetId, Aggregate[] AggregateSet)>> GetAggregateSetsForProcessRun(int processRunId);
+
+    Task<Licence?> GetLicenceAsync(int licenceId);
     
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId);
     
@@ -34,9 +38,13 @@ public interface IAbstractionLicenceDatabaseReadService
 
     Task<Licence?> GetNewestLicenceAsync(string permitNumber);
     
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
+    
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take);
+
+    Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
     
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
@@ -61,7 +69,7 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
-    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, bool slashesRemoved);
+    Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(string licenceNumber, bool slashesRemoved, bool includeDetail = true);
     
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
@@ -77,7 +85,9 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
-    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+    Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
+
+    Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId);
 
     Task<List<LicenceListItemAggregate>> GetLicencesListSearchAsync(
         int processRunId,
@@ -99,4 +109,10 @@ public interface IAbstractionLicenceDatabaseReadService
     Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber);
     
     Task<List<DocumentNaldPurposeMap>> GetDocumentNaldPurposeMapAsync();
+    
+    Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync();
+    Task<int> GetCurrentVerificationsCount();
+    Task<int> GetCurrentBackupVerificationsCount();
+    
+    Task<List<Licence>> GetLicencesByFileIdAsync(Guid fileId);
 }

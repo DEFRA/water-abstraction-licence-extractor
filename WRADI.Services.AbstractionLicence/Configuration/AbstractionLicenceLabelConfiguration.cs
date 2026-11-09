@@ -37,7 +37,11 @@ public static partial class AbstractionLicenceLabelConfiguration
             ("LinkedLicenceNumber", GetGeneralLinkedLicenceNumbers()),
             
             ("ScheduleOfConditionsA", GetScheduleOfConditionsA()),
-            ("ScheduleOfConditionsB", GetScheduleOfConditionsB())
+            ("ScheduleOfConditionsB", GetScheduleOfConditionsB()),
+
+            // Matched for their own sake, not for the schema: TemplateTypeIdentifierService reads
+            // these groups off the result to classify the document's template.
+            ..TemplateHeaderLabels.GetLabelGroups()
         ];
     }
     
@@ -607,7 +611,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                     MultipleServiceMatchBehaviour.UseMostSubResultsUseLastServiceResultIfEqual,
                 IncludeWholeLine = true,
                 PreviousLinesToFetch = 0,
-                NextLinesToFetch = 60,
+                NextLinesToFetch = 100,
                 SubLabels = 
                 [
                     new()
@@ -1631,6 +1635,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     new("(3)"),
                                     new("(4)"),
                                     new("(5)"),
+                                    new("ii)"),
+                                    new("i)"),
                                     new("[START_OF_BLOCK]")
                                 ],
                                 TextEnd = [
@@ -1646,6 +1652,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                     new("(4)"),
                                     new("(5)"),
                                     new("(6)"),
+                                    new("iii)"),
+                                    new("ii)"),                     
                                     new("[END_OF_BLOCK]")
                                 ],
                                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -1671,6 +1679,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("(3)"),
                                             new("(4)"),
                                             new("(5)"),
+                                            new("ii)"),
+                                            new("i)")
                                         ],
                                         Position = LabelPosition.ApplicableToMost,
                                         Format = "Text",
@@ -1704,7 +1714,10 @@ public static partial class AbstractionLicenceLabelConfiguration
                                             new("(2)"),
                                             new("(3)"),
                                             new("(4)"),
-                                            new("(5)")
+                                            new("(5)"),
+                                            new("iii)"),
+                                            new("ii)"),
+                                            new("i)"),
                                         ],
                                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithASingleValueButMultipleLines,
                                         Position = LabelPosition.ApplicableToMost,
@@ -2004,9 +2017,14 @@ public static partial class AbstractionLicenceLabelConfiguration
                 [
                     new("MEANS OF ABSTRACTION")
                 ],
+                // A spelling missing here does not fail to match - the section runs on to
+                // [END_OF_BLOCK] and the value swallows Purposes and Period. GetPurposeLabels
+                // carries the same spellings; keep the two in step.
                 TextEnd =
                 [
                     new("PURPOSE OF ABSTRACTION"),
+                    new("PURPOSES OF ABSTRACTION"),
+                    new("PURPOSE(S) OF ABSTRACTION"),
                     new("[END_OF_BLOCK]")
                 ],
                 Position = LabelPosition.TextToFindIsBetweenLabels,
@@ -2062,7 +2080,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                                 Possibilities = new List<TextToMatch>
                                 {
                                     new("megalitres"),
-                                    new("mega litres"),                                    
+                                    new("mega litres"),
                                     new("litres"),
                                     new("cubic metres"),
                                     new("cubic meters"),
@@ -2207,6 +2225,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause                            
                             new("6.1") { LineMustStartWith = true },
+                            new("6.2.1") { LineMustStartWith = true },
+                            new("6.2.2") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2233,6 +2253,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("6.10") { LineMustStartWith = true },
                             new("6.1 0") { LineMustStartWith = true }, // TODO should fix underlying cause
                             new("6.1[END_OF_COLUMN]") { LineMustStartWith = true },
+                            new("6.2.1") { LineMustStartWith = true },
+                            new("6.2.2") { LineMustStartWith = true },
                             new("6.2") { LineMustStartWith = true },
                             new("6.3") { LineMustStartWith = true },
                             new("6.4") { LineMustStartWith = true },
@@ -2308,6 +2330,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Name = "DocumentIdentifier",
                         Possibilities = documentIdentifierPrefix != null ? [
                             new($"{documentIdentifierPrefix}.1") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.2.1") { LineMustStartWith = true },
+                            new($"{documentIdentifierPrefix}.2.2") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.2") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.3") { LineMustStartWith = true },
                             new($"{documentIdentifierPrefix}.4") { LineMustStartWith = true },
@@ -2326,7 +2350,7 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("9. ") { LineMustStartWith = true }
                         ] : [],
                         Position = LabelPosition.ApplicableToMost,
-                        Format = "Number",
+                        Format = "Text",
                         PreviousLinesToFetch = 0,
                         NextLinesToFetch = 0
                     },
@@ -2395,6 +2419,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         ],
                         Remove = [
                             new ($"{documentIdentifierPrefix}.1"),
+                            new ($"{documentIdentifierPrefix}.2.1"),
+                            new ($"{documentIdentifierPrefix}.2.2"),
                             new ($"{documentIdentifierPrefix}.2"),
                             new ($"{documentIdentifierPrefix}.3"),
                             new ($"{documentIdentifierPrefix}.4"),
@@ -2409,6 +2435,17 @@ public static partial class AbstractionLicenceLabelConfiguration
                         IncludeStartLabelText = true,
                         IncludeEndLabelText = true,
                         MultipleMatchBehaviour = MultipleMatchBehaviour.FindMultipleInstancesOfLabelWithMultipleValuesPerLabel
+                    },
+                    new()
+                    {
+                        Name = "LegalText",
+                        Text =
+                        [
+                            new("as may be renewed from time"),
+                            new("or such other licence")
+                        ],
+                        Position = LabelPosition.LabelIsBeforeTextToFind,
+                        Format = "Text"
                     },
                     new()
                     {
@@ -2460,7 +2497,9 @@ public static partial class AbstractionLicenceLabelConfiguration
                             "spray irrigation", // TODO add more types here
                             "trickle irrigation",
                             "mineral washing",
-                            "groundwater augmentation"
+                            "groundwater augmentation",
+                            "industrial",
+                            "non-evaporative cooling"
                         ],
                         SubLabels =
                         [
@@ -2580,6 +2619,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         ],
                         Position = LabelPosition.TextToFindIsBetweenLabels,
                         IncludeStartLabelText = true,
+                        FindMultipleOnSingleLine = true,
+                        MultipleMatchBehaviour = MultipleMatchBehaviour.FindSingleInstanceOfLabelWithMultipleValues,
                         Format = "Text",
                         Possibilities =
                         [
@@ -2985,6 +3026,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("1 ")
@@ -3025,6 +3068,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },                            
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3049,6 +3094,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },                            
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3084,6 +3131,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3119,6 +3168,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3149,6 +3200,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3186,6 +3239,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         Remove =
                         [
                             new("6.1") { ExceptWhenInsideWord = true },
+                            new("6.2.1") { ExceptWhenInsideWord = true },
+                            new("6.2.2") { ExceptWhenInsideWord = true },
                             new("6.2") { ExceptWhenInsideWord = true },
                             new("6.3") { ExceptWhenInsideWord = true },
                             new("(1)"),
@@ -3235,6 +3290,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                             new("Abstraction Point Hourly")
                         ],
                         TextEnd = [
+                            new("6.2.1"),
+                            new("6.2.2"),
                             new("6.2"),
                             new("[END_OF_BLOCK]")
                         ],

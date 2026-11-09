@@ -20,6 +20,9 @@ export const ContainedInList = ({sections, onJumpToPage, showLinkReason}: Contai
                         <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px 16px', alignItems: 'center'}}>
                             <div><strong>Source:</strong> {section.source || 'N/A'}</div>
                             <div><strong>Section:</strong> {section.sectionName || 'N/A'}</div>
+                            {section.documentIdentifier && (
+                                <div><strong>Document Identifier:</strong> {section.documentIdentifier}</div>
+                            )}
                             {showLinkReason && (
                                 <div><strong>Link Reason:</strong> {section.linkReason || 'N/A'}</div>
                             )}

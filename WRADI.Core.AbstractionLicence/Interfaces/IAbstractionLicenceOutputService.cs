@@ -26,22 +26,37 @@ public interface IAbstractionLicenceOutputService
     Task<Dictionary<string, LicenceSet>> GetLicenceSetsAsync(int processRunId, List<Licence> licences);
     
     Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId);
+    
+    Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId);
 
+    Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false);
+    
     Task<Licence?> GetLicenceAsync(Guid fileId, int processRunId, bool applyVerifications = false);
 
     Task<Licence?> GetLicenceAsync(string licenceNumber, int processRunId, bool applyVerifications = false);
     
     Task<LinkedLicence[]?> GetLinkedLicencesAsync(string permitNumber);
 
-    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId);
+    Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber);
 
     Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId);
+    Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take);
+    
+    Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync();
+    Task<int> GetCurrentVerificationsCountAsync();
+    Task<int> GetCurrentBackupVerificationsCountAsync();
+    Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber);
 
+    Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification> verifications);
+    
+    Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications);
     Task<Dictionary<string, LicenceVerificationLookups>> GetVerificationLookupsBySectionNameAsync(int maxProcessRunId);
 
     Task<int> SaveLicenceSectionVerificationAsync(LicenceSectionVerification verification);
 
     Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
+
+    Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds);
 
     Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery);
 
@@ -49,7 +64,9 @@ public interface IAbstractionLicenceOutputService
 
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
-    Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId);
+    Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
+
+    Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId);
     
     Task FinishProcessRunAsync(ProcessRun processRun);
 
@@ -65,4 +82,6 @@ public interface IAbstractionLicenceOutputService
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
     Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(int processRunId);
 }

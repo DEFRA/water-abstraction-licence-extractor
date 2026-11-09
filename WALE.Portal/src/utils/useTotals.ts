@@ -115,7 +115,7 @@ function countNonEmptyVerificationTypes(data: OutputListDataItem[], verification
                     if (verificationType === "Flagged")
                     {
                         count += sectionItems.filter(sectionItem =>
-                            sectionItem.scrapedDataIsDifferent
+                            sectionItem.isFlagged
                         ).length;
                     }
                     else {

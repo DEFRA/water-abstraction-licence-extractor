@@ -17,6 +17,8 @@ public interface IAbstractionLicenceDatabaseWriteService
 
     Task<int> DeleteLicenceSectionVerificationAsync(int licenceSectionVerificationId);
 
+    Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds);
+
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
     Task ClearLicenceFinderResultsAsync();
@@ -31,10 +33,20 @@ public interface IAbstractionLicenceDatabaseWriteService
     
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 
-    public Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status);
+    public Task UpdateLicenceAsync(
+        int licenceId,
+        string licenceData,
+        Guid fileId,
+        int processRunId,
+        string status,
+        string? filename,
+        string? permitNumber,
+        string? licenceNumber,
+        int matchesResultId);
 
     public Task<int> SaveLicenceAsync(
         string? licenceNumber,
+        int matchesResultId,
         string? filename,
         string status,
         string licenceData,
@@ -50,4 +62,8 @@ public interface IAbstractionLicenceDatabaseWriteService
     Task AddDocumentNaldPurposeMapAsync(string documentDescription, NaldPurposeData naldPurpose, string matchType);
     
     Task AddDocumentNaldPurposeMatchAsync(string licNo, string documentDescription, NaldPurposeData naldPurpose, string matchType);
+    
+    Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification>  verifications);
+
+    Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications);
 }

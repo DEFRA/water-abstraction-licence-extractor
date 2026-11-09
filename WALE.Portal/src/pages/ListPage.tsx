@@ -1,5 +1,5 @@
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem } from "../api/generated/apiClient.ts";
+import {OutputListDataItem , CumulativeFilterCounts} from "../api/generated/apiClient.ts";
 import {useState, useEffect, useCallback} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableRow from "../components/LicencesTableRow";
@@ -45,6 +45,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         ocrScan: undefined,
         issueYear: undefined,
         meansFound: undefined,
+        isLicenceNumberFlagged: undefined,
+        isIssueDateFlagged: undefined,
         ShortLicenceSetId: '',
         linkedLicencesType: '',
         verificationType: undefined,
@@ -53,6 +55,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         licenceNumbers: []
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
+    const [cumulativeFilterCounts, setCumulativeFilterCounts] = useState<CumulativeFilterCounts | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -97,6 +100,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty +
                 currentQuery.issueYear +
                 currentQuery.meansFound +
+                currentQuery.isLicenceNumberFlagged +
+                currentQuery.isIssueDateFlagged +
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
                 currentQuery.verificationType +
@@ -129,6 +134,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.pointsEmpty,
                 currentQuery.issueYear,
                 currentQuery.meansFound,
+                currentQuery.isLicenceNumberFlagged,
+                currentQuery.isIssueDateFlagged,
                 currentQuery.ShortLicenceSetId,
                 currentQuery.linkedLicencesType,
                 currentQuery.verificationType,
@@ -138,6 +145,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
             );
 
             setOutputList(listDataItems.records);
+            setCumulativeFilterCounts(listDataItems.cumulativeFilterCounts);
             setVerifyType(currentQuery.verificationType ?? '');
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
@@ -168,9 +176,9 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         updateModalOutputItem
     } = useReportModals();
 
-    const openReportWithId = useCallback((fileId: string) => {
+    const openReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number) => {
         const knownItem = outputList.find(item => item.fileId === fileId);
-        openReport(fileId, processRunId, knownItem, openReportWithId);
+        openReport(fileId, licenceId, matchesResultId, processRunId, knownItem, openReportWithId);
 
         if (!knownItem) {
             const licenceNumber = getLicenceNumber(fileId);
@@ -180,6 +188,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                     'N/A',
                     '',
                     0,
+                    undefined,
+                    undefined,
                     undefined,
                     undefined,
                     undefined,
@@ -207,8 +217,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         }
     }, [openReport, processRunId, outputList, getLicenceNumber, updateModalOutputItem]);
 
-    const openLicenceSetReportWithId = useCallback((fileId: string, licenceSetId: string) => {
-        openLicenceSetReport(fileId, licenceSetId, processRunId);
+    const openLicenceSetReportWithId = useCallback((fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => {
+        openLicenceSetReport(fileId, licenceId, matchesResultId, licenceSetId, processRunId);
     }, [openLicenceSetReport, processRunId]);
 
     const updateQuery = <K extends keyof ProcessRunQuery>(
@@ -333,7 +343,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                             />
                         ))}
                         </tbody>
-                        <tfoot><LicencesTableFooters totals={totals}/></tfoot>
+                        <tfoot><LicencesTableFooters cumulativeTotals={cumulativeFilterCounts} totals={totals}/></tfoot>
                     </table>
                 </div>
             )}
@@ -362,7 +372,7 @@ function ListPageContent({processRunId}: {processRunId: number}) {
 
             {activeTab === 'actions' && (
                 <div id="actions">
-                    <ScrapeDocuments/>
+                    <ScrapeDocuments documentType="AbstractionLicence"/>
                 </div>
             )}
 

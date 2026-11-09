@@ -26,6 +26,15 @@ public class LicenceController(
         
         return Ok(licences);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetByLicenceIdAsync(
+        [FromQuery] int licenceId,
+        [FromQuery] bool applyVerifications = false)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(licenceId, applyVerifications);
+        return Ok(licence);
+    }
     
     [HttpGet]
     public async Task<IActionResult> GetByFileIdAsync(

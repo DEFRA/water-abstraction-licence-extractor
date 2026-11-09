@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 
@@ -101,8 +102,29 @@ public class NoPersistenceOutputService : IOutputService
 
     public Task<List<ProcessRun>> GetAllProcessRunsAsync() => Task.FromResult(new List<ProcessRun>());
 
+    public Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId) =>
+        Task.FromResult<MatchesResult?>(null);
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId) =>
         Task.FromResult<MatchesResult?>(null);
+
+    public Task<int> SaveStubMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        bool isUpdate = false) => Task.FromResult(0);
+
+    public Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error) => Task.FromResult(0);
+
+    public Task SaveThumbnailAsync(Guid fileId) => Task.CompletedTask;
+
+    public Task UpdateProcessRunListProjectionAsync(int processRunId) => Task.CompletedTask;
 
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId) =>
         Task.FromResult<MatchesResult?>(null);

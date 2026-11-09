@@ -5,7 +5,12 @@ namespace WALE.ProcessFile.Services.Helpers;
 public static class ConfigHelper
 {
     public static string GetRequiredString(IConfiguration config, string key) =>
-        config[key] ?? throw new NullReferenceException(key);
+        GetOptionalString(config, key) ?? throw new NullReferenceException(key);
+
+    public static string? GetOptionalString(IConfiguration config, string key)
+    {
+        return config[key];
+    }
 
     public static int GetRequiredInt(IConfiguration config, string key) =>
         int.Parse(config[key] ?? throw new NullReferenceException(key));

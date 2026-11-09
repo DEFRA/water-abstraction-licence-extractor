@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.NoOcrService;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.ProcessFile.Core.Interfaces;
@@ -19,18 +20,17 @@ public interface IDatabaseWriteService
     
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data);
 
-    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false);
     
-    Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate);
+    Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error);
     
     public Task<int> SaveMatchesResultAsync(string matchesResult, Guid fileId, int processRunId, bool isUpdate);
-
-    public Task SavePageScreenshotAsync(
-        int pageNumber,
-        string noOcrServiceName,
-        Guid fileId, 
-        byte[] data,
-        int processRunId);
 
     Task<NoOcrServicePageCacheRequest> SaveNoOcrPageAsync(NoOcrServicePageCacheRequest request, string data, int processRunId);
     
@@ -40,8 +40,12 @@ public interface IDatabaseWriteService
    
     Task SaveAllPagesTextAsync(string documentLinesStr, Guid fileId, string noOcrServiceName, int processRunId);
 
-    Task SaveImageOnPageAsync(
-        byte[] bytes,
+    Task SaveDocumentTextAsync(Guid fileId, string sourceService, int formatVersion, string text);
+
+    // Metadata only - image_on_page.data holds an empty placeholder for rows written this way.
+    // Real bytes live in S3 (see IImageService); this exists so GetImagesAsync's listing keeps
+    // working without a schema change.
+    Task SaveImageOnPageMetadataAsync(
         int width,
         int height,
         Guid fileId,
@@ -74,7 +78,4 @@ public interface IDatabaseWriteService
     Task DeleteTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
 
     Task DeleteTemporaryOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);
-
-    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
-        int processRunId);
 }

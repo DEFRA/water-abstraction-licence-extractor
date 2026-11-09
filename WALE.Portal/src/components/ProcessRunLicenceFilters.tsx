@@ -19,9 +19,7 @@ export function ProcessRunLicenceFilters({
                                              issuers,
                                              shortLicenceIds,
                                              issueDates,
-                                             setPageNumber,
-                                             onToggleSingles,
-                                             showSingles
+                                             setPageNumber
                                          }: ProcessRunLicenceFiltersProps) {
     const [pendingQuery, setPendingQuery] = useState<ProcessRunQuery>(query);
 
@@ -63,6 +61,8 @@ export function ProcessRunLicenceFilters({
             issueYear: undefined,
             issuer: undefined,
             meansFound: undefined,
+            isLicenceNumberFlagged: undefined,
+            isIssueDateFlagged: undefined,
             linkedLicencesType: undefined,
             ShortLicenceSetId: undefined,
             verificationType: undefined
@@ -89,18 +89,6 @@ export function ProcessRunLicenceFilters({
 
     return (
         <>
-            <tr>
-                <td colSpan={11}></td>
-                <td>
-                    <input
-                        type="checkbox"
-                        id="showSingles"
-                        checked={showSingles}
-                        onChange={(e) => onToggleSingles(e.target.checked)}
-                    /> Show singles
-                </td>
-                <td colSpan={2}></td>
-            </tr>
         <tr>
             <td> 
                 <button
@@ -113,7 +101,25 @@ export function ProcessRunLicenceFilters({
             </td>
 
             <td>
-               
+                <select
+                    className={pendingQuery.isLicenceNumberFlagged === undefined ? "" : "filter-active"}
+                    value={
+                        pendingQuery.isLicenceNumberFlagged === undefined
+                            ? ""
+                            : String(pendingQuery.isLicenceNumberFlagged)
+                    }
+                    onChange={e =>
+                        updatePendingQuery(
+                            "isLicenceNumberFlagged",
+                            e.target.value === ""
+                                ? undefined
+                                : e.target.value === "true"
+                        )
+                    }
+                >
+                    <option value="">All</option>
+                    <option value="true">Flagged</option>
+                </select>
 
                 <button
                     type="button"
@@ -246,20 +252,25 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
-                    className={!pendingQuery.issueYear ? "" : "filter-active"}
+                    className={!pendingQuery.issueYear && pendingQuery.isIssueDateFlagged === undefined ? "" : "filter-active"}
                     value={
-                        pendingQuery.issueYear === undefined
-                            ? ""
-                            : String(pendingQuery.issueYear)
+                        pendingQuery.isIssueDateFlagged
+                            ? "flagged"
+                            : pendingQuery.issueYear === undefined
+                                ? ""
+                                : String(pendingQuery.issueYear)
                     }
-                    onChange={e =>
-                        updatePendingQuery(
-                            "issueYear",
-                            e.target.value === "" ? undefined : Number(e.target.value)
-                        )
-                    }
+                    onChange={e => {
+                        const value = e.target.value;
+                        setPendingQuery(prev => ({
+                            ...prev,
+                            issueYear: value === "" || value === "flagged" ? undefined : Number(value),
+                            isIssueDateFlagged: value === "flagged" ? true : undefined
+                        }));
+                    }}
                 >
-                    <option value="">All years</option>
+                    <option value="">All</option>
+                    <option value="flagged">Flagged</option>
 
                     {issueDates?.map(year => (
                         <option key={year} value={year}>
@@ -341,10 +352,12 @@ export function ProcessRunLicenceFilters({
                     <option value="NaldStatusLive">Live</option>
                     <option value="NaldStatusRevoked">Revoked</option>
                     <option value="NaldStatusExpired">Expired</option>
+                    <option value="NaldOnly">NALD Only</option>
+                    <option value="NoDocument">No Document</option>
                 </select>
             </td>
 
-            <td className='default-hidden'>
+            <td>
                 <select
                     className={!pendingQuery.ShortLicenceSetId ? "" : "filter-active"}
                     value={pendingQuery.ShortLicenceSetId ?? ""}
@@ -427,7 +440,7 @@ export function ProcessRunLicenceFilters({
         <td style={{width: '7%'}}>
             Linked&nbsp;licences <a href="#" onClick={(e) => { e.preventDefault(); handleSort('linkedLicences'); }}>&#8693;</a>
         </td>
-        <td className='default-hidden' style={{width: '8%'}}>
+        <td style={{width: '8%'}}>
             Licence sets <a href="#" onClick={(e) => { e.preventDefault(); handleSort('licenceSets'); }}>&#8693;</a>
         </td>
         <td style={{width: '10%'}}>

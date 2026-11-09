@@ -5,6 +5,10 @@ public class OutputListDataItem
     public int? processRunId { get; set; }
     
     public Guid fileId { get; set; }
+    
+    public int licenceId { get; set; }
+    
+    public int matchesResultId { get; set; }
 
     public string? filename { get; set; }
     
@@ -28,11 +32,23 @@ public class OutputListDataItem
     
     public string? issueDate { get; set; }
     
+    public string? naldOrigSignatureDate { get; set; }
+    
+    public string? naldSignatureDate { get; set; }
+    
+    public bool isIssueDateFlagged { get; set; }
+    
     public string? issuer { get; set; }
     
     public bool meansFound { get; set; }
     
     public string? status{ get; set; }
+    
+    public bool isLicenceNumberFlagged { get; set; }
+    
+    public string? licenceNumberFlagReason { get; set; }
+    
+    public string? thumbnailUrl { get; set; }
     
     public LinkedLicence[]? linkedLicences { get; set; }
     

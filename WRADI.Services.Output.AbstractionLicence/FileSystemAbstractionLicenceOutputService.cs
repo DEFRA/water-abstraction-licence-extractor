@@ -64,7 +64,7 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return File.WriteAllTextAsync(jsListFilePath, "var data = " +
             JsonSerializer.Serialize(listData, JsonHelper.GetSerializerOptions()) + ";");
     }
-    
+
     public Task FinishProcessRunAsync(ProcessRun processRun)
     {
         return Task.CompletedTask;
@@ -96,6 +96,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
+    public Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<Licence>> GetLicencesAsync(int processRunId, int skip, int take)
     {
         throw new NotImplementedException();
@@ -111,12 +116,17 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<List<LicenceSet>> GetLicenceSetsAsync(int processRunId)
+    public Task<List<LicenceSet>> GetLicenceSetsAsync(int licenceId)
     {
         throw new NotImplementedException();
     }
 
     public Task<List<LicenceSet>> GetLicenceSetsAsync(Guid fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Licence?> GetLicenceAsync(int licenceId, bool applyVerifications = false)
     {
         throw new NotImplementedException();
     }
@@ -136,12 +146,47 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId)
+    public Task<IEnumerable<LicenceSectionVerification>> GetLicenceSectionVerificationsAsync(Guid licenceFileId, string sourceLicenceNumber)
     {
         return Task.FromResult<IEnumerable<LicenceSectionVerification>>([]);
     }
 
     public Task<IEnumerable<LicenceSectionVerification>> GetAllVerificationsAsync(int maxProcessRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetExportVerificationsAsync(int skip, int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<VerificationBackupVersion> GetCurrentVerificationsBackupVersionAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetCurrentBackupVerificationsCountAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<IEnumerable<LicenceSectionVerification>> GetVerificationsBackupVersionAsync(int versionNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> CreateVerificationsBackupVersionAsync(IEnumerable<LicenceSectionVerification> verifications)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> ImportVerificationsAsync(IEnumerable<LicenceSectionVerification> verifications)
     {
         throw new NotImplementedException();
     }
@@ -162,6 +207,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         return Task.FromResult(0);
     }
 
+    public Task<int> DeleteLicenceSectionVerificationsAsync(IEnumerable<int> licenceSectionVerificationIds)
+    {
+        return Task.FromResult(0);
+    }
+
     public Task<int> GetTotalLicenceCountAsync(int processRunId, ProcessRunQuery processRunQuery)
     {
         throw new NotImplementedException();
@@ -177,7 +227,12 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
-    public Task<Dictionary<Guid, string>> GetLicenceFileIdsAsync(int processRunId)
+    public Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Dictionary<int, string>> GetLicenceNumberFlagReasonsAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

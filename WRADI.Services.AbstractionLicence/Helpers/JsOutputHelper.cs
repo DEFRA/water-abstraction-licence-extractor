@@ -23,10 +23,6 @@ public static class JsOutputHelper
         var licenceHolderOcrConfidence =
             GetValueOrDefault<double, double?>(licence.NoneSchemaData, "issuedToConfidence", null);
         var ocr = GetValueOrDefault<string, string>(licence.NoneSchemaData, "ocr", "--");
-        var serviceName = GetValueOrDefault<string[], string>(licence.NoneSchemaData, "servicesUsed",
-            GeneralConstants.PdfPigDataExtractorServiceName);
-
-        var durationInMSeconds = (int)(DateTime.Now - dtStart).TotalMilliseconds;
 
         var licenceNumber = licence.LicenceNumber;
         var licenceNumberOcrConfidence =
@@ -51,6 +47,8 @@ public static class JsOutputHelper
         }
 
         var issueDate = licence.LicenceVersion.IssueDate?.ToString("yyyy-MM-dd");
+        var naldOrigSignatureDate = licence.LicenceVersion.NaldOrigSignatureDate?.ToString("yyyy-MM-dd");
+        var naldSignatureDate = licence.LicenceVersion.NaldSignatureDate?.ToString("yyyy-MM-dd");
         var issuer = licence.LicenceVersion.Issuer;
 
         var licenceSets = licence.LicenceSets
@@ -61,6 +59,8 @@ public static class JsOutputHelper
         return new IntermediateOutputLicence
         {
             Filename = licence.Filename,
+            LicenceId = licence.LicenceId,
+            MatchesResultId = licence.MatchesResultId,
             LicenceHolder = licenceHolder,
             LicenceHolderOcrConfidence = licenceHolderOcrConfidence,
             Ocr = ocr,
@@ -72,6 +72,9 @@ public static class JsOutputHelper
             AggregateIds = licence.AbstractionLimits.Aggregates?.Select(a => a.Id).ToArray() ?? [],
             NaldHasAggregateCondition = licence.NaldHasAggregateCondition,
             IssueDate = issueDate,
+            NaldOrigSignatureDate = naldOrigSignatureDate,
+            NaldSignatureDate = naldSignatureDate,
+            IsIssueDateFlagged = IsIssueDateFlagged(licence.LicenceVersion),
             Issuer = !string.IsNullOrEmpty(issuer) ? issuer : string.Empty,
             MeansFound = meansFound,
             Status = status,
@@ -82,10 +85,10 @@ public static class JsOutputHelper
         };
     }
 
-    public static IReadOnlyList<OutputListDataItem> ToListData(List<IntermediateOutputLicence> outputLines,
+    public static IReadOnlyList<OutputListDataItem> ToListData(
+        List<IntermediateOutputLicence> outputLines,
         int processRunId,
-        Dictionary<string, LicenceVerificationLookups> verificationLookups,
-        Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Dictionary<string, LicenceVerificationLookups> verificationLookups)
     {
         var listData = new List<OutputListDataItem>();
 
@@ -96,8 +99,6 @@ public static class JsOutputHelper
                 new AggregatesVerificationOutputStrategy()
             }.ToDictionary(s => s.SectionName);
 
-        var verificationSectionNames = verificationLookups.Keys.ToList();
-
         var orderedOutputLines = outputLines
             .OrderBy(ol => ol.Filename)
             .ToList();
@@ -106,7 +107,7 @@ public static class JsOutputHelper
         {
             var filenameNoExtension = FileHelper.GetFilenameWithoutExtension(outputLine.Filename!);
 
-            var licenceSets = outputLine.LicenceSetReferences?
+            var itemLicenceSets = outputLine.LicenceSetReferences?
                 .Select(lsr =>
                 {
                     var ls = outputLine.LicenceSets!.FirstOrDefault(ls1 => ls1.LicenceSetId == lsr.LicenceSetId);
@@ -119,15 +120,13 @@ public static class JsOutputHelper
                             ShortLicenceSetId = "ERROR"
                         };
                     }
-
-                    var licenceSetType = lsr.LicenceSetType;
-
+                    
                     return new OutputListDataItemLicenceSet
                     {
                         LicenceSetId = ls.LicenceSetId,
                         ShortLicenceSetId = ls.ShortLicenceSetId,
-                        LicenceSetTypes = ls.LicenceSetTypes,
-                        LicenceSetType = licenceSetType
+                        LicenceSetType = ls.LicenceSetType,
+                        AggregateSets = ls.AggregateSets
                     };
                 })
                 .ToArray() ?? [];
@@ -137,6 +136,8 @@ public static class JsOutputHelper
                 processRunId = processRunId,
                 filename = filenameNoExtension,
                 fileId = outputLine.DmsFileId!.Value,
+                licenceId = outputLine.LicenceId,
+                matchesResultId = outputLine.MatchesResultId,
                 licenceNumber =
                     $"{outputLine.LicenceNumber}{ToPercent(outputLine.LicenceNumberOcrConfidence, outputLine.Ocr)}",
                 licenceHolder =
@@ -148,29 +149,49 @@ public static class JsOutputHelper
                 naldHasAggregateCondition = outputLine.NaldHasAggregateCondition,
                 ocr = outputLine.Ocr == "OCR",
                 issueDate = outputLine.IssueDate,
+                naldOrigSignatureDate = outputLine.NaldOrigSignatureDate,
+                naldSignatureDate = outputLine.NaldSignatureDate,
+                isIssueDateFlagged = outputLine.IsIssueDateFlagged,
                 issuer = outputLine.Issuer,
                 meansFound = outputLine.MeansFound,
                 status = outputLine.Status,
                 linkedLicences = outputLine.LinkedLicences?.OrderBy(ll => ll.LicenceNumber).ToArray() ?? [],
-                licenceSets = licenceSets
+                licenceSets = itemLicenceSets
             };
 
-            foreach (var sectionName in verificationSectionNames)
+            foreach (var strategy in verificationOutputStrategies.Values)
             {
-                if (!verificationOutputStrategies.TryGetValue(sectionName, out var strategy)
-                    || !verificationLookups.TryGetValue(sectionName, out var sectionVerificationLookups))
-                {
-                    continue;
-                }
+                var sectionVerificationLookups = verificationLookups.GetValueOrDefault(
+                    strategy.SectionName, new LicenceVerificationLookups());
 
-                strategy.HandleVerifications(listRow, sectionVerificationLookups, outputLine.DmsFileId!.Value,
-                    outputLine.LicenceNumber!, fileIdToLicenceNumberMapping);
+                strategy.HandleVerifications(
+                    listRow,
+                    sectionVerificationLookups,
+                    outputLine.DmsFileId!.Value,
+                    outputLine.LicenceNumber!);
             }
 
             listData.Add(listRow);
         }
 
         return listData;
+    }
+
+    // Flagged when the issue date matches neither of the NALD signature dates that are present
+    private static bool IsIssueDateFlagged(LicenceVersion licenceVersion)
+    {
+        if (licenceVersion.IssueDate is null)
+        {
+            return false;
+        }
+
+        if (licenceVersion.NaldOrigSignatureDate is null && licenceVersion.NaldSignatureDate is null)
+        {
+            return false;
+        }
+
+        return licenceVersion.NaldOrigSignatureDate?.Date != licenceVersion.IssueDate.Value.Date &&
+               licenceVersion.NaldSignatureDate?.Date != licenceVersion.IssueDate.Value.Date;
     }
 
     private static string ToPercent(double? value, string? ocr)

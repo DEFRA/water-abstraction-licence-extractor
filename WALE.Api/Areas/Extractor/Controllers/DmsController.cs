@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
@@ -46,9 +48,18 @@ public class DmsController(ICacheService cacheService) : Controller
     [HttpGet]
     public async Task<IActionResult> GetExtractAsync(
         [FromQuery] int skip = 0,
-        [FromQuery] int take = int.MaxValue)
+        [FromQuery] int take = int.MaxValue,
+        // Required rather than defaulted: a caller that omits it would otherwise be served the
+        // licence extract, which reads as plausible data for any other document type.
+        [FromQuery][Required] string extractType = "")
     {
-        var dmsExtract = await cacheService.GetDmsExtractAsync(skip, take);
+        if (string.IsNullOrWhiteSpace(extractType))
+        {
+            return BadRequest($"extractType is required - '{DocumentTypes.AbstractionLicence}' "
+                + $"or '{DocumentTypes.WrInspectionReport}'");
+        }
+
+        var dmsExtract = await cacheService.GetDmsExtractAsync(skip, take, extractType);
         return Ok(dmsExtract);
     }
     

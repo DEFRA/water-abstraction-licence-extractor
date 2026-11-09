@@ -18,6 +18,7 @@ public interface INoOcrDataExtractorService
     public Task<List<DocumentLine>>
         GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             PdfDocument pdfDocument,
+            LookupConfiguration configuration,
             ICacheService cacheService,
             IOutputService outputService,
             int processRunId);

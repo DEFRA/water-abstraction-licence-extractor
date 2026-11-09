@@ -26,7 +26,15 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
     
-    public async Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
+    public Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync()
+    {
+        return ReferenceDataCache.GetAsync(
+            $"{nameof(ApiAbstractionLicenceCacheService)}.LinkedLicenceRawData|{httpClient.BaseAddress}",
+            ReferenceDataCache.DefaultTimeToLive,
+            FetchNaldLinkedLicenceRawDataAsync);
+    }
+
+    private async Task<List<NaldLinkedLicenceRawData>> FetchNaldLinkedLicenceRawDataAsync()
     {
         var path = "/Extractor/LinkedLicence/GetMap";
         
@@ -252,7 +260,15 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()
+    {
+        return ReferenceDataCache.GetAsync(
+            $"{nameof(ApiAbstractionLicenceCacheService)}.ImpoundmentAndAbstraction|{httpClient.BaseAddress}",
+            ReferenceDataCache.DefaultTimeToLive,
+            FetchNaldImpoundmentAndAbstractionLicencesAsync);
+    }
+
+    private async Task<List<NaldLicence>> FetchNaldImpoundmentAndAbstractionLicencesAsync()
     {
         var dtStart = DateTime.UtcNow;
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiAbstractionLicenceCacheService)} - Started getting abstraction licences");
@@ -277,9 +293,10 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
         int regionCode,
-        bool slashesRemoved = false)
+        bool slashesRemoved = false,
+        bool includeDetail = true)
     {
-        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}&slashesRemoved={slashesRemoved}";
+        var path = $"/Extractor/NaldData/Get?licenceNumber={licenceNumber}&regionCode={regionCode}&slashesRemoved={slashesRemoved}&includeDetail={includeDetail}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -311,7 +328,15 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    public Task<Dictionary<string, NaldLicenceNumberHistory>> GetNaldLicenceNumberHistoryAsync()
+    {
+        return ReferenceDataCache.GetAsync(
+            $"{nameof(ApiAbstractionLicenceCacheService)}.LicenceNumberHistory|{httpClient.BaseAddress}",
+            ReferenceDataCache.DefaultTimeToLive,
+            FetchNaldLicenceNumberHistoryAsync);
+    }
+
+    private async Task<Dictionary<string, NaldLicenceNumberHistory>> FetchNaldLicenceNumberHistoryAsync()
     {
         var path = "/Extractor/NaldData/GetNaldLicenceNumberHistory";
 

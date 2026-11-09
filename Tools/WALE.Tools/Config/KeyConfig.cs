@@ -306,6 +306,31 @@ public static class KeyConfig
         }
     }
     
+    private static string? _libreOfficePath;
+
+    /// <summary>
+    /// The soffice binary, used by ConvertWordInspectionReportsToPdf. On macOS this is inside the
+    /// app bundle (/Applications/LibreOffice.app/Contents/MacOS/soffice), not on the PATH.
+    /// </summary>
+    public static string LibreOfficePath
+    {
+        get
+        {
+            if (_libreOfficePath != null)
+            {
+                return _libreOfficePath;
+            }
+
+            _libreOfficePath = Config["LibreOfficePath"]
+                ?? throw new InvalidOperationException(
+                    "LibreOfficePath user secret not set. Run: dotnet user-secrets set "
+                    + "LibreOfficePath \"/Applications/LibreOffice.app/Contents/MacOS/soffice\" "
+                    + "--project Tools/WALE.Tools");
+
+            return _libreOfficePath;
+        }
+    }
+
     private static string? _tesseractExeName;
 
     public static string TesseractExeName
@@ -402,6 +427,42 @@ public static class KeyConfig
         }
     }
     
+    private static string? _awsS3RegionName;
+
+    public static string AwsS3RegionName
+    {
+        get
+        {
+            if (_awsS3RegionName != null)
+            {
+                return _awsS3RegionName;
+            }
+
+            _awsS3RegionName = Config["AwsS3RegionName"]!;
+            return _awsS3RegionName;
+        }
+    }
+
+    private static string? _awsS3AssetsBucketName;
+
+    public static string AwsS3AssetsBucketName
+    {
+        get
+        {
+            if (_awsS3AssetsBucketName != null)
+            {
+                return _awsS3AssetsBucketName;
+            }
+
+            _awsS3AssetsBucketName = Config["AwsS3AssetsBucketName"]!;
+            return _awsS3AssetsBucketName;
+        }
+    }
+
+    // Optional - only needed when AwsS3AccessKey/AwsS3SecretKey are a temporary STS session
+    // rather than a long-lived IAM user's credentials.
+    public static string? AwsS3SessionToken => Config["AwsS3SessionToken"];
+
     private static string? _awsS3ZipPassword;
     
     public static string AwsS3ZipPassword

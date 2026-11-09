@@ -1,3 +1,4 @@
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -9,41 +10,70 @@ public class LinkedLicencesVerificationOutputStrategy : IVerificationOutputStrat
     public string SectionName => "Linked Licences";
 
     public void HandleVerifications(OutputListDataItem listRow, LicenceVerificationLookups verificationLookups,
-        Guid fileId, string licenceNumber, Dictionary<Guid, string> fileIdToLicenceNumberMapping)
+        Guid fileId, string licenceNumber)
     {
         var hasOutgoingVerifications =
-            verificationLookups.ByFileId.TryGetValue(fileId, out var outgoingVerifications);
+            verificationLookups.BySourceLicence.TryGetValue((fileId, licenceNumber), out var outgoingVerifications);
 
         var hasIncomingVerifications =
             verificationLookups.ByItemId.TryGetValue(licenceNumber, out var incomingVerifications);
 
-        if (!hasOutgoingVerifications && !hasIncomingVerifications)
+        var linkedLicences = listRow.linkedLicences?.ToList() ?? [];
+
+        List<LicenceSectionItemSummary> sectionSummaries = hasOutgoingVerifications
+            ? LinkedLicenceVerificationMergeHelper.MergeOutgoing(
+                linkedLicences, outgoingVerifications!, listRow.linkedLicences, listRow.processRunId)
+            : [];
+
+        if (hasIncomingVerifications)
+        {
+            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!);
+        }
+
+        if (hasOutgoingVerifications || hasIncomingVerifications)
+        {
+            listRow.linkedLicences = linkedLicences.Where(ll => ll.ContainedIn?.Length > 0).ToArray();
+        }
+
+        // Add a dummy, flagged entry for any LL without any verifications
+        var existingItemIds = sectionSummaries
+            .Select(s => s.LicenceSectionItemId)
+            .ToHashSet();
+
+        foreach (var linkedLicence in listRow.linkedLicences ?? [])
+        {
+            var linkedLicenceNumber = linkedLicence.LicenceNumber;
+            if (string.IsNullOrWhiteSpace(linkedLicenceNumber) || !existingItemIds.Add(linkedLicenceNumber))
+            {
+                continue;
+            }
+
+            // Only add the dummy entry if the LL is outgoing
+            if (linkedLicence.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) != true)
+            {
+                continue;
+            }
+
+            sectionSummaries.Add(new LicenceSectionItemSummary
+            {
+                LicenceSectionItemId = linkedLicenceNumber,
+                VerificationTypes = [],
+                IsFlagged = true,
+                FlagReason = "New linked licence"
+            });
+        }
+
+        if (sectionSummaries.Count == 0)
         {
             return;
         }
 
-        var linkedLicences = listRow.linkedLicences?.ToList() ?? [];
-
-        if (hasOutgoingVerifications)
+        var summaries = listRow.licenceSectionVerifications?.ToList() ?? [];
+        summaries.Add(new LicenceSectionVerificationSummary
         {
-            var sectionSummaries = LinkedLicenceVerificationMergeHelper.MergeOutgoing(
-                linkedLicences, outgoingVerifications!, listRow.linkedLicences, listRow.processRunId);
-
-            var summaries = listRow.licenceSectionVerifications?.ToList() ?? [];
-            summaries.Add(new LicenceSectionVerificationSummary
-            {
-                LicenceSectionName = SectionName,
-                LicenceSectionItems = sectionSummaries.ToArray()
-            });
-            listRow.licenceSectionVerifications = summaries.ToArray();
-        }
-
-        if (hasIncomingVerifications)
-        {
-            LinkedLicenceVerificationMergeHelper.MergeIncoming(linkedLicences, incomingVerifications!,
-                fileIdToLicenceNumberMapping);
-        }
-
-        listRow.linkedLicences = linkedLicences.Where(ll => ll.ContainedIn?.Length > 0).ToArray();
+            LicenceSectionName = SectionName,
+            LicenceSectionItems = sectionSummaries.ToArray()
+        });
+        listRow.licenceSectionVerifications = summaries.ToArray();
     }
 }

@@ -6,8 +6,12 @@ namespace WALE.ProcessFile.Core.Models;
 public class PdfPage
 {
     public int Number { get; set; }
-    
+
     public int NumberOfImages { get; set; }
+
+    public double Width { get; set; }
+
+    public double Height { get; set; }
 
     [JsonIgnore]
     public string? DigitalText { get; set; }

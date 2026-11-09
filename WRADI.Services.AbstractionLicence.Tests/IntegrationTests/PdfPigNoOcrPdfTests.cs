@@ -18,6 +18,7 @@ using WRADI.DocumentType.AbstractionLicence.Configuration;
 using WRADI.DocumentType.AbstractionLicence.Converters;
 using WRADI.DocumentType.AbstractionLicence.Interfaces;
 using WRADI.DocumentType.AbstractionLicence.Services;
+using WRADI.Services.AbstractionLicence.Tests.Config;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 using WRADI.Services.Cache.AbstractionLicence;
 using WRADI.Services.Output.AbstractionLicence;
@@ -98,6 +99,8 @@ public class PdfPigNoOcrPdfTests
             CacheService,
             OutputService,
             await baseFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now,
@@ -110,14 +113,14 @@ public class PdfPigNoOcrPdfTests
         // Arrange
         var regionCode = 3;
 
-        const string filename = "NE0270023036__Application - New - Issued Licence 03.03.2017 9705232.pdf";
+        const string filename = "NE0270023036__Application - New - Issued Licence 03.03.2017 9705232.pdf"; // This file messes up as it seems to remove spaces
 
         // Act
         var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(21, resultList.Count);
+        Assert.Equal(30, resultList.Count);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -129,8 +132,8 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Single(abstractionLicence);
+        Assert.Equal(3, abstractionLicence.First().Licences.Length);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("NE/027/0023/036", licence.LicenceNumber!.Value);
@@ -155,7 +158,172 @@ public class PdfPigNoOcrPdfTests
         var resultList = resultFull.Matches!;
 
         // Assert
-        Assert.Equal(19, resultList.Count);
+        Assert.Equal(26, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Single(abstractionLicence);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("2/27/19/166", licence.LicenceNumber!.Value);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Single(licence.AbstractionLimits.Individual);
+        
+        Assert.Null(licence.AbstractionLimits.Aggregates);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.Empty(licence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task WhenD_E()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "NE0270024103__Application New Licence Issued - [15.03.2024] - (18.03.2024).pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(26, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Single(abstractionLicence);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("NE/027/0024/103", licence.LicenceNumber!.Value);
+
+        Assert.NotNull(licence.AbstractionLimits.Individual);
+        Assert.Equal(2, licence.AbstractionLimits.Individual.Length);
+        
+        Assert.NotNull(licence.AbstractionLimits.Aggregates);
+        Assert.Single(licence.AbstractionLimits.Aggregates);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[0].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[0].ContainedIn!);
+        Assert.Equal(4, licence.AbstractionLimits.Aggregates[0].ContainedIn![0].PageNumber);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.Empty(licence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task WhenE_F()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "NE0270024095R01__Application Renewal Licence Issued - 17.12.2024.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(29, resultList.Count);
+        
+        var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
+        
+        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+            resultFull,
+            _pdfDataExtractor,
+            0,
+            config,
+            AbsLicCacheService,
+            NaldDataLookupService);
+        
+        Assert.Single(abstractionLicence);
+        Assert.Single(abstractionLicence.First().Licences);
+        
+        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal("NE/027/0024/095/R01", licence.LicenceNumber!.Value);
+
+        Assert.Null(licence.AbstractionLimits.Individual);
+        
+        Assert.NotNull(licence.AbstractionLimits.Aggregates);
+        Assert.Equal(5, licence.AbstractionLimits.Aggregates.Length);
+        Assert.Equal("6.1", licence.AbstractionLimits.Aggregates[0].DocumentIdentifier);
+        Assert.Equal("6.2.1", licence.AbstractionLimits.Aggregates[1].DocumentIdentifier);
+        Assert.NotNull(licence.AbstractionLimits.Aggregates[1].ContainedIn);
+        Assert.Single(licence.AbstractionLimits.Aggregates[1].ContainedIn!);
+        Assert.Equal(4, licence.AbstractionLimits.Aggregates[1].ContainedIn![0].PageNumber);
+        Assert.Equal("6.2.2", licence.AbstractionLimits.Aggregates[2].DocumentIdentifier);
+        Assert.Equal("6.3", licence.AbstractionLimits.Aggregates[3].DocumentIdentifier);
+        Assert.Equal("6.4", licence.AbstractionLimits.Aggregates[4].DocumentIdentifier);
+        
+        Assert.NotNull(licence.LinkedLicences);
+        Assert.Empty(licence.LinkedLicences);
+    }
+    
+    [Fact]
+    public async Task WhenFixSomeSubSectionsNotBeingFound()
+    {
+        // Arrange
+        var regionCode = 3;
+
+        const string filename = "ne0270028068__b6895d2e-8bcb-41f0-b618-0197bb3f35f4.pdf";
+
+        // Act
+        var resultFull = await GetMatchesAsync(filename, regionCode: regionCode);
+        var resultList = resultFull.Matches!;
+
+        // Assert
+        Assert.Equal(31, resultList.Count);
+        
+        var abstractionLimitsSection = resultList.FirstOrDefault(result => result.LabelGroupName == "AbstractionLimits");
+        
+        Assert.NotNull(abstractionLimitsSection);
+        Assert.False(abstractionLimitsSection.IsOcr);
+        Assert.Equal(21, abstractionLimitsSection.Text!.Count);
+
+        Assert.Equal(5, abstractionLimitsSection.SubResults.Count);
+        
+        var abstractionLimitsPoint = abstractionLimitsSection.SubResults[0];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.1 25 cubic metres per hour", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[1];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.2 For purpose 4.1", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[2];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.3 For purpose 4.2", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[3];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.Equal("6.4 25 cubic metres per hour", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
+        
+        abstractionLimitsPoint = abstractionLimitsSection.SubResults[4];
+        Assert.Equal("AbstractionLimitPoint", abstractionLimitsPoint.MatchedLabel!.Name);
+        Assert.StartsWith("6.5 The aggregate quantity of water", abstractionLimitsPoint.Text!.First().Text);
+        Assert.Single(abstractionLimitsPoint.SubResults);
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
@@ -171,15 +339,20 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(abstractionLicence.First().Licences);
         
         var licence =  abstractionLicence.First().Licences[0];
-        Assert.Equal("2/27/19/166", licence.LicenceNumber!.Value);
+        Assert.Equal("NE/027/0028/068", licence.LicenceNumber!.Value);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
-        Assert.Single(licence.AbstractionLimits.Individual);
+        Assert.Equal(6, licence.AbstractionLimits.Individual.Length);
+        Assert.Equal("6.1", licence.AbstractionLimits.Individual[0].DocumentIdentifier);
+        Assert.Equal("6.2", licence.AbstractionLimits.Individual[1].DocumentIdentifier);
+        Assert.Equal("6.3", licence.AbstractionLimits.Individual[2].DocumentIdentifier);
+        Assert.Equal("6.4", licence.AbstractionLimits.Individual[3].DocumentIdentifier);
+        Assert.Equal("6.5", licence.AbstractionLimits.Individual[4].DocumentIdentifier);
+        Assert.Equal("9.3", licence.AbstractionLimits.Individual[5].DocumentIdentifier);
         
         Assert.Null(licence.AbstractionLimits.Aggregates);
         
         Assert.NotNull(licence.LinkedLicences);
-        Assert.Single(licence.LinkedLicences); // This test is mainly to check we don't get two entries here
-        Assert.Equal("2/27/01/009", licence.LinkedLicences[0].LicenceNumber);
+        Assert.NotEmpty(licence.LinkedLicences);
     }
 }

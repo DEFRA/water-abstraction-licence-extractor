@@ -16,6 +16,10 @@ public interface IDatabaseReadService
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
     Task<string?> GetAllPagesTextAsync(Guid fileId, string noOcrServiceName);
+
+    Task<List<OcrCachedPage>> GetOcrCachedPagesAsync(Guid fileId, string[] ocrServiceNamesByPreference);
+
+    Task<StoredDocumentText?> GetStoredDocumentTextAsync(Guid fileId);
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     
@@ -37,11 +41,17 @@ public interface IDatabaseReadService
     
     Task<ProcessRun?> GetMostRecentProcessRunAsync(Guid fileId);
     
+    Task<ProcessRun?> GetMostRecentProcessRunAsync(int licenceId);
+
+    Task<MatchesResult?> GetMatchesResult(int matchesResultId);
+
     Task<MatchesResult?> GetMatchesResult(Guid fileId);
-    
+
     Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId);
     
-    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take);
+    Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType);
+
+    Task<List<Override>> GetOverridesAsync();
 
     Task<List<DmsFileReaderResult>> GetDmsFileReaderResultsAsync();
     

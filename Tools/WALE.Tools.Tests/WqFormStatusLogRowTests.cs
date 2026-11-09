@@ -248,7 +248,7 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
         var noOcrDataExtractorService = new PdfPigNoOcrDataExtractorService();
 
         var lookupConfiguration = new WALE.ProcessFile.Core.Configuration.LookupConfiguration(
-            [], [], fileService, cacheService, outputService, null!, null!,
+            [], [], fileService, cacheService, outputService, null!, null!, null!, null!,
             WALE.ProcessFile.Core.Constants.GeneralConstants.UnsetRegionCode,
             DateTime.Now, skipFileIfMoreThenPages: 100, useLockExclusivity: false);
 
@@ -263,7 +263,7 @@ public class WqFormStatusLogRowTests(ITestOutputHelper testOutputHelper)
 
         var lines = await noOcrDataExtractorService
             .GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
-                pdfDocument, cacheService, outputService, -1);
+                pdfDocument, lookupConfiguration, cacheService, outputService, -1);
 
         // The table can span a page break, with its heading repeated as a continuation header on
         // the next page - anchoring to the FIRST page a heading appears on would miss the note

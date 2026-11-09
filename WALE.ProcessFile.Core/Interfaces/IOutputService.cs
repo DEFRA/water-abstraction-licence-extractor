@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 
 namespace WALE.ProcessFile.Core.Interfaces;
@@ -38,9 +39,15 @@ public interface IOutputService
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
 
-    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId);
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false);
     
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate);
+    public Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error);
     
     public Task<int> SaveMatchResultAsync(MatchesResult matchesResult, Guid fileId, int processRunId, bool isUpdate);
 
@@ -67,19 +74,29 @@ public interface IOutputService
     Task<List<ProcessRun>> GetProcessRunsAsync();
 
     Task<List<ProcessRun>> GetAllProcessRunsAsync();
-    
+
+    Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId);
+
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId);
-    
+
     Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId);
+
+    Task SaveThumbnailAsync(Guid fileId);
     
-    Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail,
+    Task SavePageScreenshotThumbnailAsync(
+        int pageNumber,
+        string serviceName,
+        Guid fileId,
+        byte[] thumbnail,
         int processRunId);
     
     Task UpdateProcessRunByLicenceNumbersAsync(
         int processRunId,
         string[] licenceNumbers);
 
-    Task UpdateLicenceListProcessRunAsync(
+    /// Reprojects whatever list view the run's document type feeds. Which projection that is
+    /// follows from the run's own DocumentType, so a caller does not need to know.
+    Task UpdateProcessRunListProjectionAsync(
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);

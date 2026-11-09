@@ -59,6 +59,15 @@ public static class JsonHelper
         return jsonElement.GetDouble();
     }
     
+    public static JsonSerializerOptions GetWireSerializerOptions()
+    {
+        _wireOptions ??= new JsonSerializerOptions(GetSerializerOptions()) { WriteIndented = false };
+
+        return _wireOptions;
+    }
+
+    private static JsonSerializerOptions? _wireOptions;
+
     public static JsonSerializerOptions GetSerializerOptions()
     {
         _options ??= new JsonSerializerOptions

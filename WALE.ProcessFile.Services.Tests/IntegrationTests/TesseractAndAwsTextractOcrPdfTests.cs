@@ -110,6 +110,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             CacheService,
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);
@@ -201,10 +203,11 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
-            AbsLicCacheService, NaldDataLookupService);
+            AbsLicCacheService,
+            NaldDataLookupService,
+            naldLicenceNumber: "28/39/22/0271");
         
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Empty(agreedSchemaLicence.LinkedLicences);
@@ -400,7 +403,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
     [InlineData("22712270__Non-Application Licence Document (29.07.2003).PDF", "29th July 03", "29/07/2003", 14, 0, "2/27/12/270", 3)]
     [InlineData("22709167__Non-Application Licence Document (27.03.1997).PDF", "27 MAR 1897", "27/03/1897", 11, 0, "2/27/09/167", 3)]
     [InlineData("12506023__Application type unknown Licence Issued (26.01.2006).PDF", "26 JAN 2006", "26/01/2006", 15, 0, "1/25/06/023", 3)] // Should be 2000 but impossible to tell in file, so fine
-    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 5, 0, "2/27/12/298", 3)]
+    [InlineData("22712298__Non-Application Licence Document (27.03.1991).PDF", "2715 day of Marl 1991", "27/03/1991", 4, 0, "2/27/12/298", 3)]
     [InlineData("22709141__Non-Application Licence Document (09.08.1990).PDF", "9th day of Aug 1990", "09/08/1990", 4, 0, "2/27/09/141", 3)]
     [InlineData("12304001__1-23-04-001 Licence Issued - 07031966.PDF", "7th day of MARCH, 19 66", "07/03/1966", 6, 0, "1/23/04/001", 3)]
     //12504178R01__Application type unknown Licence Issued (01.05.2007).pdf, "299 July'03", // Stamp is incredibly faint, Tesseract doesnt read - Azure AI reads it wrong
@@ -484,7 +487,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12203045-LV19660523", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
         Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
@@ -530,13 +533,15 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Equal("12405035-LV19660310", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("12405035", agreedSchemaLicenceGroup[0].LicenceSetId);
         Assert.Equal("035", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
-        Assert.Equal(9, agreedSchemaLicence.LinkedLicences.Length); // NOTE File has 14, but many don't exist in NALD
+        Assert.Equal("1/24/05/035", agreedSchemaLicence.LicenceNumber?.Value);     
+        
+        Assert.Equal(10, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("1/23/05/001", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("1/25/05/002", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
         Assert.Equal("1/25/05/005", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
@@ -546,7 +551,7 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.Equal("1/25/05/007", agreedSchemaLicence.LinkedLicences[6].LicenceNumber);
         Assert.Equal("1/25/05/001", agreedSchemaLicence.LinkedLicences[7].LicenceNumber);
         Assert.Equal("1/24/05/001", agreedSchemaLicence.LinkedLicences[8].LicenceNumber);
-        // 1/24/5/3 is missing in NALD (and others)
+        Assert.Equal("1/25/01/004", agreedSchemaLicence.LinkedLicences[9].LicenceNumber);
         
         Assert.Equal(new DateTime(1966, 03, 10), agreedSchemaLicence.LicenceVersion.IssueDate);
     }

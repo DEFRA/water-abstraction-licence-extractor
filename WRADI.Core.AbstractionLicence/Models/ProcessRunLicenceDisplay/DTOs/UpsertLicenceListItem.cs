@@ -5,6 +5,10 @@ public sealed class UpsertLicenceListItem
     public int ProcessRunId { get; init; }
 
     public Guid FileId { get; init; }
+    
+    public int LicenceId { get; init; }
+    
+    public int MatchesResultId { get; set; }
 
     public string Filename { get; init; } = string.Empty;
 
@@ -28,11 +32,21 @@ public sealed class UpsertLicenceListItem
 
     public DateOnly? IssueDate { get; init; }
 
+    public DateOnly? NaldOrigSignatureDate { get; init; }
+
+    public DateOnly? NaldSignatureDate { get; init; }
+
+    public bool IsIssueDateFlagged { get; init; }
+
     public string? Issuer { get; init; }
 
     public bool MeansFound { get; init; }
 
     public string? Status { get; init; }
+
+    public bool IsLicenceNumberFlagged { get; init; }
+
+    public string? LicenceNumberFlagReason { get; init; }
 
     public UpsertLinkedLicenceItem[] LinkedLicences { get; init; } = [];
 

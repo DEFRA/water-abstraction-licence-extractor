@@ -63,7 +63,6 @@ public static class Units
                         matchedPossibilityForLine = possibility;
                         
                         matchedPossibilityTextForColumn = possibility.Text;
-
                         break;
                     }
 

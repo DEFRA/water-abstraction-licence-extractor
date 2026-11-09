@@ -111,6 +111,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             CacheService,
             OutputService,
             await firstNamesFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);
@@ -138,7 +140,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(7, resultList.Count);
+        Assert.Equal(11, resultList.Count);
 
         var period = resultList
             .FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
@@ -274,7 +276,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         var resultList = resultFull.Matches!;
         
         // Assert
-        Assert.Equal(6, resultList.Count); // Better then Azure AI Vision
+        Assert.Equal(12, resultList.Count); // Better then Azure AI Vision
 
         var purpose = resultList.FirstOrDefault(result => result.LabelGroupName == "Purposes");
         Assert.NotNull(purpose);
@@ -475,7 +477,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("1095", perYearValue1?.Text?.FirstOrDefault()?.Text); // Better then AI Vision which reads it as 1.095
         
         var perYearUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("megalitres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perYearUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
         Assert.Equal("720", perYearValue2?.Text?.FirstOrDefault()?.Text); // TODO Should actually be 3273.2
@@ -487,7 +489,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("1095", perDayValue1?.Text?.FirstOrDefault()?.Text); // NOTE - This is getting it really wrong, should be 3.5, Azure AI Vision working better
 
         var perDayUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("megalitres", perDayUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perDayUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perDayValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
         Assert.Equal("2.25", perDayValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 10.2, wrong (but also wrong in AI Vision)
@@ -499,7 +501,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("720", perHourValue1?.Text?.FirstOrDefault()?.Text); // TODO this is wrong
         
         var perHourUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("cubic metres", perHourUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("thousand gallons", perHourUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perHourValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
         Assert.Equal("95", perHourValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 431
@@ -842,12 +844,12 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("14/46/03/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("14/46/003/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);        
@@ -907,7 +909,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("1.25", perDayValue1?.Text?.FirstOrDefault()?.Text);    
         
         var perDayUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayUnits");
-        Assert.Equal("megalitres", perDayUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perDayUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perDayValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerDayValue");
         Assert.Equal("1.25", perDayValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 5.7
@@ -919,10 +921,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("300", perYearValue1?.Text?.FirstOrDefault()?.Text);
         
         var perYearUnits2 = section1Sub1.SubResults!.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearUnits");
-        Assert.Equal("megalitres", perYearUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("million gallons", perYearUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perYearValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerYearValue");
-        Assert.Equal("300", perYearValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 1364
+        Assert.Equal("300", perYearValue2?.Text?.FirstOrDefault()?.Text);
         
         var perHourUnits1 = section1Sub1.SubResults?.FirstOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
         Assert.Equal("thousand gallons", perHourUnits1?.Text?.FirstOrDefault()?.Text);
@@ -931,10 +933,10 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         Assert.Equal("52", perHourValue1?.Text?.FirstOrDefault()?.Text);
         
         var perHourUnits2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourUnits");
-        Assert.Equal("cubic metres", perHourUnits2?.Text?.FirstOrDefault()?.Text);
+        Assert.Equal("thousand gallons", perHourUnits2?.Text?.FirstOrDefault()?.Text);
 
         var perHourValue2 = section1Sub1.SubResults?.LastOrDefault(x => x.MatchedLabel!.Name == "PerHourValue");
-        Assert.Equal("52", perHourValue2?.Text?.FirstOrDefault()?.Text); // TODO should be 236
+        Assert.Equal("52", perHourValue2?.Text?.FirstOrDefault()?.Text);
         
         var licenceNumberResult = resultList.FirstOrDefault(result => result.LabelGroupName == "LicenceNumber");
         
@@ -952,6 +954,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(4, agreedSchemaLicenceGroup.Last().Licences.Length);
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
@@ -1011,8 +1014,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -1108,15 +1111,15 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
         
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal("8/36/19/S/101", agreedSchemaLicence.NoneSchemaData["scrapedLicenceNumber"]);
         Assert.Equal("08/36/19/S/0101", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
-        Assert.Equal("8/36/19/S/130", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("8/36/19/*S/0130", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -1600,7 +1603,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 1, 2);
-        Assert.Equal(10, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
+        Assert.Equal(9, GeneralTestsHelper.ExcludeSomeMatches(resultFull.Matches!).Count);
         
         var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
@@ -1682,7 +1685,7 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
 
         // Act
         var resultFull = await GetMatchesAsync(filename, 2, 2);
-        Assert.Equal(6, resultFull.Matches!.Count);
+        Assert.Equal(13, resultFull.Matches!.Count);
 
         var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,

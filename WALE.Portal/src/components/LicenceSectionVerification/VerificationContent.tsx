@@ -6,6 +6,7 @@ import {LinkedLicences} from "./LinkedLicences/LinkedLicences";
 import {LicenceVerificationHistory} from "./LicenceVerificationHistory";
 import {waleApiClient} from "../../api/apiClient.ts";
 import {Aggregates} from "./Aggregates/Aggregates.tsx";
+import {DocumentInfo} from "./DocumentInfo.tsx";
 
 interface VerificationContentProps {
     licence: Licence;
@@ -14,7 +15,7 @@ interface VerificationContentProps {
     onJumpToPage: (pageNumber: number) => void;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 type SubTabType = 'scraped' | 'current' | 'history';
@@ -25,10 +26,12 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [scrapedResetKey, setScrapedResetKey] = useState(0);
 
+    const sourceLicenceNumber = licence.licenceNumber?.value;
+
     const fetchHistory = useCallback(() => {
-        if (licence.dmsFileId) {
+        if (licence.dmsFileId && sourceLicenceNumber) {
             setIsLoadingHistory(true);
-            waleApiClient.licenceSectionVerifications(licence.dmsFileId)
+            waleApiClient.licenceSectionVerifications(licence.dmsFileId, sourceLicenceNumber)
                 .then((data) => {
                     setHistory(data);
                 })
@@ -39,7 +42,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     setIsLoadingHistory(false);
                 });
         }
-    }, [licence.dmsFileId]);
+    }, [licence.dmsFileId, sourceLicenceNumber]);
 
     const handleVerified = () => {
         fetchHistory();
@@ -54,10 +57,8 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
 
     return (
         <div id="properties" style={{ padding: '10px' }}>
-            <div id="simpleOverview" style={{ textAlign: 'right' }}>
-                <strong>Licence contains Aggregates (NALD):</strong> {licence.naldHasAggregateCondition ?? false ? "True" : "False"}
-            </div>
-                
+            <DocumentInfo licence={licence} outputListDataItem={outputListDataItem} />
+
             <ul className="ul-links">
                 <li>
                     <a
@@ -80,7 +81,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                             setActiveSubTab('scraped');
                         }}
                     >
-                        Scraped / Original
+                        {`Scraped PR ${processRunId}`}
                     </a>
                 </li>
                 <li>
@@ -103,6 +104,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                         title="Linked Licences" 
                         itemType="linked licence"
                         licenceFileId={licence.dmsFileId!} 
+                        sourceLicenceNumber={sourceLicenceNumber ?? ''}
                         processRunId={processRunId}
                         onRefresh={onRefresh}
                         onVerified={handleVerified}
@@ -112,6 +114,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     >
                         <LinkedLicences
                             licence={licence}
+                            processRunId={processRunId}
                             currentLicence={currentLicence}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
@@ -122,6 +125,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                         title="Aggregates"
                         itemType="aggregate"
                         licenceFileId={licence.dmsFileId!}
+                        sourceLicenceNumber={sourceLicenceNumber ?? ''}
                         processRunId={processRunId}
                         onRefresh={onRefresh}
                         onVerified={handleVerified}
@@ -153,6 +157,7 @@ export function VerificationContent({ licence, currentLicence, processRunId, onJ
                     >
                         <LinkedLicences
                             licence={licence}
+                            processRunId={processRunId}
                             onJumpToPage={onJumpToPage}
                             outputListDataItem={outputListDataItem}
                             scrapedView={true}

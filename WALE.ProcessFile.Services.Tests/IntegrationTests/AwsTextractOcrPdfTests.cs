@@ -94,6 +94,8 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             CacheService,
             OutputService,
             await textractFixture.GetLicenceNumbersServiceAsync((short)regionCode, DatabaseCacheService),
+            null,
+            null,
             new DmsLookupService(),
             regionCode,
             DateTime.Now);
@@ -227,7 +229,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
-        Assert.Equal("14/46/03/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("14/46/003/0852", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -283,7 +285,7 @@ public class AwsTextractOcrPdfTests(SingletonAwsTextractFixture textractFixture)
             await LookupConfigurationAsync(2, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Equal(1, agreedSchemaLicenceGroup.Count);
         var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
 
         Assert.Equal("2/27/12/254", agreedSchemaLicence.LicenceNumber?.Value);

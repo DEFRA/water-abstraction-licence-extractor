@@ -1,4 +1,3 @@
-using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -20,7 +19,7 @@ public static class AggregateVerificationMergeHelper
         {
             UpdateSectionSummaries(summaries, verification);
 
-            if (IsAutoOrBusinessReview(verification.VerificationType))
+            if (IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 continue;
             }
@@ -31,10 +30,15 @@ public static class AggregateVerificationMergeHelper
             {
                 if (ids.Count > 0)
                 {
-                    // Flag this because the verification confirmed there are zero aggregates but actually there are some
-                    FlagItemSummary(summaries, itemId);
+                    FlagItemSummary(summaries, itemId, "'None' verification contradicted by existence of aggregates");
                 }
 
+                continue;
+            }
+
+            if (VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
+            {
+                FlagItemSummary(summaries, itemId, VerificationMergeHelper.MissingJsonFlagReason);
                 continue;
             }
 
@@ -43,12 +47,16 @@ public static class AggregateVerificationMergeHelper
 
             if (wasScrapedThisRun != wasScrapedOnVerificationRun)
             {
-                FlagItemSummary(summaries, itemId);
+                var flagReason = wasScrapedThisRun
+                    ? "Aggregate added to scraper output since the verification run"
+                    : "Aggregate removed from scraper output since the verification run";
+                FlagItemSummary(summaries, itemId, flagReason);
             }
 
             switch (verification.VerificationType)
             {
                 case "Confirmed":
+                case "CompleteBusinessReview":
                 case "AutoConfirm":
                 case "Edited":
                 case "Added":
@@ -77,13 +85,16 @@ public static class AggregateVerificationMergeHelper
         IEnumerable<Aggregate>? scrapedAggregates,
         IEnumerable<LicenceSectionVerification> verifications)
     {
-        var aggregates = (scrapedAggregates ?? []).ToList();
+        var scrapedAggregateList = (scrapedAggregates ?? []).ToList();
+        var aggregates = scrapedAggregateList.ToList();
 
         foreach (var verification in OrderVerifications(verifications))
         {
             var itemId = verification.LicenceSectionItemId!;
 
-            if (itemId == NoAggregatesSentinel || IsAutoOrBusinessReview(verification.VerificationType))
+            if (itemId == NoAggregatesSentinel
+                || IsAutoOrRequestBusinessReview(verification.VerificationType)
+                || VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
             {
                 continue;
             }
@@ -93,6 +104,7 @@ public static class AggregateVerificationMergeHelper
             switch (verification.VerificationType)
             {
                 case "Confirmed":
+                case "CompleteBusinessReview":
                 case "AutoConfirm":
                 case "Edited":
                 case "Added":
@@ -110,7 +122,7 @@ public static class AggregateVerificationMergeHelper
                         }
 
                         var verificationAggregate =
-                            JsonSerializer.Deserialize<Aggregate>(json, WALE.ProcessFile.Core.Helpers.JsonHelper.GetSerializerOptions());
+                            VerificationMergeHelper.DeserializeVerificationValue<Aggregate>(json, out var verificationNode);
 
                         if (verificationAggregate == null)
                         {
@@ -118,6 +130,9 @@ public static class AggregateVerificationMergeHelper
                                 $"ERROR - {nameof(AggregateVerificationMergeHelper)} - Verification {verification.LicenceSectionVerificationId} does not have valid JSON");
                             continue;
                         }
+
+                        VerificationMergeHelper.ApplyCurrentRunValuesForMissingProperties(verificationAggregate,
+                            scrapedAggregateList.FirstOrDefault(a => a.Id == itemId), verificationNode!);
 
                         if (existingAggregate != null)
                         {
@@ -152,9 +167,9 @@ public static class AggregateVerificationMergeHelper
             .OrderBy(v => v.CreatedDateTimeUtc)
             .ToList();
 
-    private static bool IsAutoOrBusinessReview(string? verificationType)
+    private static bool IsAutoOrRequestBusinessReview(string? verificationType)
         => verificationType is "AutoWarn" or "AutoFail"
-            or "RequestBusinessReview" or "CompleteBusinessReview";
+            or "RequestBusinessReview";
 
     private static void UpdateSectionSummaries(List<LicenceSectionItemSummary> sectionSummaries,
         LicenceSectionVerification verification)
@@ -167,33 +182,61 @@ public static class AggregateVerificationMergeHelper
             sectionSummaries.Add(new LicenceSectionItemSummary
             {
                 LicenceSectionItemId = itemId,
-                VerificationTypes = [verification.VerificationType!]
+                VerificationTypes = [verification.VerificationType!],
+                CurrentVerificationType = verification.VerificationType!,
+                VerificationTypesWithNotes = [VerificationMergeHelper.GetVerificationWithNotes(verification)]
             });
         }
         else
         {
-            if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            // New business review tags should override previous ones - clear the previous ones first
+            if (VerificationMergeHelper.IsBusinessReview(verification.VerificationType))
             {
                 existingSummary.VerificationTypes = existingSummary.VerificationTypes
-                    .Append(verification.VerificationType!)
+                    .Where(x => !VerificationMergeHelper.IsBusinessReview(x))
+                    .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsBusinessReviewWithNotes(x))
                     .ToArray();
             }
 
-            if (!IsAutoOrBusinessReview(verification.VerificationType))
+            existingSummary.CurrentVerificationType = verification.VerificationType!;
+            if (!existingSummary.VerificationTypes.Contains(verification.VerificationType!))
+            {
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
+            }
+            else
+            {
+                // remove existing and re add
+                existingSummary.VerificationTypes = existingSummary.VerificationTypes
+                    .Where(x => x != verification.VerificationType!)
+                    .ToArray();
+                
+                existingSummary.VerificationTypesWithNotes = existingSummary.VerificationTypesWithNotes
+                    .Where(x => !VerificationMergeHelper.IsExistingVerificationType(x, verification.VerificationType!))
+                    .ToArray();
+                
+                VerificationMergeHelper.AddNewVerificationType(verification, existingSummary);
+            }
+
+            if (!IsAutoOrRequestBusinessReview(verification.VerificationType))
             {
                 // Clear the flag, it'll be re-calculated for this verification later
-                existingSummary.ScrapedDataIsDifferent = false;
+                existingSummary.IsFlagged = false;
+                existingSummary.FlagReason = null;
             }
         }
     }
 
-    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId)
+    private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)
     {
         var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
 
         if (summary != null)
         {
-            summary.ScrapedDataIsDifferent = true;
+            summary.IsFlagged = true;
+            summary.FlagReason = flagReason;
             return;
         }
 

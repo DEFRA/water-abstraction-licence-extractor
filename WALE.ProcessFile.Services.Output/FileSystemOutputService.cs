@@ -1,6 +1,6 @@
-using System.Text.Json;
 using SkiaSharp;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -89,12 +89,18 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    public Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false)
     {
         return Task.FromResult(-1);
     }
 
-    public Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
+    public Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error)
     {
         return Task.FromResult(-1);
     }
@@ -237,6 +243,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task<MatchesResult?> GetMatchesResultAsync(int matchesResultId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId)
     {
         throw new NotImplementedException();
@@ -245,6 +256,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     public Task<MatchesResult?> GetMatchesResultAsync(Guid fileId, int processRunId)
     {
         return Task.FromResult<MatchesResult?>(null);
+    }
+
+    public Task SaveThumbnailAsync(Guid fileId)
+    {
+        return Task.CompletedTask;
     }
 
     public Task SavePageScreenshotThumbnailAsync(int pageNumber, string serviceName, Guid fileId, byte[] thumbnail, int processRunId)
@@ -257,7 +273,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task UpdateLicenceListProcessRunAsync(int processRunId)
+    public Task UpdateProcessRunListProjectionAsync(int processRunId)
     {
         throw new NotImplementedException();
     }

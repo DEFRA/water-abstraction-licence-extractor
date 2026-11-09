@@ -15,16 +15,12 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, JsonSerializerOptions? jsonSerializerOptions = null)
     : IDatabaseWriteService
 {
-    
-    private readonly JsonSerializerOptions _jsonSerializerOptions = jsonSerializerOptions
-    ?? new JsonSerializerOptions(JsonSerializerDefaults.Web);
-
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status) 
-                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status) 
+                           INSERT INTO process_run (description, start_date_time_utc, number_of_files, status, document_type)
+                           VALUES (@Description, @StartDateTimeUtc, @NumberOfFiles, @Status, @DocumentType)
                            RETURNING process_run_id
                            """;
 
@@ -37,7 +33,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 processRun.Description,
                 processRun.StartDateTimeUtc,
                 processRun.NumberOfFiles,
-                processRun.Status
+                processRun.Status,
+                processRun.DocumentType
             });
 
         return processRun;
@@ -94,7 +91,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                                @FileName, 
                                @UTCStartDateTime
                            )
-                           ON CONFLICT (process_run_id, file_name) DO NOTHING
+                           ON CONFLICT (process_run_id, file_name) DO UPDATE
+                               SET process_run_id = EXCLUDED.process_run_id
                            RETURNING process_run__file_id;
                            """;
 
@@ -164,87 +162,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         return processRunFile;
     }
 
-    public async Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set (schema_licence_set_id, short_licence_set_id, process_run_id, date_time_utc) 
-                           VALUES (@SchemaLicenceSetId, @ShortLicenceSetId, @ProcessRunId, @DateTimeUtc)
-                           RETURNING licence_set_id
-                           """;
-
-        return await ExecuteScalarAsync(
-            connection,
-            sql,
-            0,
-            new {
-                SchemaLicenceSetId = licenceSetId,
-                ShortLicenceSetId = shortLicenceSetId,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
-    public async Task UpdateLicenceAsync(int licenceId, string licenceData, Guid fileId, int processRunId, string status)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           UPDATE licence
-                           SET
-                               file_id = @FileId
-                               , status = @Status
-                               , data = @Data
-                           WHERE
-                                licence_id = @LicenceId
-                                AND process_run_id = @ProcessRunId
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                LicenceId = licenceId,
-                Data = licenceData,
-                ProcessRunId = processRunId,
-                Status = status
-            });
-    }
-
-    public async Task<int> SaveLicenceAsync(
-        string? licenceNumber,
-        string? filename,
-        string status,
-        string licenceData,
-        Guid? fileId,
-        string? permitNumber,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence (file_id, licence_number, filename, status, data, process_run_id, permit_number, date_time_utc)
-                           VALUES (@FileId, @LicenceNumber, @filename, @Status, @Data, @ProcessRunId, @PermitNumber, @DateTimeUtc)
-                           RETURNING licence_id
-                           """;
-
-        return await ExecuteScalarAsync(
-            connection,
-            sql,
-            0,
-            new {
-                FileId = fileId,
-                LicenceNumber = licenceNumber,
-                Filename = filename,
-                Status = status,
-                Data = licenceData,
-                ProcessRunId = processRunId,
-                PermitNumber = permitNumber,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
     public async Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, string data)
     {
         await using var connection = GetPostgresConnection();
@@ -266,14 +183,46 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId)
+    public async Task<int> SaveStubMatchesResultAsync(string filename, Guid fileId, int processRunId, bool isUpdate = false)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO matches_result (file_id, filename, status, data, process_run_id, date_time_utc)
-                           VALUES (@FileId, @Filename, @Status, @Data, @ProcessRunId, @DateTimeUtc)
-                           RETURNING matches_result_id
-                           """;
+
+        string sql;
+
+        if (isUpdate)
+        {
+            const string updateSql = """
+               UPDATE matches_result
+               SET
+                    date_time_utc = @DateTimeUtc,
+                    filename = @Filename,
+                    data = @Data,
+                    status = @Status
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+
+               SELECT
+                   matches_result_id
+               FROM
+                    matches_result
+               WHERE
+                    file_id = @FileId
+                    AND process_run_id = @ProcessRunId;
+               """;
+
+            sql = updateSql;
+        }
+        else
+        {
+            const string insertSql = """
+               INSERT INTO matches_result (file_id, filename, status, data, process_run_id, date_time_utc)
+               VALUES (@FileId, @Filename, @Status, @Data, @ProcessRunId, @DateTimeUtc)
+               RETURNING matches_result_id
+               """;
+
+            sql = insertSql;
+        }
 
         const string status = nameof(ScrapeStatus.InProgress);
         var data = JsonSerializer.Serialize(new
@@ -297,7 +246,13 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task<int> SaveErrorMatchesResultAsync(string filename, Guid fileId, int processRunId, string? error, bool isUpdate)
+    public async Task<int> SaveErrorMatchesResultAsync(
+        string filename,
+        Guid fileId,
+        int processRunId,
+        string? error,
+        bool isUpdate,
+        ScrapeStatus status = ScrapeStatus.Error)
     {
         await using var connection = GetPostgresConnection();
         
@@ -337,11 +292,11 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             sql = insertSql;            
         }
 
-        const string status = nameof(ScrapeStatus.Error);
+        var statusName = status.ToString();
         var data = JsonSerializer.Serialize(new
         {
             Filename = filename,
-            Status = status,
+            Status = statusName,
             Error = error
         }, JsonHelper.GetSerializerOptions());
         
@@ -352,7 +307,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             new
             {
                 FileId = fileId,
-                Status = status,
+                Status = statusName,
                 Data = data,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
@@ -411,34 +366,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 ProcessRunId = processRunId,
                 Status = nameof(ScrapeStatus.Ok),
                 DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
-    public async Task SavePageScreenshotAsync(
-        int pageNumber,
-        string noOcrServiceName,
-        Guid fileId,
-        byte[] data,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO page_screenshot (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
-                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
-                           """;
-        
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                PageNumber = pageNumber,
-                NoOcrServiceName = noOcrServiceName,
-                Data = data,
-                DateTimeUtc = DateTime.UtcNow,
-                ProcessRunId = processRunId
             });
     }
 
@@ -519,6 +446,40 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         return request;
     }
 
+    public async Task SaveDocumentTextAsync(
+        Guid fileId,
+        string sourceService,
+        int formatVersion,
+        string text)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql = """
+                           INSERT INTO document_text
+                               (file_id, source_service, format_version, text, date_time_utc)
+                           VALUES
+                               (@FileId, @SourceService, @FormatVersion, @Text, @DateTimeUtc)
+                           ON CONFLICT (file_id) DO UPDATE SET
+                               source_service = EXCLUDED.source_service,
+                               format_version = EXCLUDED.format_version,
+                               text = EXCLUDED.text,
+                               date_time_utc = EXCLUDED.date_time_utc;
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                FileId = fileId,
+                SourceService = sourceService,
+                FormatVersion = formatVersion,
+                Text = text,
+                DateTimeUtc = DateTime.UtcNow
+            });
+    }
+
     public async Task SaveAllPagesTextAsync(
         string documentLinesStr,
         Guid fileId,
@@ -545,8 +506,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SaveImageOnPageAsync(
-        byte[] bytes,
+    public async Task SaveImageOnPageMetadataAsync(
         int width,
         int height,
         Guid fileId,
@@ -558,7 +518,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id) 
+                           INSERT INTO image_on_page (file_id, no_ocr_service_name, image_number, page_number, data, width, height, extension, date_time_utc, process_run_id)
                            VALUES (@FileId, @NoOcrServiceName, @ImageNumber, @PageNumber, @Data, @Width, @Height, @Extension, @DateTimeUtc, @ProcessRunId)
                            """;
 
@@ -570,7 +530,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             {
                 FileId = fileId,
                 NoOcrServiceName = noOcrServiceName,
-                Data = bytes,
+                Data = Array.Empty<byte>(),
                 Width = width,
                 Height = height,
                 ImageNumber = imageNumber,
@@ -741,50 +701,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 
             });
     }
-
-    public async Task InsertLicenceSetLicenceAsync(int licenceSetId, int? licenceId, string? licenceNumber,
-        string licenceVersionId,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set_licence (licence_set_id, licence_id, licence_number, licence_version_id, process_run_id, date_time_utc) 
-                           VALUES (@LicenceSetId, @LicenceId, @LicenceNumber, @LicenceVersionId, @ProcessRunId, @DateTimeUtc)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                LicenceId = licenceId,
-                LicenceNumber = licenceNumber ?? "UNKNOWN",
-                LicenceVersionId = licenceVersionId,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
-    public async Task SaveLicenceSetTypeAsync(int licenceSetId, int licenceSetType, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_set_type (licence_set_id, licence_set_type) 
-                           VALUES (@LicenceSetId, @LicenceSetType)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                LicenceSetType = licenceSetType
-            });
-    }
     
     public async Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult)
     {
@@ -917,56 +833,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    public async Task SavePageScreenshotThumbnailAsync(
-        int pageNumber,
-        string serviceName,
-        Guid fileId,
-        byte[] thumbnail,
-        int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO page_screenshot_thumbnail (file_id, page_number, no_ocr_service_name, data, date_time_utc, process_run_id)
-                           VALUES (@FileId, @PageNumber, @NoOcrServiceName, @Data, @DateTimeUtc, @ProcessRunId)
-                           """;
-        
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                FileId = fileId,
-                PageNumber = pageNumber,
-                NoOcrServiceName = serviceName,
-                Data = thumbnail,
-                DateTimeUtc = DateTime.UtcNow,
-                ProcessRunId = processRunId
-            });
-    }
-    
-    public async Task SaveAggregateSetAsync(int licenceSetId, string? aggregateSetId, string data, int processRunId)
-    {
-        await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO aggregate_set (licence_set_id, schema_aggregate_set_id, data, process_run_id, date_time_utc)
-                           VALUES (@LicenceSetId, @SchemaAggregateSetId, @Data, @ProcessRunId, @DateTimeUtc)
-                           """;
-
-        await ExecuteAsync(
-            connection,
-            sql,
-            0,
-            new
-            {
-                LicenceSetId = licenceSetId,
-                SchemaAggregateSetId = aggregateSetId,
-                Data = data,
-                ProcessRunId = processRunId,
-                DateTimeUtc = DateTime.UtcNow
-            });
-    }
-
     public async Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation)
     {
         await using var connection = GetPostgresConnection();
@@ -989,7 +855,6 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
-    
     private async Task<DateTime> ExecuteDateTimeScalarAsync(NpgsqlConnection connection, string sql, int retryNumber, object? param = null)
     {
         try

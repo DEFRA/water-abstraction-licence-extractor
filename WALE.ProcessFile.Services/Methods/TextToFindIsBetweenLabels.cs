@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -43,8 +44,18 @@ public static class TextToFindIsBetweenLabels
         
         var labelLineAlreadyIncluded = false;
         var lineContainsSomethingOtherThenJustLabel = request.line?.Text != request.label.TextToMatch?.FirstOrDefault()?.Text;
-        
-        if (lineContainsLabel != true || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel))
+
+        // When LimitTo restricts matching to a column, the label's own line has already been
+        // narrowed down to just the columns relevant to this match (the label's column plus
+        // any same-line value columns up to the next field). If that narrowed line holds more
+        // than the label text alone, the value is sitting right there and must be included -
+        // otherwise only nextLines gets used and a same-line value is silently dropped.
+        var sameLineValuePresent = request.label.LimitTo is LimitTo.SameColumn or LimitTo.SpecifiedColumn
+            && lineContainsSomethingOtherThenJustLabel;
+
+        if (lineContainsLabel != true
+            || (request.label.IncludeWholeLine && lineContainsSomethingOtherThenJustLabel)
+            || sameLineValuePresent)
         {
             labelLineAlreadyIncluded = true;
             linesToUse.Add(request.line!);
@@ -96,9 +107,11 @@ public static class TextToFindIsBetweenLabels
             request.line!,
             labelLineAlreadyIncluded,
             request.label.DoNotTrimLines,
+            request.label.AllowValueToWrapPastSameLineEndTag,
+            request.lookupConfiguration!,
             out var foundEndTag,
             out var matchedEndText);
-        
+
         if (betweenText == null)
         {
             return [];
@@ -166,7 +179,7 @@ public static class TextToFindIsBetweenLabels
         {
             return [];
         }
-        
+
         labelGroupResult.Text = betweenText.ToList();
         labelGroupResult.MatchedPosition = MatchedPosition.BetweenLabels;
         labelGroupResult.MatchedLabel = request.label.Clone();
@@ -203,7 +216,10 @@ public static class TextToFindIsBetweenLabels
         return await ProcessSubLabelsAsync(request, returnList);
     }
     
-    private static List<DocumentLine>? GetTextBetween(
+    // Internal (not private): lets WALE.ProcessFile.Services.Tests exercise this directly with
+    // synthetic DocumentLines, same pattern as FindLabelGroupMatchesHelper's own internal
+    // methods - see the csproj's InternalsVisibleTo.
+    internal static List<DocumentLine>? GetTextBetween(
         IReadOnlyList<TextToMatch> textEnd,
         string? firstLineTextAfterLabel,
         IReadOnlyList<DocumentLine> lines,
@@ -211,6 +227,8 @@ public static class TextToFindIsBetweenLabels
         DocumentLine lineInput,
         bool labelLineAlreadyIncluded,
         bool doNotTrimLines,
+        bool allowValueToWrapPastSameLineEndTag,
+        LookupConfiguration config,
         out bool foundEndTag,
         out (TextToMatch matchedEndText, string matchedContainsText)? matchData)
     {
@@ -236,7 +254,8 @@ public static class TextToFindIsBetweenLabels
             var clonedLine = lineInput.Clone();
             clonedLine.LineNumber = startLineNumber;
             clonedLine.Columns.Clear();
-            clonedLine.Columns.Add(new DocumentLineColumn(textWords));
+            clonedLine.Columns.Add(new DocumentLineColumn());
+            ToColumns(textWords, clonedLine, config.HorizontalGapBetweenColumns);
             
             linesLoop.Add(clonedLine);
         }
@@ -300,8 +319,19 @@ public static class TextToFindIsBetweenLabels
                 
                 if (labelMatchCount[matchedEndTextTemp.Text] >= requiredCount)
                 {
-                    matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
-                    foundEndTag = true;
+                    // See LabelToMatch.AllowValueToWrapPastSameLineEndTag. Only the label's own
+                    // first line (returnList still empty) is eligible - the fragment before the
+                    // end-tag is still extracted and kept below either way; subsequent lines get
+                    // evaluated by this same loop as normal, so this label's own end-tag further
+                    // down still stops the scan at the right place when the flag is set.
+                    var isFirstLineMatch = returnList.Count == 0;
+                    var continueScanningPastThisMatch = isFirstLineMatch && allowValueToWrapPastSameLineEndTag;
+
+                    if (!continueScanningPastThisMatch)
+                    {
+                        matchData = (matchedEndTextTemp, PositionConstants.ReplacementMarker);
+                        foundEndTag = true;
+                    }
 
                     if (returnList.Count == 0 || line.Columns.Count == 1)
                     {
@@ -341,13 +371,19 @@ public static class TextToFindIsBetweenLabels
                                 
                                 var clonedLine2 = line.Clone();
                                 clonedLine2.Columns.Clear();
-                                clonedLine2.Columns.Add(new DocumentLineColumn(ctWords));
+                                clonedLine2.Columns.Add(new DocumentLineColumn());
+                                ToColumns(ctWords, clonedLine2, config.HorizontalGapBetweenColumns);
 
                                 returnList.Add(clonedLine2);
                             }
                         }
                     }
-                    
+
+                    if (continueScanningPastThisMatch)
+                    {
+                        continue;
+                    }
+
                     break;
                 }
             }
@@ -373,5 +409,31 @@ public static class TextToFindIsBetweenLabels
         }
 
         return matchData == null ? null : returnList;
+    }
+    
+    // TODO move this to somewhere more standardised
+    private static void ToColumns(
+        List<DocumentLineWord> words,
+        DocumentLine line,
+        int horizontalGapBetweenColumns)
+    {
+        DocumentLineWord? previousWord = null;
+                
+        foreach (var word in words)
+        {
+            previousWord ??= word;
+
+            var xDiff = word.Coordinates.Left - previousWord.Coordinates.Right;
+                    
+            if (xDiff >= horizontalGapBetweenColumns)
+            {
+                line.Columns.Add(new DocumentLineColumn());
+            }
+
+            var columnToAddTo = line.Columns.Last();
+            columnToAddTo.Words.Add(word);
+
+            previousWord = word;
+        }
     }
 }

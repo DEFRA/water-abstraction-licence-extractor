@@ -4,6 +4,7 @@ public class LicenceSectionVerification
 {
     public int LicenceSectionVerificationId { get; set; }
     public Guid LicenceFileId { get; set; }
+    public string SourceLicenceNumber { get; set; } = string.Empty;
     public int ProcessRunId { get; set; }
     public string? LicenceSectionName { get; set; }
     public string? LicenceSectionScrapedValue { get; set; }
@@ -12,7 +13,6 @@ public class LicenceSectionVerification
     public string? VerificationType { get; set; }
     public string? LicenceSectionItemId { get; set; }
     public string? Notes { get; set; }
-    public bool ScrapedDataIsDifferent { get; set; }
     public DateTime CreatedDateTimeUtc { get; set; }
     public DateTime? DeletedDateTimeUtc { get; set; }
 }
@@ -29,5 +29,8 @@ public record LicenceSectionItemSummary
     
     public string? CurrentVerificationType { get; set; }
     public required string[] VerificationTypes { get; set; }
-    public bool ScrapedDataIsDifferent { get; set; }
+
+    public string[] VerificationTypesWithNotes { get; set; } = [];
+    public bool IsFlagged { get; set; }
+    public string? FlagReason { get; set; }
 }

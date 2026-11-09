@@ -1,27 +1,30 @@
 import {useState, useEffect, useRef} from 'react';
-//import {JSONPath} from 'jsonpath-plus';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import '../assets/reportstyles.css';
 import {VerificationContent} from "./LicenceSectionVerification/VerificationContent";
 import {getImageUrl, getPdfUrl} from "../utils/images.ts";
-import {waleApiClient} from '../api/apiClient';
+import {waleApiClient, waleApiBaseUrl} from '../api/apiClient';
 import {Licence, LicenceSet, type MatchesResult, OutputListDataItem} from "../api/generated/apiClient.ts";
 import LicenceImages from "./LicenceImages";
+import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
+import DocumentTextView from './DocumentTextView';
+import TemplateTypeTag from "./TemplateTypeTag";
 
 interface ReportContentProps {
     fileId: string;
+    licenceId: number,
+    matchesResultId: number,
     hideBackLink?: boolean;
-    //onOpenLinkedLicence: (fileId: string) => void;
     processRunId: number;
     onRefresh?: () => void;
     outputListDataItem?: OutputListDataItem;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
 }
 
 type TabType = 'verification' | 'json-new' | 'json-new-verify' | 'json-set' | 'json-ai' | 'json' | 'text' | 'images';
 
-export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicence,*/ processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
+export function ReportContent({ fileId, licenceId, matchesResultId, hideBackLink = true, processRunId, onRefresh, outputListDataItem, onOpenReport}: ReportContentProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -34,12 +37,34 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
     const [licenceString, setLicenceString] = useState<string | null>(null);
     const [licenceVerificationStringResult, setLicenceVerificationStringResult] = useState<string | null>(null);
     // const [aiData, setAiData] = useState<AiData | null>(null);
-    // const [textData, setTextData] = useState<string>('');
+    const [documentText, setDocumentText] = useState<string | null>(null);
+    const [documentTextLoading, setDocumentTextLoading] = useState(false);
 
     // UI states
     const [activeTab, setActiveTab] = useState<TabType>('verification');
 
     const iframeParentRef = useRef<HTMLDivElement>(null);
+
+    /// Raw fetch: the generated client has no DocumentText method.
+    const loadDocumentText = async () => {
+        if (documentText !== null || documentTextLoading) {
+            return;
+        }
+
+        setDocumentTextLoading(true);
+
+        try {
+            const response = await fetch(`${waleApiBaseUrl}/BFF/FileData/DocumentText?fileId=${fileId}`);
+            const text = response.ok ? await response.text() : '';
+
+            // The endpoint answers an empty body, not a 404, when nothing is cached for the file.
+            setDocumentText(text.trim() === '' ? null : text);
+        } catch {
+            setDocumentText(null);
+        } finally {
+            setDocumentTextLoading(false);
+        }
+    };
 
     // Load all data
     const loadAllData = async () => {
@@ -48,20 +73,20 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
             
             // Load data using API client
             const [matchesResult, matchesResultString, licenceResult, currentLicenceResult, licenceSetsResult, licenceStringResult, licenceVerificationStringResult] = await Promise.allSettled([
-                waleApiClient.matchesResult(fileId),
-                waleApiClient.matchesResultString(fileId),
-                waleApiClient.licence(fileId, processRunId, false),
-                waleApiClient.licence(fileId, processRunId, true),
-                waleApiClient.licenceSets(fileId),
-                waleApiClient.licenceString(fileId, processRunId, false),
-                waleApiClient.licenceString(fileId, processRunId, true),
+                waleApiClient.getMatchesResultByMatchesResultId(matchesResultId),
+                waleApiClient.getMatchesResultByMatchesResultIdString(matchesResultId),
+                waleApiClient.licenceByLicenceId(licenceId, false),
+                waleApiClient.licenceByLicenceId(licenceId, true),
+                waleApiClient.licenceSetsByLicenceIdString(licenceId),
+                waleApiClient.licenceByLicenceIdString(licenceId, false),
+                waleApiClient.licenceByLicenceIdString(licenceId, true)
             ]);
 
             if (matchesResult.status === 'fulfilled') setReportData(matchesResult.value);
             if (matchesResultString.status === 'fulfilled') setMatchesResultString(JSON.parse(matchesResultString.value));
             if (licenceResult.status === 'fulfilled') setReportData2(licenceResult.value);
             if (currentLicenceResult.status === 'fulfilled') setCurrentLicence(currentLicenceResult.value);
-            if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(licenceSetsResult.value);
+            if (licenceSetsResult.status === 'fulfilled') setLicenceSetsData(JSON.parse(licenceSetsResult.value));
             if (licenceStringResult.status === 'fulfilled') setLicenceString(JSON.parse(licenceStringResult.value));
             if (licenceVerificationStringResult.status === 'fulfilled') setLicenceVerificationStringResult(JSON.parse(licenceVerificationStringResult.value));
 
@@ -138,10 +163,21 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                 <div id="left-cell">
                     <div className="leftDetails">
                         {reportData2?.licenceNumber?.value && (
-                            <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+                            <div style={{
+                                marginBottom: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '5px',
+                                flexWrap: 'wrap'
+                            }}>
                                 <span style={{ fontWeight: 'bold', fontSize: '1.2em' }}>
                                     Licence Number {reportData2.licenceNumber.value}
                                 </span>
+                                {outputListDataItem?.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={outputListDataItem.licenceNumberFlagReason}/>}
+                                <TemplateTypeTag
+                                    templateType={(reportData2 as unknown as {templateType?: string})?.templateType}
+                                    template={(reportData2 as unknown as {template?: string})?.template}/>
                             </div>
                         )}
                         {/* Tab Navigation */}
@@ -218,16 +254,17 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
                                     Internal data
                                 </a>
                             </li>
-                            <li style={{display: 'none'}}>
+                            <li>
                                 <a
                                     href="#"
                                     className={activeTab === 'text' ? 'selectedTab' : ''}
                                     onClick={(e) => {
                                         e.preventDefault();
                                         setActiveTab('text');
+                                        void loadDocumentText();
                                     }}
                                 >
-                                    Digital text
+                                    Document text
                                 </a>
                             </li>
                             <li>
@@ -282,11 +319,11 @@ export function ReportContent({fileId, hideBackLink = true, /*onOpenLinkedLicenc
 
                         {activeTab === 'text' && (
                             <div id="text">
-                                <span
-                                    // dangerouslySetInnerHTML={{
-                                    //     __html: textData.replaceAll('\n', '<br/>\n')
-                                    // }}
-                                />
+                                {documentTextLoading && <p>Loading...</p>}
+                                {!documentTextLoading && documentText === null && (
+                                    <p>No text is cached for this document.</p>
+                                )}
+                                {documentText !== null && <DocumentTextView text={documentText}/>}
                             </div>
                         )}
                         

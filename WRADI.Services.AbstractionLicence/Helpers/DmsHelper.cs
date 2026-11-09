@@ -273,23 +273,27 @@ public static class DmsHelper
         LicenceFinderResult licenceFinderResult,
         string? destinationFileName)
     {
-        if (string.IsNullOrEmpty(destinationFileName))
-        {
-            destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{licenceFinderResult.FileId!.ToLower()}.pdf";
-        }
-        
         var naldLicence = new NaldLicenceSimple
         {
             RegionCode = (short)RegionHelper.GetRegionId(licenceFinderResult.Region),
             LicenceNumber = licenceFinderResult.LicenseNumber
         };
+
+        var fileId = Guid.TryParse(licenceFinderResult.FileId, out var tempFileId)
+            ? tempFileId
+            : Guid.Empty;
+     
+        if (string.IsNullOrEmpty(destinationFileName))
+        {
+            destinationFileName = $"{licenceFinderResult.PermitNumber.ToLower()}__{fileId.ToString().ToLower()}.pdf";
+        }
         
         var dmsFileData = new DmsFileData
         {
             DestinationFileName = destinationFileName,
             PermitNumber = licenceFinderResult.PermitNumber, // TODO, DmsPermitNumber ?
             DmsPath = licenceFinderResult.FileUrl,
-            FileId = Guid.Parse(licenceFinderResult.FileId!)
+            FileId = fileId
         };
 
         return (dmsFileData, naldLicence);

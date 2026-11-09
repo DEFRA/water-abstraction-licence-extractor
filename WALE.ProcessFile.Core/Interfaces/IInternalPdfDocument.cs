@@ -11,4 +11,6 @@ public interface IInternalPdfDocument : IDisposable
     public Stream FileStream { get; }
     
     public long SizeBytes { get; }
+    
+    public object UnderlyingDocument { get; }
 }

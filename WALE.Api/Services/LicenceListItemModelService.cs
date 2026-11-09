@@ -30,7 +30,8 @@ public class LicenceListItemModelService
             .ToArray();
     }
 
-    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(IEnumerable<LicenceListItemAggregate> source)
+    public IReadOnlyList<OutputListDataItem> ConvertToOutputListDataItems(
+        IEnumerable<LicenceListItemAggregate> source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
@@ -48,6 +49,8 @@ public class LicenceListItemModelService
         {
             ProcessRunId = source.processRunId!.Value,
             FileId = source.fileId,
+            LicenceId = source.licenceId,
+            MatchesResultId = source.matchesResultId,
             Filename = source.filename ?? string.Empty,
             LicenceNumber = source.licenceNumber,
             LicenceHolder = source.licenceHolder,
@@ -68,9 +71,14 @@ public class LicenceListItemModelService
             AggregateIds = source.aggregateIds ?? [],
             Ocr = source.ocr,
             IssueDate = ParseDateOnly(source.issueDate),
+            NaldOrigSignatureDate = ParseDateOnly(source.naldOrigSignatureDate),
+            NaldSignatureDate = ParseDateOnly(source.naldSignatureDate),
+            IsIssueDateFlagged = source.isIssueDateFlagged,
             Issuer = source.issuer,
             MeansFound = source.meansFound,
             Status = source.status,
+            IsLicenceNumberFlagged = source.isLicenceNumberFlagged,
+            LicenceNumberFlagReason = source.licenceNumberFlagReason,
 
             LinkedLicences = source.linkedLicences?
                 .Select(ToUpsertLinkedLicence)
@@ -97,6 +105,8 @@ public class LicenceListItemModelService
         {
             processRunId = licence.ProcessRunId,
             fileId = licence.FileId,
+            licenceId = licence.LicenceId,
+            matchesResultId = licence.MatchesResultId,
             filename = licence.Filename,
             licenceNumber = licence.LicenceNumber,
             licenceHolder = licence.LicenceHolder,
@@ -109,9 +119,14 @@ public class LicenceListItemModelService
             naldHasAggregateCondition = licence.NaldAggregate,
             ocr = licence.Ocr,
             issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
+            naldOrigSignatureDate = licence.NaldOrigSignatureDate?.ToString("yyyy-MM-dd"),
+            naldSignatureDate = licence.NaldSignatureDate?.ToString("yyyy-MM-dd"),
+            isIssueDateFlagged = licence.IsIssueDateFlagged,
             issuer = licence.Issuer,
             meansFound = licence.MeansFound,
             status = licence.Status,
+            isLicenceNumberFlagged = licence.IsLicenceNumberFlagged,
+            licenceNumberFlagReason = licence.LicenceNumberFlagReason,
 
             linkedLicences = source.LinkedLicences
                 .Select(ToOutputLinkedLicence)
@@ -177,7 +192,7 @@ public class LicenceListItemModelService
 
         if (!string.IsNullOrEmpty(source.SourceFields))
         {
-            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields);
+            sourceFields = JsonSerializer.Deserialize<Dictionary<string, string?>>(source.SourceFields); // TODO - use serialiser options?
         }
         
         return new ContainedInInformation
@@ -208,18 +223,17 @@ public class LicenceListItemModelService
         throw new InvalidOperationException($"Unrecognized {typeof(TEnum).Name} value: '{value}'");
     }
     
-    private static OutputListDataItemLicenceSet ToOutputLicenceSet(LicenceListItemLicenceSet source)
+    private static OutputListDataItemLicenceSet ToOutputLicenceSet(
+        LicenceListItemLicenceSet source)
     {
         ArgumentNullException.ThrowIfNull(source);
 
         return new OutputListDataItemLicenceSet
         {
-            LicenceSetId =  source.LicenceSetId,
+            LicenceSetId = source.LicenceSetId,
             LicenceSetType = source.LicenceSetType,
-            ShortLicenceSetId =  source.ShortLicenceSetId,
-            LicenceSetTypes =  source.LicenceSetTypes
-                .Select(x => x.LicenceSetType)
-                .ToArray(),
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
     
@@ -229,9 +243,9 @@ public class LicenceListItemModelService
         return new UpsertLicenceSetItem
         {
             LicenceSetType = source.LicenceSetType.ToString(),
-            LicenceSetTypes = source.LicenceSetTypes.Select(x => x.ToString()).ToArray(),
-           LicenceSetId  = source.LicenceSetId,
-            ShortLicenceSetId = source.ShortLicenceSetId
+            LicenceSetId = source.LicenceSetId,
+            ShortLicenceSetId = source.ShortLicenceSetId,
+            AggregateSets = source.AggregateSets
         };
     }
 

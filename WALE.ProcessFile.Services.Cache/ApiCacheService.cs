@@ -13,6 +13,7 @@ namespace WALE.ProcessFile.Services.Cache;
 public class ApiCacheService(HttpClient httpClient) : ICacheService
 {
     public string? CacheFolderOrUrl { get; set; } = httpClient.BaseAddress?.ToString();
+
     
     public Task SetupAsync()
     {
@@ -410,17 +411,30 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
+
+        // A 429 or 500 body deserialises into a MetadataCollection with every property null, and
+        // the caller reads a non-null return as a cache hit - so the miss has to be returned here.
+        if (!response.IsSuccessStatusCode)
+        {
+            ConsoleHelper.WriteLine($"WARNING - {nameof(ApiCacheService)} - "
+                + $"{(int)response.StatusCode} getting metadata for {fileId}, treating as a miss");
+
+            return null;
+        }
+
         var content = await response.Content.ReadAsStringAsync();
 
         var metadata = !string.IsNullOrEmpty(content)
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
 
-        if (metadata != null)
+        if (metadata?.PagesMetadata == null)
         {
-            metadata.SizeBytes = content.Length;
+            return null;
         }
-        
+
+        metadata.SizeBytes = content.Length;
+
         return metadata;
     }
     
@@ -476,16 +490,16 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     {
         var path = "/Extractor/Dms/AddFileIdInformation";
         var json = JsonSerializer.Serialize(newDmsFileIdInformation, JsonHelper.GetSerializerOptions());
-        
+
         var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take)
+    public async Task<List<DmsExtract>> GetDmsExtractAsync(int skip, int take, string extractType)
     {
-        var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}";
+        var path = $"/Extractor/Dms/GetExtract?skip={skip}&take={take}&extractType={extractType}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -493,6 +507,20 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
 
         var content = await response.Content.ReadAsStringAsync();
         return JsonSerializer.Deserialize<List<DmsExtract>>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
+    public async Task<List<Override>> GetOverridesAsync()
+    {
+        var path = "/Extractor/Override/GetAll";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<List<Override>>(
             content,
             JsonHelper.GetSerializerOptions())!;
     }
@@ -547,7 +575,15 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return await response.Content.ReadAsStringAsync();
     }
     
-    public async Task<HashSet<string>> GetFirstNamesAsync()
+    public Task<HashSet<string>> GetFirstNamesAsync()
+    {
+        return ReferenceDataCache.GetAsync(
+            $"{nameof(ApiCacheService)}.FirstNames|{httpClient.BaseAddress}",
+            ReferenceDataCache.DefaultTimeToLive,
+            FetchFirstNamesAsync);
+    }
+
+    private async Task<HashSet<string>> FetchFirstNamesAsync()
     {
         var dtStart = DateTime.UtcNow;
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Started getting first names");

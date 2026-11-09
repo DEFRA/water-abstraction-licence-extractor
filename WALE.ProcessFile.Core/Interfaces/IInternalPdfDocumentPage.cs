@@ -3,10 +3,14 @@ namespace WALE.ProcessFile.Core.Interfaces;
 public interface IInternalPdfDocumentPage
 {
     public int Number { get; set; }
-    
+
     public int NumberOfImages { get; set; }
 
     public string? Text { get; set; }
+
+    public double Width { get; set; }
+
+    public double Height { get; set; }
     
     public object UnderlyingObject { get; set; }
 

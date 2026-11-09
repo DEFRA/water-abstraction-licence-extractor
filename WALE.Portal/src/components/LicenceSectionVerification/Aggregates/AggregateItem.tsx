@@ -12,13 +12,15 @@ import {
     LimitPeriodType,
     NullableOfCutoffType,
     InformationSource,
-    LicenceSectionVerification
+    LicenceSectionVerification,
+    OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
 import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
+import {getFlaggedItem} from "../../../utils/verificationUtils.ts";
 
 interface AggregateItemProps {
     aggregate?: Aggregate;
@@ -34,10 +36,16 @@ interface AggregateItemProps {
     onOverride?: () => void;
     onRequestBusinessReview?: () => void;
     onCompleteBusinessReview?: () => void;
-    onOpenReport?: (fileId: string) => void;
+    onOpenReport?: (fileId: string, licenceId: number, matchesResultId: number) => void;
+    outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
+    linkedLicenceOptions?: string[];
+    pointDescriptions?: Map<string, string>;
+    purposeDescriptions?: Map<string, string>;
 }
+
+const UNRECOGNISED_LINKED_LICENCE_MESSAGE = "This licence number is not in the document's current Linked Licences list";
 
 const labelStyle: React.CSSProperties = {display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: 600};
 const topLevelLabelStyle: React.CSSProperties = {display: 'block', fontSize: '0.9rem', marginBottom: '4px', fontWeight: 600};
@@ -46,6 +54,7 @@ const rowStyle: React.CSSProperties = {display: 'grid', gridTemplateColumns: 're
 const cardStyle: React.CSSProperties = {marginBottom: '10px', padding: '10px', border: '1px solid #eee', borderRadius: '4px', backgroundColor: 'white'};
 const addButtonStyle: React.CSSProperties = {padding: '4px 12px', fontSize: '0.8rem', backgroundColor: '#52c41a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'};
 const removeButtonStyle: React.CSSProperties = {height: '30px', padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', boxSizing: 'border-box'};
+const lookupDescriptionStyle: React.CSSProperties = {margin: '6px 0 0 0', fontSize: '0.8rem', color: '#555'};
 const removeButtonDisabledStyle: React.CSSProperties = {...removeButtonStyle, backgroundColor: '#f5f5f5', color: 'rgba(0, 0, 0, 0.25)', border: '1px solid #d9d9d9', cursor: 'not-allowed'};
 
 const LIMIT_UNITS_OPTIONS = [
@@ -65,8 +74,12 @@ export const AggregateItem = ({
                                    onOverride,
                                    onRequestBusinessReview,
                                    onCompleteBusinessReview,
+                                   outputListDataItem,
                                    scrapedView,
-                                   history
+                                   history,
+                                   linkedLicenceOptions,
+                                   pointDescriptions,
+                                   purposeDescriptions
                                }: AggregateItemProps) => {
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const [showTimePeriod, setShowTimePeriod] = React.useState<boolean>(!!aggregateProp?.timePeriod);
@@ -94,6 +107,10 @@ export const AggregateItem = ({
     const points = (aggregate.points ?? []) as Point[];
     const purposes = (aggregate.purposes ?? []) as Purpose[];
     const linkedLicences = aggregate.linkedLicences ?? [];
+    const isLinkedLicenceUnrecognised = (licenceNumber: string) =>
+        !!licenceNumber && !(linkedLicenceOptions ?? []).includes(licenceNumber);
+    const lookupPointDescription = (id?: string) => pointDescriptions?.get(id?.trim() ?? '');
+    const lookupPurposeDescription = (id?: string) => purposeDescriptions?.get(id?.trim() ?? '');
 
     const update = (changes: Partial<Aggregate>) => {
         if (onUpdate) {
@@ -189,6 +206,9 @@ export const AggregateItem = ({
         }
         // Sub Type is optional — not validated.
 
+        if (aggregate.primaryType === PrimaryType.LicenceToLicence && linkedLicences.length === 0) {
+            newErrors.linkedLicences = 'At least one Linked Licence is required when Primary Type is LicenceToLicence';
+        }
         linkedLicences.forEach((ll, idx) => {
             if (!ll || !ll.trim()) newErrors[`linkedLicence_${idx}`] = 'Linked Licence cannot be empty';
         });
@@ -308,21 +328,44 @@ export const AggregateItem = ({
                         <button onClick={handleAddLinkedLicence} style={addButtonStyle}>+ Add Linked Licence</button>
                     </div>
                     {linkedLicences.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
-                    {linkedLicences.map((ll, idx) => (
-                        <div key={idx} style={cardStyle}>
-                            <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
-                                <div style={{flex: 1}}>
-                                    <label style={labelStyle}>Licence Number:</label>
-                                    <input type="text" value={ll}
-                                           onChange={(e) => handleLinkedLicenceChange(idx, e.target.value)}
-                                           style={{...inputStyle, borderColor: errors[`linkedLicence_${idx}`] ? '#ff4d4f' : '#d9d9d9'}}/>
+                    <ValidationError message={errors.linkedLicences}/>
+                    {linkedLicences.map((ll, idx) => {
+                        const unrecognised = isLinkedLicenceUnrecognised(ll);
+                        return (
+                            <div key={idx} style={cardStyle}>
+                                <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
+                                    <div style={{flex: 1}}>
+                                        <label style={labelStyle}>Licence Number:</label>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                                            <select value={ll}
+                                                    onChange={(e) => handleLinkedLicenceChange(idx, e.target.value)}
+                                                    style={{
+                                                        ...inputStyle,
+                                                        borderColor: errors[`linkedLicence_${idx}`]
+                                                            ? '#ff4d4f'
+                                                            : unrecognised ? '#faad14' : '#d9d9d9'
+                                                    }}>
+                                                <option value="">-- Select --</option>
+                                                {unrecognised && <option value={ll}>{ll}</option>}
+                                                {(linkedLicenceOptions ?? []).map(number => (
+                                                    <option key={number} value={number}>{number}</option>
+                                                ))}
+                                            </select>
+                                            {unrecognised && (
+                                                <span title={UNRECOGNISED_LINKED_LICENCE_MESSAGE}
+                                                      style={{fontSize: '1rem', cursor: 'help'}}>⚠️</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => handleRemoveLinkedLicence(idx)} style={removeButtonStyle}>Remove</button>
                                 </div>
-                                <button onClick={() => handleRemoveLinkedLicence(idx)} disabled={linkedLicences.length <= 1}
-                                        style={linkedLicences.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
+                                <ValidationError
+                                    message={errors[`linkedLicence_${idx}`] || (unrecognised ? UNRECOGNISED_LINKED_LICENCE_MESSAGE : undefined)}
+                                    style={!errors[`linkedLicence_${idx}`] && unrecognised ? {color: '#faad14'} : undefined}
+                                />
                             </div>
-                            <ValidationError message={errors[`linkedLicence_${idx}`]}/>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 <div style={{marginTop: '16px'}}>
@@ -443,6 +486,11 @@ export const AggregateItem = ({
                                 <button onClick={() => handleRemovePoint(idx)} disabled={points.length <= 1}
                                         style={points.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
                             </div>
+                            {lookupPointDescription(point.id) && (
+                                <p style={lookupDescriptionStyle}>
+                                    <strong>Value:</strong> {lookupPointDescription(point.id)}
+                                </p>
+                            )}
                             <ValidationError message={errors[`point_${idx}`]}/>
                         </div>
                     ))}
@@ -470,6 +518,11 @@ export const AggregateItem = ({
                                 <button onClick={() => handleRemovePurpose(idx)} disabled={purposes.length <= 1}
                                         style={purposes.length <= 1 ? removeButtonDisabledStyle : removeButtonStyle}>Remove</button>
                             </div>
+                            {lookupPurposeDescription(purpose.id) && (
+                                <p style={lookupDescriptionStyle}>
+                                    <strong>Value:</strong> {lookupPurposeDescription(purpose.id)}
+                                </p>
+                            )}
                             <ValidationError message={errors[`purpose_${idx}`]}/>
                         </div>
                     ))}
@@ -557,9 +610,13 @@ export const AggregateItem = ({
         );
     }
 
+    const flaggedItem = getFlaggedItem(outputListDataItem, 'Aggregates', itemId);
+
     const summary = (
         <div style={{fontSize: '0.9rem'}}>
             <strong>{aggregate.id || 'N/A'}</strong>
+            {flaggedItem && ' 🚩'}
+            {flaggedItem?.flagReason && <span> {flaggedItem.flagReason}</span>}
         </div>
     );
 
@@ -575,7 +632,25 @@ export const AggregateItem = ({
             </div>
             {linkedLicences.length > 0 && (
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
-                    <strong>Linked Licences:</strong> {linkedLicences.join(', ')}
+                    <strong>Linked Licences:</strong>{' '}
+                    {linkedLicences.map((ll, idx) => {
+                        const unrecognised = isLinkedLicenceUnrecognised(ll);
+                        const isLast = idx === linkedLicences.length - 1;
+                        return (
+                            <span key={idx}
+                                  title={unrecognised ? UNRECOGNISED_LINKED_LICENCE_MESSAGE : undefined}
+                                  style={unrecognised ? {
+                                      display: 'inline-block',
+                                      border: '1px solid #faad14',
+                                      borderRadius: '4px',
+                                      padding: '0 4px',
+                                      marginRight: '4px',
+                                      cursor: 'help'
+                                  } : {marginRight: '4px'}}>
+                                {ll}{unrecognised ? ' ⚠️' : ''}{!isLast ? ',' : ''}
+                            </span>
+                        );
+                    })}
                 </p>
             )}
             {aggregate.timePeriod && (
@@ -621,7 +696,7 @@ export const AggregateItem = ({
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
                         {points.map((point, idx) => (
                             <li key={idx} style={{marginBottom: '4px', padding: '6px 8px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
-                                {[point.id, point.altId, point.description].filter(v => v && v.trim()).join(' / ') || 'N/A'}
+                                {[point.id, point.altId, point.description?.trim() || lookupPointDescription(point.id)].filter(v => v && v.trim()).join(' / ') || 'N/A'}
                             </li>
                         ))}
                     </ul>
@@ -633,7 +708,7 @@ export const AggregateItem = ({
                     <ul style={{margin: 0, padding: 0, listStyle: 'none'}}>
                         {purposes.map((purpose, idx) => (
                             <li key={idx} style={{marginBottom: '4px', padding: '6px 8px', backgroundColor: '#f9f9f9', borderRadius: '4px'}}>
-                                {[purpose.id, purpose.description].filter(v => v && v.trim()).join(' / ') || 'N/A'}
+                                {[purpose.id, purpose.description?.trim() || lookupPurposeDescription(purpose.id)].filter(v => v && v.trim()).join(' / ') || 'N/A'}
                             </li>
                         ))}
                     </ul>

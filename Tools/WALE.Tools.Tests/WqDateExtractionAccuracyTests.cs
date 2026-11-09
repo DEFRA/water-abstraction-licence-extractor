@@ -209,6 +209,8 @@ public partial class WqDateExtractionAccuracyTests(ITestOutputHelper testOutputH
             outputService,
             null!,
             null!,
+            null!,
+            null!,
             GeneralConstants.UnsetRegionCode,
             DateTime.Now,
             skipFileIfMoreThenPages: 100,

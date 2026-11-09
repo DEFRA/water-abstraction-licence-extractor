@@ -20,6 +20,9 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
             listRow.aggregateIds, outgoingVerifications);
 
         listRow.aggregateIds = aggregateIds.ToArray(); // aggregatesCount recomputes automatically from this
+        listRow.aggregates = AggregateVerificationMergeHelper
+            .MergeAggregates(listRow.aggregates, outgoingVerifications)
+            .ToArray();
 
         var sectionSummaries = listRow.licenceSectionVerifications?.ToList() ?? [];
         sectionSummaries.Add(new LicenceSectionVerificationSummary

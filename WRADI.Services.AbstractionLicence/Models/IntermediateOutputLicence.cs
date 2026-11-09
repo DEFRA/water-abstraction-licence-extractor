@@ -27,6 +27,8 @@ public class IntermediateOutputLicence
     public int LimitsCount;
     
     public string[]? AggregateIds;
+
+    public Aggregate[]? Aggregates;
     
     public bool? NaldHasAggregateCondition;
     

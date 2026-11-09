@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace WRADI.Core.AbstractionLicence.Models;
 
 public class OutputListDataItem
@@ -25,6 +27,9 @@ public class OutputListDataItem
     public string[]? aggregateIds { get; set; }
 
     public int aggregatesCount => aggregateIds?.Length ?? 0;
+
+    [JsonIgnore]
+    public Aggregate[]? aggregates { get; set; }
 
     public bool? naldHasAggregateCondition { get; set; }
     

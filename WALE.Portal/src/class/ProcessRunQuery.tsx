@@ -5,6 +5,7 @@ export type ProcessRunQuery = {
     issuer?: string;
     limitsEmpty?: boolean;
     aggregatesFilter?: string;
+    aggregatePrimaryTypeFilter?: string;
     purposesEmpty?: boolean;
     pointsEmpty?: boolean;
     ocrScan?: boolean;

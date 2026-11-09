@@ -57,6 +57,7 @@ export function ProcessRunLicenceFilters({
             pointsEmpty: undefined,
             limitsEmpty: undefined,
             aggregatesFilter: undefined,
+            aggregatePrimaryTypeFilter: undefined,
             ocrScan: undefined,
             issueYear: undefined,
             issuer: undefined,
@@ -224,6 +225,23 @@ export function ProcessRunLicenceFilters({
                     <option value="true_null">File: Yes, Nald: Any</option>
                     <option value="true_true">File: Yes, Nald: Yes</option>
                     <option value="true_false">File: Yes, Nald: No</option>
+                </select>
+
+                <select
+                    className={!pendingQuery.aggregatePrimaryTypeFilter ? "" : "filter-active"}
+                    title="Aggregate primary type"
+                    value={pendingQuery.aggregatePrimaryTypeFilter ?? ""}
+                    onChange={e =>
+                        updatePendingQuery(
+                            "aggregatePrimaryTypeFilter",
+                            e.target.value === "" ? undefined : e.target.value
+                        )
+                    }
+                >
+                    <option value="">Any</option>
+                    <option value="InLicence">In Licence</option>
+                    <option value="LicenceToLicence">Licence to Licence</option>
+                    <option value="Both">Both</option>
                 </select>
             </td>
 

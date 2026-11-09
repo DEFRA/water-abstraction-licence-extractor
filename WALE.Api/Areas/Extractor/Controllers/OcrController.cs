@@ -15,6 +15,21 @@ public class OcrController(
     ICacheService cacheService) : Controller
 {
     [HttpGet]
+    public async Task<IActionResult> GetAllTextAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] string ocrServiceName)
+    {
+        var allText = await cacheService.GetAllOcrTextAsync(
+            new OcrServiceAllTextCacheRequest
+            {
+                FileId = fileId,
+                OcrServiceName = ocrServiceName
+            });
+
+        return Ok(allText);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetImageTextAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int pageNumber,

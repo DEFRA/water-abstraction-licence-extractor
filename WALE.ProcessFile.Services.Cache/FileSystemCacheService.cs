@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
@@ -9,7 +10,7 @@ using WALE.ProcessFile.Core.Models.OcrService;
 
 namespace WALE.ProcessFile.Services.Cache;
 
-public class FileSystemCacheService(string cacheFolder) : ICacheService
+public partial class FileSystemCacheService(string cacheFolder) : ICacheService
 {
     public string? CacheFolderOrUrl { get; set; } = cacheFolder.StartsWith('/') ? cacheFolder : Path.GetFullPath(cacheFolder);
 
@@ -252,6 +253,49 @@ public class FileSystemCacheService(string cacheFolder) : ICacheService
         return (string?)await File.ReadAllTextAsync(metadataFilename);
     }
     
+    public async Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request)
+    {
+        var folder = $"{GetFolderPath(request.FileId)}/{request.OcrServiceName}/Text";
+        var allText = new Dictionary<string, string>();
+
+        if (!Directory.Exists(folder))
+        {
+            return allText;
+        }
+
+        // The filenames GetOcrImageTextAsync and GetOcrScreenshotTextAsync open - keep in step.
+        foreach (var path in Directory.EnumerateFiles(folder, "ocr-page-*.json"))
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            var imageMatch = OcrImageFileName().Match(name);
+
+            if (imageMatch.Success)
+            {
+                allText[OcrServiceAllTextCacheRequest.ImageKey(
+                    int.Parse(imageMatch.Groups[1].Value),
+                    int.Parse(imageMatch.Groups[2].Value))] = await File.ReadAllTextAsync(path);
+
+                continue;
+            }
+
+            var screenshotMatch = OcrScreenshotFileName().Match(name);
+
+            if (screenshotMatch.Success)
+            {
+                allText[OcrServiceAllTextCacheRequest.ScreenshotKey(
+                    int.Parse(screenshotMatch.Groups[1].Value))] = await File.ReadAllTextAsync(path);
+            }
+        }
+
+        return allText;
+    }
+
+    [GeneratedRegex(@"^ocr-page-(\d+)-image-(\d+)$")]
+    private static partial Regex OcrImageFileName();
+
+    [GeneratedRegex(@"^ocr-page-(\d+)$")]
+    private static partial Regex OcrScreenshotFileName();
+
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         var fileCacheFolder= GetFolderPath(request.FileId);

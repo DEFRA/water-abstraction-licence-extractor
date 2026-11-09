@@ -121,33 +121,53 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         throw new NotImplementedException();
     }
     
-    public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    private static readonly TimeSpan AllOcrTextTimeToLive = TimeSpan.FromMinutes(2);
+
+    public async Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request)
     {
-        var path = $"/Extractor/Ocr/GetImageText?pageNumber={request.PageNumber}"
-            + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
-            + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+        var path = $"/Extractor/Ocr/GetAllText?fileId={request.FileId}"
+            + $"&ocrServiceName={request.OcrServiceName}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
-        
-        var content = await response.Content.ReadAsStringAsync();
+
         response.EnsureSuccessStatusCode();
 
-        return content;
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<Dictionary<string, string>>(
+            content,
+            JsonHelper.GetWireSerializerOptions()) ?? [];
+    }
+
+    /// A warm container processes many files in turn, so entries are per file and short-lived.
+    /// Safe to hold for the file: the OCR services use what this returns only when the document
+    /// itself came from cache, so a save during the run cannot be read back stale.
+    private Task<Dictionary<string, string>> GetAllOcrTextCachedAsync(Guid fileId, string? ocrServiceName) =>
+        ReferenceDataCache.GetAsync(
+            $"{nameof(ApiCacheService)}.AllOcrText|{httpClient.BaseAddress}|{fileId}|{ocrServiceName}",
+            AllOcrTextTimeToLive,
+            () => GetAllOcrTextAsync(
+                new OcrServiceAllTextCacheRequest
+                {
+                    FileId = fileId,
+                    OcrServiceName = ocrServiceName
+                }));
+
+    public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
+    {
+        var allText = await GetAllOcrTextCachedAsync(request.FileId, request.OcrServiceName);
+
+        return allText.GetValueOrDefault(
+            OcrServiceAllTextCacheRequest.ImageKey(request.PageNumber, request.ImageNumber));
     }
 
     public async Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request)
     {
-        var path = $"/Extractor/Ocr/GetScreenshotText?pageNumber={request.PageNumber}"
-           + $"&imageNumber={request.ImageNumber}&fileId={request.FileId}"
-           + $"&ocrServiceName={request.OcrServiceName}&processRunId={request.ProcessRunId}";
+        var allText = await GetAllOcrTextCachedAsync(request.FileId, request.OcrServiceName);
 
-        var response = await HttpHelper.RateLimiter.Enqueue(() =>
-            httpClient.GetAsync(path));
-        
-        var content = await response.Content.ReadAsStringAsync();
-
-        return content;
+        return allText.GetValueOrDefault(
+            OcrServiceAllTextCacheRequest.ScreenshotKey(request.PageNumber));
     }
 
     public async Task<List<LineAndWords>> GetAndSaveTemporaryOcrImageTextAsync(OcrServiceImageTextCacheRequest request)

@@ -23,6 +23,8 @@ public interface IDatabaseReadService
     
     Task<string?> GetNoOcrImagesMetadata(NoOcrServiceMetadataCacheRequest request);
     
+    Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request);
+
     Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);

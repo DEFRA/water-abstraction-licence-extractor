@@ -85,8 +85,13 @@ public class FileProcessSingleService(
             fileProcessSingleRequest.LockRetryCount,
             naldLinkedLicenceHelper: naldLinkedLicenceHelper);
 
-        var processRuns = await outputService.GetAllProcessRunsAsync();
-        var processRun = processRuns.Single(pr => pr.ProcessRunId == fileProcessSingleRequest.ProcessRunId);
+        if (fileProcessSingleRequest.ProcessRunId == null)
+        {
+            throw new InvalidOperationException(
+                $"No process run id on the request for {fileProcessSingleRequest.FilePath}");
+        }
+
+        var processRun = new ProcessRun { ProcessRunId = fileProcessSingleRequest.ProcessRunId.Value };
 
         ConsoleHelper.WriteLine(
             $"INFO - {nameof(FileProcessSingleService)} - Start file to output for " +

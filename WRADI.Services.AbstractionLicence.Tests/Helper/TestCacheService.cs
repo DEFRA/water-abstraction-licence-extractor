@@ -66,6 +66,11 @@ public class TestCacheService : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         throw new NotImplementedException();

@@ -38,6 +38,8 @@ public interface ICacheService
 
     public Task<Dictionary<int, string>?> GetNoOcrAllPagesTextLinesAsync(NoOcrServiceMetadataCacheRequest request);
     
+    public Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request);
+
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request);
     
     public Task<string?> GetOcrScreenshotTextAsync(OcrServiceImageTextCacheRequest request);

@@ -129,6 +129,11 @@ public class DatabaseCacheService(
         return databaseReadService.GetOcrScreenshotTextAsync(request);
     }
     
+    public Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request)
+    {
+        return databaseReadService.GetAllOcrTextAsync(request);
+    }
+
     public Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         return databaseReadService.GetOcrImageTextAsync(request);

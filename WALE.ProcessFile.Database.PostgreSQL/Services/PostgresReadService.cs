@@ -349,6 +349,59 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
+    public async Task<Dictionary<string, string>> GetAllOcrTextAsync(OcrServiceAllTextCacheRequest request)
+    {
+        await using var connection = GetPostgresConnection();
+
+        // DISTINCT ON matches GetOcrScreenshotTextAsync's newest-row-per-page ORDER BY.
+        const string sql = """
+                           SELECT 'i:' || page_number || ':' || image_number AS cache_key, data
+                           FROM ocr_image_text_cache
+                           WHERE file_id = @FileId
+                             AND ocr_service_name = @OcrServiceName
+                           UNION ALL
+                           SELECT cache_key, data
+                           FROM (
+                               SELECT DISTINCT ON (page_number)
+                                      's:' || page_number AS cache_key, data
+                               FROM ocr_screenshot_text_cache
+                               WHERE file_id = @FileId
+                                 AND ocr_service_name = @OcrServiceName
+                               ORDER BY page_number, date_time_utc DESC
+                           ) newest_screenshot_per_page;
+                           """;
+
+        var rows = await QueryAsync<OcrTextCacheRow>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                request.FileId,
+                request.OcrServiceName
+            });
+
+        var allText = new Dictionary<string, string>();
+
+        foreach (var row in rows)
+        {
+            if (row.CacheKey == null || row.Data == null)
+            {
+                continue;
+            }
+
+            allText[row.CacheKey] = row.Data;
+        }
+
+        return allText;
+    }
+
+    private sealed class OcrTextCacheRow
+    {
+        public string? CacheKey { get; set; }
+        public string? Data { get; set; }
+    }
+
     public async Task<string?> GetOcrImageTextAsync(OcrServiceImageTextCacheRequest request)
     {
         await using var connection = GetPostgresConnection();

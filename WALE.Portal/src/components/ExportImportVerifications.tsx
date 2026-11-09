@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import { waleApiBaseUrl } from '../api/apiClient.ts';
 import { ProcessRun } from '../api/generated/apiClient.ts'
 import {
@@ -7,20 +7,6 @@ import {
 import {
     getVerificationDataStatus
 } from '.././utils/verificationsDataUtils.tsx';
-import { processNotificationService } from '../utils/processNotificationService.ts'
-
-interface ProcessEvent {
-    processRunId: number;
-    status: string;
-    message?: string;
-}
-
-type ProcessStatus =
-    | 'idle'
-    | 'starting'
-    | 'processing'
-    | 'completed'
-    | 'failed';
 
 export function ExportImportVerifications() {
 
@@ -36,10 +22,7 @@ export function ExportImportVerifications() {
     const [currentBackupVerificationsCount, setCurrentBackupVerificationsCount] = useState<number | undefined>();
     const [currentVerificationsCount, setCurrentVerificationsCount] = useState<number | undefined>();
     const [latestBackupDate, setLatestBackupDate] = useState<string | undefined>();
-    const [status, setStatus] = useState<ProcessStatus>('idle');
-    const [isConnected, setIsConnected] = useState(false);
-
-    const statusRef = useRef<ProcessStatus>('idle');
+    
     const uploadFileAsync = async (
         file: File,
         failed: { filename: string; error: string }[],
@@ -268,11 +251,7 @@ export function ExportImportVerifications() {
         setLatestBackupDate(
             verificationDataStatusResult.latestBackupVersionDate?.toLocaleString());
     };
-
-    const updateStatus = (value: ProcessStatus) => {
-        statusRef.current = value;
-        setStatus(value);
-    };
+    
 
     useEffect(() => {
         let disposed = false;
@@ -291,89 +270,7 @@ export function ExportImportVerifications() {
                 if (!disposed) {
                     console.error('Error loading utility values:', error);
                 }
-            });
-
-        // Process completed
-        const unsubscribeCompleted =
-            processNotificationService.onCompleted((event: ProcessEvent) => {
-                if (disposed) return;
-
-                updateStatus('completed');
-                setError(null);
-
-                setSuccessMessage(prev => {
-                    const newMessage =
-                        event.message ??
-                        'Refresh Licence List Data completed for latest process run.';
-
-                    return prev
-                        ? `${prev}\n${newMessage}`
-                        : newMessage;
-                });
-            });
-
-        // Process failed
-        const unsubscribeFailed =
-            processNotificationService.onFailed((event: ProcessEvent) => {
-                if (disposed) return;
-
-                updateStatus('failed');
-                setSuccessMessage(null);
-                setError(
-                    event.message ??
-                    'Refresh Licence List Data failed.'
-                );
-            });
-
-        // Connection temporarily lost
-        const unsubscribeReconnecting =
-            processNotificationService.onReconnecting(() => {
-                if (!disposed) {
-                    setIsConnected(false);
-                }
-            });
-
-        // Connection restored
-        const unsubscribeReconnected =
-            processNotificationService.onReconnected(() => {
-                if (!disposed) {
-                    setIsConnected(true);
-                }
-            });
-
-        // Connection closed
-        const unsubscribeClosed =
-            processNotificationService.onClosed(() => {
-                if (!disposed) {
-                    setIsConnected(false);
-                }
-            });
-
-        // Start shared SignalR connection
-        void processNotificationService.start()
-            .then(() => {
-                if (!disposed) {
-                    setIsConnected(processNotificationService.isConnected);
-                }
-            })
-            .catch(err => {
-                console.error('SignalR connection error:', err);
-
-                if (!disposed) {
-                    setIsConnected(false);
-                }
-            });
-
-        // Cleanup
-        return () => {
-            disposed = true;
-
-            unsubscribeCompleted();
-            unsubscribeFailed();
-            unsubscribeReconnecting();
-            unsubscribeReconnected();
-            unsubscribeClosed();
-        };
+            });        
     }, []);
 
     const isRunning =
@@ -489,9 +386,7 @@ export function ExportImportVerifications() {
                     </div>
                 )}
                 <h3>Import Verifications Section</h3>
-                <div style={{ marginTop: '10px', fontSize: '12px' }}>
-                    SignalR: {isConnected ? 'Connected' : 'Disconnected'}
-                </div>
+              
                 <div style={{ marginBottom: "12px" }}>
                     <label
                         htmlFor="targetProcessRunId"

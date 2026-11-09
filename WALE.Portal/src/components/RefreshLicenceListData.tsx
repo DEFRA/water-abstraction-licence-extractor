@@ -1,17 +1,10 @@
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { waleApiBaseUrl } from '../api/apiClient.ts';
 import { Client } from '../api/generated/apiClient';
-import { processNotificationService } from '../utils/processNotificationService.ts'
 
 interface RefreshLicenceListDataProps {
     processRunId: number;
-}
-
-interface ProcessEvent {
-    processRunId: number;
-    status: string;
-    message?: string;
 }
 
 type ProcessStatus =
@@ -27,7 +20,6 @@ export function RefreshLicenceListData({
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [status, setStatus] = useState<ProcessStatus>('idle');
-    const [isConnected, setIsConnected] = useState(false);
 
     const statusRef = useRef<ProcessStatus>('idle');
 
@@ -40,83 +32,7 @@ export function RefreshLicenceListData({
         statusRef.current = value;
         setStatus(value);
     };
-
-    useEffect(() => {
-        if (!processRunId) {
-            setIsConnected(false);
-            return;
-        }
-
-        let disposed = false;
-
-        setIsConnected(processNotificationService.isConnected);
-
-        const unsubscribeCompleted =
-            processNotificationService.onCompleted((event: ProcessEvent) => {
-                if (disposed) return;
-
-                updateStatus('completed');
-                setError(null);
-
-                setSuccessMessage(prev => {
-                    const newMessage =
-                        event.message ??
-                        'Refresh Licence List Data completed for latest process run.';
-
-                    return prev
-                        ? `${prev}\n${newMessage}`
-                        : newMessage;
-                });
-            });
-
-        const unsubscribeFailed =
-            processNotificationService.onFailed((event: ProcessEvent) => {
-                if (disposed || event.processRunId !== processRunId) return;
-
-                updateStatus('failed');
-                setSuccessMessage(null);
-                setError(
-                    event.message ??
-                    `Refresh Licence List Data failed for process run ${processRunId}.`
-                );
-            });
-
-        const unsubscribeReconnecting =
-            processNotificationService.onReconnecting(() => {
-                if (!disposed) setIsConnected(false);
-            });
-
-        const unsubscribeReconnected =
-            processNotificationService.onReconnected(() => {
-                if (!disposed) setIsConnected(true);
-            });
-
-        const unsubscribeClosed =
-            processNotificationService.onClosed(() => {
-                if (!disposed) setIsConnected(false);
-            });
-
-        void processNotificationService.start()
-            .then(() => {
-                if (!disposed) {
-                    setIsConnected(processNotificationService.isConnected);
-                }
-            })
-            .catch(err => {
-                console.error('SignalR connection error:', err);
-                if (!disposed) setIsConnected(false);
-            });
-
-        return () => {
-            disposed = true;
-
-            unsubscribeCompleted();
-            unsubscribeFailed();
-            unsubscribeReconnecting();
-            unsubscribeReconnected();
-            unsubscribeClosed();
-        };
-    }, [processRunId]);
+    
 
     const startRefreshProcess = async () => {
         if (!processRunId || statusRef.current === 'starting' ||
@@ -135,12 +51,10 @@ export function RefreshLicenceListData({
             // Completion may have arrived before the API returned.
             if (statusRef.current !== 'completed' &&
                 statusRef.current !== 'failed') {
-
-                updateStatus('processing');
-
                 setSuccessMessage(
                     `Refresh Licence List Data started successfully for process run ${processRunId}.`
                 );
+                updateStatus('completed');
             }
         } catch (err) {
             if (statusRef.current === 'completed') return;
@@ -188,10 +102,7 @@ export function RefreshLicenceListData({
                             ? 'Processing...'
                             : 'Refresh Licence List Data'}
                 </button>
-
-                <div style={{ marginTop: '10px', fontSize: '12px' }}>
-                    SignalR: {isConnected ? 'Connected' : 'Disconnected'}
-                </div>
+                
             </div>
 
             {error && (

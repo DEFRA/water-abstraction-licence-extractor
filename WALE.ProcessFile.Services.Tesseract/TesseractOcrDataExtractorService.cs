@@ -47,9 +47,11 @@ public class TesseractOcrDataExtractorService(
         var isPageScreenshot = OcrHelper.IsPageScreenshot(imageReference, pageNumber);
         var returnLines = new List<LineAndWords>();
 
-        var cachedJson = isPageScreenshot
-            ? await cacheService.GetOcrScreenshotTextAsync(request)
-            : await cacheService.GetOcrImageTextAsync(request);
+        var cachedJson = pdfDocument.FromCache
+            ? await (isPageScreenshot
+                ? cacheService.GetOcrScreenshotTextAsync(request)
+                : cacheService.GetOcrImageTextAsync(request))
+            : null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cachedJson))
         {

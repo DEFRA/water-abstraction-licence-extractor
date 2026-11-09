@@ -173,9 +173,11 @@ public class AwsTextractOcrDataExtractorService
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = isPageScreenshot
-            ? await _cacheService.GetOcrScreenshotTextAsync(request)
-            : await _cacheService.GetOcrImageTextAsync(request);
+        var cacheFileText = pdfDocument.FromCache
+            ? await (isPageScreenshot
+                ? _cacheService.GetOcrScreenshotTextAsync(request)
+                : _cacheService.GetOcrImageTextAsync(request))
+            : null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {

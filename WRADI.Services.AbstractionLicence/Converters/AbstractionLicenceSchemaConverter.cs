@@ -1726,9 +1726,57 @@ public static class AbstractionLicenceSchemaConverter
         FixNoLicenceSetWithoutLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
+        PerspectiveCorrectLicenceAggregates(allLicences);
         AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
         
         return returnLicenceSets;
+    }
+
+    private static void PerspectiveCorrectLicenceAggregates(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            var newAggregates = licence.AbstractionLimits.Aggregates!
+                .Select(agg => agg.Clone())
+                .ToList();
+            
+            foreach (var aggregate in newAggregates)
+            {
+                if (aggregate.SourceLicenceNumber == licence.LicenceNumber.Value)
+                {
+                    continue;
+                }
+
+                if (aggregate.LinkedLicences != null)
+                {
+                    var newLinkedLicences = aggregate.LinkedLicences
+                        .Where(ll => ll != licence.LicenceNumber.Value)
+                        .ToList();
+
+                    newLinkedLicences.Add(aggregate.SourceLicenceNumber!);
+                    aggregate.LinkedLicences = newLinkedLicences.ToArray();
+                }
+                
+                aggregate.SourceLicenceNumber = licence.LicenceNumber.Value;
+                aggregate.SourceLicenceVersionId = licence.LicenceVersion.LicenceVersionId;
+            }
+
+            licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
+        }
     }
 
     private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)

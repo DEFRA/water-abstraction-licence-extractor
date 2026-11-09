@@ -80,9 +80,6 @@ public class LicenceEstateExportRunner(
         }
     }
 
-    // One object per export: the role has no s3:DeleteObject, so a stale zip could not be cleared
-    // before writing a replacement. Old exports accumulate and are removed by hand. The trailing
-    // hyphen is load-bearing - without it run 5's prefix also matches runs 50 and 51.
     private static string KeyPrefix(int processRunId) => $"exports/licence-estate-run-{processRunId}-";
 
     private static string Key(int processRunId, DateTime timestampUtc) =>

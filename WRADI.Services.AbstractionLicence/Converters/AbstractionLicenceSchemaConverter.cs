@@ -1729,6 +1729,8 @@ public static class AbstractionLicenceSchemaConverter
         PerspectiveCorrectLicenceAggregates(allLicences);
         AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
         
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        
         return returnLicenceSets;
     }
 
@@ -1854,6 +1856,11 @@ public static class AbstractionLicenceSchemaConverter
 
                 foreach (var licenceSetIdPart in licenceSetIdParts!)
                 {
+                    if (licenceSetIdPart == "12100001" && licenceSet.LicenceSetId == "12100001-12100052-12203007")
+                    {
+                        
+                    }
+                    
                     var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
                         .Replace(".", string.Empty)
                         .Replace("-", string.Empty)
@@ -6621,6 +6628,13 @@ public static class AbstractionLicenceSchemaConverter
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
+        var allLicences = distinctLicenceSets
+            .SelectMany(lsg => lsg.Licences)
+            .ToList();
+        
+        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        
         distinctLicenceSets.AddRange(
             await AddIncomingLinksAndLicenceSetReferencesAsync(
                 licenceSetGroups,
@@ -6628,6 +6642,10 @@ public static class AbstractionLicenceSchemaConverter
                 naldDataLookupService));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
+        
+        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        
         return distinctLicenceSets;
     }
 

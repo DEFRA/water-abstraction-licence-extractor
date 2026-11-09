@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(88)]
+[Migration(89)]
 public class AddAggregatePrimaryTypeColumnsToLicenceListItem : Migration
 {
     private const string LicenceListItemTable = "licence_list_item";

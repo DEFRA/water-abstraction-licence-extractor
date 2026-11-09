@@ -1725,10 +1725,59 @@ public static class AbstractionLicenceSchemaConverter
 
         FixNoLicenceSetWithoutLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+
+        AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
         
         return returnLicenceSets;
     }
 
+    private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates!)
+            {
+                if (aggregate.LinkedLicences == null)
+                {
+                    continue;
+                }
+
+                var newLinkedLicences = new List<string>();
+                
+                foreach (var linkedLicence in aggregate.LinkedLicences)
+                {
+                    if (linkedLicence == licence.LicenceNumber.Value)
+                    {
+                        if (fixWhenDetected)
+                        {
+                            continue;
+                        }
+                        
+                        throw new Exception("Licence has aggregate licence linking to itself");
+                    }
+                    
+                    newLinkedLicences.Add(linkedLicence);
+                }
+                
+                aggregate.LinkedLicences = newLinkedLicences.ToArray();
+            }
+        }
+    }
+    
     private static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
     {
         var okayLicences = licences

@@ -1,8 +1,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as signalR from '@microsoft/signalr';
 import { waleApiBaseUrl } from '../api/apiClient.ts';
 import { Client } from '../api/generated/apiClient';
+import { processNotificationService } from '../utils/processNotificationService.ts'
 
 interface RefreshLicenceListDataProps {
     processRunId: number;
@@ -29,7 +29,6 @@ export function RefreshLicenceListData({
     const [status, setStatus] = useState<ProcessStatus>('idle');
     const [isConnected, setIsConnected] = useState(false);
 
-    const connectionRef = useRef<signalR.HubConnection | null>(null);
     const statusRef = useRef<ProcessStatus>('idle');
 
     const client = useMemo(
@@ -43,93 +42,79 @@ export function RefreshLicenceListData({
     };
 
     useEffect(() => {
-        if (!processRunId) return;
+        if (!processRunId) {
+            setIsConnected(false);
+            return;
+        }
 
         let disposed = false;
 
-        const hubUrl =
-            `${waleApiBaseUrl}/notificationsHub/process`.replace("-api-", "-portal-");
+        setIsConnected(processNotificationService.isConnected);
 
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl)
-            .withAutomaticReconnect()
-            .configureLogging(signalR.LogLevel.Information)
-            .build();
+        const unsubscribeCompleted =
+            processNotificationService.onCompleted((event: ProcessEvent) => {
+                if (disposed) return;
 
-        connectionRef.current = connection;
+                updateStatus('completed');
+                setError(null);
 
-        connection.on('ProcessCompleted', (event: ProcessEvent) => {
-            if (disposed || event.processRunId !== processRunId) return;
+                setSuccessMessage(prev => {
+                    const newMessage =
+                        event.message ??
+                        'Refresh Licence List Data completed for latest process run.';
 
-            updateStatus('completed');
-            setError(null);
-            setSuccessMessage(
-                event.message ??
-                `Refresh Licence List Data completed for process run ${processRunId}.`
-            );
-        });
+                    return prev
+                        ? `${prev}\n${newMessage}`
+                        : newMessage;
+                });
+            });
 
-        connection.on('ProcessFailed', (event: ProcessEvent) => {
-            if (disposed || event.processRunId !== processRunId) return;
+        const unsubscribeFailed =
+            processNotificationService.onFailed((event: ProcessEvent) => {
+                if (disposed || event.processRunId !== processRunId) return;
 
-            updateStatus('failed');
-            setSuccessMessage(null);
-            setError(
-                event.message ??
-                `Refresh Licence List Data failed for process run ${processRunId}.`
-            );
-        });
+                updateStatus('failed');
+                setSuccessMessage(null);
+                setError(
+                    event.message ??
+                    `Refresh Licence List Data failed for process run ${processRunId}.`
+                );
+            });
 
-        connection.onreconnecting(() => {
-            if (!disposed) setIsConnected(false);
-        });
+        const unsubscribeReconnecting =
+            processNotificationService.onReconnecting(() => {
+                if (!disposed) setIsConnected(false);
+            });
 
-        connection.onreconnected(async () => {
-            if (disposed) return;
-
-            try {
-                await connection.invoke('JoinProcess', processRunId);
+        const unsubscribeReconnected =
+            processNotificationService.onReconnected(() => {
                 if (!disposed) setIsConnected(true);
+            });
 
-                // Optional: refresh current status from API here
-                // to recover notifications missed during reconnection.
-            } catch (err) {
-                console.error('Failed to rejoin process:', err);
-            }
-        });
+        const unsubscribeClosed =
+            processNotificationService.onClosed(() => {
+                if (!disposed) setIsConnected(false);
+            });
 
-        connection.onclose(() => {
-            if (!disposed) setIsConnected(false);
-        });
-
-        const startConnection = async () => {
-            try {
-                await connection.start();
-
-                if (disposed) {
-                    await connection.stop();
-                    return;
-                }
-
-                await connection.invoke('JoinProcess', processRunId);
-
-                if (!disposed) setIsConnected(true);
-            } catch (err) {
-                console.error('SignalR connection error:', err);
-
+        void processNotificationService.start()
+            .then(() => {
                 if (!disposed) {
-                    setIsConnected(false);
+                    setIsConnected(processNotificationService.isConnected);
                 }
-            }
-        };
-
-        void startConnection();
+            })
+            .catch(err => {
+                console.error('SignalR connection error:', err);
+                if (!disposed) setIsConnected(false);
+            });
 
         return () => {
             disposed = true;
-            connectionRef.current = null;
-            setIsConnected(false);
-            void connection.stop();
+
+            unsubscribeCompleted();
+            unsubscribeFailed();
+            unsubscribeReconnecting();
+            unsubscribeReconnected();
+            unsubscribeClosed();
         };
     }, [processRunId]);
 
@@ -239,11 +224,15 @@ export function RefreshLicenceListData({
                         position: 'relative'
                     }}
                 >
-                    <p style={{ margin: 0 }}>{successMessage}</p>
+                    <p style={{
+                        margin: 0,
+                        whiteSpace: 'pre-line',
+                        paddingRight: '25px'
+                    }}>
+                        {successMessage}
+                    </p>
 
                     <button
-                        type="button"
-                        aria-label="Clear success message"
                         onClick={() => setSuccessMessage(null)}
                         style={{
                             position: 'absolute',

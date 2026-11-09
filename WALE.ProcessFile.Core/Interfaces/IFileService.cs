@@ -13,6 +13,8 @@ public interface IFileService
     
     public Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take);
     
+    public Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder);
+    
     public Task<Stream?> GetFileAsStreamAsync(string filename);
 
     public Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize);
@@ -21,7 +23,7 @@ public interface IFileService
 
     public Task<string?> UploadFileChunkAsync(string filename, Stream stream, int chunkIndex, int totalChunks, string? uploadId = null);
     
-    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress);
+    public Task DeleteAsync(string filename);
     
     Task<bool> ExistsAsync(string filename, StorageFolder folder);
     

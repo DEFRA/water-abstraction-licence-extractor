@@ -26,22 +26,22 @@ public static class HttpHelper
     public static int PerInstanceRequestsPerSecond(int totalRequestsPerSecond, int instances) =>
         Math.Max(1, totalRequestsPerSecond / Math.Max(1, instances));
 
-    public static HttpClient GetResilientHttpClient(string baseUrl, int maxConnectionsPerServer, int maxRequestsPerSecond)
+    public static HttpClient GetResilientHttpClient(string baseUrl, int defaultConnectionLimit, int maxRequestsPerSecond)
     {
-        Database.PostgreSQL.Helpers.HttpHelper.MaxRequestsPerSecond = maxRequestsPerSecond;
-
+        Database.PostgreSQL.Helpers.HttpHelper.SetMaxRequestsPerSecond(maxRequestsPerSecond);
+        
         var pollyHandler = new PolicyHttpMessageHandler(GetTooManyRequestsBackoffPolicy())
         {
             InnerHandler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                MaxConnectionsPerServer = maxConnectionsPerServer
+                MaxConnectionsPerServer = defaultConnectionLimit
             }
         };
-
+    
         var httpClient = new HttpClient(pollyHandler);
         httpClient.BaseAddress = new Uri(baseUrl);
-
+        
         return httpClient;
     }
 }

@@ -14,7 +14,7 @@ public class HttpHelperRateLimitTests
     [Fact]
     public async Task AConfiguredRateIsAppliedRatherThanTheDefault()
     {
-        DatabaseHttpHelper.MaxRequestsPerSecond = 2;
+        DatabaseHttpHelper.SetMaxRequestsPerSecond(2);
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -34,10 +34,10 @@ public class HttpHelperRateLimitTests
     [Fact]
     public void ChangingTheRateRebuildsTheLimiter()
     {
-        DatabaseHttpHelper.MaxRequestsPerSecond = 7;
+        DatabaseHttpHelper.SetMaxRequestsPerSecond(7);
         var first = DatabaseHttpHelper.RateLimiter;
 
-        DatabaseHttpHelper.MaxRequestsPerSecond = 11;
+        DatabaseHttpHelper.SetMaxRequestsPerSecond(11);
 
         Assert.NotSame(first, DatabaseHttpHelper.RateLimiter);
         Assert.Equal(11, DatabaseHttpHelper.MaxRequestsPerSecond);
@@ -46,7 +46,7 @@ public class HttpHelperRateLimitTests
     [Fact]
     public void TheSameLimiterIsReusedWhileTheRateIsUnchanged()
     {
-        DatabaseHttpHelper.MaxRequestsPerSecond = 5;
+        DatabaseHttpHelper.SetMaxRequestsPerSecond(5);
 
         Assert.Same(DatabaseHttpHelper.RateLimiter, DatabaseHttpHelper.RateLimiter);
     }
@@ -57,7 +57,7 @@ public class HttpHelperRateLimitTests
     public void ARateBelowOneIsRefused(int rate)
     {
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => DatabaseHttpHelper.MaxRequestsPerSecond = rate);
+            () => DatabaseHttpHelper.SetMaxRequestsPerSecond(rate));
     }
 
     [Theory]
@@ -74,7 +74,7 @@ public class HttpHelperRateLimitTests
     [Fact]
     public void BuildingTheClientAppliesTheRateToTheSharedLimiter()
     {
-        DatabaseHttpHelper.MaxRequestsPerSecond = 50;
+        DatabaseHttpHelper.SetMaxRequestsPerSecond(50);
 
         using var client = ServicesHttpHelper.GetResilientHttpClient("https://example.invalid", 100, 5);
 

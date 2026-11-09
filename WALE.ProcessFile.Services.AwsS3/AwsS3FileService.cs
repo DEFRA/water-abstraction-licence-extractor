@@ -58,6 +58,29 @@ public class AwsS3FileService(
             .ToList();
     }
 
+    public async Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder)
+    {
+        var client = GetS3Client();
+        var keys = new List<string>();
+        string? continuationToken = null;
+
+        do
+        {
+            var response = await client.ListObjectsV2Async(new ListObjectsV2Request
+            {
+                BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
+                Prefix = prefix,
+                ContinuationToken = continuationToken
+            });
+
+            keys.AddRange(response.S3Objects.Select(s3Object => s3Object.Key));
+            continuationToken = response.IsTruncated == true ? response.NextContinuationToken : null;
+        }
+        while (continuationToken != null);
+
+        return keys;
+    }
+
     public async Task<List<FileMetadata>> GetAllFilesWithMetadataAsync(string startAfter, int take)
     {
         var client = GetS3Client();
@@ -224,13 +247,13 @@ public class AwsS3FileService(
         return uploadId;
     }
     
-    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
+    public Task DeleteAsync(string filename)
     {
         var client = GetS3Client();
         
         return client.DeleteObjectAsync(new DeleteObjectRequest
         {
-            BucketName = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath,
+            BucketName = IngressFolderPath,
             Key = filename
         });
     }

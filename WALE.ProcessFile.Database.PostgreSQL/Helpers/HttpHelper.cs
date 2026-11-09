@@ -9,30 +9,27 @@ public static class HttpHelper
     private static int _maxRequestsPerSecond = 50;
     private static TimeLimiter? _rateLimiter;
 
-    // Built on first use, never in a field initialiser: a static initialiser captures the rate
-    // at type-init time, before the setter can run, and silently discards every configured value.
-    public static int MaxRequestsPerSecond
+    public static int MaxRequestsPerSecond => _maxRequestsPerSecond;
+
+    public static void SetMaxRequestsPerSecond(int maxRequestsPerSecond)
     {
-        get => _maxRequestsPerSecond;
-
-        set
+        if (maxRequestsPerSecond < 1)
         {
-            if (value < 1)
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(value),
-                    value,
-                    "Requests per second must be at least 1");
-            }
+            throw new ArgumentOutOfRangeException(
+                nameof(maxRequestsPerSecond),
+                maxRequestsPerSecond,
+                "Requests per second must be at least 1");
+        }
 
-            lock (ConfigurationLock)
-            {
-                _maxRequestsPerSecond = value;
-                _rateLimiter = null;
-            }
+        lock (ConfigurationLock)
+        {
+            _maxRequestsPerSecond = maxRequestsPerSecond;
+            _rateLimiter = null;
         }
     }
 
+    // One instance, held: a TimeLimiter paces by the call history it accumulates, so building a
+    // new one per access - as an expression-bodied property does - paces nothing at all.
     public static TimeLimiter RateLimiter
     {
         get

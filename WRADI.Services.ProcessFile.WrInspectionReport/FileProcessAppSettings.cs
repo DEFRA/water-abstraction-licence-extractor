@@ -8,6 +8,9 @@ public class FileProcessAppSettings
     public string PdfFolderPath { get; set; } = string.Empty;
     public int? MaxFilesPerRun { get; set; }
 
+    public int ApiRequestsPerSecond { get; set; } = 50;
+    public int ReservedConcurrency { get; set; } = 10;
+
     /// Restricts a run to documents DMS recorded as uploaded in this window, either end optional,
     /// unless the orchestration message names a window of its own, which replaces this one.
     /// Unlike MaxFilesPerRun, which takes whatever the candidate order happens to put first, this

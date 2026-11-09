@@ -277,7 +277,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     {
         var path = $"/BFF/ProcessRuns/GetProcessRunLicenceSets?processRunId={processRunId}";
         
-        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -365,7 +366,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     {
         var path = $"/BFF/FileData/LicenceSectionVerifications?licenceFileId={licenceFileId}&sourceLicenceNumber={Uri.EscapeDataString(sourceLicenceNumber)}";
         
-        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -384,7 +386,8 @@ public class ApiAbstractionLicenceOutputService(HttpClient httpClient) : IAbstra
     {
         var path = $"/BFF/FileData/GetLatestLicenceSectionVerifications";
         
-        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();

@@ -414,7 +414,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         var path = "/BFF/ProcessRuns/GetProcessRuns";
         
-        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -433,7 +434,8 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     {
         var path = "/BFF/ProcessRuns/GetAllProcessRuns";
         
-        var response = await httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path));
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(new Uri(httpClient.BaseAddress!, path)));
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();

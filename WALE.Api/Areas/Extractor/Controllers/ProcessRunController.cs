@@ -43,6 +43,15 @@ public class ProcessRunController(
     [HttpPost]
     public async Task<IActionResult> AddProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
     {
+        // process_run_file has no foreign key on process_run_id, so nothing else catches an
+        // unknown id.
+        var processRuns = await outputService.GetAllProcessRunsAsync();
+
+        if (processRuns.All(processRun => processRun.ProcessRunId != request.ProcessRunId))
+        {
+            return NotFound($"Process run {request.ProcessRunId} does not exist");
+        }
+
         var processRunFile = await outputService.AddProcessRunFileAsync(new ProcessRunFile
         {
             FileName = request.FileName,

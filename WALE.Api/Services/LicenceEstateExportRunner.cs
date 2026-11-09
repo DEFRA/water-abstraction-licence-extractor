@@ -34,20 +34,25 @@ public class LicenceEstateExportRunner(
 
     public async Task<string?> GetRunExportUrlAsync(int processRunId)
     {
-        var key = Key(processRunId);
+        var keys = await fileService.GetFileNamesWithPrefixAsync(
+            KeyPrefix(processRunId),
+            StorageFolder.Assets);
 
-        return await fileService.ExistsAsync(key, StorageFolder.Assets)
-            ? await fileService.GetPresignedUrlAsync(key, StorageFolder.Assets)
-            : null;
+        // The timestamp in the key sorts chronologically, so the highest key is the newest export.
+        var newest = keys
+            .OrderByDescending(key => key, StringComparer.Ordinal)
+            .FirstOrDefault();
+
+        return newest == null
+            ? null
+            : await fileService.GetPresignedUrlAsync(newest, StorageFolder.Assets);
     }
 
     private async Task ExportAsync(int processRunId)
     {
         // A file rather than memory: a run's zip reaches tens of megabytes.
         var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.zip");
-
-        // Deleted before the run, so the url endpoint cannot serve the last zip as this one.
-        await fileService.DeleteAsync(Key(processRunId), StorageFolder.Assets);
+        var key = Key(processRunId, DateTime.UtcNow);
 
         try
         {
@@ -61,7 +66,7 @@ public class LicenceEstateExportRunner(
             await using (var upload = File.OpenRead(tempPath))
             {
                 await fileService.UploadFileAsStreamAsync(
-                    Key(processRunId),
+                    key,
                     upload,
                     "application/zip",
                     StorageFolder.Assets);
@@ -75,7 +80,13 @@ public class LicenceEstateExportRunner(
         }
     }
 
-    private static string Key(int processRunId) => $"exports/licence-estate-run-{processRunId}.zip";
+    // One object per export: the role has no s3:DeleteObject, so a stale zip could not be cleared
+    // before writing a replacement. Old exports accumulate and are removed by hand. The trailing
+    // hyphen is load-bearing - without it run 5's prefix also matches runs 50 and 51.
+    private static string KeyPrefix(int processRunId) => $"exports/licence-estate-run-{processRunId}-";
+
+    private static string Key(int processRunId, DateTime timestampUtc) =>
+        $"{KeyPrefix(processRunId)}{timestampUtc:yyyyMMdd-HHmmss}.zip";
 
     // Not ProcessCompleted/ProcessFailed: UiProcessRunService sends those on the same
     // process-{id} group, and RefreshLicenceListData takes any of them as its own.

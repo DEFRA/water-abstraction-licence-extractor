@@ -34,6 +34,23 @@ public class LocalFileService(string folderPath) : IFileService
             .ToList());
     }
 
+    public Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder)
+    {
+        var root = folder == StorageFolder.Ingress ? IngressFolderPath : AssetsFolderPath;
+
+        if (!Directory.Exists(root))
+        {
+            return Task.FromResult(new List<string>());
+        }
+
+        return Task.FromResult(
+            Directory
+                .EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                .Select(path => Path.GetRelativePath(root, path).Replace('\\', '/'))
+                .Where(name => name.StartsWith(prefix, StringComparison.Ordinal))
+                .ToList());
+    }
+
     public Task<Stream?> GetFileAsStreamAsync(string filename)
     {
         var path = $"{IngressFolderPath}{filename}";
@@ -70,7 +87,7 @@ public class LocalFileService(string folderPath) : IFileService
         return null;
     }
     
-    public Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
+    public Task DeleteAsync(string filename)
     {
         throw new NotImplementedException();
     }

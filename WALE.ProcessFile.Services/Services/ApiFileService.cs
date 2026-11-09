@@ -172,9 +172,9 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         return content;
     }
     
-    public async Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
+    public async Task DeleteAsync(string filename)
     {
-        var path = $"/BFF/Files/Delete?filename={filename}&folder={folder}";
+        var path = $"/BFF/Files/Delete?filename={filename}";
        
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
@@ -209,6 +209,11 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
+    }
+
+    public Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder)
+    {
+        throw new NotImplementedException();
     }
 
     public Task CopyAsync(string filename, string destinationBucketName)

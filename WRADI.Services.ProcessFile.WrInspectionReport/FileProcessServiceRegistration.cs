@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.Cache;
@@ -75,6 +76,8 @@ public static class FileProcessServiceRegistration
 
             // Local/dev cap on files per orchestration; unset in deployed environments.
             options.MaxFilesPerRun = ConfigHelper.GetOptionalInt(configuration, "MaxFilesPerRun");
+            options.ApiRequestsPerSecond = ConfigHelper.GetOptionalInt(configuration, "ApiRequestsPerSecond") ?? 50;
+            options.ReservedConcurrency = ConfigHelper.GetOptionalInt(configuration, "ReservedConcurrency") ?? 10;
 
             options.UploadedFrom = ParseOptionalDate(configuration, "UploadedFrom");
             options.UploadedTo = ParseOptionalDate(configuration, "UploadedTo");
@@ -93,10 +96,18 @@ public static class FileProcessServiceRegistration
             switch (fileServiceType)
             {
                 case "api":
+                    var requestsPerSecond = HttpHelper.PerInstanceRequestsPerSecond(
+                        settings.ApiRequestsPerSecond,
+                        settings.ReservedConcurrency);
+
+                    ConsoleHelper.WriteLine($"INFO - {nameof(HttpHelper)} - pacing API calls at "
+                        + $"{requestsPerSecond}/sec per instance ({settings.ApiRequestsPerSecond}/sec "
+                        + $"shared across {settings.ReservedConcurrency})");
+
                     var httpClient = HttpHelper.GetResilientHttpClient(
                         settings.ApiBaseUrl,
                         100,
-                        30);
+                        requestsPerSecond);
                     fileService = new ApiFileService(httpClient);
 
                     break;

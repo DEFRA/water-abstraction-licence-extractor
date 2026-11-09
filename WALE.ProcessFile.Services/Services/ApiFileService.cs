@@ -141,7 +141,8 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/pdf");
         form.Add(fileContent, "file", filename);
 
-        var response = await httpClient.PutAsync(uri, form);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PutAsync(uri, form));
         response.EnsureSuccessStatusCode();
     }
 
@@ -165,7 +166,8 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
         form.Add(fileContent, "file", filename);
 
-        var response = await httpClient.PutAsync(uri, form);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PutAsync(uri, form));
         var content = await response.Content.ReadAsStringAsync();
         
         response.EnsureSuccessStatusCode();

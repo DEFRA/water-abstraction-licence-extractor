@@ -45,9 +45,11 @@ public class AzureOpenAiOcrDataExtractorService(
             ProcessRunId = processRunId
         };
         
-        var cacheFileText = isPageScreenshot
-            ? await cacheService.GetOcrScreenshotTextAsync(request)
-            : await cacheService.GetOcrImageTextAsync(request);
+        var cacheFileText = pdfDocument.FromCache
+            ? await (isPageScreenshot
+                ? cacheService.GetOcrScreenshotTextAsync(request)
+                : cacheService.GetOcrImageTextAsync(request))
+            : null;
         
         if (pdfDocument.FromCache && !string.IsNullOrEmpty(cacheFileText))
         {

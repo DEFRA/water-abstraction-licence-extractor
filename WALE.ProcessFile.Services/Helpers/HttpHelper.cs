@@ -21,6 +21,11 @@ public static class HttpHelper
                     $"WARNING - HttpHelper - 429 received from API, retry {attempt} in {delay.TotalMilliseconds:F0}ms"));
     }
 
+    // Dev's measured ceiling is 50/sec for the whole system. instances must equal the Lambda's
+    // reserved concurrency, the mapping's MaximumConcurrency and AwsTextract's ReservedConcurrency.
+    public static int PerInstanceRequestsPerSecond(int totalRequestsPerSecond, int instances) =>
+        Math.Max(1, totalRequestsPerSecond / Math.Max(1, instances));
+
     public static HttpClient GetResilientHttpClient(string baseUrl, int defaultConnectionLimit, int maxRequestsPerSecond)
     {
         Database.PostgreSQL.Helpers.HttpHelper.SetMaxRequestsPerSecond(maxRequestsPerSecond);

@@ -63,6 +63,8 @@ public static class FileProcessServiceRegistration
 
             // Local/dev cap on files per orchestration; unset in deployed environments.
             options.MaxFilesPerRun = ConfigHelper.GetOptionalInt(configuration, "MaxFilesPerRun");
+            options.ApiRequestsPerSecond = ConfigHelper.GetOptionalInt(configuration, "ApiRequestsPerSecond") ?? 50;
+            options.ReservedConcurrency = ConfigHelper.GetOptionalInt(configuration, "ReservedConcurrency") ?? 10;
         });
 
         services.AddSingleton(sp =>
@@ -78,10 +80,18 @@ public static class FileProcessServiceRegistration
             switch (fileServiceType)
             {
                 case "api":
+                    var requestsPerSecond = HttpHelper.PerInstanceRequestsPerSecond(
+                        settings.ApiRequestsPerSecond,
+                        settings.ReservedConcurrency);
+
+                    ConsoleHelper.WriteLine($"INFO - {nameof(HttpHelper)} - pacing API calls at "
+                        + $"{requestsPerSecond}/sec per instance ({settings.ApiRequestsPerSecond}/sec "
+                        + $"shared across {settings.ReservedConcurrency})");
+
                     var httpClient = HttpHelper.GetResilientHttpClient(
                         settings.ApiBaseUrl,
                         100,
-                        30);
+                        requestsPerSecond);
                     fileService = new ApiFileService(httpClient);
 
                     break;

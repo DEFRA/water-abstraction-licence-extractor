@@ -141,7 +141,8 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/pdf");
         form.Add(fileContent, "file", filename);
 
-        var response = await httpClient.PutAsync(uri, form);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PutAsync(uri, form));
         response.EnsureSuccessStatusCode();
     }
 
@@ -165,16 +166,17 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
         form.Add(fileContent, "file", filename);
 
-        var response = await httpClient.PutAsync(uri, form);
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PutAsync(uri, form));
         var content = await response.Content.ReadAsStringAsync();
         
         response.EnsureSuccessStatusCode();
         return content;
     }
     
-    public async Task DeleteAsync(string filename, StorageFolder folder = StorageFolder.Ingress)
+    public async Task DeleteAsync(string filename)
     {
-        var path = $"/BFF/Files/Delete?filename={filename}&folder={folder}";
+        var path = $"/BFF/Files/Delete?filename={filename}";
        
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
@@ -209,6 +211,11 @@ public class ApiFileService(HttpClient httpClient) : IFileService
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
+    }
+
+    public Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder)
+    {
+        throw new NotImplementedException();
     }
 
     public Task CopyAsync(string filename, string destinationBucketName)

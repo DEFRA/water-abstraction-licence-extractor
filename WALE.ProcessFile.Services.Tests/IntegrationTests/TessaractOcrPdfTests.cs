@@ -340,7 +340,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
-        Assert.Equal("28/39/28/507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("28/39/28/0507", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -653,7 +653,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
-        Assert.Equal("28/39/28/312", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("28/39/28/0312", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("FurtherProvisions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("WhenAddedTo", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -1765,7 +1765,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
-        Assert.Equal("8/36/19/S/101", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("8/36/19/*S/0101", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
@@ -1856,8 +1856,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             NaldDataLookupService);
 
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("283922217-283922427", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("2839220217-283922427", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("0217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
 
         Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
@@ -1868,7 +1868,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
-        Assert.Equal("28/39/22/217", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
+        Assert.Equal("28/39/22/0217", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);

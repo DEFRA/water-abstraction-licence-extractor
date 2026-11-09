@@ -371,8 +371,6 @@ public static class AbstractionLicenceSchemaConverter
 
             if (!found && licenceHistoryLinkedLicences.Count > 0)
             {
-                // TODO this needs updating so it only excludes them if there from the licnce history line number
-
                 found = licenceHistoryLinkedLicences
                     .Any(lhLinkedLicence =>
                     {
@@ -422,9 +420,12 @@ public static class AbstractionLicenceSchemaConverter
                 {
                     foreach (var l in licenceContainsOther)
                     {
+                        var licenceHistoryLicence = licenceHistoryLinkedLicences
+                            .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
+                        
                         var newContainedIn = new List<ContainedInInformation>();
                         newContainedIn.AddRange(l.ContainedIn!);
-                        newContainedIn.Add(anywhereInDocumentLinkedLicence.ContainedIn![0]);
+                        newContainedIn.Add((licenceHistoryLicence ?? anywhereInDocumentLinkedLicence).ContainedIn![0]);
 
                         l.ContainedIn = newContainedIn.ToArray();
                     }
@@ -447,6 +448,19 @@ public static class AbstractionLicenceSchemaConverter
         linkedLicences = linkedLicences
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
+            .Where(linkedLicence =>
+            {
+                if (string.IsNullOrEmpty(linkedLicence.RawScrapedLicenceNumber)
+                    || string.IsNullOrEmpty(linkedLicence.LicenceNumber))
+                {
+                    return true;
+                }
+
+                var parts1 = linkedLicence.RawScrapedLicenceNumber.Replace("//", "/").Split('/');
+                var parts2 = linkedLicence.LicenceNumber.Replace("//", "/").Split('/');
+
+                return parts1.Length == 1 || parts2.Length == 1 || parts1.Length == parts2.Length;
+            })
             .ToList();
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
@@ -1708,10 +1722,132 @@ public static class AbstractionLicenceSchemaConverter
         {
             AssertNoDuplicateLicences(returnLicenceSet.Licences);
         }
+
+        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
         return returnLicenceSets;
     }
 
+    private static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+        
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+            
+            var licenceNumber = licence.LicenceNumber!.Value!
+                .Replace(".", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("/", string.Empty)
+                .Replace(" ", string.Empty);
+            
+            foreach (var licenceSet in licence.LicenceSets)
+            {
+                var licenceSetIdParts = licenceSet.LicenceSetId?
+                    .Split('-')
+                    .Where(p => p != licenceNumber)
+                    .ToList();
+
+                foreach (var licenceSetIdPart in licenceSetIdParts!)
+                {
+                    var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
+                        .Replace(".", string.Empty)
+                        .Replace("-", string.Empty)
+                        .Replace("/", string.Empty)                        
+                        .Replace(" ", string.Empty) == licenceSetIdPart);
+
+                    if (!hasLinkedLicence)
+                    {
+                        throw new Exception($"Licence set mentions licence {licenceSetIdPart} that isn't in linked licences");
+                    }
+                }
+            }
+        }
+    }
+    
+    private static void FixNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
+    {
+        var allLicences = licences.ToList();
+        
+        var okayLicences = allLicences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+        
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+            
+            var licenceNumber = licence.LicenceNumber!.Value!
+                .Replace(".", string.Empty)
+                .Replace("-", string.Empty)
+                .Replace("/", string.Empty)
+                .Replace(" ", string.Empty);
+            
+            foreach (var licenceSet in licence.LicenceSets)
+            {
+                var licenceSetIdParts = licenceSet.LicenceSetId?
+                    .Split('-')
+                    .Where(p => p != licenceNumber)
+                    .ToList();
+
+                foreach (var licenceSetIdPart in licenceSetIdParts!)
+                {
+                    var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
+                        .Replace(".", string.Empty)
+                        .Replace("-", string.Empty)
+                        .Replace("/", string.Empty)                        
+                        .Replace(" ", string.Empty) == licenceSetIdPart);
+
+                    if (!hasLinkedLicence)
+                    {
+                        var licenceToAdd = allLicences.FirstOrDefault(ll => ll.LicenceNumber!.Value!
+                            .Replace(".", string.Empty)
+                            .Replace("-", string.Empty)
+                            .Replace("/", string.Empty)                        
+                            .Replace(" ", string.Empty) == licenceSetIdPart);
+
+                        if (licenceToAdd == null)
+                        {
+                            throw new Exception($"Cant find licence to add {licenceToAdd}");
+                        }
+
+                        var newLinkedLicences = licence.LinkedLicences.ToList();
+                        newLinkedLicences.Add(new LinkedLicence
+                        {
+                            LicenceNumber = licenceToAdd.LicenceNumber!.Value,
+                            RegionId = licenceToAdd.RegionId,
+                            ContainedIn = [
+                                new()
+                                {
+                                    Direction = InformationDirection.InSameGroup,
+                                    Source = InformationSource.Unknown // TODO - maybe could infer this
+                                }],
+                            NaldStatus = licenceToAdd.NaldStatus,
+                            Filename = licenceToAdd.Filename,
+                            DmsPath =  licenceToAdd.DmsPath,
+                            DmsFileId = licenceToAdd.DmsFileId,
+                            DmsPermitNumber = licenceToAdd.DmsPermitNumber,
+                            LicenceType = licenceToAdd.LicenceType,
+                            LicenceVersion = licenceToAdd.LicenceVersion
+                        });
+                        
+                        licence.LinkedLicences = newLinkedLicences.ToArray();
+                    }
+                }
+            }
+        }
+    }
+    
     private static void AssertNoDuplicateLinkedLicences(string[] linkedLicences)
     {
         var grouped = linkedLicences.GroupBy(l => l);
@@ -3457,6 +3593,14 @@ public static class AbstractionLicenceSchemaConverter
         LicenceType licenceType;
         NaldLicenceStatus licenceStatus;
 
+        var naldContainsSeperator = 
+            naldLicenceNumber?.Contains('|') == true
+            || naldLicenceNumber?.Contains('/') == true
+            || naldLicenceNumber?.Contains('.') == true
+            || naldLicenceNumber?.Contains(' ') == true;
+
+        var backupLicenceNumber = naldContainsSeperator ? naldLicenceNumber : scrapedLicenceNumber;
+        
         if (naldLicenceType == "Impoundment")
         {
             var naldDataLine = await naldDataLookupService.GetNaldImpoundmentDataLineAsync(
@@ -3464,7 +3608,7 @@ public static class AbstractionLicenceSchemaConverter
                 regionCode);
                 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
-            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+            licenceNumber = naldDataLine?.LicenceNumber ?? backupLicenceNumber;
                 
             licenceType = LicenceType.Impoundment;
             licenceStatus = NaldHelper.GetImpoundmentLicenceStatus(naldDataLine);
@@ -3476,8 +3620,14 @@ public static class AbstractionLicenceSchemaConverter
                 regionCode);
 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
-            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+            licenceNumber = naldDataLine?.LicenceNumber ?? backupLicenceNumber;
+            
             (licenceStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldDataLine);
+            
+            if (licenceType == LicenceType.Unknown && naldLicenceType == nameof(LicenceType.Abstraction))
+            {
+                licenceType = LicenceType.Abstraction;
+            }
         }
         
         return (regionId, licenceNumber, licenceType, licenceStatus);

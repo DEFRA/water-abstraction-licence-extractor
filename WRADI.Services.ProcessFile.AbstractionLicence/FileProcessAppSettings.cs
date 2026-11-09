@@ -7,6 +7,9 @@ public class FileProcessAppSettings
     public string ApiBaseUrl { get; set; } = string.Empty;
     public string PdfFolderPath { get; set; } = string.Empty;
     public int? MaxFilesPerRun { get; set; }
+
+    public int ApiRequestsPerSecond { get; set; } = 50;
+    public int ReservedConcurrency { get; set; } = 10;
     
     // Tesseract settings
     public string TesseractExeName { get; set; } = string.Empty;

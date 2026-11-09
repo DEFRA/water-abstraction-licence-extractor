@@ -723,7 +723,17 @@ public static class FormattingHelper
         
         if (IsNeLicenceNumber(licenceNumber, regionCode))
         {
-            return ToFullLicenceNumber_NE(licenceNumber);
+            var returnValue = ToFullLicenceNumber_NE(licenceNumber);
+            
+            var parts1 = licenceNumber.Replace("//", "/").Split('/');
+            var parts2 = returnValue!.Replace("//", "/").Split('/');
+
+            if (parts1.Length >= 2 && parts2.Length >= 2 && parts1.Length != parts2.Length)
+            {
+                return licenceNumber;
+            }
+            
+            return returnValue;
         }
 
         licenceNumber = licenceNumber.Replace("//", "/");

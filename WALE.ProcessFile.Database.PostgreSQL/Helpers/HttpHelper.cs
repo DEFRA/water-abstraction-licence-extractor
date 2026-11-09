@@ -4,8 +4,49 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class HttpHelper
 {
-    public static int MaxRequestsPerSecond = 50;
-    
-    public static readonly TimeLimiter RateLimiter =
-        TimeLimiter.GetFromMaxCountByInterval(MaxRequestsPerSecond, TimeSpan.FromSeconds(1));
+    private static readonly Lock ConfigurationLock = new();
+
+    private static int _maxRequestsPerSecond = 50;
+    private static TimeLimiter? _rateLimiter;
+
+    public static int MaxRequestsPerSecond => _maxRequestsPerSecond;
+
+    public static void SetMaxRequestsPerSecond(int maxRequestsPerSecond)
+    {
+        if (maxRequestsPerSecond < 1)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(maxRequestsPerSecond),
+                maxRequestsPerSecond,
+                "Requests per second must be at least 1");
+        }
+
+        lock (ConfigurationLock)
+        {
+            _maxRequestsPerSecond = maxRequestsPerSecond;
+            _rateLimiter = null;
+        }
+    }
+
+    // One instance, held: a TimeLimiter paces by the call history it accumulates, so building a
+    // new one per access - as an expression-bodied property does - paces nothing at all.
+    public static TimeLimiter RateLimiter
+    {
+        get
+        {
+            var limiter = _rateLimiter;
+
+            if (limiter != null)
+            {
+                return limiter;
+            }
+
+            lock (ConfigurationLock)
+            {
+                return _rateLimiter ??= TimeLimiter.GetFromMaxCountByInterval(
+                    _maxRequestsPerSecond,
+                    TimeSpan.FromSeconds(1));
+            }
+        }
+    }
 }

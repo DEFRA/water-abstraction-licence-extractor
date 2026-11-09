@@ -13,6 +13,7 @@ import {
     NullableOfCutoffType,
     InformationSource,
     LicenceSectionVerification,
+    LinkedLicence,
     OutputListDataItem
 } from "../../../api/generated/apiClient.ts";
 import {ValidationError} from "../ValidationError.tsx";
@@ -20,7 +21,7 @@ import {ContainedInList} from "../ContainedInList.tsx";
 import {ContainedInEdit} from "../ContainedInEdit.tsx";
 import {VerificationActions} from "../VerificationActions.tsx";
 import {CollapsibleItem} from "../CollapsibleItem.tsx";
-import {getFlaggedItem} from "../../../utils/verificationUtils.ts";
+import {getFlaggedItem, groupLinkedLicencesByFollowOn} from "../../../utils/verificationUtils.ts";
 
 interface AggregateItemProps {
     aggregate?: Aggregate;
@@ -40,7 +41,7 @@ interface AggregateItemProps {
     outputListDataItem?: OutputListDataItem;
     scrapedView?: boolean;
     history?: LicenceSectionVerification[];
-    linkedLicenceOptions?: string[];
+    linkedLicenceOptions?: LinkedLicence[];
     pointDescriptions?: Map<string, string>;
     purposeDescriptions?: Map<string, string>;
 }
@@ -107,8 +108,11 @@ export const AggregateItem = ({
     const points = (aggregate.points ?? []) as Point[];
     const purposes = (aggregate.purposes ?? []) as Purpose[];
     const linkedLicences = aggregate.linkedLicences ?? [];
+    const linkedLicenceOptionNumbers = (linkedLicenceOptions ?? [])
+        .map(ll => ll.licenceNumber)
+        .filter((n): n is string => !!n);
     const isLinkedLicenceUnrecognised = (licenceNumber: string) =>
-        !!licenceNumber && !(linkedLicenceOptions ?? []).includes(licenceNumber);
+        !!licenceNumber && !linkedLicenceOptionNumbers.includes(licenceNumber);
     const lookupPointDescription = (id?: string) => pointDescriptions?.get(id?.trim() ?? '');
     const lookupPurposeDescription = (id?: string) => purposeDescriptions?.get(id?.trim() ?? '');
 
@@ -347,7 +351,7 @@ export const AggregateItem = ({
                                                     }}>
                                                 <option value="">-- Select --</option>
                                                 {unrecognised && <option value={ll}>{ll}</option>}
-                                                {(linkedLicenceOptions ?? []).map(number => (
+                                                {linkedLicenceOptionNumbers.map(number => (
                                                     <option key={number} value={number}>{number}</option>
                                                 ))}
                                             </select>
@@ -631,27 +635,39 @@ export const AggregateItem = ({
                 <p style={{margin: 0, fontSize: '0.9rem'}}><strong>Document Identifier:</strong> {aggregate.documentIdentifier || 'N/A'}</p>
             </div>
             {linkedLicences.length > 0 && (
-                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
-                    <strong>Linked Licences:</strong>{' '}
-                    {linkedLicences.map((ll, idx) => {
-                        const unrecognised = isLinkedLicenceUnrecognised(ll);
-                        const isLast = idx === linkedLicences.length - 1;
-                        return (
-                            <span key={idx}
-                                  title={unrecognised ? UNRECOGNISED_LINKED_LICENCE_MESSAGE : undefined}
-                                  style={unrecognised ? {
-                                      display: 'inline-block',
-                                      border: '1px solid #faad14',
-                                      borderRadius: '4px',
-                                      padding: '0 4px',
-                                      marginRight: '4px',
-                                      cursor: 'help'
-                                  } : {marginRight: '4px'}}>
-                                {ll}{unrecognised ? ' ⚠️' : ''}{!isLast ? ',' : ''}
-                            </span>
-                        );
-                    })}
-                </p>
+                <div style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>
+                    <strong>Linked Licences:</strong>
+                    {groupLinkedLicencesByFollowOn(linkedLicences, linkedLicenceOptions ?? []).map((group, groupIdx) => (
+                        <div key={groupIdx}>
+                            {group.map((stage, stageIdx) => (
+                                <React.Fragment key={stageIdx}>
+                                    {stageIdx > 0 && ' -> '}
+                                    {stage.map((entry, entryIdx) => {
+                                        const unrecognised = isLinkedLicenceUnrecognised(entry.licenceNumber);
+                                        return (
+                                            <React.Fragment key={entry.licenceNumber}>
+                                                {entryIdx > 0 && ', '}
+                                                <span title={unrecognised ? UNRECOGNISED_LINKED_LICENCE_MESSAGE : undefined}
+                                                      style={unrecognised ? {
+                                                          display: 'inline-block',
+                                                          border: '1px solid #faad14',
+                                                          borderRadius: '4px',
+                                                          padding: '0 4px',
+                                                          cursor: 'help'
+                                                      } : undefined}>
+                                                    <span style={entry.isScraped ? {textDecoration: 'underline'} : undefined}>
+                                                        {entry.licenceNumber}
+                                                    </span>
+                                                    {unrecognised ? ' ⚠️' : ''}
+                                                </span>
+                                            </React.Fragment>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    ))}
+                </div>
             )}
             {aggregate.timePeriod && (
                 <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>

@@ -60,11 +60,9 @@ public class FilesController(IFileService fileService) : Controller
     }
     
     [HttpDelete]
-    public async Task<ActionResult<string>> DeleteAsync(
-        string filename,
-        StorageFolder folder = StorageFolder.Ingress)
+    public async Task<ActionResult<string>> DeleteAsync(string filename)
     {
-        await fileService.DeleteAsync(filename, folder);
+        await fileService.DeleteAsync(filename);
         return Ok();
     }
     

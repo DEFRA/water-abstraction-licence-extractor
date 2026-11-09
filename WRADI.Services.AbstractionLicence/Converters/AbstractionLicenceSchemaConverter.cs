@@ -448,6 +448,19 @@ public static class AbstractionLicenceSchemaConverter
         linkedLicences = linkedLicences
             .Where(linkedLicence =>
                 FormattingHelper.IsValidLicenceNumber(linkedLicence.LicenceNumber!, regionCode) != false)
+            .Where(linkedLicence =>
+            {
+                if (string.IsNullOrEmpty(linkedLicence.RawScrapedLicenceNumber)
+                    || string.IsNullOrEmpty(linkedLicence.LicenceNumber))
+                {
+                    return true;
+                }
+
+                var parts1 = linkedLicence.RawScrapedLicenceNumber.Replace("//", "/").Split('/');
+                var parts2 = linkedLicence.LicenceNumber.Replace("//", "/").Split('/');
+
+                return parts1.Length == 1 || parts2.Length == 1 || parts1.Length == parts2.Length;
+            })
             .ToList();
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
@@ -1724,6 +1737,11 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var licence in okayLicences)
         {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+            
             var licenceNumber = licence.LicenceNumber!.Value!
                 .Replace(".", string.Empty)
                 .Replace("-", string.Empty)
@@ -1764,6 +1782,11 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var licence in okayLicences)
         {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+            
             var licenceNumber = licence.LicenceNumber!.Value!
                 .Replace(".", string.Empty)
                 .Replace("-", string.Empty)
@@ -3570,6 +3593,14 @@ public static class AbstractionLicenceSchemaConverter
         LicenceType licenceType;
         NaldLicenceStatus licenceStatus;
 
+        var naldContainsSeperator = 
+            naldLicenceNumber?.Contains('|') == true
+            || naldLicenceNumber?.Contains('/') == true
+            || naldLicenceNumber?.Contains('.') == true
+            || naldLicenceNumber?.Contains(' ') == true;
+
+        var backupLicenceNumber = naldContainsSeperator ? naldLicenceNumber : scrapedLicenceNumber;
+        
         if (naldLicenceType == "Impoundment")
         {
             var naldDataLine = await naldDataLookupService.GetNaldImpoundmentDataLineAsync(
@@ -3577,7 +3608,7 @@ public static class AbstractionLicenceSchemaConverter
                 regionCode);
                 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
-            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+            licenceNumber = naldDataLine?.LicenceNumber ?? backupLicenceNumber;
                 
             licenceType = LicenceType.Impoundment;
             licenceStatus = NaldHelper.GetImpoundmentLicenceStatus(naldDataLine);
@@ -3589,8 +3620,14 @@ public static class AbstractionLicenceSchemaConverter
                 regionCode);
 
             regionId = naldDataLine?.FgacRegionCode ?? regionCode;
-            licenceNumber = naldDataLine?.LicenceNumber ?? scrapedLicenceNumber;
+            licenceNumber = naldDataLine?.LicenceNumber ?? backupLicenceNumber;
+            
             (licenceStatus, licenceType) = NaldHelper.GetLicenceStatusAndType(naldDataLine);
+            
+            if (licenceType == LicenceType.Unknown && naldLicenceType == nameof(LicenceType.Abstraction))
+            {
+                licenceType = LicenceType.Abstraction;
+            }
         }
         
         return (regionId, licenceNumber, licenceType, licenceStatus);

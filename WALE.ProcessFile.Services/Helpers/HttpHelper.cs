@@ -23,17 +23,14 @@ public static class HttpHelper
 
     public static HttpClient GetResilientHttpClient(string baseUrl, int defaultConnectionLimit, int maxRequestsPerSecond)
     {
-        Database.PostgreSQL.Helpers.HttpHelper.MaxRequestsPerSecond = maxRequestsPerSecond;
+        Database.PostgreSQL.Helpers.HttpHelper.SetMaxRequestsPerSecond(maxRequestsPerSecond);
         
-        #pragma warning disable SYSLIB0014
-        ServicePointManager.DefaultConnectionLimit = defaultConnectionLimit;
-        #pragma warning restore SYSLIB0014
-    
         var pollyHandler = new PolicyHttpMessageHandler(GetTooManyRequestsBackoffPolicy())
         {
             InnerHandler = new HttpClientHandler
             {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                MaxConnectionsPerServer = defaultConnectionLimit
             }
         };
     

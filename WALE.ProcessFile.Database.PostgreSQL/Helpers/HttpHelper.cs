@@ -4,8 +4,13 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class HttpHelper
 {
-    public static int MaxRequestsPerSecond = 50;
+    public static void SetMaxRequestsPerSecond(int maxRequestsPerSecond)
+    {
+        _maxRequestsPerSecond = maxRequestsPerSecond;
+    }
+
+    private static int _maxRequestsPerSecond = 50;
     
-    public static readonly TimeLimiter RateLimiter =
-        TimeLimiter.GetFromMaxCountByInterval(MaxRequestsPerSecond, TimeSpan.FromSeconds(1));
+    public static TimeLimiter RateLimiter =>
+        TimeLimiter.GetFromMaxCountByInterval(_maxRequestsPerSecond, TimeSpan.FromSeconds(1));
 }

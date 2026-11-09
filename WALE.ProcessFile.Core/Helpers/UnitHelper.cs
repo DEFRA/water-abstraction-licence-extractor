@@ -19,22 +19,27 @@ public static class UnitHelper
         };
     }
     
-    private const string MillionGallons = "milliongallons";
-    private const string MegaGallons = "megagallons";
-    private const string Gallons = "gallons";
-    private const string Litres = "litres";
-    private const string MegaLitres = "megalitres";
-    private const string CubicMetres = "cubicmetres";
-    private const string ThousandCubicMetres = "thousandcubicmetres";
+    private const string MillionGallons = "milliongallon";
+    private const string MegaGallons = "megagallon";
+    private const string Gallons = "gallon";
+    private const string Litres = "litre";
+    private const string MegaLitres = "megalitre";
+    private const string CubicMetres = "cubicmetre";
+    private const string ThousandCubicMetres = "thousandcubicmetre";
 
     //Misspelling
-    private const string MisspellingLitres = "liters";
-    private const string MisspellingCubicMetres = "cubicmeters";
-    private const string MisspellingThousandCubicMetres = "thousandcubicmeters";
+    private const string MisspellingLitres = "liter";
+    private const string MisspellingCubicMetres = "cubicmeter";
+    private const string MisspellingThousandCubicMetres = "thousandcubicmeter";
     
     private static string LoweredUnits(string units)
     {
         units = units.Replace(" ", string.Empty).ToLower();
+        
+        if (units.EndsWith('s'))
+        {
+            units = units[..^1];
+        }
         
         if (units == MillionGallons)
         {
@@ -78,7 +83,7 @@ public static class UnitHelper
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToCubicMetres,            
             CubicMetres => sourceValue,
             ThousandCubicMetres => sourceValue * thousandCubicMetresToCubicMetres,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to cubic metres")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to cubic metres")
         };
     }
     
@@ -102,7 +107,7 @@ public static class UnitHelper
             MegaLitres => sourceValue * megaLitresToLitres,
             CubicMetres => sourceValue * cubicMetersToLitres,
             ThousandCubicMetres => ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetersToLitres,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to litres")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to litres")
         };
     }
 
@@ -126,7 +131,7 @@ public static class UnitHelper
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToGallons,
             CubicMetres => sourceValue * cubicMetresToGallons,
             ThousandCubicMetres => ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetresToGallons,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to gallons")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to gallons")
         };
     }
     

@@ -1725,10 +1725,109 @@ public static class AbstractionLicenceSchemaConverter
 
         FixNoLicenceSetWithoutLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+
+        PerspectiveCorrectLicenceAggregates(allLicences);
+        AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
+        
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
         return returnLicenceSets;
     }
 
+    private static void PerspectiveCorrectLicenceAggregates(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            var newAggregates = licence.AbstractionLimits.Aggregates!
+                .Select(agg => agg.Clone())
+                .ToList();
+            
+            foreach (var aggregate in newAggregates)
+            {
+                if (aggregate.SourceLicenceNumber == licence.LicenceNumber.Value)
+                {
+                    continue;
+                }
+
+                if (aggregate.LinkedLicences != null)
+                {
+                    var newLinkedLicences = aggregate.LinkedLicences
+                        .Where(ll => ll != licence.LicenceNumber.Value)
+                        .ToList();
+
+                    newLinkedLicences.Add(aggregate.SourceLicenceNumber!);
+                    aggregate.LinkedLicences = newLinkedLicences.ToArray();
+                }
+                
+                aggregate.SourceLicenceNumber = licence.LicenceNumber.Value;
+                aggregate.SourceLicenceVersionId = licence.LicenceVersion.LicenceVersionId;
+            }
+
+            licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
+        }
+    }
+
+    private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+
+        foreach (var licence in okayLicences)
+        {
+            if (licence.LicenceNumber == null)
+            {
+                continue;
+            }
+
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates!)
+            {
+                if (aggregate.LinkedLicences == null)
+                {
+                    continue;
+                }
+
+                var newLinkedLicences = new List<string>();
+                
+                foreach (var linkedLicence in aggregate.LinkedLicences)
+                {
+                    if (linkedLicence == licence.LicenceNumber.Value)
+                    {
+                        if (fixWhenDetected)
+                        {
+                            continue;
+                        }
+                        
+                        throw new Exception("Licence has aggregate licence linking to itself");
+                    }
+                    
+                    newLinkedLicences.Add(linkedLicence);
+                }
+                
+                aggregate.LinkedLicences = newLinkedLicences.ToArray();
+            }
+        }
+    }
+    
     private static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
@@ -1757,6 +1856,11 @@ public static class AbstractionLicenceSchemaConverter
 
                 foreach (var licenceSetIdPart in licenceSetIdParts!)
                 {
+                    if (licenceSetIdPart == "12100001" && licenceSet.LicenceSetId == "12100001-12100052-12203007")
+                    {
+                        
+                    }
+                    
                     var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
                         .Replace(".", string.Empty)
                         .Replace("-", string.Empty)
@@ -6524,6 +6628,13 @@ public static class AbstractionLicenceSchemaConverter
     {
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
+        var allLicences = distinctLicenceSets
+            .SelectMany(lsg => lsg.Licences)
+            .ToList();
+        
+        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        
         distinctLicenceSets.AddRange(
             await AddIncomingLinksAndLicenceSetReferencesAsync(
                 licenceSetGroups,
@@ -6531,6 +6642,10 @@ public static class AbstractionLicenceSchemaConverter
                 naldDataLookupService));
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
+        
+        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        
         return distinctLicenceSets;
     }
 

@@ -72,7 +72,7 @@ public class NaldDataLookupService(
 
         if (filterPurposes.Count == 0)
         {
-            Console.WriteLine($"ERROR no nald purposes found for {licenceNumber} ");
+            Console.WriteLine($"INFO - {nameof(NaldDataLookupService)} - No Nald purposes found for {licenceNumber} ");
             return ([], null);
         }
         

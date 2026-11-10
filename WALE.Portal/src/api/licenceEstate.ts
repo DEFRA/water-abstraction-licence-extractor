@@ -1,7 +1,7 @@
 import { waleApiClient } from './apiClient';
 import type { LicenceEstateQuery } from '../class/LicenceEstateQuery.tsx';
 
-/// NSwag flattens the query object into 25 positional parameters, so the order is pinned here
+/// NSwag flattens the query object into 26 positional parameters, so the order is pinned here
 /// once rather than at every call site.
 export function getLicenceEstate(query: LicenceEstateQuery) {
     return waleApiClient.getLicenceEstate(
@@ -17,6 +17,7 @@ export function getLicenceEstate(query: LicenceEstateQuery) {
         query.issuer,
         query.limitsEmpty,
         query.aggregatesFilter,
+        query.aggregatePrimaryTypeFilter,
         query.ocrScan,
         query.purposesEmpty,
         query.pointsEmpty,

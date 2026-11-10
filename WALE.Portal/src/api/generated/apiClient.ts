@@ -2857,6 +2857,49 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param ocrServiceName (optional) 
+     * @return OK
+     */
+    getAllText(fileId: string | undefined, ocrServiceName: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Ocr/GetAllText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (ocrServiceName === null)
+            throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
+        else if (ocrServiceName !== undefined)
+            url_ += "ocrServiceName=" + encodeURIComponent("" + ocrServiceName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAllText(_response);
+        });
+    }
+
+    protected processGetAllText(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
      * @param ocrServiceName (optional) 
@@ -5386,19 +5429,14 @@ export class Client {
 
     /**
      * @param filename (optional) 
-     * @param folder (optional) 
      * @return OK
      */
-    delete(filename: string | undefined, folder: number | undefined): Promise<string> {
+    delete(filename: string | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/Files/Delete?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
-        if (folder === null)
-            throw new globalThis.Error("The parameter 'folder' cannot be null.");
-        else if (folder !== undefined)
-            url_ += "folder=" + encodeURIComponent("" + folder) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -5803,6 +5841,58 @@ export class Client {
     }
 
     /**
+     * @param licenceNumber (optional) 
+     * @param newerRunId (optional) 
+     * @param olderRunId (optional) 
+     * @return OK
+     */
+    getLicenceRunComparison(licenceNumber: string | undefined, newerRunId: number | undefined, olderRunId: number | undefined): Promise<LicenceRunComparison> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceRunComparison?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (newerRunId === null)
+            throw new globalThis.Error("The parameter 'newerRunId' cannot be null.");
+        else if (newerRunId !== undefined)
+            url_ += "newerRunId=" + encodeURIComponent("" + newerRunId) + "&";
+        if (olderRunId === null)
+            throw new globalThis.Error("The parameter 'olderRunId' cannot be null.");
+        else if (olderRunId !== undefined)
+            url_ += "olderRunId=" + encodeURIComponent("" + olderRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceRunComparison(_response);
+        });
+    }
+
+    protected processGetLicenceRunComparison(response: Response): Promise<LicenceRunComparison> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceRunComparison.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceRunComparison>(null as any);
+    }
+
+    /**
      * @param projectedStatus (optional) 
      * @param processRunId (optional) 
      * @param queue (optional) 
@@ -5815,6 +5905,7 @@ export class Client {
      * @param issuer (optional) 
      * @param limitsEmpty (optional) 
      * @param aggregatesFilter (optional) 
+     * @param aggregatePrimaryTypeFilter (optional) 
      * @param ocrScan (optional) 
      * @param purposesEmpty (optional) 
      * @param pointsEmpty (optional) 
@@ -5830,7 +5921,7 @@ export class Client {
      * @param licenceNumbers (optional) 
      * @return OK
      */
-    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, maximumRunCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, maximumRunCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
         let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
         if (projectedStatus === null)
             throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
@@ -5880,6 +5971,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
         else if (aggregatesFilter !== undefined)
             url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
+        if (aggregatePrimaryTypeFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatePrimaryTypeFilter' cannot be null.");
+        else if (aggregatePrimaryTypeFilter !== undefined)
+            url_ += "AggregatePrimaryTypeFilter=" + encodeURIComponent("" + aggregatePrimaryTypeFilter) + "&";
         if (ocrScan === null)
             throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
         else if (ocrScan !== undefined)
@@ -5973,7 +6068,7 @@ export class Client {
      * @param documentType (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: string | undefined, uploadedTo: string | undefined, documentType: string | undefined): Promise<void> {
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: Date | undefined, uploadedTo: Date | undefined, documentType: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
         if (delayInSeconds === null)
             throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
@@ -5990,11 +6085,11 @@ export class Client {
         if (uploadedFrom === null)
             throw new globalThis.Error("The parameter 'uploadedFrom' cannot be null.");
         else if (uploadedFrom !== undefined)
-            url_ += "uploadedFrom=" + encodeURIComponent("" + uploadedFrom) + "&";
+            url_ += "uploadedFrom=" + encodeURIComponent(uploadedFrom ? "" + uploadedFrom.toISOString() : "") + "&";
         if (uploadedTo === null)
             throw new globalThis.Error("The parameter 'uploadedTo' cannot be null.");
         else if (uploadedTo !== undefined)
-            url_ += "uploadedTo=" + encodeURIComponent("" + uploadedTo) + "&";
+            url_ += "uploadedTo=" + encodeURIComponent(uploadedTo ? "" + uploadedTo.toISOString() : "") + "&";
         if (documentType === null)
             throw new globalThis.Error("The parameter 'documentType' cannot be null.");
         else if (documentType !== undefined)
@@ -9849,6 +9944,221 @@ export interface ILicenceNaldData {
     [key: string]: any;
 }
 
+export class LicenceRunComparison implements ILicenceRunComparison {
+    licenceNumber!: string;
+    newerRunId?: number;
+    olderRunId?: number;
+    newerRunHasData?: boolean;
+    olderRunHasData?: boolean;
+    identical?: boolean;
+    differences?: LicenceRunDifference[];
+    lines?: LicenceRunDiffLine[];
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunComparison) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumber = _data["licenceNumber"];
+            this.newerRunId = _data["newerRunId"];
+            this.olderRunId = _data["olderRunId"];
+            this.newerRunHasData = _data["newerRunHasData"];
+            this.olderRunHasData = _data["olderRunHasData"];
+            this.identical = _data["identical"];
+            if (Array.isArray(_data["differences"])) {
+                this.differences = [] as any;
+                for (let item of _data["differences"])
+                    this.differences!.push(LicenceRunDifference.fromJS(item));
+            }
+            if (Array.isArray(_data["lines"])) {
+                this.lines = [] as any;
+                for (let item of _data["lines"])
+                    this.lines!.push(LicenceRunDiffLine.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceRunComparison {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunComparison();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumber"] = this.licenceNumber;
+        data["newerRunId"] = this.newerRunId;
+        data["olderRunId"] = this.olderRunId;
+        data["newerRunHasData"] = this.newerRunHasData;
+        data["olderRunHasData"] = this.olderRunHasData;
+        data["identical"] = this.identical;
+        if (Array.isArray(this.differences)) {
+            data["differences"] = [];
+            for (let item of this.differences)
+                data["differences"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.lines)) {
+            data["lines"] = [];
+            for (let item of this.lines)
+                data["lines"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceRunComparison {
+    licenceNumber: string;
+    newerRunId?: number;
+    olderRunId?: number;
+    newerRunHasData?: boolean;
+    olderRunHasData?: boolean;
+    identical?: boolean;
+    differences?: LicenceRunDifference[];
+    lines?: LicenceRunDiffLine[];
+
+    [key: string]: any;
+}
+
+export class LicenceRunDifference implements ILicenceRunDifference {
+    path!: string;
+    older?: string | undefined;
+    newer?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunDifference) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.path = _data["path"];
+            this.older = _data["older"];
+            this.newer = _data["newer"];
+        }
+    }
+
+    static fromJS(data: any): LicenceRunDifference {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunDifference();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["path"] = this.path;
+        data["older"] = this.older;
+        data["newer"] = this.newer;
+        return data;
+    }
+}
+
+export interface ILicenceRunDifference {
+    path: string;
+    older?: string | undefined;
+    newer?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceRunDiffLine implements ILicenceRunDiffLine {
+    kind?: LicenceRunDiffLineKind;
+    olderLineNumber?: number | undefined;
+    newerLineNumber?: number | undefined;
+    text!: string;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunDiffLine) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.kind = _data["kind"];
+            this.olderLineNumber = _data["olderLineNumber"];
+            this.newerLineNumber = _data["newerLineNumber"];
+            this.text = _data["text"];
+        }
+    }
+
+    static fromJS(data: any): LicenceRunDiffLine {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunDiffLine();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["kind"] = this.kind;
+        data["olderLineNumber"] = this.olderLineNumber;
+        data["newerLineNumber"] = this.newerLineNumber;
+        data["text"] = this.text;
+        return data;
+    }
+}
+
+export interface ILicenceRunDiffLine {
+    kind?: LicenceRunDiffLineKind;
+    olderLineNumber?: number | undefined;
+    newerLineNumber?: number | undefined;
+    text: string;
+
+    [key: string]: any;
+}
+
+export enum LicenceRunDiffLineKind {
+    Context = "Context",
+    Removed = "Removed",
+    Added = "Added",
+    Skipped = "Skipped",
+}
+
 export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
     processRunId?: number;
     licenceListItemId?: number;
@@ -9870,6 +10180,12 @@ export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
     isLicenceNumberFlagged?: boolean;
     isIssueDateFlagged?: boolean;
     createdDateTimeUtc?: Date;
+    licenceVersionId?: string | undefined;
+    naldIssueNumber?: number | undefined;
+    naldIncrementNumber?: number | undefined;
+    naldUpdateReason?: string | undefined;
+    changedFromPrevious?: boolean | undefined;
+    runLicenceCount?: number;
 
     [key: string]: any;
 
@@ -9908,6 +10224,12 @@ export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
             this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
             this.isIssueDateFlagged = _data["isIssueDateFlagged"];
             this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
+            this.licenceVersionId = _data["licenceVersionId"];
+            this.naldIssueNumber = _data["naldIssueNumber"];
+            this.naldIncrementNumber = _data["naldIncrementNumber"];
+            this.naldUpdateReason = _data["naldUpdateReason"];
+            this.changedFromPrevious = _data["changedFromPrevious"];
+            this.runLicenceCount = _data["runLicenceCount"];
         }
     }
 
@@ -9944,6 +10266,12 @@ export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
         data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
         data["isIssueDateFlagged"] = this.isIssueDateFlagged;
         data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
+        data["licenceVersionId"] = this.licenceVersionId;
+        data["naldIssueNumber"] = this.naldIssueNumber;
+        data["naldIncrementNumber"] = this.naldIncrementNumber;
+        data["naldUpdateReason"] = this.naldUpdateReason;
+        data["changedFromPrevious"] = this.changedFromPrevious;
+        data["runLicenceCount"] = this.runLicenceCount;
         return data;
     }
 }
@@ -9969,6 +10297,12 @@ export interface ILicenceRunHistoryItem {
     isLicenceNumberFlagged?: boolean;
     isIssueDateFlagged?: boolean;
     createdDateTimeUtc?: Date;
+    licenceVersionId?: string | undefined;
+    naldIssueNumber?: number | undefined;
+    naldIncrementNumber?: number | undefined;
+    naldUpdateReason?: string | undefined;
+    changedFromPrevious?: boolean | undefined;
+    runLicenceCount?: number;
 
     [key: string]: any;
 }

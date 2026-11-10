@@ -77,12 +77,13 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("22723032s__5f2cfe7d-1151-4310-8780-794b33093c35.pdf", StringComparison.OrdinalIgnoreCase))
-        //|| x.Key.Contains("1asdssdds", StringComparison.OrdinalIgnoreCase))
+       // .Where(x => x.Key.Contains("12100001__50f99510-da86-49e1-8142-4b6a9aacf5db.pdf", StringComparison.OrdinalIgnoreCase)
+       //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
+       //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        .Take(100)
+        //.Take(100)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -437,7 +438,7 @@ ConfiguredServices ConfigureServices(
     var httpClient = HttpHelper.GetResilientHttpClient(
         apiBaseUrl,
         100,
-        30);
+        50);
 
     var fileServiceType =
         configurationForServices.GetValue<string>(

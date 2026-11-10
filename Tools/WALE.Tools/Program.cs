@@ -7,20 +7,25 @@ using WALE.Tools.Config;
 string workflow;
 //workflow = "FilesAvailableForLicenceIdentificationExtract";
 //workflow = "ImportNaldData";
-//workflow = "ImportDmsData";
+//workflow = "ImportDmsData AbstractionLicence";
 //workflow = "RemoveRedundantFilesFromS3";
 //workflow = "ClearCacheMultiple";
-//workflow = "GenerateLicenceReaderExtract";
+workflow = "GenerateLicenceReaderExtract";
 //workflow = "ImportOverrideData";
 //workflow = "CopyS3Files";
 //workflow = "ForceLowercaseS3Files";
 //workflow = "GenerateLinkedLicencesCsv";
 //workflow = "PurposeMapper";
-workflow = "GenerateS3Thumbnails";
+//workflow = "GenerateS3Thumbnails";
 
 // Also selectable from the command line: "<workflow> [argument]".
 if (args.Length > 0)
 {
+    workflow = args[0];
+}
+else if (workflow.Contains(' '))
+{
+    args = workflow.Split(' ');
     workflow = args[0];
 }
 

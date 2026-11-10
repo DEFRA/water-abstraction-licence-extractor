@@ -17,6 +17,7 @@ public static class KeyConfig
             
             _config = new ConfigurationBuilder()
                 .AddUserSecrets<Program>()
+                .AddEnvironmentVariables()
                 .Build();
             
             return _config;

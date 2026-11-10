@@ -151,6 +151,8 @@ public static class ImportNaldData
         await StoreForeignKeysAsync(dataSource);
         await DropForeignKeysAsync(dataSource);
 
+        files = files.Where(f => f.EndsWith(".txt")).ToList();
+        
         // Truncate all tables
         foreach (var filePath in files)
         {

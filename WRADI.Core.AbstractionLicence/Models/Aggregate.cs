@@ -34,7 +34,7 @@ public class Aggregate : AbstractionLimitGroup
 
             if (LinkedLicences != null)
             {
-                foreach (var linkedLicence in LinkedLicences)
+                foreach (var linkedLicence in LinkedLicences.OrderBy(ll => ll))
                 {
                     var linkedLicenceNumber = linkedLicence
                         .Replace("/", string.Empty)

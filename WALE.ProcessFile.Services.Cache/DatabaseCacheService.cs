@@ -213,6 +213,15 @@ public class DatabaseCacheService(
         await databaseWriteService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
+    public async Task SaveNoOcrPagesTextLinesAsync(
+        List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
+    {
+        foreach (var page in pages)
+        {
+            await SaveNoOcrPageTextLinesAsync(page.Request, page.PageLines);
+        }
+    }
+
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)

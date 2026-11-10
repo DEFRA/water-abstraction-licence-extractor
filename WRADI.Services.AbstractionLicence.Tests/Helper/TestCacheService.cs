@@ -107,6 +107,12 @@ public class TestCacheService : ICacheService
         throw new NotImplementedException();
     }
 
+    public Task SaveNoOcrPagesTextLinesAsync(
+        List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(NoOcrServicePageCacheRequest request, string pageLines)
     {
         throw new NotImplementedException();

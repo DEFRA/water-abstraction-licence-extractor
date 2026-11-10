@@ -1763,6 +1763,8 @@ public static class AbstractionLicenceSchemaConverter
                     continue;
                 }
 
+                var originalAggregate = aggregate.Clone();
+
                 if (aggregate.LinkedLicences != null)
                 {
                     var newLinkedLicences = aggregate.LinkedLicences
@@ -1775,10 +1777,30 @@ public static class AbstractionLicenceSchemaConverter
                 
                 aggregate.SourceLicenceNumber = licence.LicenceNumber.Value;
                 aggregate.SourceLicenceVersionId = licence.LicenceVersion.LicenceVersionId;
+
+                var variations = new List<AggregateVariation>();
+                if (aggregate.Variations != null)
+                {
+                    variations.AddRange(aggregate.Variations!);
+                }
+
+                variations.Add(AggregateVariation.FromAggregate(
+                    originalAggregate,
+                    AggregateVariation.DifferentOrder));
+                
+                aggregate.Variations = variations.Count >= 1 ? DeDupeVariations(variations.ToArray()) : null;
             }
 
             licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
         }
+    }
+
+    private static AggregateVariation[]? DeDupeVariations(AggregateVariation[]? variations)
+    {
+        return variations?
+            .GroupBy(v => v.Id)
+            .Select(v => v.First())
+            .ToArray();
     }
 
     private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
@@ -1856,11 +1878,6 @@ public static class AbstractionLicenceSchemaConverter
 
                 foreach (var licenceSetIdPart in licenceSetIdParts!)
                 {
-                    if (licenceSetIdPart == "12100001" && licenceSet.LicenceSetId == "12100001-12100052-12203007")
-                    {
-                        
-                    }
-                    
                     var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
                         .Replace(".", string.Empty)
                         .Replace("-", string.Empty)
@@ -3306,7 +3323,7 @@ public static class AbstractionLicenceSchemaConverter
         }
         catch (Exception ex)
         {
-            ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock");
+            ConsoleHelper.WriteLine($"ERROR - {nameof(AbstractionLicenceSchemaConverter)} - {dmsFileData!.FileId} had error, releasing lock. {ex}");
             
             await lookupConfiguration.OutputService.SaveErrorMatchesResultAsync(
                 destinationFileName!,

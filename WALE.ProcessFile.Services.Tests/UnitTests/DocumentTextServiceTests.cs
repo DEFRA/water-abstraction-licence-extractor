@@ -3,6 +3,8 @@ using FakeItEasy;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
+using WALE.ProcessFile.Core.Models.NoOcrService;
+using WALE.ProcessFile.Services.PdfPig.Models;
 using WALE.ProcessFile.Services.Services;
 using Xunit;
 
@@ -18,15 +20,47 @@ public class DocumentTextServiceTests
 
     private DocumentTextService Service() => new(_readService, _writeService);
 
-    private static string NativePayload(params string[] lines)
+    private static string NativePayload(params string[] lines) => NativeBlocks(lines);
+
+    /// Baselines step by more than BlockTextHelper's 2pt tolerance, or two lines merge into one.
+    private static string NativeBlocks(params string[][] blocks)
     {
-        return JsonSerializer.Serialize(lines
-            .Select((line, index) => new DocumentLine(
-                index,
-                1,
-                [new DocumentLineColumn(DocumentLineColumn.TextToWords(line, null))],
-                0, 0, 0, 0))
+        return JsonSerializer.Serialize(blocks
+            .Select(lines => new MinimalTextBlock
+            {
+                TextLines = lines
+                    .Select((line, index) => new MinimalTextLine
+                    {
+                        Words = Words(line, 800 - index * 20)
+                    })
+                    .ToList()
+            })
             .ToList());
+    }
+
+    private static List<MinimalWord> Words(string line, double bottom)
+    {
+        var left = 0d;
+        var words = new List<MinimalWord>();
+
+        foreach (var word in line.Split(' '))
+        {
+            words.Add(new MinimalWord
+            {
+                Text = word,
+                BoundingBox = new MinimalPdfRectangle
+                {
+                    Left = left,
+                    Right = left + word.Length,
+                    Bottom = bottom,
+                    Top = bottom + 10
+                }
+            });
+
+            left += word.Length + 5;
+        }
+
+        return words;
     }
 
     private static string OcrPayload(params string[] lines)
@@ -44,10 +78,13 @@ public class DocumentTextServiceTests
 
     private void NativeStoredAs(string? json)
     {
-        A.CallTo(() => _readService.GetAllPagesTextAsync(
-                FileId,
-                GeneralConstants.PdfPigDataExtractorServiceName))
-            .Returns(Task.FromResult(json));
+        A.CallTo(() => _readService.GetNoOcrAllPagesTextLinesAsync(
+                A<NoOcrServiceMetadataCacheRequest>.That.Matches(request =>
+                    request.FileId == FileId
+                    && request.NoOcrServiceName == GeneralConstants.PdfPigDataExtractorServiceName)))
+            .Returns(Task.FromResult<Dictionary<int, string>?>(json == null
+                ? null
+                : new Dictionary<int, string> { [1] = json }));
     }
 
     private void OcrStoredAs(params string[] pagePayloads)
@@ -75,6 +112,20 @@ public class DocumentTextServiceTests
 
         Assert.Contains("SCHEDULE OF CONDITIONS", text);
         A.CallTo(() => _readService.GetOcrCachedPagesAsync(A<Guid>._, A<string[]>._)).MustNotHaveHappened();
+    }
+
+    [Fact]
+    public async Task TwoColumnsAreReadColumnAtATimeRatherThanInterleaved()
+    {
+        NativeStoredAs(NativeBlocks(
+            ["left one", "left two"],
+            ["right one", "right two"]));
+
+        OcrStoredAs();
+
+        Assert.Equal(
+            "left one\nleft two\nright one\nright two",
+            await Service().GetDocumentTextAsync(FileId));
     }
 
     [Fact]
@@ -176,22 +227,20 @@ public class DocumentTextServiceTests
             .Returns(Task.FromResult(stored));
     }
 
-    /// Must match DocumentTextService.FormatVersion.
-    private const int CurrentFormatVersion = 1;
-
     [Fact]
     public async Task AStoredRowAtTheCurrentFormatIsReturnedWithoutDeriving()
     {
         StoredAs(new StoredDocumentText
         {
             SourceService = "AzureAiVisionOcr",
-            FormatVersion = CurrentFormatVersion,
+            FormatVersion = DocumentTextService.CurrentFormatVersion,
             Text = "text from the store"
         });
 
         Assert.Equal("text from the store", await Service().GetDocumentTextAsync(FileId));
 
-        A.CallTo(() => _readService.GetAllPagesTextAsync(A<Guid>._, A<string>._)).MustNotHaveHappened();
+        A.CallTo(() => _readService.GetNoOcrAllPagesTextLinesAsync(
+            A<NoOcrServiceMetadataCacheRequest>._)).MustNotHaveHappened();
         A.CallTo(() => _readService.GetOcrCachedPagesAsync(A<Guid>._, A<string[]>._)).MustNotHaveHappened();
     }
 
@@ -201,7 +250,7 @@ public class DocumentTextServiceTests
         StoredAs(new StoredDocumentText
         {
             SourceService = "TesseractOcr-SparseTextOsd",
-            FormatVersion = CurrentFormatVersion - 1,
+            FormatVersion = DocumentTextService.CurrentFormatVersion - 1,
             Text = "text in the old format"
         });
 
@@ -232,7 +281,10 @@ public class DocumentTextServiceTests
         await Service().StoreDocumentTextAsync(FileId);
 
         A.CallTo(() => _writeService.SaveDocumentTextAsync(
-                FileId, GeneralConstants.PdfPigDataExtractorServiceName, CurrentFormatVersion, A<string>._))
+                FileId,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                DocumentTextService.CurrentFormatVersion,
+                A<string>._))
             .MustHaveHappenedOnceExactly();
     }
 

@@ -131,6 +131,18 @@ export default function LicencesPage() {
         openReport(fileId, licenceId, matchesResultId, runOf(fileId), row, openReportWithId);
     }
 
+    /// Carries the history row's own run rather than runOf's, which answers for the estate row
+    /// - the newest extraction - and so would open the wrong run's report from every older row.
+    function openRunReport(run: LicenceRunHistoryItem) {
+        openReport(
+            run.fileId ?? '',
+            run.licenceId ?? 0,
+            run.matchesResultId ?? 0,
+            run.processRunId ?? 0,
+            records.find(record => record.fileId === run.fileId),
+            openReportWithId);
+    }
+
     const openLicenceSetReportWithId = useCallback(
         (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) =>
             openLicenceSetReport(fileId, licenceId, matchesResultId, licenceSetId, runOf(fileId)),
@@ -325,8 +337,10 @@ export default function LicencesPage() {
                                     />
                                     {expanded.includes(item.licenceNumber ?? '') && (
                                         <LicenceRunHistory
+                                            licenceNumber={item.licenceNumber ?? ''}
                                             runs={runHistory[item.licenceNumber ?? '']}
                                             columnCount={LicenceRowColumns}
+                                            onOpenRunReport={openRunReport}
                                         />
                                     )}
                                 </Fragment>

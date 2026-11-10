@@ -28,8 +28,6 @@ public static class HttpHelper
         }
     }
 
-    // One instance, held: a TimeLimiter paces by the call history it accumulates, so building a
-    // new one per access - as an expression-bodied property does - paces nothing at all.
     public static TimeLimiter RateLimiter
     {
         get

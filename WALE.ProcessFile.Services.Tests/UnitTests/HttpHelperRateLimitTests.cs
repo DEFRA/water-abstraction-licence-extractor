@@ -76,7 +76,7 @@ public class HttpHelperRateLimitTests
     {
         DatabaseHttpHelper.SetMaxRequestsPerSecond(50);
 
-        using var client = ServicesHttpHelper.GetResilientHttpClient("https://example.invalid", 100, 5);
+        using var client = ServicesHttpHelper.GetResilientHttpClient("https://example.invalid", 300, 5);
 
         Assert.Equal(5, DatabaseHttpHelper.MaxRequestsPerSecond);
     }

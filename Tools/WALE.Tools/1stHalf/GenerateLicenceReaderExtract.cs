@@ -94,11 +94,13 @@ public static class GenerateLicenceReaderExtract
     {
         var dtStart = DateTime.Now;
         ConsoleHelper.WriteLine($"API is {KeyConfig.ApiBaseUrl}");
+        ConsoleHelper.WriteLine(
+            $"Pacing API calls at {KeyConfig.ApiRequestsPerSecond}/sec");
         
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
             300,
-            50);
+            KeyConfig.ApiRequestsPerSecond);
 
         var delayPerProcessMs = 500;
         

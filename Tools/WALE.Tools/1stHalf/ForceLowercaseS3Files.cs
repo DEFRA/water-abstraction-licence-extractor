@@ -12,7 +12,7 @@ public static class ForceLowercaseS3Files
         var sourceHttpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
             300,
-            50);
+            KeyConfig.ApiRequestsPerSecond);
         
         Console.WriteLine($"Started at {DateTime.Now}");
         Console.WriteLine($"Getting files from {sourceHttpClient.BaseAddress}");

@@ -12,12 +12,12 @@ public static class CopyS3Files
     {
         var sourceHttpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
-            100,
+            300,
             50);
         
         var destinationHttpClient = HttpHelper.GetResilientHttpClient(
             "https://wli-api-tst.aws-int.defra.cloud",
-            100,
+            300,
             50);
 
         Console.WriteLine($"Started at {DateTime.Now}");

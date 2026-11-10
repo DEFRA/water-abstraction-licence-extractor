@@ -1731,6 +1731,9 @@ public static class AbstractionLicenceSchemaConverter
         
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
+        RemoveDuplicateVariations(allLicences);
+        AssertNoDuplicateVariations(allLicences);
+        
         return returnLicenceSets;
     }
 
@@ -2921,7 +2924,7 @@ public static class AbstractionLicenceSchemaConverter
                 logId = logId[..150];
             }
             
-            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAndLicenceSetReferencesAsync)} {idx++} " +
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - {nameof(AddIncomingLinksAndLicenceSetReferencesAsync)} {++idx} " +
                 $"of {licenceSetGroups.Count} started - {licenceSetGroup.Count} sets in batch - {logId}");
             
             foreach (var licenceSet in licenceSetGroup)
@@ -6663,9 +6666,73 @@ public static class AbstractionLicenceSchemaConverter
         FixNoLicenceSetWithoutLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
+        RemoveDuplicateVariations(allLicences);
+        AssertNoDuplicateVariations(allLicences);        
+        
         return distinctLicenceSets;
     }
 
+    private static void AssertNoDuplicateVariations(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+        
+        foreach (var licence in okayLicences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.Variations == null)
+                {
+                    continue;
+                }
+                
+                var groupedVariations = aggregate.Variations
+                    .GroupBy(v => v.Id)
+                    .Where(v => v.Count() > 1)
+                    .ToList();
+
+                if (groupedVariations.Any())
+                {
+                    throw new Exception($"Grouped variations found in {aggregate.Id}");
+                }
+            }
+        }
+    }
+    
+    private static void RemoveDuplicateVariations(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+        
+        foreach (var licence in okayLicences)
+        {
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                if (aggregate.Variations == null)
+                {
+                    continue;
+                }
+
+                aggregate.Variations = aggregate.Variations
+                    .GroupBy(v => v.Id)
+                    .Select(g => g.First())
+                    .ToArray();;
+            }
+        }
+    }
+    
     private static void AddImplicitExplicitAndEncompassingLicenceSets(
         List<IReadOnlyList<LicenceSet>> initialLicenceSetGroups,
         List<LicenceSet> distinctLicenceSets)

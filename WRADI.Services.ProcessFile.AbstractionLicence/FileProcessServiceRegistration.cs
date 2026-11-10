@@ -90,7 +90,7 @@ public static class FileProcessServiceRegistration
 
                     var httpClient = HttpHelper.GetResilientHttpClient(
                         settings.ApiBaseUrl,
-                        100,
+                        300,
                         requestsPerSecond);
                     fileService = new ApiFileService(httpClient);
 

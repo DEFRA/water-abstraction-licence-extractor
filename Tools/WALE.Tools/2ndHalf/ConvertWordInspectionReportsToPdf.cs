@@ -39,7 +39,7 @@ public static class ConvertWordInspectionReportsToPdf
 
     public static async Task<int> RunAsync()
     {
-        var httpClient = HttpHelper.GetResilientHttpClient(KeyConfig.ApiBaseUrl, 100, 50);
+        var httpClient = HttpHelper.GetResilientHttpClient(KeyConfig.ApiBaseUrl, 300, 50);
         var fileService = new ApiFileService(httpClient);
 
         ConsoleHelper.WriteLine($"Reading the ingress bucket via {httpClient.BaseAddress}");

@@ -437,7 +437,7 @@ ConfiguredServices ConfigureServices(
 
     var httpClient = HttpHelper.GetResilientHttpClient(
         apiBaseUrl,
-        100,
+        300,
         50);
 
     var fileServiceType =

@@ -14,6 +14,7 @@ public class LicencesController(
     ILicenceListRepository licenceListRepository,
     ILicenceListItemModelService licenceListItemModelService,
     IThumbnailUrlService thumbnailUrlService,
+    ILicenceRunComparisonService licenceRunComparisonService,
     IAbstractionLicenceCacheService abstractionLicenceCacheService,
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IMemoryCache memoryCache) : Controller
@@ -27,7 +28,7 @@ public class LicencesController(
             return BadRequest("A licence number is required.");
         }
 
-        var runs = await licenceListRepository.GetLicenceRunHistoryAsync(licenceNumber);
+        var runs = await GetRunHistoryWithChangesAsync(licenceNumber);
 
         var verifications = new List<LicenceSectionVerification>();
 
@@ -126,7 +127,72 @@ public class LicencesController(
             return BadRequest("A licence number is required.");
         }
 
-        return Ok(await licenceListRepository.GetLicenceRunHistoryAsync(licenceNumber));
+        return Ok(await GetRunHistoryWithChangesAsync(licenceNumber));
+    }
+
+    /// Marked here rather than left to the caller: without it the portal would have to ask for
+    /// a comparison of every adjacent pair just to find the one or two that moved.
+    private async Task<List<LicenceRunHistoryItem>> GetRunHistoryWithChangesAsync(
+        string licenceNumber)
+    {
+        var runs = await licenceListRepository.GetLicenceRunHistoryAsync(licenceNumber);
+
+        if (runs.Count < 2)
+        {
+            return runs;
+        }
+
+        var data = await licenceListRepository.GetLicenceRunDataAsync(
+            licenceNumber,
+            runs.Select(run => run.ProcessRunId).ToArray());
+
+        for (var index = 0; index < runs.Count - 1; index++)
+        {
+            var newer = runs[index];
+            var older = runs[index + 1];
+
+            var comparison = licenceRunComparisonService.Compare(
+                licenceNumber,
+                newer.ProcessRunId,
+                data.GetValueOrDefault(newer.ProcessRunId),
+                older.ProcessRunId,
+                data.GetValueOrDefault(older.ProcessRunId));
+
+            newer.ChangedFromPrevious = comparison.NewerRunHasData && comparison.OlderRunHasData
+                ? !comparison.Identical
+                : null;
+        }
+
+        return runs;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<LicenceRunComparison>> GetLicenceRunComparison(
+        [FromQuery] string licenceNumber,
+        [FromQuery] int newerRunId,
+        [FromQuery] int olderRunId)
+    {
+        if (string.IsNullOrWhiteSpace(licenceNumber))
+        {
+            return BadRequest("A licence number is required.");
+        }
+
+        if (newerRunId == olderRunId)
+        {
+            return BadRequest("Two different runs are required.");
+        }
+
+        var data = await licenceListRepository.GetLicenceRunDataAsync(
+            licenceNumber,
+            [newerRunId, olderRunId]);
+
+        return Ok(
+            licenceRunComparisonService.Compare(
+                licenceNumber,
+                newerRunId,
+                data.GetValueOrDefault(newerRunId),
+                olderRunId,
+                data.GetValueOrDefault(olderRunId)));
     }
 
     [HttpGet]

@@ -161,6 +161,7 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<ILicenceEstateExportService, LicenceEstateExportService>()
         .AddTransient<ILicenceEstateExportRunner, LicenceEstateExportRunner>()
         .AddTransient<IThumbnailUrlService, ThumbnailUrlService>()
+        .AddTransient<ILicenceRunComparisonService, LicenceRunComparisonService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
         .Configure<VerificationConfig>(options =>
         {

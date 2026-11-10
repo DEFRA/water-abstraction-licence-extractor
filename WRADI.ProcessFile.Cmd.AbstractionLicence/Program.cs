@@ -440,6 +440,7 @@ ConfiguredServices ConfigureServices(
             "ApiRequestsPerSecond")
         ?? 50;
 
+    // One process, so it takes the whole budget; the Lambda path divides it across instances.
     var reservedConcurrency =
         configurationForServices.GetValue<int?>(
             "ReservedConcurrency")

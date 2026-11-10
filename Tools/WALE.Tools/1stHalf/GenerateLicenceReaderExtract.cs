@@ -454,6 +454,9 @@ public static class GenerateLicenceReaderExtract
             .Where(templateFinderInput =>
                 !processedFileIds.Contains(templateFinderInput.FileId)
                 && !ExcludedFiles.Contains(templateFinderInput.FileName!)) // Comment out this line if debugging a certain file
+            // The ingress bucket holds the same key in two cases (37 files on dev, 2026-11-10) and
+            // both parse to one file id, so without this the document is OCR'd and saved twice.
+            .DistinctBy(templateFinderInput => templateFinderInput.FileId)
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");

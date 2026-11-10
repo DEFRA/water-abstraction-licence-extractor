@@ -102,7 +102,9 @@ public static class GenerateLicenceReaderExtract
             300,
             KeyConfig.ApiRequestsPerSecond);
 
-        var delayPerProcessMs = 500;
+        // Task.WhenAny below holds work at maxConcurrentScrapers and the rate limiter paces the
+        // calls, so a stagger here only adds latency to every slot refill.
+        var delayPerProcessMs = 0;
         
         //var maxConcurrentScrapers = 6;
         var maxConcurrentScrapers = 10;

@@ -63,9 +63,22 @@ public class LocalFileService(string folderPath) : IFileService
                 FileShare.Read));
     }
 
-    public Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
+    public async Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize)
     {
-        return File.ReadAllBytesAsync($"{IngressFolderPath}{filename}");
+        await using var file = File.OpenRead($"{IngressFolderPath}{filename}");
+        var start = (long)chunkIndex * chunkSize;
+
+        if (start >= file.Length)
+        {
+            return [];
+        }
+
+        file.Position = start;
+
+        var bytes = new byte[(int)Math.Min(chunkSize, file.Length - start)];
+        await file.ReadExactlyAsync(bytes);
+
+        return bytes;
     }
 
     public async Task UploadFileAsStreamAsync(string filename, Stream stream, string contentType, StorageFolder folder)

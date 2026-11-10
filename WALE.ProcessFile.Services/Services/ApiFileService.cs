@@ -105,14 +105,18 @@ public class ApiFileService(HttpClient httpClient) : IFileService
                     documentChunks.Add(bytes);                    
                 }
 
-                var combinedByteArray = documentChunks[0].AsEnumerable();
+                // One buffer rather than ByteStream over chained Concats, which reads a byte
+                // at a time through a nesting as deep as the chunk count.
+                var combined = new MemoryStream(totalLength);
 
-                for (var idx = 1; idx < documentChunks.Count; idx++)
+                foreach (var documentChunk in documentChunks)
                 {
-                    combinedByteArray = combinedByteArray.Concat(documentChunks[idx]);
+                    combined.Write(documentChunk, 0, documentChunk.Length);
                 }
 
-                return new ByteStream(combinedByteArray, totalLength);
+                combined.Position = 0;
+
+                return combined;
             }
 
             throw;

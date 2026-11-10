@@ -26,6 +26,26 @@ function changedFromPrevious(runs: LicenceRunHistoryItem[], index: number, key: 
     return older !== undefined && older[key] !== runs[index][key];
 }
 
+/// A count falling is the one movement worth reading as bad news - 63% of licences sampled on
+/// dev lost ground somewhere, mostly limits and licence sets, and only a seventh of those
+/// drops were to zero. Bolding a loss the same as a gain is what buried them.
+function countDirection(runs: LicenceRunHistoryItem[], index: number, key: keyof LicenceRunHistoryItem) {
+    const older = runs[index + 1];
+
+    if (older === undefined) {
+        return 'none';
+    }
+
+    const newerCount = runs[index][key];
+    const olderCount = older[key];
+
+    if (typeof newerCount !== 'number' || typeof olderCount !== 'number' || newerCount === olderCount) {
+        return 'none';
+    }
+
+    return newerCount < olderCount ? 'lost' : 'gained';
+}
+
 function naldRevision(run: LicenceRunHistoryItem) {
     if (run.naldIssueNumber === undefined || run.naldIssueNumber === null) {
         return '--';
@@ -56,9 +76,14 @@ export default function LicenceRunHistory({licenceNumber, runs, columnCount, onO
         );
     }
 
-    /// 33 of 2,160 licences map to more than one document, so for every other licence this was
-    /// the widest column in the table carrying the same value on every row.
-    const documents = [...new Set(runs.map(run => run.filename))];
+    /// Compared lowercased: dev renamed every file to lower case part-way through, so matching
+    /// on the raw name splits one document in two for 34 of 60 licences sampled there.
+    /// Only a handful genuinely have a second document, and for the rest this was the widest
+    /// column in the table carrying the same value on every row.
+    const documents = runs
+        .map(run => run.filename ?? '')
+        .filter((name, index, all) =>
+            all.findIndex(other => other.toLowerCase() === name.toLowerCase()) === index);
 
     return (
         <tr>
@@ -92,6 +117,8 @@ export default function LicenceRunHistory({licenceNumber, runs, columnCount, onO
                             const older = runs[index + 1];
                             const runId = run.processRunId ?? 0;
                             const statusMoved = changedFromPrevious(runs, index, 'status');
+                            const documentMoved = older !== undefined
+                                && (older.filename ?? '').toLowerCase() !== (run.filename ?? '').toLowerCase();
 
                             return (
                                 <Fragment key={runId}>
@@ -128,22 +155,29 @@ export default function LicenceRunHistory({licenceNumber, runs, columnCount, onO
                                             title={run.naldUpdateReason ?? undefined}>
                                             {naldRevision(run)}
                                         </td>
-                                        {Counts.map(count => (
-                                            <td
-                                                key={count.key}
-                                                style={{
-                                                    ...cell,
-                                                    textAlign: 'right',
-                                                    fontWeight: changedFromPrevious(runs, index, count.key) ? 700 : 400,
-                                                }}>
-                                                {String(run[count.key])}
-                                            </td>
-                                        ))}
+                                        {Counts.map(count => {
+                                            const direction = countDirection(runs, index, count.key);
+
+                                            return (
+                                                <td
+                                                    key={count.key}
+                                                    title={direction === 'none'
+                                                        ? undefined
+                                                        : `${direction === 'lost' ? 'Down' : 'Up'} from ${older?.[count.key]} in run ${older?.processRunId}`}
+                                                    style={{
+                                                        ...cell,
+                                                        textAlign: 'right',
+                                                        fontWeight: direction === 'none' ? 400 : 700,
+                                                        color: direction === 'lost' ? '#b00' : undefined
+                                                    }}>
+                                                    {String(run[count.key])}
+                                                    {direction === 'lost' && '\u25BC'}
+                                                    {direction === 'gained' && '\u25B2'}
+                                                </td>
+                                            );
+                                        })}
                                         {documents.length > 1 && (
-                                            <td style={{
-                                                ...cell,
-                                                fontWeight: changedFromPrevious(runs, index, 'filename') ? 700 : 400
-                                            }}>
+                                            <td style={{...cell, fontWeight: documentMoved ? 700 : 400}}>
                                                 {run.filename}
                                             </td>
                                         )}

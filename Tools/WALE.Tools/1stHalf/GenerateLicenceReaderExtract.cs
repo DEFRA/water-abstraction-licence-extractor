@@ -94,13 +94,17 @@ public static class GenerateLicenceReaderExtract
     {
         var dtStart = DateTime.Now;
         ConsoleHelper.WriteLine($"API is {KeyConfig.ApiBaseUrl}");
+        ConsoleHelper.WriteLine(
+            $"Pacing API calls at {KeyConfig.ApiRequestsPerSecond}/sec");
         
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
             300,
-            50);
+            KeyConfig.ApiRequestsPerSecond);
 
-        var delayPerProcessMs = 500;
+        // Task.WhenAny below holds work at maxConcurrentScrapers and the rate limiter paces the
+        // calls, so a stagger here only adds latency to every slot refill.
+        var delayPerProcessMs = 0;
         
         //var maxConcurrentScrapers = 6;
         var maxConcurrentScrapers = 10;
@@ -452,6 +456,9 @@ public static class GenerateLicenceReaderExtract
             .Where(templateFinderInput =>
                 !processedFileIds.Contains(templateFinderInput.FileId)
                 && !ExcludedFiles.Contains(templateFinderInput.FileName!)) // Comment out this line if debugging a certain file
+            // The ingress bucket holds the same key in two cases (37 files on dev, 2026-11-10) and
+            // both parse to one file id, so without this the document is OCR'd and saved twice.
+            .DistinctBy(templateFinderInput => templateFinderInput.FileId)
             .ToList();
         
         ConsoleHelper.WriteLine($"INFO - {nameof(GenerateLicenceReaderExtract)} - Found {allPdfFilesInS3.Count} total PDF files at {DateTime.Now}");

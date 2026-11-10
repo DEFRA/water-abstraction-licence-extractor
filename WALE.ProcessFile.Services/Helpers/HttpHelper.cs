@@ -26,6 +26,8 @@ public static class HttpHelper
     public static int PerInstanceRequestsPerSecond(int totalRequestsPerSecond, int instances) =>
         Math.Max(1, totalRequestsPerSecond / Math.Max(1, instances));
 
+    // maxRequestsPerSecond sets one limiter for the whole process, so where a process builds
+    // more than one client the last call here is the rate all of them get.
     public static HttpClient GetResilientHttpClient(string baseUrl, int defaultConnectionLimit, int maxRequestsPerSecond)
     {
         Database.PostgreSQL.Helpers.HttpHelper.SetMaxRequestsPerSecond(maxRequestsPerSecond);

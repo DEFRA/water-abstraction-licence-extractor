@@ -435,10 +435,29 @@ ConfiguredServices ConfigureServices(
             "DelayPerProcessMs")
         ?? 200;
 
+    var apiRequestsPerSecond =
+        configurationForServices.GetValue<int?>(
+            "ApiRequestsPerSecond")
+        ?? 50;
+
+    // One process, so it takes the whole budget; the Lambda path divides it across instances.
+    var reservedConcurrency =
+        configurationForServices.GetValue<int?>(
+            "ReservedConcurrency")
+        ?? 1;
+
+    var requestsPerSecond = HttpHelper.PerInstanceRequestsPerSecond(
+        apiRequestsPerSecond,
+        reservedConcurrency);
+
+    ConsoleHelper.WriteLine($"INFO - {nameof(HttpHelper)} - pacing API calls at "
+        + $"{requestsPerSecond}/sec per instance ({apiRequestsPerSecond}/sec "
+        + $"shared across {reservedConcurrency})");
+
     var httpClient = HttpHelper.GetResilientHttpClient(
         apiBaseUrl,
         300,
-        50);
+        requestsPerSecond);
 
     var fileServiceType =
         configurationForServices.GetValue<string>(

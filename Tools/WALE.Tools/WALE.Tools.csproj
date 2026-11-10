@@ -15,6 +15,7 @@
 
     <ItemGroup>
         <PackageReference Include="ClosedXML" Version="0.105.1" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.9" />
         <PackageReference Include="PDFtoImage" Version="5.1.1" />
         <PackageReference Include="SharpZipLib" Version="1.4.2" />
@@ -38,7 +39,7 @@
     </ItemGroup>
 
     <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
-        <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib"/>
-        <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib"/>
+        <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib" />
     </Target>
 </Project>

@@ -41,4 +41,20 @@ public sealed class LicenceRunHistoryItem
     public bool IsIssueDateFlagged { get; set; }
 
     public DateTimeOffset CreatedDateTimeUtc { get; set; }
+
+    public string? LicenceVersionId { get; set; }
+
+    public int? NaldIssueNumber { get; set; }
+
+    public int? NaldIncrementNumber { get; set; }
+
+    public string? NaldUpdateReason { get; set; }
+
+    /// Null where either run's extraction is no longer stored, so "nothing changed" and
+    /// "nothing to compare" stay distinguishable.
+    public bool? ChangedFromPrevious { get; set; }
+
+    /// Runs in one history are wildly uneven - 2,090 licences against 26 - and comparing a
+    /// full run with a spot check reads as a regression without it.
+    public int RunLicenceCount { get; set; }
 }

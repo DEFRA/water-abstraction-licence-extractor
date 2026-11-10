@@ -31,6 +31,10 @@ public interface ILicenceListRepository
 
     Task<List<LicenceRunHistoryItem>> GetLicenceRunHistoryAsync(string licenceNumber);
 
+    Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds);
+
     Task<List<string>> GetLicenceListIssuersAsync(int? processRunId);
 
     Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);

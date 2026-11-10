@@ -126,6 +126,11 @@ public interface IAbstractionLicenceDatabaseReadService
         string licenceNumber,
         CancellationToken cancellationToken = default);
 
+    Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds,
+        CancellationToken cancellationToken = default);
+
     Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync();
     
     Task<NaldImpoundmentData?> GetNaldImpoundmentLicenceAsync(string licenceNumber);

@@ -889,14 +889,40 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                 is_licence_number_flagged AS IsLicenceNumberFlagged,
                 is_issue_date_flagged AS IsIssueDateFlagged,
                 created_date_time_utc AS CreatedDateTimeUtc,
+                version.licence_version_id AS LicenceVersionId,
+                version.nald_issue_number AS NaldIssueNumber,
+                version.nald_increment_number AS NaldIncrementNumber,
+                version.nald_update_reason AS NaldUpdateReason,
+                (
+                    SELECT count(*)
+                    FROM licence_list_item run_total
+                    WHERE run_total.process_run_id = ranked.process_run_id
+                ) AS RunLicenceCount,
             """);
 
         sql.AppendLine(LicenceQueue);
+
+        // The NALD version a run captured, not NALD's state now - it moves for 7 of 2,160
+        // licences, so a column of identical values is the normal reading. Only 15% of item
+        // rows resolve to a licence row locally, against near-all on dev.
         sql.AppendLine(
             """
             FROM licence_list_item ranked
-            WHERE lower(licence_number) = @LicenceNumber
-            ORDER BY process_run_id DESC;
+            LEFT JOIN LATERAL (
+                SELECT
+                    licence.data::jsonb -> 'licenceVersion' ->> 'licenceVersionId'
+                        AS licence_version_id,
+                    (licence.data::jsonb -> 'licenceVersion' ->> 'naldIssueNumber')::int
+                        AS nald_issue_number,
+                    (licence.data::jsonb -> 'licenceVersion' ->> 'naldIncrementNumber')::int
+                        AS nald_increment_number,
+                    licence.data::jsonb -> 'licenceVersion' ->> 'naldUpdateReason'
+                        AS nald_update_reason
+                FROM licence
+                WHERE licence.licence_id = ranked.licence_id
+            ) version ON true
+            WHERE lower(ranked.licence_number) = @LicenceNumber
+            ORDER BY ranked.process_run_id DESC;
             """);
 
         var parameters = new DynamicParameters();
@@ -921,6 +947,42 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                 cancellationToken: cancellationToken));
 
         return results.ToList();
+    }
+
+    public async Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds,
+        CancellationToken cancellationToken = default)
+    {
+        await using var connection = GetPostgresConnection();
+
+        // Joined through licence_list_item rather than read from licence directly: a run can
+        // hold several licence rows for one number, and the item row names the one projected.
+        const string sql =
+            """
+            SELECT
+                ranked.process_run_id AS ProcessRunId,
+                licence.data AS Data
+            FROM licence_list_item ranked
+            JOIN licence ON licence.licence_id = ranked.licence_id
+            WHERE
+                lower(ranked.licence_number) = @LicenceNumber
+                AND ranked.process_run_id = ANY(@ProcessRunIds);
+            """;
+
+        var rows = await connection.QueryAsync<(int ProcessRunId, string Data)>(
+            new CommandDefinition(
+                sql,
+                new
+                {
+                    LicenceNumber = licenceNumber.Trim().ToLowerInvariant(),
+                    ProcessRunIds = processRunIds
+                },
+                cancellationToken: cancellationToken));
+
+        return rows
+            .GroupBy(row => row.ProcessRunId)
+            .ToDictionary(group => group.Key, group => group.First().Data);
     }
 
     public async Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(

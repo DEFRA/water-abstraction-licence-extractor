@@ -49,7 +49,9 @@ public class LicenceRunHistoryQueryTests
         var sql = PostgresAbstractionLicenceReadService
             .BuildLicenceRunHistoryQuery("01/117").Sql;
 
-        Assert.Contains("ORDER BY process_run_id DESC", sql);
+        // The qualifier is optional so that aliasing the table does not fail the test, but
+        // DESC is the point: ascending would put the oldest extraction at the top.
+        Assert.Matches(@"ORDER BY\s+(?:\w+\.)?process_run_id DESC", sql);
     }
 
     /// An unlowered parameter matches nothing rather than failing.
@@ -59,7 +61,7 @@ public class LicenceRunHistoryQueryTests
         var query = PostgresAbstractionLicenceReadService
             .BuildLicenceRunHistoryQuery("  NE/027/0022/049  ");
 
-        Assert.Contains("lower(licence_number) = @LicenceNumber", query.Sql);
+        Assert.Matches(@"lower\((?:\w+\.)?licence_number\) = @LicenceNumber", query.Sql);
 
         Assert.Equal(
             "ne/027/0022/049",

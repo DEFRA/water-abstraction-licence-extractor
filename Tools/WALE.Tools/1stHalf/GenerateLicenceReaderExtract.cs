@@ -98,7 +98,7 @@ public static class GenerateLicenceReaderExtract
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
             100,
-            30);
+            50);
 
         var delayPerProcessMs = 500;
         

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Models.Nald;
 
 namespace WRADI.Core.AbstractionLicence.Models;
 
@@ -61,6 +62,8 @@ public class LicenceVersion
     public string? DmsFileIdStatus { get; set; }
     
     public DateTime? DmsFileIdStatusDateUtc { get; set; }
+    
+    public List<NaldLicenceNumberHistoryOutput>? History { get; set; }
 
     public LicenceVersion Clone() => new()
     {

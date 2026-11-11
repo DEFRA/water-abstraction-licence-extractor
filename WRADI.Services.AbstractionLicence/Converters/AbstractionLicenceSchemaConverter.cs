@@ -93,7 +93,12 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber,
             regionCode);
         
-        var licenceVersion = GetLicenceVersion(matches, naldAbstractionDataLine, noneSchemaData, dmsFileIdInfo);
+        var licenceVersion = GetLicenceVersion(
+            matches,
+            naldAbstractionDataLine,
+            noneSchemaData,
+            dmsFileIdInfo,
+            lookupConfiguration);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -1272,8 +1277,34 @@ public static class AbstractionLicenceSchemaConverter
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         Dictionary<string, object?> noneSchemaData,
-        DmsFileIdInformation? dmsFileIdInformation)
+        DmsFileIdInformation? dmsFileIdInformation,
+        LookupConfiguration lookupConfiguration)
     {
+        List<NaldLicenceNumberHistoryOutput>? extendedHistory = null;
+
+        if (naldDataLine?.LicenceNumber != null)
+        {
+            var (_, history) = 
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(naldDataLine.LicenceNumber);
+            
+            extendedHistory = ExtendedHistory(
+                new LinkedLicence
+                {
+                    ContainedIn = [
+                        new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        }
+                    ]
+                },
+                history);
+
+            if (extendedHistory.Count == 0)
+            {
+                extendedHistory = null;
+            }
+        }
+
         return new LicenceVersion
         {
             DmsFileIdStatus = dmsFileIdInformation?.Status,
@@ -1311,6 +1342,7 @@ public static class AbstractionLicenceSchemaConverter
                     "DateOfOriginalIssue",
                     true,
                     noneSchemaData)),
+            History = extendedHistory
         };
     }
 

@@ -45,6 +45,8 @@ public class ProcessRunQuery
     
     public string[]? LicenceNumbers { get; init; }
 
+    public string[]? VerificationSections { get; init; }
+
     public ProcessRunQuery Clone()
     {
         return new ProcessRunQuery
@@ -68,7 +70,8 @@ public class ProcessRunQuery
             VerificationType = VerificationType,
             SortField = SortField,
             SortAscending = SortAscending,
-            LicenceNumbers = LicenceNumbers
+            LicenceNumbers = LicenceNumbers,
+            VerificationSections = VerificationSections
         };
     }
 }

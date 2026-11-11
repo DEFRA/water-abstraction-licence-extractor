@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
 import type { OutputListDataItemKey} from "../utils/types.ts";
+import { VERIFICATION_SECTIONS } from "../utils/verificationSections.ts";
 
 type ProcessRunLicenceFiltersProps = {
     issuers?: string[];
@@ -66,7 +67,8 @@ export function ProcessRunLicenceFilters({
             isIssueDateFlagged: undefined,
             linkedLicencesType: undefined,
             ShortLicenceSetId: undefined,
-            verificationType: undefined
+            verificationType: undefined,
+            verificationSections: undefined
         };
 
         setPendingQuery(clearedQuery);
@@ -397,6 +399,25 @@ export function ProcessRunLicenceFilters({
             </td>
 
             <td>
+                <select
+                    className={!pendingQuery.verificationSections?.length ? "" : "filter-active"}
+                    title="Verification section"
+                    value={pendingQuery.verificationSections?.[0] ?? ""}
+                    onChange={e =>
+                        updatePendingQuery(
+                            "verificationSections",
+                            e.target.value === "" ? undefined : [e.target.value]
+                        )
+                    }
+                >
+                    <option value="">All</option>
+                    {VERIFICATION_SECTIONS.map(section => (
+                        <option key={section} value={section}>
+                            {section}
+                        </option>
+                    ))}
+                </select>
+
                 <select
                     className={!pendingQuery.verificationType ? "" : "filter-active"}
                     value={pendingQuery.verificationType ?? ""}

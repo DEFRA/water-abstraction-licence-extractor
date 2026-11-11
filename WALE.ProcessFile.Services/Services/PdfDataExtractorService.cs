@@ -122,7 +122,13 @@ public class PdfDataExtractorService(
         }
 
         var matches = matchesResult.Matches
-            .Select(match => (matchResultId, match.MatchedLabelName, match.LabelGroupName, match))
+            .Select(match => new MatchToSave
+            {
+                MatchesResultId = matchResultId,
+                LabelName = match.MatchedLabelName,
+                LabelGroupName = match.LabelGroupName,
+                Data = match
+            })
             .ToList();
 
         await outputService.SaveMatchesAsync(matches);

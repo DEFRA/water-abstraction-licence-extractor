@@ -19,4 +19,5 @@ export type ProcessRunQuery = {
     sortField?: string;
     sortAscending?: boolean;
     licenceNumbers?: string[];
+    verificationSections?: string[];
 };

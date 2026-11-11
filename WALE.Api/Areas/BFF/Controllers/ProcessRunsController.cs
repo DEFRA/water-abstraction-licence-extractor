@@ -136,7 +136,7 @@ public class ProcessRunsController(
             Issuers = await issuersTask,
             LicenceSetIds = await licenceSetIdsTask,
             IssueDates = await issueDatesTask,
-            CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType)
+            CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType, query.VerificationSections)
         };
         
         var thumbnailPaths = await GetThumbnailPathsAsync(
@@ -254,7 +254,8 @@ public class ProcessRunsController(
     
      private static CumulativeFilterCounts GetCumulativeFilterCounts(
         IReadOnlyList<OutputListDataItem> filteredData,
-        string? sectionVerification)
+        string? sectionVerification,
+        string[]? verificationSections)
     {
         var data = filteredData.ToList();
 
@@ -292,7 +293,8 @@ public class ProcessRunsController(
 
             LicenceSectionVerifications = CountNonEmptyVerificationTypes(
                 data,
-                sectionVerification),
+                sectionVerification,
+                verificationSections),
             
             LicenceSets = CountNonEmptyLicenceSets(
                 data),
@@ -315,9 +317,14 @@ public class ProcessRunsController(
     
     private static int CountNonEmptyVerificationTypes(
         IEnumerable<OutputListDataItem> data,
-        string? verificationType)
+        string? verificationType,
+        string[]? verificationSections)
     {
         var count = 0;
+
+        var selectedSections = verificationSections is { Length: > 0 }
+            ? new HashSet<string>(verificationSections, StringComparer.OrdinalIgnoreCase)
+            : null;
 
         foreach (var item in data)
         {
@@ -329,6 +336,12 @@ public class ProcessRunsController(
 
             foreach (var section in item.licenceSectionVerifications)
             {
+                if (selectedSections != null &&
+                    !selectedSections.Contains(section.LicenceSectionName ?? string.Empty))
+                {
+                    continue;
+                }
+
                 var sectionItems = section.LicenceSectionItems
                                    ?? [];
 

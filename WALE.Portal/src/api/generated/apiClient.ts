@@ -2857,6 +2857,49 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param ocrServiceName (optional) 
+     * @return OK
+     */
+    getAllText(fileId: string | undefined, ocrServiceName: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Ocr/GetAllText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (ocrServiceName === null)
+            throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
+        else if (ocrServiceName !== undefined)
+            url_ += "ocrServiceName=" + encodeURIComponent("" + ocrServiceName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAllText(_response);
+        });
+    }
+
+    protected processGetAllText(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
      * @param ocrServiceName (optional) 
@@ -5386,19 +5429,14 @@ export class Client {
 
     /**
      * @param filename (optional) 
-     * @param folder (optional) 
      * @return OK
      */
-    delete(filename: string | undefined, folder: number | undefined): Promise<string> {
+    delete(filename: string | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/Files/Delete?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
-        if (folder === null)
-            throw new globalThis.Error("The parameter 'folder' cannot be null.");
-        else if (folder !== undefined)
-            url_ += "folder=" + encodeURIComponent("" + folder) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -5720,7 +5758,7 @@ export class Client {
      * @param documentType (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: string | undefined, uploadedTo: string | undefined, documentType: string | undefined): Promise<void> {
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: Date | undefined, uploadedTo: Date | undefined, documentType: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
         if (delayInSeconds === null)
             throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
@@ -5737,11 +5775,11 @@ export class Client {
         if (uploadedFrom === null)
             throw new globalThis.Error("The parameter 'uploadedFrom' cannot be null.");
         else if (uploadedFrom !== undefined)
-            url_ += "uploadedFrom=" + encodeURIComponent("" + uploadedFrom) + "&";
+            url_ += "uploadedFrom=" + encodeURIComponent(uploadedFrom ? "" + uploadedFrom.toISOString() : "") + "&";
         if (uploadedTo === null)
             throw new globalThis.Error("The parameter 'uploadedTo' cannot be null.");
         else if (uploadedTo !== undefined)
-            url_ += "uploadedTo=" + encodeURIComponent("" + uploadedTo) + "&";
+            url_ += "uploadedTo=" + encodeURIComponent(uploadedTo ? "" + uploadedTo.toISOString() : "") + "&";
         if (documentType === null)
             throw new globalThis.Error("The parameter 'documentType' cannot be null.");
         else if (documentType !== undefined)
@@ -6206,9 +6244,10 @@ export class Client {
      * @param sortField (optional) 
      * @param sortAscending (optional) 
      * @param licenceNumbers (optional) 
+     * @param verificationSections (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -6297,6 +6336,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
         else if (licenceNumbers !== undefined)
             licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
+        if (verificationSections === null)
+            throw new globalThis.Error("The parameter 'verificationSections' cannot be null.");
+        else if (verificationSections !== undefined)
+            verificationSections && verificationSections.forEach(item => { url_ += "VerificationSections=" + encodeURIComponent("" + item) + "&"; });
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -6351,9 +6394,10 @@ export class Client {
      * @param sortField (optional) 
      * @param sortAscending (optional) 
      * @param licenceNumbers (optional) 
+     * @param verificationSections (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -6442,6 +6486,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
         else if (licenceNumbers !== undefined)
             licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
+        if (verificationSections === null)
+            throw new globalThis.Error("The parameter 'verificationSections' cannot be null.");
+        else if (verificationSections !== undefined)
+            verificationSections && verificationSections.forEach(item => { url_ += "VerificationSections=" + encodeURIComponent("" + item) + "&"; });
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

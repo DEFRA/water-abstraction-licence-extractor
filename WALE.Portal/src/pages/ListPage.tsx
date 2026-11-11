@@ -53,7 +53,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
         verificationType: undefined,
         sortAscending: undefined,
         sortField: '',
-        licenceNumbers: []
+        licenceNumbers: [],
+        verificationSections: undefined
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [cumulativeFilterCounts, setCumulativeFilterCounts] = useState<CumulativeFilterCounts | undefined>(undefined);
@@ -144,7 +145,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.verificationType,
                 currentQuery.sortField,
                 currentQuery.sortAscending,
-                currentQuery.licenceNumbers
+                currentQuery.licenceNumbers,
+                currentQuery.verificationSections
             );
 
             setOutputList(listDataItems.records);
@@ -208,7 +210,8 @@ function ListPageContent({processRunId}: {processRunId: number}) {
                     undefined,
                     undefined,
                     undefined,
-                    [licenceNumber]
+                    [licenceNumber],
+                    undefined
                 ).then(result => {
                     const resolvedItem = result.records?.find(item => item.fileId === fileId);
                     if (resolvedItem) {

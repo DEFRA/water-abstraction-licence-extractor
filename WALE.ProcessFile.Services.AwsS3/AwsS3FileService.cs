@@ -163,14 +163,26 @@ public class AwsS3FileService(
     public async Task<Stream?> GetFileAsStreamAsync(string filename)
     {
         var client = GetS3Client();
-        var file = await client.GetObjectAsync(
-            new GetObjectRequest
-            {
-                BucketName = IngressFolderPath,
-                Key = filename
-            });
 
-        return file.ResponseStream;
+        try
+        {
+            var file = await client.GetObjectAsync(
+                new GetObjectRequest
+                {
+                    BucketName = IngressFolderPath,
+                    Key = filename
+                });
+
+            return file.ResponseStream;
+        }
+        catch (AmazonS3Exception exception)
+            when (exception.StatusCode == System.Net.HttpStatusCode.NotFound
+                || exception.ErrorCode == "NoSuchKey")
+        {
+            // The work list is built from licence_finder_result without checking the bucket, so a
+            // row can name a file that is not there.
+            return null;
+        }
     }
 
     public Task UploadFileAsStreamAsync(string filename, Stream stream, string contentType, StorageFolder folder)

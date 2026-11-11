@@ -326,8 +326,6 @@ public static class AbstractionLicenceSchemaConverter
                 lookupConfiguration,
                 naldDataLookupService);
 
-        // NOTE - We don't want to include licence history licences in our output, we just want to check against them
-
         linkedLicences = await ConsolidateLinkedLicencesAsync(
             linkedLicences,
             licenceNumber!,
@@ -412,23 +410,21 @@ public static class AbstractionLicenceSchemaConverter
             
             if (licenceContainsOther.Count >= 1)
             {
-                var foundIsNaldOnly = licenceContainsOther
-                    .All(l => l.ContainedIn!
-                        .All(ci => ci.Source == InformationSource.Nald) != false);
-
-                if (foundIsNaldOnly)
+                foreach (var l in licenceContainsOther)
                 {
-                    foreach (var l in licenceContainsOther)
-                    {
-                        var licenceHistoryLicence = licenceHistoryLinkedLicences
-                            .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
-                        
-                        var newContainedIn = new List<ContainedInInformation>();
-                        newContainedIn.AddRange(l.ContainedIn!);
-                        newContainedIn.Add((licenceHistoryLicence ?? anywhereInDocumentLinkedLicence).ContainedIn![0]);
+                    var licenceHistoryLicence = licenceHistoryLinkedLicences
+                        .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
 
-                        l.ContainedIn = newContainedIn.ToArray();
+                    if (licenceHistoryLicence == null)
+                    {
+                        continue;
                     }
+                    
+                    var newContainedIn = new List<ContainedInInformation>();
+                    newContainedIn.AddRange(l.ContainedIn!);
+                    newContainedIn.Add(licenceHistoryLicence.ContainedIn![0]);
+
+                    l.ContainedIn = newContainedIn.ToArray();
                 }
                 
                 found = true;
@@ -3867,6 +3863,21 @@ public static class AbstractionLicenceSchemaConverter
             return null;
         }
 
+        if (text.Contains("minor variation", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.MinorVariation;
+        }
+        
+        if (text.Contains("licence has been split", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.LicenceHasBeenSplit;
+        }
+        
+        if (text.Contains("issued separately", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.IssuedSeparately;
+        }
+        
         if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReleaseOfWater;

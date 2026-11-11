@@ -1514,9 +1514,11 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("6/33/56/*G/0274/R02", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(primaryLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("IssuedSeparately", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         
         Assert.Equal(7, primaryLicence.Points.Length);
         Assert.Equal("TL 75736 94136 Abstraction point A Map 1", primaryLicence.Points[0].Description);
@@ -2089,11 +2091,13 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(primaryLicence.LinkedLicences);
 
         Assert.Equal("AN/033/0047/018", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("Purposes", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
         Assert.Equal("DischargeAndReabstractionCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
+        Assert.Equal("LicenceHasBeenSplit", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
     }
     
     [Fact]
@@ -2860,10 +2864,12 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal("6.2", primaryLicence.LinkedLicences[0].ContainedIn![0].DocumentIdentifier);
         Assert.Equal("2/27/05/026", primaryLicence.LinkedLicences[1].LicenceNumber);
         Assert.NotNull(primaryLicence.LinkedLicences[1].ContainedIn);
-        Assert.Single(primaryLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal(2, primaryLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("ShallNotExceed", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal("9.4", primaryLicence.LinkedLicences[1].ContainedIn![0].DocumentIdentifier);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[1].ContainedIn![1].SectionName);
+        Assert.Equal("CompensationFlow", primaryLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
         
         Assert.Equal(2, primaryLicence.AbstractionLimits?.Individual?.Length);
         Assert.Equal("6.1", primaryLicence.AbstractionLimits!.Individual![0].DocumentIdentifier);

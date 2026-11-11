@@ -138,19 +138,38 @@ public class DatabaseAbstractionLicenceCacheService(
         foreach (var item in list)
         {
             var licenceNumber = item.LicenceNumber!.ToLower();
+            var licenceNumberInDict = dict.TryGetValue(licenceNumber, out var followOnKvp);
             
-            if (dict.ContainsKey(licenceNumber))
+            if (licenceNumberInDict)
             {
-                dict[licenceNumber].FollowOnLicenceNumbers.Add(item.FollowOnLicenceNumber!);
-                continue;
+                followOnKvp!.FollowOnLicenceNumbers.Add(item.FollowOnLicenceNumber!);
+            }
+            else
+            {
+                dict.Add(licenceNumber, new NaldLicenceNumberHistory
+                {
+                    LicenceNumber = item.LicenceNumber,
+                    FollowOnLicenceNumbers = [item.FollowOnLicenceNumber!],
+                    Source = item.Source
+                });
             }
             
-            dict.Add(licenceNumber, new NaldLicenceNumberHistory
+            var followOnLicenceNumber = item.FollowOnLicenceNumber!.ToLower();
+            var followOnLicenceNumberInDict = dict.TryGetValue(followOnLicenceNumber, out var predecessorKvp);
+            
+            if (followOnLicenceNumberInDict)
             {
-                LicenceNumber = item.LicenceNumber,
-                FollowOnLicenceNumbers = [item.FollowOnLicenceNumber!],
-                Source = item.Source
-            });
+                predecessorKvp!.PrecedingLicenceNumbers.Add(licenceNumber);
+            }
+            else
+            {
+                dict.Add(followOnLicenceNumber, new NaldLicenceNumberHistory
+                {
+                    LicenceNumber = item.FollowOnLicenceNumber,
+                    PrecedingLicenceNumbers = [item.LicenceNumber],
+                    Source = item.Source
+                });
+            }
         }
 
         return dict;

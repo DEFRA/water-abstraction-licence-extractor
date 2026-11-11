@@ -93,7 +93,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber,
             regionCode);
         
-        var licenceVersion = GetLicenceVersion(
+        var (licenceVersion, predecessorLinkedLicences) = GetLicenceVersion(
             matches,
             naldAbstractionDataLine,
             noneSchemaData,
@@ -298,6 +298,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         linkedLicences.AddRange(aggregateLinkedLicences);
+        linkedLicences.AddRange(predecessorLinkedLicences);
         
         linkedLicences.AddRange(await GetPurposesLinkedLicencesAsync(
             matches,
@@ -670,6 +671,7 @@ public static class AbstractionLicenceSchemaConverter
             returnList.Add(new NaldLicenceNumberHistoryOutput
             {
                 FollowOnLicenceNumbers = item.FollowOnLicenceNumbers,
+                PrecedingLicenceNumbers = item.PrecedingLicenceNumbers,
                 LicenceNumber = item.LicenceNumber,
                 Status = first ? ogStatus : furtherUpdate,
                 Source = item.Source
@@ -1273,7 +1275,7 @@ public static class AbstractionLicenceSchemaConverter
         return Date.DateFormatConsistent(text);
     }
 
-    private static LicenceVersion GetLicenceVersion(
+    private static (LicenceVersion LicenceVersion, List<LinkedLicence> LinkedLicences) GetLicenceVersion(
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         Dictionary<string, object?> noneSchemaData,
@@ -1281,11 +1283,12 @@ public static class AbstractionLicenceSchemaConverter
         LookupConfiguration lookupConfiguration)
     {
         List<NaldLicenceNumberHistoryOutput>? extendedHistory = null;
+        var linkedLicences = new List<LinkedLicence>();
 
         if (naldDataLine?.LicenceNumber != null)
         {
             var (_, history) = 
-                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(naldDataLine.LicenceNumber);
+                lookupConfiguration.LicenceNumberService.AnyOlderLicenceNumber(naldDataLine.LicenceNumber);
             
             extendedHistory = ExtendedHistory(
                 new LinkedLicence
@@ -1303,9 +1306,27 @@ public static class AbstractionLicenceSchemaConverter
             {
                 extendedHistory = null;
             }
+            else
+            {
+                foreach (var extendedHistoryItem in extendedHistory)
+                {
+                    var linkedLicence = new LinkedLicence
+                    {
+                        LicenceNumber = extendedHistoryItem.PrecedingLicenceNumbers[0],
+                        ContainedIn = [
+                            new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald
+                            }
+                        ]
+                    };
+                    
+                    linkedLicences.Add(linkedLicence);
+                }
+            }
         }
 
-        return new LicenceVersion
+        var licenceVersion = new LicenceVersion
         {
             DmsFileIdStatus = dmsFileIdInformation?.Status,
             DmsFileIdStatusDateUtc = dmsFileIdInformation?.StatusDateUtc,
@@ -1344,6 +1365,8 @@ public static class AbstractionLicenceSchemaConverter
                     noneSchemaData)),
             History = extendedHistory
         };
+
+        return (licenceVersion, linkedLicences);
     }
 
     private static string? GetTextAndSetConfidence(

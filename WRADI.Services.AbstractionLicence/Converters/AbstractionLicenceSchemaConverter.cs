@@ -1749,12 +1749,48 @@ public static class AbstractionLicenceSchemaConverter
             {
                 continue;
             }
-
-            // TODO Should merge them more
-            licence.AbstractionLimits.Aggregates = licence.AbstractionLimits.Aggregates
+            
+            var groupedAggregates = licence.AbstractionLimits.Aggregates
                 .GroupBy(a => a.Id)
-                .Select(a => a.First())
                 .ToArray();
+
+            if (!groupedAggregates.Any(agg => agg.Count() > 1))
+            {
+                continue;
+            }
+
+            var newAggregates = new List<Aggregate>();
+
+            foreach (var aggregateGroup in groupedAggregates)
+            {
+                if (aggregateGroup.Count() == 1)
+                {
+                    newAggregates.Add(aggregateGroup.First());
+                    continue;
+                }
+
+                var containedInList = new List<ContainedInInformation>();
+
+                foreach (var aggregate in aggregateGroup)
+                {
+                    if (aggregate.ContainedIn == null)
+                    {
+                        continue;
+                    }
+                    
+                    containedInList.AddRange(aggregate.ContainedIn);
+                }
+
+                var returnAggregate = aggregateGroup.First();
+                returnAggregate.ContainedIn = containedInList
+                    .GroupBy(ci => new { ci.Source, ci.SectionName, ci.LineNumber, ci.DocumentIdentifier })
+                    .Select(grp => grp.First())
+                    .ToArray();
+                
+                newAggregates.Add(returnAggregate);
+            }
+            
+            licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
         }
     }
 

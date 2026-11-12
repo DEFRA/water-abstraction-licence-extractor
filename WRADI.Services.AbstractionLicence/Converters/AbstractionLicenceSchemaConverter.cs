@@ -93,12 +93,13 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber,
             regionCode);
         
-        var (licenceVersion, predecessorLinkedLicences) = GetLicenceVersion(
+        var (licenceVersion, predecessorLinkedLicences) = await GetLicenceVersionAsync(
             matches,
             naldAbstractionDataLine,
             noneSchemaData,
             dmsFileIdInfo,
-            lookupConfiguration);
+            lookupConfiguration,
+            naldDataLookupService);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -1300,12 +1301,14 @@ public static class AbstractionLicenceSchemaConverter
         return Date.DateFormatConsistent(text);
     }
 
-    private static (LicenceVersion LicenceVersion, List<LinkedLicence> LinkedLicences) GetLicenceVersion(
-        List<LabelGroupResult> matches,
-        NaldAbstractionData? naldDataLine,
-        Dictionary<string, object?> noneSchemaData,
-        DmsFileIdInformation? dmsFileIdInformation,
-        LookupConfiguration lookupConfiguration)
+    private static async Task<(LicenceVersion LicenceVersion, List<LinkedLicence> LinkedLicences)>
+        GetLicenceVersionAsync(
+            List<LabelGroupResult> matches,
+            NaldAbstractionData? naldDataLine,
+            Dictionary<string, object?> noneSchemaData,
+            DmsFileIdInformation? dmsFileIdInformation,
+            LookupConfiguration lookupConfiguration,
+            INaldDataLookupService naldDataLookupService)
     {
         List<NaldLicenceNumberHistoryOutput>? extendedHistory = null;
         var linkedLicences = new List<LinkedLicence>();
@@ -1349,6 +1352,19 @@ public static class AbstractionLicenceSchemaConverter
                     {
                         { extendedHistoryItem.Source!, relevantLicenceNumber}
                     };
+
+                    var dmsFileDataTask = lookupConfiguration.DmsLookupService.GetDmsFileDataAsync(
+                        relevantLicenceNumber,
+                        lookupConfiguration.CacheService);
+        
+                    var (regionId, licenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+                        relevantLicenceNumber,
+                        relevantLicenceNumber,
+                        nameof(LicenceType.Abstraction),
+                        lookupConfiguration.RegionId,
+                        naldDataLookupService);
+        
+                    var dmsFileData = await dmsFileDataTask;
                     
                     var linkedLicence = new LinkedLicence
                     {
@@ -1360,7 +1376,14 @@ public static class AbstractionLicenceSchemaConverter
                                 SourceFields = sourceFields,
                                 LinkReason = isForwardLink ? LinkReason.Successor : LinkReason.Predecessor
                             }
-                        ]
+                        ],
+                        RegionId = regionId,
+                        LicenceType = licenceType,
+                        NaldStatus = licenceStatus,
+                        DmsFileId = dmsFileData?.FileId,
+                        DmsPath = dmsFileData?.DmsPath,
+                        DmsPermitNumber = dmsFileData?.PermitNumber,
+                        Filename = dmsFileData?.DestinationFileName
                     };
                     
                     linkedLicences.Add(linkedLicence);
@@ -3232,7 +3255,6 @@ public static class AbstractionLicenceSchemaConverter
                 $"Region id was missing, using {defaultRegionId}. {extraInfo}");
         }
         
-                
         return regionId ?? defaultRegionId;
     }
     
@@ -3265,7 +3287,8 @@ public static class AbstractionLicenceSchemaConverter
             // Already found it
             if (allLicences.Any(returnLicence =>
                 FormattingHelper.StripForComparison(
-                    returnLicence.LicenceNumber?.Value, returnLicence.RegionId!.Value) == strippedLlNumber))
+                    returnLicence.LicenceNumber?.Value,
+                    returnLicence.RegionId ?? GeneralConstants.UnsetRegionCode) == strippedLlNumber))
             {
                 continueOuter = true;
                 break;

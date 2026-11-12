@@ -203,10 +203,28 @@ public partial class AbstractionLicenceNumber(
 
         var history = new List<NaldLicenceNumberHistory>();
 
-        while (item?.FollowOnLicenceNumbers.Count > 0)
+        const int maxHistoryCount = 10;
+        var loopIndex = 0;
+        
+        while (item?.FollowOnLicenceNumbers.Count > 0 && loopIndex++ < maxHistoryCount)
         {
             history.Add(item);
             item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0].ToLower());
+            
+            if (history.Any(historyItem =>
+                historyItem.LicenceNumber?.Equals(item?.LicenceNumber, StringComparison.OrdinalIgnoreCase) == true))
+            {
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(AbstractionLicenceNumber)} - {licenceNumber} has a recursive loop in its history (detection f1)");
+                
+                break;
+            }
+        }
+        
+        if (loopIndex >= maxHistoryCount - 1)
+        {
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(AbstractionLicenceNumber)} - {licenceNumber} has a recursive loop in its history (detection f2)");
         }
         
         return (hasSuccessor, history);
@@ -218,11 +236,27 @@ public partial class AbstractionLicenceNumber(
         var hasPredecessor = item?.PrecedingLicenceNumbers.Count > 0;
 
         var history = new List<NaldLicenceNumberHistory>();
+        
+        const int maxHistoryCount = 10;
+        var loopIndex = 0;
 
-        while (item?.PrecedingLicenceNumbers.Count > 0)
+        while (item?.PrecedingLicenceNumbers.Count > 0 && loopIndex++ < maxHistoryCount)
         {
             history.Add(item);
             item = _licenceHistory.GetValueOrDefault(item.PrecedingLicenceNumbers[0].ToLower());
+
+            if (history.Any(historyItem =>
+                historyItem.LicenceNumber?.Equals(item?.LicenceNumber, StringComparison.OrdinalIgnoreCase) == true))
+            {
+                ConsoleHelper.WriteLine(
+                    $"WARNING - {nameof(AbstractionLicenceNumber)} - {licenceNumber} has a recursive loop in its history (detection p1)");
+            }
+        }
+
+        if (loopIndex >= maxHistoryCount - 1)
+        {
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(AbstractionLicenceNumber)} - {licenceNumber} has a recursive loop in its history (detection p2)");            
         }
         
         return (hasPredecessor, history);

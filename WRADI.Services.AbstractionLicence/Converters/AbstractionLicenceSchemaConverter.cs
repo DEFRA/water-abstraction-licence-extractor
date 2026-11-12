@@ -298,7 +298,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         linkedLicences.AddRange(aggregateLinkedLicences);
-        linkedLicences.AddRange(predecessorLinkedLicences);
+        //linkedLicences.AddRange(predecessorLinkedLicences);
         
         linkedLicences.AddRange(await GetPurposesLinkedLicencesAsync(
             matches,
@@ -312,7 +312,7 @@ public static class AbstractionLicenceSchemaConverter
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
-            lookupConfiguration!,
+            lookupConfiguration,
             cacheService,
             naldDataLookupService));
         
@@ -1289,6 +1289,11 @@ public static class AbstractionLicenceSchemaConverter
         {
             var (_, history) = 
                 lookupConfiguration.LicenceNumberService.AnyOlderLicenceNumber(naldDataLine.LicenceNumber);
+            var (_, future) = 
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(naldDataLine.LicenceNumber);
+
+            var combinedHistory = history.ToList();
+            combinedHistory.AddRange(future);
             
             extendedHistory = ExtendedHistory(
                 new LinkedLicence
@@ -1300,7 +1305,7 @@ public static class AbstractionLicenceSchemaConverter
                         }
                     ]
                 },
-                history);
+                combinedHistory);
 
             if (extendedHistory.Count == 0)
             {
@@ -1310,13 +1315,25 @@ public static class AbstractionLicenceSchemaConverter
             {
                 foreach (var extendedHistoryItem in extendedHistory)
                 {
+                    var isForwardLink = extendedHistoryItem.FollowOnLicenceNumbers.Count > 0;
+                    var relevantLicenceNumber = isForwardLink
+                        ? extendedHistoryItem.LicenceNumber
+                        : extendedHistoryItem.PrecedingLicenceNumbers[0];
+                    
+                    var sourceFields = new Dictionary<string, string?>
+                    {
+                        { extendedHistoryItem.Source!, relevantLicenceNumber}
+                    };
+                    
                     var linkedLicence = new LinkedLicence
                     {
-                        LicenceNumber = extendedHistoryItem.PrecedingLicenceNumbers[0],
+                        LicenceNumber = relevantLicenceNumber,
                         ContainedIn = [
                             new ContainedInInformation
                             {
-                                Source = InformationSource.Nald
+                                Source = InformationSource.Nald,
+                                SourceFields = sourceFields,
+                                LinkReason = isForwardLink ? LinkReason.Successor : LinkReason.Predecessor
                             }
                         ]
                     };

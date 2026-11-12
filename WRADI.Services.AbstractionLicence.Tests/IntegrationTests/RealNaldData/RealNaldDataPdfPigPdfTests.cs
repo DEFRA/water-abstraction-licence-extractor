@@ -394,7 +394,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             NaldDataLookupService);
         
         Assert.Equal(2, abstractionLicence.Count);
-        Assert.Equal(2, abstractionLicence.Last().Licences.Length);
+        Assert.Equal(3, abstractionLicence.Last().Licences.Length);
         Assert.Single(abstractionLicence.First().Licences);
         
         var licence =  abstractionLicence.First().Licences[0];

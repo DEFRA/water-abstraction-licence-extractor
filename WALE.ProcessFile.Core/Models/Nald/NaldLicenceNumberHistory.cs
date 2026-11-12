@@ -6,5 +6,7 @@ public class NaldLicenceNumberHistory
 
     public List<string> FollowOnLicenceNumbers { get; set; } = [];
     
+    public List<string> PrecedingLicenceNumbers { get; set; } = [];
+
     public string? Source { get; set; }
 }

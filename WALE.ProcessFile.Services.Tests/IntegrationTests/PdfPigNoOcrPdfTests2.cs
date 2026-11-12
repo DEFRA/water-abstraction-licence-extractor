@@ -1657,9 +1657,11 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Single(agreedSchemaLicence.LinkedLicences);
 
         Assert.Equal("18/54/21/0026", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[0].ContainedIn!);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
     }
     
     [Fact]
@@ -1829,7 +1831,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
 
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].Source);
@@ -1839,6 +1841,9 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].LinkReason);
         Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].Source);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].LinkReason);
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].Source);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
@@ -1972,24 +1977,30 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
 
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Direction);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);
-        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
-        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
-        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Source);
+        Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Source);
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
-        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
+        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Source);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].Direction);
+        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].SectionName);
+        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].LinkReason);
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].Source);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
         
         Assert.Equal("NE/026/0034/056", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
@@ -2021,7 +2032,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal("AggregateConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].Source);
@@ -2030,7 +2041,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].Source);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].LinkReason);
-        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].Source);        
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].Source);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].LinkReason);
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].Source); 
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
@@ -2102,16 +2116,20 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         
         Assert.Equal("2/27/18/117/R01", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
+        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("Records", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("ReadingsDischargedAugmentationCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].SectionName);
+        Assert.Equal("OriginalLicence", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].LinkReason);        
         
         Assert.Equal("NE/027/0018/041", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[2].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", agreedSchemaLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[2].ContainedIn![1].SectionName);
+        Assert.Equal("OriginalLicence", agreedSchemaLicence.LinkedLicences[2].ContainedIn![1].LinkReason);
     }
     
     [Fact]
@@ -2163,21 +2181,26 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Direction);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
-        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
-        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
-        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
+        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
+        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].SectionName);
+        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].LinkReason);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].Direction);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
         
         // For second licence
         agreedSchemaLicenceGroup = licenceSets[2];
@@ -2207,7 +2230,7 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(InformationSource.Document, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Source);
         
         Assert.Equal("NE/026/0034/018", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
         Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
@@ -2215,6 +2238,10 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].Direction);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![2].LinkReason);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].Direction);
+        Assert.Equal(InformationSource.OtherDocument, agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].Source);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![3].LinkReason);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[2].LicenceNumber);
         Assert.Single(agreedSchemaLicence.LinkedLicences[2].ContainedIn!);
@@ -2313,23 +2340,27 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         Assert.Equal(2, agreedSchemaLicence.LinkedLicences.Length);
 
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(4, agreedSchemaLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal(InformationDirection.Outgoing, agreedSchemaLicence.LinkedLicences[0].ContainedIn![0].Direction);
-        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
-        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
-        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].Direction);
-        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
-        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
+        Assert.Equal("Purposes", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].SectionName);
+        Assert.Equal("SubsequentAbstraction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
         Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![2].Direction);
+        Assert.Equal("Additional", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].SectionName);
+        Assert.Equal("ReadInConjunction", agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].LinkReason);
+        Assert.Equal(InformationDirection.Incoming, agreedSchemaLicence.LinkedLicences[0].ContainedIn![3].Direction);
         
         Assert.Equal("NE/026/0034/053", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
-        Assert.Single(agreedSchemaLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal(2, agreedSchemaLicence.LinkedLicences[1].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", agreedSchemaLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
+        Assert.Equal("LicenceHistory", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].SectionName);
+        Assert.Equal("MinorVariation", agreedSchemaLicence.LinkedLicences[1].ContainedIn![1].LinkReason);
         
-        Assert.Single(agreedSchemaLicence.AbstractionLimits!.Individual!);
+        Assert.Single(agreedSchemaLicence.AbstractionLimits.Individual!);
     }
     
     [Fact]

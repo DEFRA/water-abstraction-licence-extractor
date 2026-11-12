@@ -199,17 +199,33 @@ public partial class AbstractionLicenceNumber(
         string? licenceNumber)
     {
         var item = _licenceHistory.GetValueOrDefault(licenceNumber!.ToLower());
-        var hasSuccessor = item != null;
+        var hasSuccessor = item?.FollowOnLicenceNumbers.Count > 0;
 
         var history = new List<NaldLicenceNumberHistory>();
 
-        while (item != null)
+        while (item?.FollowOnLicenceNumbers.Count > 0)
         {
             history.Add(item);
             item = _licenceHistory.GetValueOrDefault(item.FollowOnLicenceNumbers[0].ToLower());
         }
         
         return (hasSuccessor, history);
+    }
+
+    public (bool HasPredecessor, List<NaldLicenceNumberHistory> History) AnyOlderLicenceNumber(string? licenceNumber)
+    {
+        var item = _licenceHistory.GetValueOrDefault(licenceNumber!.ToLower());
+        var hasPredecessor = item?.PrecedingLicenceNumbers.Count > 0;
+
+        var history = new List<NaldLicenceNumberHistory>();
+
+        while (item?.PrecedingLicenceNumbers.Count > 0)
+        {
+            history.Add(item);
+            item = _licenceHistory.GetValueOrDefault(item.PrecedingLicenceNumbers[0].ToLower());
+        }
+        
+        return (hasPredecessor, history);
     }
 
     public List<NaldLicence> GetNaldLicences(string licenceNumber)

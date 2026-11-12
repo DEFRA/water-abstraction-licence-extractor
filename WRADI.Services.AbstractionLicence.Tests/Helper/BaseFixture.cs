@@ -29,6 +29,8 @@ public class BaseFixture
                 return _licenceNumberService;
             }
             
+            var licenceNumberSuccessorsTask = cacheService.GetNaldLicenceNumberHistoryAsync();
+            
             if (!_licencesAlternateFormatValues.TryGetValue(regionCode, out var licences))
             {
                 var allNaldData = await cacheService.GetNaldDataAsync(regionCode, false, 0, int.MaxValue);
@@ -37,7 +39,7 @@ public class BaseFixture
                 _licencesAlternateFormatValues.TryAdd(regionCode, licences);
             }
 
-            _licenceNumberService = new AbstractionLicenceNumber(licences, []);
+            _licenceNumberService = new AbstractionLicenceNumber(licences, await licenceNumberSuccessorsTask);
             return _licenceNumberService;
             
         }

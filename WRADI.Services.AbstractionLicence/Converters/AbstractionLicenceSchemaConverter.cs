@@ -93,7 +93,12 @@ public static class AbstractionLicenceSchemaConverter
             licenceNumber,
             regionCode);
         
-        var licenceVersion = GetLicenceVersion(matches, naldAbstractionDataLine, noneSchemaData, dmsFileIdInfo);
+        var (licenceVersion, predecessorLinkedLicences) = GetLicenceVersion(
+            matches,
+            naldAbstractionDataLine,
+            noneSchemaData,
+            dmsFileIdInfo,
+            lookupConfiguration);
 
         var means = GetMeansOfAbstraction(
             matches,
@@ -293,6 +298,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         linkedLicences.AddRange(aggregateLinkedLicences);
+        linkedLicences.AddRange(predecessorLinkedLicences);
         
         linkedLicences.AddRange(await GetPurposesLinkedLicencesAsync(
             matches,
@@ -306,7 +312,7 @@ public static class AbstractionLicenceSchemaConverter
             matches,
             matchesResult.RegionCode,
             noneSchemaData,
-            lookupConfiguration!,
+            lookupConfiguration,
             cacheService,
             naldDataLookupService));
         
@@ -325,8 +331,6 @@ public static class AbstractionLicenceSchemaConverter
                 noneSchemaData,
                 lookupConfiguration,
                 naldDataLookupService);
-
-        // NOTE - We don't want to include licence history licences in our output, we just want to check against them
 
         linkedLicences = await ConsolidateLinkedLicencesAsync(
             linkedLicences,
@@ -412,23 +416,21 @@ public static class AbstractionLicenceSchemaConverter
             
             if (licenceContainsOther.Count >= 1)
             {
-                var foundIsNaldOnly = licenceContainsOther
-                    .All(l => l.ContainedIn!
-                        .All(ci => ci.Source == InformationSource.Nald) != false);
-
-                if (foundIsNaldOnly)
+                foreach (var l in licenceContainsOther)
                 {
-                    foreach (var l in licenceContainsOther)
-                    {
-                        var licenceHistoryLicence = licenceHistoryLinkedLicences
-                            .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
-                        
-                        var newContainedIn = new List<ContainedInInformation>();
-                        newContainedIn.AddRange(l.ContainedIn!);
-                        newContainedIn.Add((licenceHistoryLicence ?? anywhereInDocumentLinkedLicence).ContainedIn![0]);
+                    var licenceHistoryLicence = licenceHistoryLinkedLicences
+                        .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
 
-                        l.ContainedIn = newContainedIn.ToArray();
+                    if (licenceHistoryLicence == null)
+                    {
+                        continue;
                     }
+                    
+                    var newContainedIn = new List<ContainedInInformation>();
+                    newContainedIn.AddRange(l.ContainedIn!);
+                    newContainedIn.Add(licenceHistoryLicence.ContainedIn![0]);
+
+                    l.ContainedIn = newContainedIn.ToArray();
                 }
                 
                 found = true;
@@ -487,6 +489,11 @@ public static class AbstractionLicenceSchemaConverter
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
+                if (followOnLicenceNumber == licenceNumber)
+                {
+                    continue;
+                }
+                
                 var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber)
                     ?? linkedLicencesWithAddedFollowOns.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
                 
@@ -669,6 +676,7 @@ public static class AbstractionLicenceSchemaConverter
             returnList.Add(new NaldLicenceNumberHistoryOutput
             {
                 FollowOnLicenceNumbers = item.FollowOnLicenceNumbers,
+                PrecedingLicenceNumbers = item.PrecedingLicenceNumbers,
                 LicenceNumber = item.LicenceNumber,
                 Status = first ? ogStatus : furtherUpdate,
                 Source = item.Source
@@ -678,6 +686,26 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         return returnList;
+    }
+
+    private static bool IsEitherPredecessorOrSuccessor(string? licenceNumber, LicenceVersion licenceVersion)
+    {
+        if (string.IsNullOrEmpty(licenceNumber) || licenceVersion.History == null)
+        {
+            return false;
+        }
+
+        foreach (var item in licenceVersion.History)
+        {
+            if (item.LicenceNumber == licenceNumber
+                || item.PrecedingLicenceNumbers.FirstOrDefault() == licenceNumber
+                || item.FollowOnLicenceNumbers.FirstOrDefault() == licenceNumber)
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
@@ -1272,13 +1300,75 @@ public static class AbstractionLicenceSchemaConverter
         return Date.DateFormatConsistent(text);
     }
 
-    private static LicenceVersion GetLicenceVersion(
+    private static (LicenceVersion LicenceVersion, List<LinkedLicence> LinkedLicences) GetLicenceVersion(
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         Dictionary<string, object?> noneSchemaData,
-        DmsFileIdInformation? dmsFileIdInformation)
+        DmsFileIdInformation? dmsFileIdInformation,
+        LookupConfiguration lookupConfiguration)
     {
-        return new LicenceVersion
+        List<NaldLicenceNumberHistoryOutput>? extendedHistory = null;
+        var linkedLicences = new List<LinkedLicence>();
+
+        if (naldDataLine?.LicenceNumber != null)
+        {
+            var (_, history) = 
+                lookupConfiguration.LicenceNumberService.AnyOlderLicenceNumber(naldDataLine.LicenceNumber);
+            var (_, future) = 
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(naldDataLine.LicenceNumber);
+
+            var combinedHistory = history.ToList();
+            combinedHistory.AddRange(future);
+            
+            extendedHistory = ExtendedHistory(
+                new LinkedLicence
+                {
+                    ContainedIn = [
+                        new ContainedInInformation
+                        {
+                            Source = InformationSource.Nald
+                        }
+                    ]
+                },
+                combinedHistory);
+
+            if (extendedHistory.Count == 0)
+            {
+                extendedHistory = null;
+            }
+            else
+            {
+                foreach (var extendedHistoryItem in extendedHistory)
+                {
+                    var isForwardLink = extendedHistoryItem.FollowOnLicenceNumbers.Count > 0;
+                    var relevantLicenceNumber = isForwardLink
+                        ? extendedHistoryItem.LicenceNumber
+                        : extendedHistoryItem.PrecedingLicenceNumbers[0];
+                    
+                    var sourceFields = new Dictionary<string, string?>
+                    {
+                        { extendedHistoryItem.Source!, relevantLicenceNumber}
+                    };
+                    
+                    var linkedLicence = new LinkedLicence
+                    {
+                        LicenceNumber = relevantLicenceNumber,
+                        ContainedIn = [
+                            new ContainedInInformation
+                            {
+                                Source = InformationSource.Nald,
+                                SourceFields = sourceFields,
+                                LinkReason = isForwardLink ? LinkReason.Successor : LinkReason.Predecessor
+                            }
+                        ]
+                    };
+                    
+                    linkedLicences.Add(linkedLicence);
+                }
+            }
+        }
+
+        var licenceVersion = new LicenceVersion
         {
             DmsFileIdStatus = dmsFileIdInformation?.Status,
             DmsFileIdStatusDateUtc = dmsFileIdInformation?.StatusDateUtc,
@@ -1315,7 +1405,10 @@ public static class AbstractionLicenceSchemaConverter
                     "DateOfOriginalIssue",
                     true,
                     noneSchemaData)),
+            History = extendedHistory
         };
+
+        return (licenceVersion, linkedLicences);
     }
 
     private static string? GetTextAndSetConfidence(
@@ -1605,23 +1698,53 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var licenceNotInAnySetGroup in licencesNotInAnySetDict)
         {
-            var licences = new List<Licence> { licenceNotInAnySetGroup.Key };
-            licences.AddRange(licenceNotInAnySetGroup.Value);
+            var otherLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
+            otherLicences.AddRange(licenceNotInAnySetGroup.Value
+                .Where(l => !IsEitherPredecessorOrSuccessor(
+                    l.LicenceNumber?.Value,
+                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+            
+            // De-dupe, preferring full scrapes
+            otherLicences = otherLicences
+                .GroupBy(l => l.LicenceNumber?.Value)
+                .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
+                .ToList();
 
-            // De-dupe, prefering full scrapes
-            licences = licences
+            if (otherLicences.Count >= 2)
+            {
+                AssertNoDuplicateLicences(otherLicences);
+                
+                returnLicenceSets.Add(
+                    new LicenceSet
+                    {
+                        LicenceSetType = LicenceSetType.Others,
+                        Licences = otherLicences.ToArray()
+                    });
+            }
+            
+            var historyLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
+            historyLicences.AddRange(licenceNotInAnySetGroup.Value
+                .Where(l => IsEitherPredecessorOrSuccessor(
+                    l.LicenceNumber?.Value,
+                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+            
+            // De-dupe, preferring full scrapes
+            historyLicences = historyLicences
                 .GroupBy(l => l.LicenceNumber?.Value)
                 .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
                 .ToList();
             
-            AssertNoDuplicateLicences(licences);
-            
-            returnLicenceSets.Add(
-                new LicenceSet
-                {
-                    LicenceSetType = LicenceSetType.Others,
-                    Licences = licences.ToArray()
-                });
+            if (historyLicences.Count >= 2)
+            {
+                AssertNoDuplicateLicences(historyLicences);
+                
+                returnLicenceSets.Add(
+                    new LicenceSet
+                    {
+                        LicenceSetType = LicenceSetType.Lineage,
+                        Licences = historyLicences.ToArray()
+                    });
+            }
         }
         
         var tStart = DateTime.Now;
@@ -3867,6 +3990,21 @@ public static class AbstractionLicenceSchemaConverter
             return null;
         }
 
+        if (text.Contains("minor variation", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.MinorVariation;
+        }
+        
+        if (text.Contains("licence has been split", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.LicenceHasBeenSplit;
+        }
+        
+        if (text.Contains("issued separately", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.IssuedSeparately;
+        }
+        
         if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReleaseOfWater;

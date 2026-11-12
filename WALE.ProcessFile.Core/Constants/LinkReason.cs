@@ -36,6 +36,11 @@ public static class LinkReason
     public const string RateOfFlow = "RateOfFlow"; // Excluded link reason
     public const string WhenTheFlow = "WhenTheFlow"; // Excluded link reason    
     public const string MinimumValue = "MinimumValue"; // Excluded link reason    
+    public const string IssuedSeparately = "IssuedSeparately";
+    public const string LicenceHasBeenSplit = "LicenceHasBeenSplit";
+    public const string MinorVariation = "MinorVariation";
+    public const string Successor = "Successor";
+    public const string Predecessor = "Predecessor";
     public const string Empty = "N/A";
 
     public static IReadOnlyCollection<string> GetAll()

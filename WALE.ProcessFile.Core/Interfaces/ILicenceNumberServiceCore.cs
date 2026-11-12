@@ -13,4 +13,7 @@ public interface ILicenceNumberServiceCore
 
     (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
         string? licenceNumber);
+    
+    (bool HasPredecessor, List<NaldLicenceNumberHistory> History) AnyOlderLicenceNumber(
+        string? licenceNumber);
 }

@@ -6,6 +6,7 @@ public enum LicenceSetType
     SingleLicenceOnly,
     LicencesGroupedByAbstractionLimits,
     Others,
+    Lineage,
     
     // Oldies for serialisation
     AllLicencesExplicitlyReferencedAnywhere,

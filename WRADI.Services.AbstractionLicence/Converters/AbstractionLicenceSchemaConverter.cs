@@ -3139,10 +3139,13 @@ public static class AbstractionLicenceSchemaConverter
         
         foreach (var strippedLlNumber in strippedLlNumbers)
         {
-            // Already found it
+            // Already found it. RegionId is absent on the error stub ToLicenceAsync returns when a
+            // related file has no matches, and those stubs reach this list.
             if (allLicences.Any(returnLicence =>
                 FormattingHelper.StripForComparison(
-                    returnLicence.LicenceNumber?.Value, returnLicence.RegionId!.Value) == strippedLlNumber))
+                    returnLicence.LicenceNumber?.Value,
+                    GetRegionIdOrDefault(returnLicence.RegionId, returnLicence.LicenceNumber?.Value))
+                        == strippedLlNumber))
             {
                 continueOuter = true;
                 break;

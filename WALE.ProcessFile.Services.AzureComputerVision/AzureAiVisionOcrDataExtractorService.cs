@@ -173,7 +173,18 @@ public class AzureAiVisionOcrDataExtractorService(
 
             if (ex is ComputerVisionOcrErrorException ocrEx)
             {
-                var errorCode = ocrEx.Response.Headers["ms-azure-ai-errorcode"].FirstOrDefault();
+                // Azure does not always send this header, and the indexer throws when it is absent.
+                var errorCode = ocrEx.Response.Headers
+                    .FirstOrDefault(header => string.Equals(
+                        header.Key, "ms-azure-ai-errorcode", StringComparison.OrdinalIgnoreCase))
+                    .Value?.FirstOrDefault();
+
+                // Logged either way - with no error code the status code is all there is to go on.
+                ConsoleHelper.WriteLine(
+                    $"ERROR - {nameof(AzureAiVisionOcrDataExtractorService)} - Azure returned "
+                    + $"{(int)ocrEx.Response.StatusCode} {ocrEx.Response.StatusCode}, errorcode "
+                    + $"'{errorCode ?? "(header absent)"}' for P{request.PageNumber}, "
+                    + $"I{request.ImageNumber}, {request.FileId}");
 
                 if (errorCode == "InvalidImageDimension")
                 {

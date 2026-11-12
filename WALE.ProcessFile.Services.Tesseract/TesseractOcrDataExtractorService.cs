@@ -118,12 +118,10 @@ public class TesseractOcrDataExtractorService(
 
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
-                    // Thrown rather than returned so PdfDataExtractorService records it on
-                    // ServicesFailed, which only its catch populates. Returning left the file saving
-                    // as a clean success with empty OCR text for this image, and the provider still
-                    // listed in ServicesUsed. The exit code alone cannot tell a missing image from a
-                    // timeout, so it is reported as transient; FailurePolicy is DegradeOnError, so
-                    // the file is not failed either way.
+                    // Thrown rather than returned because only PdfDataExtractorService's catch
+                    // populates ServicesFailed. The exit code cannot tell a missing image from a
+                    // timeout, so it is reported as transient; FailurePolicy is DegradeOnError,
+                    // so the file is not failed either way.
                     throw new OcrServiceTransientException(
                         Name,
                         $"{Name} external process failed for P{pageNumber}, I{imageNumber}, " +

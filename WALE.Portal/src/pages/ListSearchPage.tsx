@@ -285,7 +285,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                             undefined,
                             undefined,
                             undefined,
-                            [licenceNumber]
+                            [licenceNumber],
+                            undefined
                         ).then(result => {
                             const resolvedItem = result.records?.find(item => item.fileId === modal.fileId);
                             if (resolvedItem) {

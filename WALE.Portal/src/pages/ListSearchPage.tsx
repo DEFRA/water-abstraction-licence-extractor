@@ -254,6 +254,42 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(modal.outputListDataItem)) {
                     updateModalOutputItem(modal.fileId, updatedItem);
                 }
+                if (!updatedItem) {
+                    const licenceNumber = getLicenceNumber(modal.fileId);
+                    if (licenceNumber) {
+                        waleApiClient.getProcessRunList(
+                            processRunId,
+                            'N/A',
+                            '',
+                            0,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            [licenceNumber]
+                        ).then(result => {
+                            const resolvedItem = result.records?.find(item => item.fileId === modal.fileId);
+                            if (resolvedItem) {
+                                updateModalOutputItem(modal.fileId, resolvedItem);
+                            }
+                        }).catch(err => {
+                            console.error('Error resolving linked licence report data:', err);
+                        });
+                    }
+                }
             }
         });
     }, [outputList, modals, updateModalOutputItem]);

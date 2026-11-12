@@ -2857,6 +2857,49 @@ export class Client {
 
     /**
      * @param fileId (optional) 
+     * @param ocrServiceName (optional) 
+     * @return OK
+     */
+    getAllText(fileId: string | undefined, ocrServiceName: string | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Ocr/GetAllText?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (ocrServiceName === null)
+            throw new globalThis.Error("The parameter 'ocrServiceName' cannot be null.");
+        else if (ocrServiceName !== undefined)
+            url_ += "ocrServiceName=" + encodeURIComponent("" + ocrServiceName) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetAllText(_response);
+        });
+    }
+
+    protected processGetAllText(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
      * @param pageNumber (optional) 
      * @param imageNumber (optional) 
      * @param ocrServiceName (optional) 
@@ -5028,6 +5071,48 @@ export class Client {
     /**
      * @return OK
      */
+    uiCreateLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/UiCreateLicenceSectionVerification";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUiCreateLicenceSectionVerification(_response);
+        });
+    }
+
+    protected processUiCreateLicenceSectionVerification(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     deleteLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
         let url_ = this.baseUrl + "/BFF/FileData/DeleteLicenceSectionVerification";
         url_ = url_.replace(/[?&]$/, "");
@@ -5386,19 +5471,14 @@ export class Client {
 
     /**
      * @param filename (optional) 
-     * @param folder (optional) 
      * @return OK
      */
-    delete(filename: string | undefined, folder: number | undefined): Promise<string> {
+    delete(filename: string | undefined): Promise<string> {
         let url_ = this.baseUrl + "/BFF/Files/Delete?";
         if (filename === null)
             throw new globalThis.Error("The parameter 'filename' cannot be null.");
         else if (filename !== undefined)
             url_ += "filename=" + encodeURIComponent("" + filename) + "&";
-        if (folder === null)
-            throw new globalThis.Error("The parameter 'folder' cannot be null.");
-        else if (folder !== undefined)
-            url_ += "folder=" + encodeURIComponent("" + folder) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -5720,7 +5800,7 @@ export class Client {
      * @param documentType (optional) 
      * @return OK
      */
-    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: string | undefined, uploadedTo: string | undefined, documentType: string | undefined): Promise<void> {
+    sendFileProcessOrchestrationMessage(delayInSeconds: number | undefined, regionId: number | undefined, maxLicencesToTake: number | undefined, uploadedFrom: Date | undefined, uploadedTo: Date | undefined, documentType: string | undefined): Promise<void> {
         let url_ = this.baseUrl + "/BFF/Message/SendFileProcessOrchestrationMessage?";
         if (delayInSeconds === null)
             throw new globalThis.Error("The parameter 'delayInSeconds' cannot be null.");
@@ -5737,11 +5817,11 @@ export class Client {
         if (uploadedFrom === null)
             throw new globalThis.Error("The parameter 'uploadedFrom' cannot be null.");
         else if (uploadedFrom !== undefined)
-            url_ += "uploadedFrom=" + encodeURIComponent("" + uploadedFrom) + "&";
+            url_ += "uploadedFrom=" + encodeURIComponent(uploadedFrom ? "" + uploadedFrom.toISOString() : "") + "&";
         if (uploadedTo === null)
             throw new globalThis.Error("The parameter 'uploadedTo' cannot be null.");
         else if (uploadedTo !== undefined)
-            url_ += "uploadedTo=" + encodeURIComponent("" + uploadedTo) + "&";
+            url_ += "uploadedTo=" + encodeURIComponent(uploadedTo ? "" + uploadedTo.toISOString() : "") + "&";
         if (documentType === null)
             throw new globalThis.Error("The parameter 'documentType' cannot be null.");
         else if (documentType !== undefined)

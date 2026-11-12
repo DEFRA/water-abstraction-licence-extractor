@@ -438,10 +438,35 @@ public class FileDataController(
 
         if (result != 0)
         {
-            FireAndForgetDataRefresh(verification);
+            FireAndForgetDataRefresh(verification, true);
         }
 
         return Ok(result);
+    }
+    
+    [HttpPost]
+    public async Task<ActionResult<int>> UiCreateLicenceSectionVerification(
+        [FromBody] LicenceSectionVerification verification)
+    {
+        try
+        {
+            var result = await abstractionLicenceOutputService.SaveLicenceSectionVerificationAsync(verification);
+
+            if (result == 0)
+            {
+                return Ok(result);
+            }
+            
+            await RefreshCurrentLicenceListData(verification);
+            FireAndForgetDataRefresh(verification, false);
+
+            return Ok(result);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
     [HttpPost]
@@ -453,7 +478,7 @@ public class FileDataController(
 
         if (result != 0)
         {
-            FireAndForgetDataRefresh(verification);
+            FireAndForgetDataRefresh(verification, true);
         }
 
         return Ok(result);
@@ -474,19 +499,19 @@ public class FileDataController(
         if (result != 0)
         {
             // Entries share a licence file and item ID, so refreshing from the earliest process run covers them all
-            FireAndForgetDataRefresh(verifications.MinBy(v => v.ProcessRunId)!);
+            FireAndForgetDataRefresh(verifications.MinBy(v => v.ProcessRunId)!, true);
         }
 
         return Ok(result);
     }
 
-    private void FireAndForgetDataRefresh(LicenceSectionVerification verification)
+    private void FireAndForgetDataRefresh(LicenceSectionVerification verification, bool includeCurrentProcessRunId)
     {
         _ = Task.Run((Func<Task?>)(async () =>
         {
             try
             {
-                await RefreshLicenceListData(verification);
+                await RefreshAffectedLicenceListData(verification, includeCurrentProcessRunId);
             }
             catch
             {
@@ -495,12 +520,17 @@ public class FileDataController(
         }));
     }
 
-    private async Task RefreshLicenceListData(LicenceSectionVerification verification)
+    private async Task RefreshAffectedLicenceListData(LicenceSectionVerification verification,  bool includeCurrentProcessRunId)
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();
 
         var currentProcessId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId;
-        var processRunIds = new List<int> {verification.ProcessRunId};
+        var processRunIds = new List<int>();
+        
+        if (includeCurrentProcessRunId)
+        {
+            processRunIds.Add(verification.ProcessRunId);
+        }
 
         if (currentProcessId is > 0 &&
             currentProcessId > verification.ProcessRunId)
@@ -539,6 +569,24 @@ public class FileDataController(
                 await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(processRunId,
                     licenceList.ToArray());
             }
+        }
+    }
+    
+    private async Task RefreshCurrentLicenceListData(LicenceSectionVerification verification)
+    {
+        var mainLicence = verification.SourceLicenceNumber;
+
+        if (!string.IsNullOrWhiteSpace(mainLicence))
+        {
+            var licenceList = new List<string> { mainLicence };
+
+            if (!string.IsNullOrWhiteSpace(verification.LicenceSectionItemId))
+            {
+                licenceList.Add(verification.LicenceSectionItemId);
+            }
+            
+            await uiProcessRunService.UpdateProcessRunByLicenceNumbersAsync(verification.ProcessRunId,
+                licenceList.ToArray());
         }
     }
 

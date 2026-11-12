@@ -124,14 +124,17 @@ public static class ReadSqlHelper
         StringBuilder sql,
         string? primaryTypeFilter)
     {
-        if (primaryTypeFilter is "InLicence" or "Both")
+        switch (primaryTypeFilter)
         {
-            sql.AppendLine("  AND has_in_licence_aggregate");
-        }
-
-        if (primaryTypeFilter is "LicenceToLicence" or "Both")
-        {
-            sql.AppendLine("  AND has_licence_to_licence_aggregate");
+            case "InLicence":
+                sql.AppendLine("  AND has_in_licence_aggregate AND NOT has_licence_to_licence_aggregate");
+                break;
+            case "LicenceToLicence":
+                sql.AppendLine("  AND has_licence_to_licence_aggregate AND NOT has_in_licence_aggregate");
+                break;
+            case "Both":
+                sql.AppendLine("  AND has_in_licence_aggregate AND has_licence_to_licence_aggregate");
+                break;
         }
     }
     

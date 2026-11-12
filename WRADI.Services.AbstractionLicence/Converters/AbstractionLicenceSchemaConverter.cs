@@ -298,7 +298,7 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         linkedLicences.AddRange(aggregateLinkedLicences);
-        //linkedLicences.AddRange(predecessorLinkedLicences);
+        linkedLicences.AddRange(predecessorLinkedLicences);
         
         linkedLicences.AddRange(await GetPurposesLinkedLicencesAsync(
             matches,
@@ -489,6 +489,11 @@ public static class AbstractionLicenceSchemaConverter
             
             foreach (var followOnLicenceNumber in extendedHistory.Last().FollowOnLicenceNumbers)
             {
+                if (followOnLicenceNumber == licenceNumber)
+                {
+                    continue;
+                }
+                
                 var existing = linkedLicences.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber)
                     ?? linkedLicencesWithAddedFollowOns.FirstOrDefault(ll => ll.LicenceNumber == followOnLicenceNumber);
                 
@@ -681,6 +686,24 @@ public static class AbstractionLicenceSchemaConverter
         }
         
         return returnList;
+    }
+
+    private static bool IsEitherPredecessorOrSuccessor(string licenceNumber, LicenceVersion licenceVersion)
+    {
+        if (licenceVersion.History == null)
+        {
+            return false;
+        }
+
+        foreach (var item in licenceVersion.History)
+        {
+            if (item.LicenceNumber == licenceNumber)
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)

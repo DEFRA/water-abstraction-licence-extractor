@@ -292,7 +292,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -300,10 +300,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Single(licenceSets.First().Licences);
         
-        var licence = abstractionLicence.First().Licences[0];
+        var licence = licenceSets.First().Licences[0];
         Assert.Equal("2/27/19/129/R01", licence.LicenceNumber!.Value);
         
         Assert.NotNull(licence.Points);
@@ -658,7 +658,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -666,10 +666,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence);
-        Assert.Equal(2, abstractionLicence.First().Licences.Length);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0027/041/R01", licence.LicenceNumber!.Value);
         
         Assert.NotNull(licence.Points);

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -343,6 +344,29 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     catch (Exception ex)
     {
         ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd:{pdfDataExtractor.Id}  - {pdfFilename} threw fatal error - {ex}");
+
+        // The result is already saved Ok by this point, so without this a post-extraction failure
+        // reads as a clean success and a re-run skips the file. Status mapping mirrors
+        // PdfDataExtractorService, which keeps a transient row reclaimable.
+        try
+        {
+            await lookupConfig.OutputService.SaveErrorMatchesResultAsync(
+                pdfFilename,
+                dmsDataForFile.FileId,
+                processRun.ProcessRunId,
+                ex.ToString(),
+                lookupConfig.UseLockExclusivity,
+                ex is OcrServiceTransientException
+                    ? ScrapeStatus.TransientError
+                    : ScrapeStatus.Error);
+        }
+        catch (Exception saveEx)
+        {
+            // Reporting must not take down the run; the console line above is then the only record.
+            ConsoleHelper.WriteLine(
+                $"ERROR - WALE.Cmd:{pdfDataExtractor.Id} - could not record the fatal for {pdfFilename} - {saveEx}");
+        }
+
         return [];
     }
     finally

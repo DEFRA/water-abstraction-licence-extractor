@@ -3272,22 +3272,30 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
     private static void AddAggregatePrimaryTypeFilter(StringBuilder sql, string? primaryTypeFilter)
     {
-        if (primaryTypeFilter is "InLicence" or "Both")
+        switch (primaryTypeFilter)
         {
-            AddAggregateOfPrimaryTypeExists(sql, "InLicence");
-        }
-
-        if (primaryTypeFilter is "LicenceToLicence" or "Both")
-        {
-            AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence");
+            case "InLicence":
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: false);
+                break;
+            case "LicenceToLicence":
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: false);
+                break;
+            case "Both":
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: true);
+                break;
         }
     }
 
-    private static void AddAggregateOfPrimaryTypeExists(StringBuilder sql, string primaryType)
+    private static void AddAggregateOfPrimaryTypeExists(StringBuilder sql, string primaryType, bool exists)
     {
+        var existsKeyword = exists ? "EXISTS" : "NOT EXISTS";
+
         sql.AppendLine(
             $"""
-               AND EXISTS (
+               AND {existsKeyword} (
                    SELECT 1
                    FROM jsonb_array_elements(
                        COALESCE(

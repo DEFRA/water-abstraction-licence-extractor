@@ -688,16 +688,18 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static bool IsEitherPredecessorOrSuccessor(string licenceNumber, LicenceVersion licenceVersion)
+    private static bool IsEitherPredecessorOrSuccessor(string? licenceNumber, LicenceVersion licenceVersion)
     {
-        if (licenceVersion.History == null)
+        if (string.IsNullOrEmpty(licenceNumber) || licenceVersion.History == null)
         {
             return false;
         }
 
         foreach (var item in licenceVersion.History)
         {
-            if (item.LicenceNumber == licenceNumber)
+            if (item.LicenceNumber == licenceNumber
+                || item.PrecedingLicenceNumbers.FirstOrDefault() == licenceNumber
+                || item.FollowOnLicenceNumbers.FirstOrDefault() == licenceNumber)
             {
                 return true;
             }
@@ -1696,23 +1698,53 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var licenceNotInAnySetGroup in licencesNotInAnySetDict)
         {
-            var licences = new List<Licence> { licenceNotInAnySetGroup.Key };
-            licences.AddRange(licenceNotInAnySetGroup.Value);
+            var otherLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
+            otherLicences.AddRange(licenceNotInAnySetGroup.Value
+                .Where(l => !IsEitherPredecessorOrSuccessor(
+                    l.LicenceNumber?.Value,
+                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+            
+            // De-dupe, preferring full scrapes
+            otherLicences = otherLicences
+                .GroupBy(l => l.LicenceNumber?.Value)
+                .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
+                .ToList();
 
-            // De-dupe, prefering full scrapes
-            licences = licences
+            if (otherLicences.Count >= 2)
+            {
+                AssertNoDuplicateLicences(otherLicences);
+                
+                returnLicenceSets.Add(
+                    new LicenceSet
+                    {
+                        LicenceSetType = LicenceSetType.Others,
+                        Licences = otherLicences.ToArray()
+                    });
+            }
+            
+            var historyLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
+            historyLicences.AddRange(licenceNotInAnySetGroup.Value
+                .Where(l => IsEitherPredecessorOrSuccessor(
+                    l.LicenceNumber?.Value,
+                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+            
+            // De-dupe, preferring full scrapes
+            historyLicences = historyLicences
                 .GroupBy(l => l.LicenceNumber?.Value)
                 .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
                 .ToList();
             
-            AssertNoDuplicateLicences(licences);
-            
-            returnLicenceSets.Add(
-                new LicenceSet
-                {
-                    LicenceSetType = LicenceSetType.Others,
-                    Licences = licences.ToArray()
-                });
+            if (historyLicences.Count >= 2)
+            {
+                AssertNoDuplicateLicences(historyLicences);
+                
+                returnLicenceSets.Add(
+                    new LicenceSet
+                    {
+                        LicenceSetType = LicenceSetType.Lineage,
+                        Licences = historyLicences.ToArray()
+                    });
+            }
         }
         
         var tStart = DateTime.Now;

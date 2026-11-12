@@ -182,7 +182,9 @@ public static class SharedHelper
                     if (previouslySavedForLicenceNumber || previouslySavedForFileIdOnly)
                     {
                         var licenceFoundLocally = licenceLoop.Status == ScrapeStatus.Ok;
-                        var previouslySavedAsNotFound = existingLicence!.Status == ScrapeStatus.NotFound;
+                        var previouslySavedAsNotFound = existingLicence!.Status
+                            is ScrapeStatus.NotFound
+                            or ScrapeStatus.NotScraped;
                         
                         if (licenceFoundLocally && previouslySavedAsNotFound)
                         {

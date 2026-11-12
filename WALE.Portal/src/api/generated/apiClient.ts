@@ -7771,7 +7771,7 @@ export class ContainedInInformation implements IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
-    history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    history?: any[] | undefined;
     documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
@@ -7802,7 +7802,7 @@ export class ContainedInInformation implements IContainedInInformation {
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
                 for (let item of _data["history"])
-                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+                    this.history!.push(item);
             }
             this.documentIdentifier = _data["documentIdentifier"];
             if (_data["sourceFields"]) {
@@ -7838,7 +7838,7 @@ export class ContainedInInformation implements IContainedInInformation {
         if (Array.isArray(this.history)) {
             data["history"] = [];
             for (let item of this.history)
-                data["history"].push(item ? item.toJSON() : undefined as any);
+                data["history"].push(item);
         }
         data["documentIdentifier"] = this.documentIdentifier;
         if (this.sourceFields) {
@@ -7860,7 +7860,7 @@ export interface IContainedInInformation {
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
-    history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    history?: any[] | undefined;
     documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
@@ -9788,6 +9788,7 @@ export enum LicenceSetType {
     SingleLicenceOnly = "SingleLicenceOnly",
     LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
     Others = "Others",
+    Lineage = "Lineage",
     AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
     AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
     AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
@@ -9824,6 +9825,7 @@ export class LicenceVersion implements ILicenceVersion {
     naldStatus?: string | undefined;
     dmsFileIdStatus?: string | undefined;
     dmsFileIdStatusDateUtc?: Date | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
 
     [key: string]: any;
 
@@ -9861,6 +9863,11 @@ export class LicenceVersion implements ILicenceVersion {
             this.naldStatus = _data["naldStatus"];
             this.dmsFileIdStatus = _data["dmsFileIdStatus"];
             this.dmsFileIdStatusDateUtc = _data["dmsFileIdStatusDateUtc"] ? new Date(_data["dmsFileIdStatusDateUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+            }
         }
     }
 
@@ -9896,6 +9903,11 @@ export class LicenceVersion implements ILicenceVersion {
         data["naldStatus"] = this.naldStatus;
         data["dmsFileIdStatus"] = this.dmsFileIdStatus;
         data["dmsFileIdStatusDateUtc"] = this.dmsFileIdStatusDateUtc ? this.dmsFileIdStatusDateUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -9920,6 +9932,7 @@ export interface ILicenceVersion {
     naldStatus?: string | undefined;
     dmsFileIdStatus?: string | undefined;
     dmsFileIdStatusDateUtc?: Date | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
 
     [key: string]: any;
 }
@@ -10371,6 +10384,7 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
     status?: string | undefined;
     licenceNumber?: string | undefined;
     followOnLicenceNumbers?: string[];
+    precedingLicenceNumbers?: string[];
     source?: string | undefined;
 
     [key: string]: any;
@@ -10397,6 +10411,11 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
                 for (let item of _data["followOnLicenceNumbers"])
                     this.followOnLicenceNumbers!.push(item);
             }
+            if (Array.isArray(_data["precedingLicenceNumbers"])) {
+                this.precedingLicenceNumbers = [] as any;
+                for (let item of _data["precedingLicenceNumbers"])
+                    this.precedingLicenceNumbers!.push(item);
+            }
             this.source = _data["source"];
         }
     }
@@ -10421,6 +10440,11 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
             for (let item of this.followOnLicenceNumbers)
                 data["followOnLicenceNumbers"].push(item);
         }
+        if (Array.isArray(this.precedingLicenceNumbers)) {
+            data["precedingLicenceNumbers"] = [];
+            for (let item of this.precedingLicenceNumbers)
+                data["precedingLicenceNumbers"].push(item);
+        }
         data["source"] = this.source;
         return data;
     }
@@ -10430,6 +10454,7 @@ export interface INaldLicenceNumberHistoryOutput {
     status?: string | undefined;
     licenceNumber?: string | undefined;
     followOnLicenceNumbers?: string[];
+    precedingLicenceNumbers?: string[];
     source?: string | undefined;
 
     [key: string]: any;

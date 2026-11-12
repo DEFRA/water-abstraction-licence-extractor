@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Enums;
 

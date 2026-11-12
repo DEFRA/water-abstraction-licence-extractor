@@ -30,8 +30,8 @@ export function ScrapeDocuments({documentType = 'AbstractionLicence'}: ScrapeDoc
                 undefined,
                 regionId,
                 maxLicences,
-                uploadedFrom === '' ? undefined : uploadedFrom,
-                uploadedTo === '' ? undefined : uploadedTo,
+                uploadedFrom === '' ? undefined : new Date(uploadedFrom),
+                uploadedTo === '' ? undefined : new Date(uploadedTo),
                 documentType);
 
             setSuccessMessage('Scraping orchestration process started successfully.');

@@ -20,6 +20,9 @@ public static class LinkedLicenceVerificationMergeHelper
     {
         var sectionSummaries = new List<LicenceSectionItemSummary>();
 
+        // Item ID -> dead state (Lapsed/Expired/Revoked/Superseded) flag reason, cleared later if the LL ends up removed
+        var deadStateFlags = new Dictionary<string, string>();
+
         var orderedVerifications = verifications
             .Where(v => v.LicenceSectionItemId is not null)
             .OrderBy(v => v.CreatedDateTimeUtc)
@@ -136,6 +139,7 @@ public static class LinkedLicenceVerificationMergeHelper
                         if (changes.Count > 0)
                         {
                             flagReason = $"Linked Licence {string.Join(" & ", changes)}";
+                            deadStateFlags[verification.LicenceSectionItemId!] = flagReason;
                         }
                     }
 
@@ -192,6 +196,8 @@ public static class LinkedLicenceVerificationMergeHelper
                 ConsoleHelper.WriteLine($"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - {ex}");
             }
         }
+
+        ClearDeadStateFlagsForRemovedLinkedLicences(sectionSummaries, deadStateFlags, linkedLicences);
 
         return sectionSummaries;
     }
@@ -305,6 +311,35 @@ public static class LinkedLicenceVerificationMergeHelper
             catch (Exception ex)
             {
                 ConsoleHelper.WriteLine($"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - {ex}");
+            }
+        }
+    }
+
+    // A dead state LL that has been removed (and not re-added) has already been dealt with, so it no longer needs flagging
+    private static void ClearDeadStateFlagsForRemovedLinkedLicences(
+        List<LicenceSectionItemSummary> sectionSummaries,
+        Dictionary<string, string> deadStateFlags,
+        List<LinkedLicence> linkedLicences)
+    {
+        var outgoingLicenceNumbers = linkedLicences
+            .Where(l => l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) == true)
+            .Select(l => l.LicenceNumber)
+            .ToHashSet();
+
+        foreach (var (itemId, flagReason) in deadStateFlags)
+        {
+            if (outgoingLicenceNumbers.Contains(itemId))
+            {
+                continue;
+            }
+
+            var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
+
+            // Only clear the flag if it's still the dead state one, not one a later verification replaced
+            if (summary is { IsFlagged: true } && summary.FlagReason == flagReason)
+            {
+                summary.IsFlagged = false;
+                summary.FlagReason = null;
             }
         }
     }

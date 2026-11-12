@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
+using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -97,7 +98,12 @@ public class TesseractOcrDataExtractorService(
                 catch (Exception ex)
                 {
                     ConsoleHelper.WriteLine($"ERROR - {Name} - Error occurred processing {imageReference} - {ex}");
-                    canSave = false;
+
+                    throw new OcrServiceTransientException(
+                        Name,
+                        $"{Name} failed for P{pageNumber}, I{imageNumber}, {pdfDocument.FileId}: " +
+                        $"{ex.GetType().Name} - {ex.Message}",
+                        ex);
                 } 
             }
             else
@@ -112,11 +118,17 @@ public class TesseractOcrDataExtractorService(
 
                 if (externalProcessRanOk == ProcessResult.UnknownOrTransientError)
                 {
-                    // TODO - Log
-                    ConsoleHelper.WriteLine($"ERROR - {Name} - Transient error occured (see above)");
-
-                    // Don't cache, should work next time
-                    canSave = false;
+                    // Thrown rather than returned so PdfDataExtractorService records it on
+                    // ServicesFailed, which only its catch populates. Returning left the file saving
+                    // as a clean success with empty OCR text for this image, and the provider still
+                    // listed in ServicesUsed. The exit code alone cannot tell a missing image from a
+                    // timeout, so it is reported as transient; FailurePolicy is DegradeOnError, so
+                    // the file is not failed either way.
+                    throw new OcrServiceTransientException(
+                        Name,
+                        $"{Name} external process failed for P{pageNumber}, I{imageNumber}, " +
+                        $"{pdfDocument.FileId} - {imageReference}",
+                        new Exception("Tesseract external process returned a non-zero exit code"));
                 }
                 else if (externalProcessRanOk == ProcessResult.RepeatableError)
                 {

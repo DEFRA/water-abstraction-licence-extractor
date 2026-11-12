@@ -15,12 +15,14 @@ public static class UnitHelper
             MegaLitres => ConvertToMegaLitres(sourceValue, sourceUnits),
             CubicMetres => ConvertToCubicMetres(sourceValue, sourceUnits),
             ThousandCubicMetres => ConvertToThousandCubicMetres(sourceValue, sourceUnits),
+            ThousandGallons => ConvertToThousandGallons(sourceValue, sourceUnits),
             _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to {destinationUnits}")
         };
     }
     
     private const string MillionGallons = "milliongallon";
     private const string MegaGallons = "megagallon";
+    private const string ThousandGallons = "thousandgallon";
     private const string Gallons = "gallon";
     private const string Litres = "litre";
     private const string MegaLitres = "megalitre";
@@ -39,11 +41,6 @@ public static class UnitHelper
         if (units.EndsWith('s'))
         {
             units = units[..^1];
-        }
-        
-        if (units == MillionGallons)
-        {
-            units = MegaGallons;
         }
         
         if (units == MillionGallons)
@@ -78,6 +75,7 @@ public static class UnitHelper
         return sourceUnits switch
         {
             Gallons => sourceValue * gallonsToCubicMetres,
+            ThousandGallons => ConvertToGallons(sourceValue, sourceUnits) * gallonsToCubicMetres,
             MegaGallons => ConvertToGallons(sourceValue, sourceUnits) * gallonsToCubicMetres,
             Litres => sourceValue * litresToCubicMetres,
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToCubicMetres,            
@@ -93,6 +91,12 @@ public static class UnitHelper
         return ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetresToThousandCubicMetres;
     }
     
+    private static double ConvertToThousandGallons(double sourceValue, string sourceUnits)
+    {
+        const double gallonsToThousandGallons = 0.001;
+        return ConvertToGallons(sourceValue, sourceUnits) * gallonsToThousandGallons;
+    }
+
     private static double ConvertToLitres(double sourceValue, string sourceUnits)
     {
         const double gallonsToLitres = 4.54609;
@@ -102,6 +106,7 @@ public static class UnitHelper
         return sourceUnits switch
         {
             Gallons => sourceValue * gallonsToLitres,
+            ThousandGallons => ConvertToGallons(sourceValue, sourceUnits) * gallonsToLitres,
             MegaGallons => ConvertToGallons(sourceValue, sourceUnits) * gallonsToLitres,
             Litres => sourceValue,
             MegaLitres => sourceValue * megaLitresToLitres,
@@ -120,12 +125,14 @@ public static class UnitHelper
     private static double ConvertToGallons(double sourceValue, string sourceUnits)
     {
         const double litresToGallons = 0.21997;
+        const double thousandGallonsToGallons = 1_000;
         const double megaGallonsToGallons = 1_000_000;
         const double cubicMetresToGallons = 219.969;
 
         return sourceUnits switch
         {
             Gallons => sourceValue,
+            ThousandGallons => sourceValue * thousandGallonsToGallons,
             MegaGallons => sourceValue * megaGallonsToGallons,
             Litres => sourceValue * litresToGallons,
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToGallons,

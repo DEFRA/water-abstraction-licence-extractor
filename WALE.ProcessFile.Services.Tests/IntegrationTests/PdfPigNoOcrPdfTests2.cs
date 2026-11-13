@@ -2226,9 +2226,8 @@ public class PdfPigNoOcrPdfTests2(StandaloneFixture2 fixture)
         agreedSchemaLicenceGroup = licenceSets[0];
         agreedSchemaLicence = agreedSchemaLicenceGroup.Licences[0];
         
-        Assert.Equal(3, agreedSchemaLicence.LicenceSets.Length);
-        Assert.Equal("NE0260034008-NE0260034018-NE0260034053", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
-        Assert.Equal(expectedLicenceSetId, agreedSchemaLicence.LicenceSets[1].LicenceSetId);
+        Assert.Equal(2, agreedSchemaLicence.LicenceSets.Length);
+        Assert.Equal("NE0260034052-NE0270028059", agreedSchemaLicence.LicenceSets[0].LicenceSetId);
         
         Assert.Equal("NE/026/0034/052", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal(ScrapeStatus.Ok, agreedSchemaLicence.Status);

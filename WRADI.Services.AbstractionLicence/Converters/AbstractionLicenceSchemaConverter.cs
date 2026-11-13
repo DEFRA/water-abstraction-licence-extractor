@@ -1923,30 +1923,41 @@ public static class AbstractionLicenceSchemaConverter
         DeDuplicateAggregates(allLicences);
         AssertNoDuplicateAggregates(allLicences);
 
-        returnLicenceSets = RemoveSingleLicenceSetsWhenOthersPresent(returnLicenceSets);
+        returnLicenceSets = RemoveSingleLicenceSetsWhenOthersPresent(returnLicenceSets, true, true);
         
         return returnLicenceSets;
     }
 
-    private static List<LicenceSet> RemoveSingleLicenceSetsWhenOthersPresent(IEnumerable<LicenceSet> licenceSets)
+    private static List<LicenceSet> RemoveSingleLicenceSetsWhenOthersPresent(
+        IEnumerable<LicenceSet> licenceSets,
+        bool applyToLicences,
+        bool applyToLicenceSets)
     {
         var licenceSetsList = licenceSets.ToList();
 
-        foreach (var licenceSet in licenceSetsList)
+        if (applyToLicences)
         {
-            foreach (var licence in licenceSet.Licences)
+            foreach (var licenceSet in licenceSetsList)
             {
-                var licenceNoneSingleSets = licence.LicenceSets
-                    .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
-                    .ToArray();
-
-                if (licenceNoneSingleSets.Length >= 1)
+                foreach (var licence in licenceSet.Licences)
                 {
-                    licence.LicenceSets = licenceNoneSingleSets.ToArray();
+                    var licenceNoneSingleSets = licence.LicenceSets
+                        .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
+                        .ToArray();
+
+                    if (licenceNoneSingleSets.Length >= 1)
+                    {
+                        licence.LicenceSets = licenceNoneSingleSets;
+                    }
                 }
             }
         }
-        
+
+        if (!applyToLicenceSets)
+        {
+            return licenceSetsList;
+        }
+            
         var allNoneSingleSets = licenceSetsList
             .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
             .ToList();
@@ -2142,6 +2153,11 @@ public static class AbstractionLicenceSchemaConverter
         var okayLicences = allLicences
             .Where(l => l.Status == ScrapeStatus.Ok)
             .ToList();
+
+        var uniqueLicences = allLicences
+            .GroupBy(l => l.LicenceNumber?.Value)
+            .Select(g => g.First())
+            .ToList();
         
         foreach (var licence in okayLicences)
         {
@@ -2173,7 +2189,7 @@ public static class AbstractionLicenceSchemaConverter
 
                     if (!hasLinkedLicence)
                     {
-                        var licenceToAdd = allLicences.FirstOrDefault(ll => ll.LicenceNumber!.Value!
+                        var licenceToAdd = uniqueLicences.FirstOrDefault(ll => ll.LicenceNumber!.Value!
                             .Replace(".", string.Empty)
                             .Replace("-", string.Empty)
                             .Replace("/", string.Empty)                        
@@ -2185,16 +2201,59 @@ public static class AbstractionLicenceSchemaConverter
                         }
 
                         var newLinkedLicences = licence.LinkedLicences.ToList();
+
+                        var licencesReferencingBoth = uniqueLicences
+                            .Where(al =>
+                            {
+                                var contains1 =
+                                    al.LinkedLicences.Any(ll => ll.LicenceNumber == licence.LicenceNumber.Value);
+                                var contains2 = al.LinkedLicences.Any(ll =>
+                                    ll.LicenceNumber == licenceToAdd.LicenceNumber?.Value);
+
+                                return contains1 && contains2;
+                            })
+                            .ToList();
+
+                        var containedIn = licencesReferencingBoth
+                            .SelectMany(l =>
+                            {
+                                var containedInList = new List<ContainedInInformation>();
+                                
+                                var innerLinkedLicences = l.LinkedLicences
+                                    .Where(ll => ll.LicenceNumber == licence.LicenceNumber.Value)
+                                    .ToList();
+
+                                foreach (var ll in innerLinkedLicences)
+                                {
+                                    if (ll.ContainedIn == null)
+                                    {
+                                        return containedInList;
+                                    }
+
+                                    foreach (var ci in ll.ContainedIn!)
+                                    {
+                                        if (ci.Direction != InformationDirection.Outgoing)
+                                        {
+                                            continue;
+                                        }
+                                        
+                                        var cloned = ci.Clone();
+                                        cloned.Direction = InformationDirection.InSameGroup;
+                                        cloned.SourceLicence = l.LicenceNumber?.Value;
+
+                                        containedInList.Add(cloned);
+                                    }
+                                }
+
+                                return containedInList;
+                            })
+                            .ToArray();
+                        
                         newLinkedLicences.Add(new LinkedLicence
                         {
                             LicenceNumber = licenceToAdd.LicenceNumber!.Value,
                             RegionId = licenceToAdd.RegionId,
-                            ContainedIn = [
-                                new()
-                                {
-                                    Direction = InformationDirection.InSameGroup,
-                                    Source = InformationSource.Unknown // TODO - maybe could infer this
-                                }],
+                            ContainedIn = containedIn,
                             NaldStatus = licenceToAdd.NaldStatus,
                             Filename = licenceToAdd.Filename,
                             DmsPath =  licenceToAdd.DmsPath,
@@ -6796,6 +6855,7 @@ public static class AbstractionLicenceSchemaConverter
         AssertNoDuplicateVariations(allLicences);        
         
         AssertNoDuplicateAggregates(allLicences);
+        distinctLicenceSets = RemoveSingleLicenceSetsWhenOthersPresent(distinctLicenceSets, true, false);
         
         return distinctLicenceSets;
     }

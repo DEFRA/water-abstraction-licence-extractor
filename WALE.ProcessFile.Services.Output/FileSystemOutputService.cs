@@ -79,7 +79,7 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
     
-    public Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    public Task SaveMatchesAsync(List<MatchToSave> matches)
     {
         throw new NotImplementedException();
     }

@@ -16,12 +16,4 @@
     <ItemGroup>
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
     </ItemGroup>
-
-    <!-- Lets unit tests exercise internal pure-logic methods (e.g. licence-number and aggregate
-         comparison) directly, without standing up the whole extraction pipeline. -->
-    <ItemGroup>
-      <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-        <_Parameter1>WRADI.Services.AbstractionLicence.Tests</_Parameter1>
-      </AssemblyAttribute>
-    </ItemGroup>
 </Project>

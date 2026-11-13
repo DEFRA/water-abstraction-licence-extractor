@@ -1,12 +1,12 @@
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// LicenceNumberContainsOther is what links a document to its linked licences. These state
+/// LicenceNumberHelper.ContainsOther is what links a document to its linked licences. These state
 /// current behaviour, not desired behaviour.
 /// </summary>
-public class LicenceNumberContainsOtherTests
+public class LicenceNumberHelperContainsOtherTests
 {
     private const int Anglian = 1;
 
@@ -19,11 +19,10 @@ public class LicenceNumberContainsOtherTests
         string licenceNumber2)
     {
         Assert.True(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 licenceNumber1, licenceNumber2, Anglian));
     }
 
-    // Suppressed deliberately: without it 4/29/10/174 would absorb 4/29/10/174/R01.
     [Theory]
     [InlineData("4/29/10/174", "4/29/10/174/R01")]
     [InlineData("4/29/10/174/R01", "4/29/10/174")]
@@ -32,7 +31,7 @@ public class LicenceNumberContainsOtherTests
         string licenceNumber2)
     {
         Assert.False(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 licenceNumber1, licenceNumber2, Anglian));
     }
 
@@ -40,7 +39,7 @@ public class LicenceNumberContainsOtherTests
     public void WhenBothSidesAreTheSameRevision_ThenTheyAreTheSameLicence()
     {
         Assert.True(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 "4/29/10/174/R01", "4/29/10/174/R01", Anglian));
     }
 
@@ -51,7 +50,7 @@ public class LicenceNumberContainsOtherTests
     public void WhenTheSameRevisionIsWrittenR1AndR01_ThenTheyDoNotMatch()
     {
         Assert.False(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 "4/29/10/174/R1", "4/29/10/174/R01", Anglian));
     }
 
@@ -59,7 +58,7 @@ public class LicenceNumberContainsOtherTests
     public void WhenNeitherContainsTheOther_ThenTheyAreDifferentLicences()
     {
         Assert.False(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 "4/29/10/174", "5/29/10/174", Anglian));
     }
 
@@ -69,10 +68,10 @@ public class LicenceNumberContainsOtherTests
     public void WhenOneSideIsMissing_ThenThereIsNoMatch(string? missing)
     {
         Assert.False(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 "4/29/10/174", missing, Anglian));
         Assert.False(
-            AbstractionLicenceSchemaConverter.LicenceNumberContainsOther(
+            LicenceNumberHelper.ContainsOther(
                 missing, "4/29/10/174", Anglian));
     }
 }

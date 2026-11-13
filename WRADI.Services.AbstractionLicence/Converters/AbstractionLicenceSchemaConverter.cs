@@ -1922,8 +1922,20 @@ public static class AbstractionLicenceSchemaConverter
         
         DeDuplicateAggregates(allLicences);
         AssertNoDuplicateAggregates(allLicences);
+
+        returnLicenceSets = RemoveSingleLicenceSetsWhenOthersPresent(returnLicenceSets);
         
         return returnLicenceSets;
+    }
+
+    private static List<LicenceSet> RemoveSingleLicenceSetsWhenOthersPresent(IEnumerable<LicenceSet> licenceSets)
+    {
+        var licenceSetsList = licenceSets.ToList();
+        var noneSingleSets = licenceSetsList
+            .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
+            .ToList();
+        
+        return noneSingleSets.Count >= 1 ? noneSingleSets : licenceSetsList;
     }
 
     private static void DeDuplicateAggregates(IEnumerable<Licence> licences)

@@ -300,11 +300,11 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
-        Assert.Equal(LicenceSetType.Others, licenceSets[2].LicenceSetType);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
         
-        Assert.Single(licenceSets.First().Licences);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
         var licence = licenceSets.First().Licences[0];
         Assert.Equal("2/27/19/129/R01", licence.LicenceNumber!.Value);
@@ -396,9 +396,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
+        Assert.Single(abstractionLicence);
         Assert.Equal(3, abstractionLicence.Last().Licences.Length);
-        Assert.Single(abstractionLicence.First().Licences);
         
         var licence =  abstractionLicence.First().Licences[0];
         Assert.Equal("TH/039/0028/051", licence.LicenceNumber!.Value);
@@ -462,10 +461,10 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
+        Assert.Single(licenceSets);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
 
-        Assert.Single(licenceSets.First().Licences);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
         var licence =  licenceSets.First().Licences[0];
         Assert.Equal("SW/045/0002/028", licence.LicenceNumber!.Value);

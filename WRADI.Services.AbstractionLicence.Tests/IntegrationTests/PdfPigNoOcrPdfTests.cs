@@ -258,10 +258,10 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
+        Assert.Single(licenceSets);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
         
-        Assert.Single(licenceSets.First().Licences);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
         var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0024/095/R01", licence.LicenceNumber!.Value);
@@ -341,12 +341,11 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(3, licenceSets.Count);
-        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
-        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[2].LicenceSetType);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Others, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
         
-        Assert.Single(licenceSets.First().Licences);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
         
         var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0028/068", licence.LicenceNumber!.Value);

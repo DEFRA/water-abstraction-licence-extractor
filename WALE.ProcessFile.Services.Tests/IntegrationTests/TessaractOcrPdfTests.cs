@@ -321,7 +321,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/28/312", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -330,10 +330,10 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             NaldDataLookupService,
             _fileLicenceMapping["28_39_28_312"]);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         
         Assert.Equal("28/39/28/0312", agreedSchemaLicence.LicenceNumber?.Value);
         Assert.Equal("ABC", agreedSchemaLicence.DmsPath);
@@ -385,17 +385,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         var linkedLicenceNumberCount = resultList.Count(result => result.LabelGroupName == "LinkedLicenceNumber");
         Assert.Equal(12, linkedLicenceNumberCount); // TODO - why not 100s?
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(13, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal(12, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("2568001/154", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO - weird
         //.. TODO fill in the gaps
@@ -456,17 +456,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("34/259", licenceNumberResult.Text!.FirstOrDefault()?.Text); // TODO - Dodgy file made up of 2 licences
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal("34/259", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);
@@ -642,17 +642,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("28/39/28/507", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         
         Assert.Equal("28/39/28/0312", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -1064,17 +1064,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         // File is scanned titled and font is very bold and hard to read
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First(); // TODO skewwed badly, doesnt read well - there should be 6
+        var agreedSchemaLicence = licenceSets.Last().Licences.First(); // TODO skewwed badly, doesnt read well - there should be 6
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("25/68/3/75", agreedSchemaLicence.LinkedLicences[0].LicenceNumber); // TODO its actually 76!
     }
@@ -1219,17 +1219,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         // Reads licence number very badly wrong. Doesn't read abstraction limits correctly
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(36, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal(35, agreedSchemaLicence.LinkedLicences.Length); // TODO should count these at some point
     }
 
@@ -1313,17 +1313,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal("25/68/3/91", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
@@ -1471,17 +1471,17 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         // Abstraction limitscrossed out
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(37, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal(36, agreedSchemaLicence.LinkedLicences.Length); // TODO should count these at some point
     }
 
@@ -1630,7 +1630,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1638,10 +1638,10 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
@@ -1680,7 +1680,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
         
         // Poor OCR stops us finding the section (its in points)
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractorCombined1,
             0,
@@ -1688,10 +1688,10 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(7, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         //Assert.Equal("25/63/1/158", agreedSchemaLicence.LicenceNumber); - NULL as doesn't read with OCR correctly
         
         Assert.Equal(6, agreedSchemaLicence.LinkedLicences.Length);

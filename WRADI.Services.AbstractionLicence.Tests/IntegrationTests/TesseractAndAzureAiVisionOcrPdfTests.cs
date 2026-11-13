@@ -466,7 +466,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -474,13 +474,15 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence);
-        Assert.Equal(2, abstractionLicence.First().Licences.Length);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal(2, licenceSets.First().Licences.Length);
+        
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("2/27/22/395", licence.LicenceNumber!.Value);
         
-        Assert.Single(licence.LinkedLicences);
+        Assert.Equal(2, licence.LinkedLicences.Length);
 
         Assert.NotNull(licence.Points);
         Assert.Single(licence.Points);

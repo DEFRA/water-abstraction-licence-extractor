@@ -737,19 +737,21 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
         var dateOfIssue = resultFull.Matches!.FirstOrDefault(result => result.LabelGroupName == "DateOfIssue");
         Assert.NotNull(dateOfIssue);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
+        
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal(new DateTime(2014, 08, 20), agreedSchemaLicence.LicenceVersion.IssueDate);
-        Assert.Empty(agreedSchemaLicence.LinkedLicences);
+        Assert.Single(agreedSchemaLicence.LinkedLicences);
     }
 
     [Fact]
@@ -953,9 +955,8 @@ public class AzureAiServicesDocumentIntelligenceOcrPdfTests(FirstNamesFixture fi
             await LookupConfigurationAsync(1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
+        Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal(4, agreedSchemaLicenceGroup.Last().Licences.Length);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
         var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);

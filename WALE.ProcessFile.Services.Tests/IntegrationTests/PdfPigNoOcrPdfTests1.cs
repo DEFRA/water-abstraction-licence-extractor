@@ -814,16 +814,16 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
             "4.1 Spray irrigation, subject to the compensatory discharges from the borehole referred to in condition 9.1 below.",
             string.Join(' ', firstPurposePointGroup.Text!.Select(x => x.Text).ToArray()));
         
-        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(1, 1, TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService)).Last();
 
-        var primaryLicence = agreedSchemaLicenceGroup.Licences[0];
+        var primaryLicence = licenceSets.Licences[0];
         
-        Assert.Equal(3, primaryLicence.LinkedLicences.Length);
+        Assert.Equal(4, primaryLicence.LinkedLicences.Length);
 
         Assert.Equal("NW/069/0025/006/R01", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal(2, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
@@ -841,6 +841,11 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal(2, primaryLicence.LinkedLicences[2].ContainedIn!.Length);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[2].ContainedIn![0].SectionName);
         Assert.Equal("SimultaneousCompensatoryDischargeCondition", primaryLicence.LinkedLicences[2].ContainedIn![0].LinkReason);
+        
+        Assert.Equal("NW/069/0025/091", primaryLicence.LinkedLicences[3].LicenceNumber);
+        Assert.Single(primaryLicence.LinkedLicences[3].ContainedIn!);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[3].ContainedIn![0].SectionName);
+        Assert.Equal("OriginalLicence", primaryLicence.LinkedLicences[3].ContainedIn![0].LinkReason);
         
         Assert.True(primaryLicence.AbstractionLimits.Aggregates![0].ContainsLegalText);
     }
@@ -2088,7 +2093,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Single(primaryPurpose3.PointIds!);
         Assert.Equal("2.2", primaryPurpose3.PointIds![0]);
         
-        Assert.Single(primaryLicence.LinkedLicences);
+        Assert.Equal(2, primaryLicence.LinkedLicences.Length);
 
         Assert.Equal("AN/033/0047/018", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
@@ -2098,6 +2103,11 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal("DischargeAndReabstractionCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
         Assert.Equal("LicenceHasBeenSplit", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+
+        Assert.Equal("6/33/47/*S/0172", primaryLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(primaryLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[1].ContainedIn![0].SectionName);
+        Assert.Equal("LicenceHasBeenSplit", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
     }
     
     [Fact]
@@ -2302,7 +2312,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
             AbsLicCacheService, NaldDataLookupService)).Last();
 
         var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
-        Assert.Empty(primaryLicence.LinkedLicences);
+        Assert.Single(primaryLicence.LinkedLicences);
     }
     
     [Fact]

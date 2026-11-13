@@ -266,17 +266,17 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("25/68/3/91", licenceNumberResult.Text!.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(4, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Equal(3, agreedSchemaLicence.LinkedLicences.Length);
         Assert.Equal("25/68/5/9", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("25/69/3/91", agreedSchemaLicence.LinkedLicences[1].LicenceNumber);
@@ -355,17 +355,17 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         Assert.True(licenceNumberResult.IsOcr);
         Assert.Equal("11/42/28.2/7", licenceNumberResult.Text?.FirstOrDefault()?.Text);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.Last().Licences.First();
+        var agreedSchemaLicence = licenceSets.Last().Licences.First();
         Assert.Single(agreedSchemaLicence.LinkedLicences);
         Assert.Equal("11/42/28.2/49", agreedSchemaLicence.LinkedLicences[0].LicenceNumber);
     }
@@ -525,20 +525,20 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
         
         Assert.Null(licenceNumberResult);
         
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder, regionCode),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Equal("12405035", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("035", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Single(licenceSets);
+        Assert.Equal("12305001-12405001-12405035-12501004-12505001-12505002-12505003-12505004-12505005-12505007-12505008", licenceSets[0].LicenceSetId);
+        Assert.Equal("001-001-035-004-001-002-003-004-005-007-008", licenceSets[0].ShortLicenceSetId);
         
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
+        Assert.Equal(11, licenceSets.First().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+        var agreedSchemaLicence = licenceSets.First().Licences.First();
         Assert.Equal("1/24/05/035", agreedSchemaLicence.LicenceNumber?.Value);     
         
         Assert.Equal(10, agreedSchemaLicence.LinkedLicences.Length);

@@ -1737,7 +1737,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnLicenceSets;
     }
 
-    private static void DeDuplicateAggregates(IEnumerable<Licence> licences)
+    internal static void DeDuplicateAggregates(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)
@@ -1794,7 +1794,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static void AssertNoDuplicateAggregates(IEnumerable<Licence> licences)
+    internal static void AssertNoDuplicateAggregates(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)
@@ -1819,7 +1819,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static AggregateVariation[]? DeDupeVariations(AggregateVariation[]? variations)
+    internal static AggregateVariation[]? DeDupeVariations(AggregateVariation[]? variations)
     {
         return variations?
             .GroupBy(v => v.Id)
@@ -2007,7 +2007,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static void AssertNoMultipleLevelVariations(IEnumerable<Licence> licences)
+    internal static void AssertNoMultipleLevelVariations(IEnumerable<Licence> licences)
     {
         foreach (var licence in licences)
         {
@@ -2039,7 +2039,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void AssertNoMultipleLevelVariations(IEnumerable<LicenceSet> licenceSets)
+    internal static void AssertNoMultipleLevelVariations(IEnumerable<LicenceSet> licenceSets)
     {
         foreach (var licenceSet in licenceSets)
         {
@@ -2153,7 +2153,7 @@ public static class AbstractionLicenceSchemaConverter
         AssertNoDuplicateLicences(firstLicenceSetInLimits.Licences);
     }
 
-    private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
+    internal static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
     {
         foreach (var licenceSet in licenceSets)
         {
@@ -2430,7 +2430,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static List<Aggregate> GetSupersets(
+    internal static List<Aggregate> GetSupersets(
         Aggregate aggregate,
         List<Aggregate> otherAggregates)
     {
@@ -2489,7 +2489,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static List<LicenceSet> GetSupersets(LicenceSet licenceSet, List<LicenceSet> otherLicenceSets)
+    internal static List<LicenceSet> GetSupersets(LicenceSet licenceSet, List<LicenceSet> otherLicenceSets)
     {
         var returnList = new List<LicenceSet>();
         
@@ -2538,7 +2538,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
     
-    private static void AddVariationsToLicenceAggregates(List<Licence> allLicences)
+    internal static void AddVariationsToLicenceAggregates(List<Licence> allLicences)
     {
         foreach (var sourceLicence in allLicences)
         {
@@ -2597,7 +2597,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static void SquashTwoLevelVariations(List<LicenceSet> licenceSets)
+    internal static void SquashTwoLevelVariations(List<LicenceSet> licenceSets)
     {
         foreach (var licenceSet in licenceSets)
         {
@@ -2620,7 +2620,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void SquashTwoLevelVariations(IEnumerable<Licence> licences)
+    internal static void SquashTwoLevelVariations(IEnumerable<Licence> licences)
     {
         foreach (var licence in licences)
         {
@@ -2641,7 +2641,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static List<AggregateVariation> SquashTwoLevelVariations(IEnumerable<AggregateVariation> variations)
+    internal static List<AggregateVariation> SquashTwoLevelVariations(IEnumerable<AggregateVariation> variations)
     {
         var newVariations = new List<AggregateVariation>();
         var variationsList = variations.ToList();
@@ -2670,7 +2670,7 @@ public static class AbstractionLicenceSchemaConverter
         return newVariations;
     }
     
-    private static bool AreAggregatesFundamentallyEqual(
+    internal static bool AreAggregatesFundamentallyEqual(
         Aggregate sourceAggregate,
         Aggregate otherAggregate) 
     {
@@ -2992,7 +2992,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static Aggregate[]? GetAggregates(
+    internal static Aggregate[]? GetAggregates(
         IReadOnlyList<Licence> licences,
         bool excludeAnyLinksNotInSet)
     {
@@ -6568,7 +6568,7 @@ public static class AbstractionLicenceSchemaConverter
         return distinctLicenceSets;
     }
 
-    private static void AssertNoDuplicateVariations(IEnumerable<Licence> licences)
+    internal static void AssertNoDuplicateVariations(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)
@@ -6601,7 +6601,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void RemoveDuplicateVariations(IEnumerable<Licence> licences)
+    internal static void RemoveDuplicateVariations(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)

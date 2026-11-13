@@ -1333,7 +1333,8 @@ public static class AbstractionLicenceSchemaConverter
         return text;
     }
 
-    private static bool LicenceNumberContainsOther(
+    // Internal so the tests can call it directly - see the csproj's InternalsVisibleTo.
+    internal static bool LicenceNumberContainsOther(
         string? licenceNumber1,
         string? licenceNumber2,
         int regionId)
@@ -2670,7 +2671,8 @@ public static class AbstractionLicenceSchemaConverter
         return newVariations;
     }
     
-    private static bool AreAggregatesFundamentallyEqual(
+    // Internal so the tests can call it directly - see the csproj's InternalsVisibleTo.
+    internal static bool AreAggregatesFundamentallyEqual(
         Aggregate sourceAggregate,
         Aggregate otherAggregate) 
     {

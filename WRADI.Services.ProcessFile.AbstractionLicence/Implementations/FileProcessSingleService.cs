@@ -1,4 +1,5 @@
 ﻿using WALE.ProcessFile.Core.Configuration;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -280,7 +281,28 @@ public class FileProcessSingleService(
         {
             ConsoleHelper.WriteLine($"FATAL ERROR - {nameof(FileProcessSingleService)} - {pdfFilename} threw " +
                 $"fatal error - {ex}");
-            
+
+            // The result is already saved Ok by this point, so without this the file reads as a
+            // clean success in matches_result. Always Error, never TransientError: a transient OCR
+            // failure is caught above and rethrown, so it cannot reach here.
+            try
+            {
+                await lookupConfig.OutputService.SaveErrorMatchesResultAsync(
+                    pdfFilename,
+                    dmsDataForFile.FileId,
+                    processRun.ProcessRunId,
+                    ex.ToString(),
+                    lookupConfig.UseLockExclusivity,
+                    ScrapeStatus.Error);
+            }
+            catch (Exception saveEx)
+            {
+                // Swallowed: an exception here reaches the caller's rethrow and the queue message
+                // is marked failed, so the file would be redelivered instead of recorded.
+                ConsoleHelper.WriteLine($"ERROR - {nameof(FileProcessSingleService)} - could not record " +
+                    $"the fatal for {pdfFilename} - {saveEx}");
+            }
+
             // Recorded rather than marked failed: which failures earn a redelivery, and which are
             // a permanently unreadable file that would cycle the queue instead, is not decided yet.
             return (false, [], ex.ToString());

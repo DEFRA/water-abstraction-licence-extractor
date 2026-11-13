@@ -13,6 +13,7 @@ public class LicenceBuilder
     private string? _licenceNumber;
     private LinkedLicence[] _linkedLicences = [];
     private Aggregate[]? _aggregates;
+    private LicenceSetReference[] _licenceSets = [];
 
     public static LicenceBuilder A() => new();
 
@@ -41,6 +42,15 @@ public class LicenceBuilder
         return this;
     }
 
+    public LicenceBuilder InLicenceSets(params string?[] licenceSetIds)
+    {
+        _licenceSets = licenceSetIds
+            .Select(licenceSetId => new LicenceSetReference { LicenceSetId = licenceSetId })
+            .ToArray();
+
+        return this;
+    }
+
     public LicenceBuilder Holding(params Aggregate[] aggregates)
     {
         _aggregates = aggregates;
@@ -54,6 +64,7 @@ public class LicenceBuilder
             ? null
             : new ValueWithConfidence<string>(_licenceNumber, null, null),
         LinkedLicences = _linkedLicences,
+        LicenceSets = _licenceSets,
         AbstractionLimits = new AbstractionLimits { Aggregates = _aggregates }
     };
 }

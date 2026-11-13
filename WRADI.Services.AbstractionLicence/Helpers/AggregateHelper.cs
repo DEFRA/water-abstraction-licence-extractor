@@ -4,9 +4,6 @@ using WRADI.Core.AbstractionLicence.Models;
 
 namespace WRADI.DocumentType.AbstractionLicence.Helpers;
 
-/// <summary>
-/// Building, comparing and merging a licence's aggregates.
-/// </summary>
 public static class AggregateHelper
 {
     public static Aggregate[]? GetAggregates(

@@ -4,8 +4,8 @@ using WRADI.Core.AbstractionLicence.Models;
 namespace WRADI.Services.AbstractionLicence.Tests.Helper;
 
 /// <summary>
-/// Defaults to a licence that extracted cleanly and holds no aggregates at all, which several
-/// of the rules read as "skip me".
+/// Aggregates stays null unless Holding is called, where AbstractionLimits itself initialises
+/// it to an empty array. The rules skip a null and walk an empty one.
 /// </summary>
 public class LicenceBuilder
 {

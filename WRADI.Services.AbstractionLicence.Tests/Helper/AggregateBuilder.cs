@@ -3,9 +3,6 @@ using WRADI.Core.AbstractionLicence.Models;
 
 namespace WRADI.Services.AbstractionLicence.Tests.Helper;
 
-/// <summary>
-/// Defaults to the smallest aggregate the rules will act on: one licence, no links, one limit.
-/// </summary>
 public class AggregateBuilder
 {
     private string? _sourceLicenceNumber = "1/2/3";

@@ -2501,9 +2501,11 @@ public static class AbstractionLicenceSchemaConverter
                         newLinkedLicences.AddRange(missingLinkedLicences
                             .Select(missingLinkedLicenceNumber =>
                             {
-                                var missingLinkedLicence = licenceSet.Licences
+                                var missingLinkedLicenceStep1 = licenceSet.Licences
                                     .FirstOrDefault(l => l.LinkedLicences.Any(ll =>
-                                        ll.LicenceNumber == missingLinkedLicenceNumber))?
+                                        ll.LicenceNumber == missingLinkedLicenceNumber));
+                                
+                                var missingLinkedLicence = missingLinkedLicenceStep1?
                                     .LinkedLicences
                                     .FirstOrDefault(ll => ll.LicenceNumber == missingLinkedLicenceNumber);
 
@@ -2512,22 +2514,26 @@ public static class AbstractionLicenceSchemaConverter
                                     // TODO look in to how this can happen / log
                                     return null;
                                 }
-                                    
-                                return new LinkedLicence
+                                
+                                // 1/25/03/031/R02 is a rare (only?) case of this
+                                
+                                var containedIn = missingLinkedLicence.ContainedIn!
+                                    .Select(ci =>
+                                    {
+                                        var cloned = ci.Clone();
+                                        cloned.Direction = InformationDirection.InSameGroup;
+                                        cloned.SourceLicence = missingLinkedLicenceStep1!.LicenceNumber?.Value;
+                                        
+                                        return cloned;
+                                    })
+                                    .ToArray();
+                                
+                                 return new LinkedLicence
                                 {
                                     LicenceNumber = missingLinkedLicenceNumber,
                                     RegionId = licenceSetLicence.RegionId,
                                     IsBecauseOfAggregate = true,
-                                    ContainedIn =
-                                    [
-                                        new ContainedInInformation
-                                        {
-                                            Direction = InformationDirection.InSameGroup,
-                                            Source = InformationSource.OtherDocument,
-                                            SectionName = missingLinkedLicence.ContainedIn![0].SectionName,
-                                            LinkReason = missingLinkedLicence.ContainedIn![0].LinkReason
-                                        }
-                                    ]
+                                    ContainedIn = containedIn
                                 };
                             })
                             .Where(x => x != null)

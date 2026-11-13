@@ -5,8 +5,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// Flattening a variation's own variations up into its parent's list. These state current
-/// behaviour, not desired behaviour.
+/// Flattening a variation's own variations up into its parent's list.
 /// </summary>
 public class SquashTwoLevelVariationsTests
 {

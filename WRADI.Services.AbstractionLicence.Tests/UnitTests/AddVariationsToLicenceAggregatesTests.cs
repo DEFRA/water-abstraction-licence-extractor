@@ -7,7 +7,7 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
 /// Cross-licence variation building: one licence's aggregate picking up another licence's
-/// equivalent aggregate as a variation. These state current behaviour, not desired behaviour.
+/// equivalent aggregate as a variation.
 /// </summary>
 public class AddVariationsToLicenceAggregatesTests
 {

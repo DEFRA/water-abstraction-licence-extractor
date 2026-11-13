@@ -4,8 +4,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// Gathering a group of licences' aggregates into one list for the set that holds them. These
-/// state current behaviour, not desired behaviour.
+/// Gathering a group of licences' aggregates into one list for the set that holds them.
 /// </summary>
 public class GetAggregatesTests
 {

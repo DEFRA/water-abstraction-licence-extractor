@@ -6,7 +6,7 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
 /// The three assertions that guard a licence's aggregates. They throw rather than return, so a
-/// violation fails the file. These state current behaviour, not desired behaviour.
+/// violation fails the file.
 /// </summary>
 public class AggregateInvariantTests
 {

@@ -6,8 +6,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// The three places a duplicate is collapsed rather than asserted on. These state current
-/// behaviour, not desired behaviour.
+/// The three places a duplicate is collapsed rather than asserted on.
 /// </summary>
 public class AggregateDeDuplicationTests
 {

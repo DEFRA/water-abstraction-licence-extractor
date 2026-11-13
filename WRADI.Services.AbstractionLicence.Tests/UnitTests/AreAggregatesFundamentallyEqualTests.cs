@@ -4,12 +4,8 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// AreAggregatesFundamentallyEqual decides whether two aggregates are the same aggregate, which is
-/// what stops one abstraction limit being counted twice across the licences that share it. It had
-/// no direct coverage because it was private.
-///
-/// These state current behaviour. The cross-source rule is the one that matters and the one a
-/// reader would not guess from the call site.
+/// Deciding that two aggregates are the same one is what stops an abstraction limit being
+/// counted twice across the licences that share it.
 /// </summary>
 public class AreAggregatesFundamentallyEqualTests
 {

@@ -6,8 +6,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// Pushing a licence set's aggregates back down onto the licences the set names. These state
-/// current behaviour, not desired behaviour.
+/// Pushing a licence set's aggregates back down onto the licences the set names.
 /// </summary>
 public class UpdateLicenceAggregatesFromLicenceSetsTests
 {

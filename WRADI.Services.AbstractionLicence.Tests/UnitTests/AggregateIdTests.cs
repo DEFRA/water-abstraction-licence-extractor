@@ -4,8 +4,7 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
 /// Aggregate.Id is what DeDuplicateAggregates dedupes on and AssertNoDuplicateAggregates groups
-/// by, so two aggregates sharing an Id are treated as one. These state current behaviour, not
-/// desired behaviour.
+/// by, so two aggregates sharing an Id are treated as one.
 /// </summary>
 public class AggregateIdTests
 {

@@ -5,8 +5,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// Which of a set of candidates counts as covering a given aggregate or licence set. These state
-/// current behaviour, not desired behaviour.
+/// Which of a set of candidates counts as covering a given aggregate or licence set.
 /// </summary>
 public class GetSupersetsTests
 {
@@ -68,8 +67,7 @@ public class GetSupersetsTests
         Assert.Equal(60, candidate.GetCombinedLimitValue());
     }
 
-    // WRADI-547. GetCombinedLimitValue returns int, so summing candidates whose totals each
-    // saturate at int.MaxValue overflows before any candidate is judged.
+    // WRADI-547. Summing GetCombinedLimitValue's int throws before any candidate is returned.
     [Fact]
     public void WhenTheCandidatesTotalsExceedIntMax_ThenItThrows()
     {

@@ -23,9 +23,9 @@ public class FilesController(IFileService fileService) : Controller
         {
             var bytes = await fileService.GetFileAsBytesAsync(filename, chunkIndex, chunkSize);
             
-            if (bytes == null)
+            if (bytes == null || bytes.Length == 0)
             {
-                throw new Exception("No data found");
+                return NotFound();
             }
             
             return File(bytes, "application/octet-stream");
@@ -35,7 +35,7 @@ public class FilesController(IFileService fileService) : Controller
 
         if (data == null)
         {
-            throw new Exception("Stream is null");
+            return NotFound();
         }
         
         return File(data, IngressFormats.ContentTypeForFile(filename));

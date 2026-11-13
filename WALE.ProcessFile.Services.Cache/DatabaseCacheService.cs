@@ -96,8 +96,12 @@ public class DatabaseCacheService(
             request.ImageNumber!.Value,
             request.Extension!);
 
-        return await imageService.DownloadAsync(s3Key)
-            ?? await databaseReadService.GetImageBytesAsync(request);
+        var fromS3 = await imageService.DownloadAsync(s3Key);
+
+        // ?? falls through only on null, so an empty download would skip the database copy.
+        return fromS3 is { Length: > 0 }
+            ? fromS3
+            : await databaseReadService.GetImageBytesAsync(request);
     }
 
     public Task<string?> GetNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request)

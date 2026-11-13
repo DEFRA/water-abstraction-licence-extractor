@@ -49,7 +49,9 @@ public class ImagesController(
                 Extension = extension
             });
 
-        if (bytes == null)
+        // A zero-length body reaches Pix.LoadFromMemory in the caller, which can only report it
+        // as "bytes can't be null or empty".
+        if (bytes == null || bytes.Length == 0)
         {
             return NotFound();
         }

@@ -214,6 +214,52 @@ public class PdfDataExtractorService(
         return (true, null);
     }
 
+    /// A cached document returns before its screenshots are rendered, so a page that falls back
+    /// to them can find none stored - locally about one cached file in ten holds any. The render
+    /// is kept, so this cost is paid once per page and not on later runs.
+    private async Task EnsurePageScreenshotExistsAsync(
+        PdfDocument pdfDocument,
+        int pageNumber,
+        int processRunId)
+    {
+        try
+        {
+            var stored = await outputService.GetPageScreenshotDataAsync(
+                pageNumber,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                pdfDocument.FileId);
+
+            if (stored.Any(bytes => bytes is { Length: > 0 }))
+            {
+                return;
+            }
+        }
+        catch (Exception exception)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - could not read a stored "
+                + $"screenshot for page {pageNumber} - {exception.Message}");
+        }
+
+        try
+        {
+            await outputService.SavePageScreenshotAsync(
+                pdfDocument,
+                pageNumber,
+                GeneralConstants.PdfPigDataExtractorServiceName,
+                pdfDocument.FileId,
+                processRunId);
+
+            ConsoleHelper.WriteLine($"INFO - {nameof(PdfDataExtractorService)} - rendered the missing "
+                + $"screenshot for page {pageNumber} - {pdfDocument.PdfFilename}");
+        }
+        catch (Exception exception)
+        {
+            // The page still has its embedded images to fall back on, so a failure here is not fatal.
+            ConsoleHelper.WriteLine($"ERROR - {nameof(PdfDataExtractorService)} - could not render a "
+                + $"screenshot for page {pageNumber} - {exception.Message}");
+        }
+    }
+
     private async Task<MatchesResult> GetMatchesInternalAsync(
         string pdfFileName,
         Guid fileId,
@@ -535,7 +581,9 @@ public class PdfDataExtractorService(
             {
                 ConsoleHelper.WriteLine($"INFO - Page {pageNumber} had more then 10 images, swapping to screenshot" +
                     $" - {pdfDocument.PdfFilename}");
-                
+
+                await EnsurePageScreenshotExistsAsync(pdfDocument, pageNumber, processRunId);
+
                 pageImages = page.ScreenshotReferences
                     .Select(sr => sr.ImageReference)
                     .ToList()!;

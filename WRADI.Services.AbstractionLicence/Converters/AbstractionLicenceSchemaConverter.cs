@@ -1931,11 +1931,27 @@ public static class AbstractionLicenceSchemaConverter
     private static List<LicenceSet> RemoveSingleLicenceSetsWhenOthersPresent(IEnumerable<LicenceSet> licenceSets)
     {
         var licenceSetsList = licenceSets.ToList();
-        var noneSingleSets = licenceSetsList
+
+        foreach (var licenceSet in licenceSetsList)
+        {
+            foreach (var licence in licenceSet.Licences)
+            {
+                var licenceNoneSingleSets = licence.LicenceSets
+                    .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
+                    .ToArray();
+
+                if (licenceNoneSingleSets.Length >= 1)
+                {
+                    licence.LicenceSets = licenceNoneSingleSets.ToArray();
+                }
+            }
+        }
+        
+        var allNoneSingleSets = licenceSetsList
             .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
             .ToList();
         
-        return noneSingleSets.Count >= 1 ? noneSingleSets : licenceSetsList;
+        return allNoneSingleSets.Count >= 1 ? allNoneSingleSets : licenceSetsList;
     }
 
     private static void DeDuplicateAggregates(IEnumerable<Licence> licences)

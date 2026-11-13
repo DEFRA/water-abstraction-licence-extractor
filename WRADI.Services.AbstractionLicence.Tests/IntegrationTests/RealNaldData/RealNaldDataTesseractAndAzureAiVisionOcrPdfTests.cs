@@ -519,11 +519,9 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("1/21/00/001", primaryLicence.LinkedLicences[0].LicenceNumber);
         Assert.Equal("1/21/00/052", primaryLicence.LinkedLicences[1].LicenceNumber);
         
-        Assert.Equal(2, primaryLicence.LicenceSets.Length);
-        Assert.Equal("12203007", primaryLicence.LicenceSets[0].LicenceSetId);
-        Assert.Equal(LicenceSetType.SingleLicenceOnly, primaryLicence.LicenceSets[0].LicenceSetType);
-        Assert.Equal("12100001-12100052-12203007", primaryLicence.LicenceSets[1].LicenceSetId);
-        Assert.Equal(LicenceSetType.Others, primaryLicence.LicenceSets[1].LicenceSetType);
+        Assert.Single(primaryLicence.LicenceSets);
+        Assert.Equal("12100001-12100052-12203007", primaryLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.Others, primaryLicence.LicenceSets[0].LicenceSetType);
         
         var licence2 = licenceSets[0].Licences[1];
         Assert.Equal("1/21/00/001", licence2.LicenceNumber!.Value);

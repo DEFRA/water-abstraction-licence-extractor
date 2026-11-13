@@ -115,7 +115,13 @@ jobs:
           GIT_LICENSE="${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.licenses'] }}"
 
           echo "Building Docker image $IMAGE_NAME:$IMAGE_TAG"
+          # Lambda rejects an OCI image index and provenance attestations, which Docker
+          # Engine v29+ adds by default - the deploy fails on the manifest media type while
+          # this workflow still reports success. All three functions are x86_64.
           docker build \
+            --platform linux/amd64 \
+            --provenance=false \
+            --sbom=false \
             --file ./WRADI.Lambda.LicenceFinder.EntryPoint/Dockerfile \
             --build-arg GIT_COMMIT="$GIT_COMMIT" \
             --label org.opencontainers.image.source="$GIT_URL" \

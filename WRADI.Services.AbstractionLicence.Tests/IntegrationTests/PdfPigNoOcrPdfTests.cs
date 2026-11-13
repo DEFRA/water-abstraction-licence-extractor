@@ -11,6 +11,7 @@ using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.PdfPig;
 using WALE.ProcessFile.Services.Services;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Database.PostgreSQL.AbstractionLicence.Services;
@@ -124,7 +125,7 @@ public class PdfPigNoOcrPdfTests
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -132,10 +133,13 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence);
-        Assert.Equal(3, abstractionLicence.First().Licences.Length);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Others, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetType);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Equal(3, licenceSets.Last().Licences.Length);
+        
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0023/036", licence.LicenceNumber!.Value);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);
@@ -246,7 +250,7 @@ public class PdfPigNoOcrPdfTests
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -254,10 +258,12 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Single(licenceSets.First().Licences);
+        
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0024/095/R01", licence.LicenceNumber!.Value);
 
         Assert.Null(licence.AbstractionLimits.Individual);
@@ -274,7 +280,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("6.4", licence.AbstractionLimits.Aggregates[4].DocumentIdentifier);
         
         Assert.NotNull(licence.LinkedLicences);
-        Assert.Empty(licence.LinkedLicences);
+        Assert.Single(licence.LinkedLicences);
     }
     
     [Fact]
@@ -327,7 +333,7 @@ public class PdfPigNoOcrPdfTests
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -335,10 +341,14 @@ public class PdfPigNoOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Equal(2, abstractionLicence.Count);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(3, licenceSets.Count);
+        Assert.Equal(LicenceSetType.SingleLicenceOnly, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[2].LicenceSetType);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        Assert.Single(licenceSets.First().Licences);
+        
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("NE/027/0028/068", licence.LicenceNumber!.Value);
 
         Assert.NotNull(licence.AbstractionLimits.Individual);

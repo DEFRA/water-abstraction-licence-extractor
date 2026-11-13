@@ -23,7 +23,6 @@ public static class LinkReason
     public const string AggregateCondition = "AggregateCondition";
     public const string ShallNotExceed = "ShallNotExceed";
     public const string Supporting = "Supporting";
-    public const string OriginalLicence = "OriginalLicence";
     public const string TransferredToThis = "TransferredToThis";
     public const string Coincident = "Coincident";
     public const string ShallBeSupported = "ShallBeSupported";
@@ -39,10 +38,23 @@ public static class LinkReason
     public const string IssuedSeparately = "IssuedSeparately";
     public const string LicenceHasBeenSplit = "LicenceHasBeenSplit";
     public const string MinorVariation = "MinorVariation";
+    public const string OriginalLicence = "OriginalLicence";
     public const string Successor = "Successor";
     public const string Predecessor = "Predecessor";
     public const string Empty = "N/A";
 
+    public static bool IsLineageRelated(string? linkReason)
+    {
+        if (string.IsNullOrWhiteSpace(linkReason))
+        {
+            return false;
+        }
+
+        return linkReason is Successor 
+            or Predecessor
+            or OriginalLicence;
+    }
+    
     public static IReadOnlyCollection<string> GetAll()
     {
         return typeof(LinkReason)

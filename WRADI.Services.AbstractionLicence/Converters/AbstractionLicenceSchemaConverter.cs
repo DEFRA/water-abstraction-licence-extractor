@@ -333,6 +333,8 @@ public static class AbstractionLicenceSchemaConverter
                 lookupConfiguration,
                 naldDataLookupService);
 
+        linkedLicences.AddRange(licenceHistoryLinkedLicences);
+        
         linkedLicences = await ConsolidateLinkedLicencesAsync(
             linkedLicences,
             licenceNumber!,
@@ -423,6 +425,12 @@ public static class AbstractionLicenceSchemaConverter
                         .FirstOrDefault(lhll => lhll.LicenceNumber == l.LicenceNumber);
 
                     if (licenceHistoryLicence == null)
+                    {
+                        continue;
+                    }
+
+                    if (l.ContainedIn?.Any(
+                        ci => AreContainedInFundamentallyEqual(ci, licenceHistoryLicence.ContainedIn![0])) == true)
                     {
                         continue;
                     }
@@ -635,6 +643,17 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
+    private static bool AreContainedInFundamentallyEqual(
+        ContainedInInformation containedIn1,
+        ContainedInInformation containedIn2)
+    {
+        return containedIn1.SectionName == containedIn2.SectionName
+            && containedIn1.LinkReason == containedIn2.LinkReason
+            && containedIn1.LineNumber == containedIn2.LineNumber
+            && containedIn1.PageNumber == containedIn2.PageNumber
+            && containedIn1.Source == containedIn2.Source;            
+    }
+    
     private static List<NaldLicenceNumberHistoryOutput> ExtendedHistory(
         LinkedLicence linkedLicence,
         List<NaldLicenceNumberHistory> history)
@@ -1723,9 +1742,21 @@ public static class AbstractionLicenceSchemaConverter
         {
             var otherLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
             otherLicences.AddRange(licenceNotInAnySetGroup.Value
-                .Where(l => !IsEitherPredecessorOrSuccessor(
-                    l.LicenceNumber?.Value,
-                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+                .Where(l =>
+                {
+                    var primaryLicenceLinkedLicenceMatch = primaryLicence.LinkedLicences
+                        .Where(ll => ll.LicenceNumber == l.LicenceNumber?.Value)
+                        .SelectMany(ll => ll.ContainedIn ?? [])
+                        .ToList();
+
+                    var containedInIsLineageRelated = primaryLicenceLinkedLicenceMatch.Any(
+                        ll => LinkReason.IsLineageRelated(ll.LinkReason));
+                    
+                    return !containedInIsLineageRelated
+                        && !IsEitherPredecessorOrSuccessor(
+                            l.LicenceNumber?.Value,
+                            licenceNotInAnySetGroup.Key.LicenceVersion);
+                }));
             
             // De-dupe, preferring full scrapes
             otherLicences = otherLicences
@@ -1747,9 +1778,21 @@ public static class AbstractionLicenceSchemaConverter
             
             var historyLicences = new List<Licence> { licenceNotInAnySetGroup.Key };
             historyLicences.AddRange(licenceNotInAnySetGroup.Value
-                .Where(l => IsEitherPredecessorOrSuccessor(
-                    l.LicenceNumber?.Value,
-                    licenceNotInAnySetGroup.Key.LicenceVersion)));
+                .Where(l =>
+                {
+                    var primaryLicenceLinkedLicenceMatch = primaryLicence.LinkedLicences
+                        .Where(ll => ll.LicenceNumber == l.LicenceNumber?.Value)
+                        .SelectMany(ll => ll.ContainedIn ?? [])
+                        .ToList();
+
+                    var containedInIsLineageRelated = primaryLicenceLinkedLicenceMatch.Any(
+                        ll => LinkReason.IsLineageRelated(ll.LinkReason));
+                    
+                    return containedInIsLineageRelated
+                        || IsEitherPredecessorOrSuccessor(
+                            l.LicenceNumber?.Value,
+                            licenceNotInAnySetGroup.Key.LicenceVersion);
+                }));
             
             // De-dupe, preferring full scrapes
             historyLicences = historyLicences
@@ -1869,7 +1912,7 @@ public static class AbstractionLicenceSchemaConverter
             AssertNoDuplicateLicences(returnLicenceSet.Licences);
         }
 
-        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
 
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
@@ -2064,7 +2107,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void FixNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
+    private static void FixNoLicenceSetWithoutLicenceHavingLinkedLicence(IEnumerable<Licence> licences)
     {
         var allLicences = licences.ToList();
         
@@ -6707,7 +6750,7 @@ public static class AbstractionLicenceSchemaConverter
             .SelectMany(lsg => lsg.Licences)
             .ToList();
         
-        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
         distinctLicenceSets.AddRange(
@@ -6718,7 +6761,7 @@ public static class AbstractionLicenceSchemaConverter
 
         AddImplicitExplicitAndEncompassingLicenceSets(licenceSetGroups, distinctLicenceSets);
         
-        FixNoLicenceSetWithoutLinkedLicence(allLicences);
+        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         AssertNoLicenceSetWithoutLinkedLicence(allLicences);
         
         RemoveDuplicateVariations(allLicences);

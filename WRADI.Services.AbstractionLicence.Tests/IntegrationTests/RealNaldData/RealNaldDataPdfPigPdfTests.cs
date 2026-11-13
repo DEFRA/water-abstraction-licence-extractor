@@ -301,8 +301,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             NaldDataLookupService);
         
         Assert.Equal(3, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[2].LicenceSetType);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.Others, licenceSets[2].LicenceSetType);
         
         Assert.Single(licenceSets.First().Licences);
         
@@ -454,7 +454,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         var config = await LookupConfigurationAsync(regionCode, TestConfig.PdfFolder);
         
-        var abstractionLicence = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
@@ -462,10 +462,12 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             AbsLicCacheService,
             NaldDataLookupService);
         
-        Assert.Single(abstractionLicence);
-        Assert.Single(abstractionLicence.First().Licences);
+        Assert.Equal(2, licenceSets.Count);
+        Assert.Equal(LicenceSetType.Lineage, licenceSets[1].LicenceSetType);
+
+        Assert.Single(licenceSets.First().Licences);
         
-        var licence =  abstractionLicence.First().Licences[0];
+        var licence =  licenceSets.First().Licences[0];
         Assert.Equal("SW/045/0002/028", licence.LicenceNumber!.Value);
         
         Assert.NotNull(licence.Points);

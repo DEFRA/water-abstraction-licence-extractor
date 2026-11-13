@@ -20,6 +20,7 @@ import ExportImportVerifications from "../components/ExportImportVerifications.t
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
 import ExportLicenceEstate from "../components/ExportLicenceEstate.tsx";
 import LicenceFinderAction from "../components/LicenceFinderAction";
+import PageNotifications from "../components/PageNotifications";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListSearchPage() {
@@ -312,6 +313,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             <div style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer'}} onClick={toHome}>&#8617;</div>
             
             <h1>
+                <PageNotifications />
                 <a
                     href="#"
                     id="licencesLink"

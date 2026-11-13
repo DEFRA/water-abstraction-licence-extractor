@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
+using WALE.Api.Interfaces;
+using WALE.Api.Services;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.Tools.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -19,7 +21,8 @@ namespace WALE.Api.Areas.BFF.Controllers;
 public class VerificationController(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     IOptions<VerificationConfig> verificationConfig,
-    IOutputService outputService) : Controller
+    IOutputService outputService,
+    IUiProcessRunService uiProcessRunService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> ExtractHistory(
@@ -238,8 +241,8 @@ public async Task<IActionResult> ImportCsvChunk(
             {
                 try
                 {
-                    await outputService
-                        .UpdateProcessRunListProjectionAsync(processRunId);
+                    await uiProcessRunService
+                        .UpdateLicenceListProcessRunAsync(processRunId);
                 }
                 catch
                 {

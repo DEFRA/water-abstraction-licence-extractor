@@ -1737,7 +1737,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnLicenceSets;
     }
 
-    private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
+    internal static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)
@@ -1785,7 +1785,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
+    internal static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
     {
         var okayLicences = licences
             .Where(l => l.Status == ScrapeStatus.Ok)
@@ -1828,7 +1828,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void FixNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
+    internal static void FixNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
     {
         var allLicences = licences.ToList();
         
@@ -1904,7 +1904,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
     
-    private static void AssertNoDuplicateLinkedLicences(string[] linkedLicences)
+    internal static void AssertNoDuplicateLinkedLicences(string[] linkedLicences)
     {
         var grouped = linkedLicences.GroupBy(l => l);
         
@@ -3189,7 +3189,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static string? GetLinkReason(List<LabelGroupResult> sections, string? textToFind)
+    internal static string? GetLinkReason(List<LabelGroupResult> sections, string? textToFind)
     {
         foreach (var section in sections)
         {
@@ -3205,7 +3205,7 @@ public static class AbstractionLicenceSchemaConverter
         return null;
     }
 
-    private static string? GetLinkReason(string? text, string? textToFind)
+    internal static string? GetLinkReason(string? text, string? textToFind)
     {
         if (string.IsNullOrEmpty(text) || (!string.IsNullOrEmpty(textToFind) && !text.Contains(textToFind)))
         {
@@ -4466,7 +4466,7 @@ public static class AbstractionLicenceSchemaConverter
         return limitPurposes;
     }
     
-    private static bool IsExcludedLinkReason(string? linkReason)
+    internal static bool IsExcludedLinkReason(string? linkReason)
     {
         return linkReason is LinkReason.SimultaneousDischargeCondition
             or LinkReason.CompensatoryDischargeCondition

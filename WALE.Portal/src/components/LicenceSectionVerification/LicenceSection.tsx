@@ -165,7 +165,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                             notes: verificationNotes
                         });
 
-                        await waleApiClient.uiCreateLicenceSectionVerification(verification);
+                        await waleApiClient.CreateLicenceSectionVerification(verification);
                     }
                 } else {
                     const verification = new LicenceSectionVerification({
@@ -181,7 +181,7 @@ export function LicenceSection({ title, itemType, children, initialOpen = false,
                         notes: verificationNotes
                     });
 
-                    await waleApiClient.uiCreateLicenceSectionVerification(verification);
+                    await waleApiClient.CreateLicenceSectionVerification(verification);
                 }
 
                 setResetKey(prev => prev + 1);

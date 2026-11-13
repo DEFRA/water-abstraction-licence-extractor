@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
@@ -21,7 +21,7 @@ public class LinkedLicenceGuardTests
             .Build();
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertOrFixNoLicenceIsLinkedToItself(
+            LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(
                 [licence],
                 fixWhenDetected: false));
     }
@@ -32,7 +32,7 @@ public class LinkedLicenceGuardTests
         var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("1/2/3", "4/5/6").Build();
         var licence = LicenceBuilder.A().Numbered("1/2/3").Holding(aggregate).Build();
 
-        AbstractionLicenceSchemaConverter.AssertOrFixNoLicenceIsLinkedToItself(
+        LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(
             [licence],
             fixWhenDetected: true);
 
@@ -47,7 +47,7 @@ public class LinkedLicenceGuardTests
             .Holding(AggregateBuilder.An().For("9/9/9").LinkedTo("1/2/3").Build())
             .Build();
 
-        AbstractionLicenceSchemaConverter.AssertOrFixNoLicenceIsLinkedToItself(
+        LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(
             [licence],
             fixWhenDetected: false);
     }
@@ -63,7 +63,7 @@ public class LinkedLicenceGuardTests
             .Holding(AggregateBuilder.An().For("1/2/3").LinkedTo("1/2/3").Build())
             .Build();
 
-        AbstractionLicenceSchemaConverter.AssertOrFixNoLicenceIsLinkedToItself(
+        LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(
             [licence],
             fixWhenDetected: false);
     }
@@ -75,7 +75,7 @@ public class LinkedLicenceGuardTests
             .Holding(AggregateBuilder.An().For("1/2/3").LinkedTo("1/2/3").Build())
             .Build();
 
-        AbstractionLicenceSchemaConverter.AssertOrFixNoLicenceIsLinkedToItself(
+        LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(
             [licence],
             fixWhenDetected: false);
     }
@@ -86,7 +86,7 @@ public class LinkedLicenceGuardTests
         var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoLicenceSetWithoutLinkedLicence([licence]));
+            LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]));
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public class LinkedLicenceGuardTests
     {
         var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123").Build();
 
-        AbstractionLicenceSchemaConverter.AssertNoLicenceSetWithoutLinkedLicence([licence]);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]);
     }
 
     // Dots, dashes, slashes and spaces come off both sides before they are compared.
@@ -107,7 +107,7 @@ public class LinkedLicenceGuardTests
             .LinkedTo(LicenceBuilder.LinkTo("4.5 6"))
             .Build();
 
-        AbstractionLicenceSchemaConverter.AssertNoLicenceSetWithoutLinkedLicence([licence]);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]);
     }
 
     // LicenceSetReference.LicenceSetId is nullable and read with a null-forgiving operator.
@@ -117,7 +117,7 @@ public class LinkedLicenceGuardTests
         var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets([null]).Build();
 
         Assert.Throws<NullReferenceException>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoLicenceSetWithoutLinkedLicence([licence]));
+            LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]));
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public class LinkedLicenceGuardTests
         other.RegionId = 3;
         other.Filename = "4-5-6.pdf";
 
-        AbstractionLicenceSchemaConverter.FixNoLicenceSetWithoutLinkedLicence([licence, other]);
+        LinkedLicenceAssertions.FixNoLicenceSetWithoutLinkedLicence([licence, other]);
 
         var added = Assert.Single(licence.LinkedLicences);
         Assert.Equal("4/5/6", added.LicenceNumber);
@@ -145,20 +145,20 @@ public class LinkedLicenceGuardTests
         var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.FixNoLicenceSetWithoutLinkedLicence([licence]));
+            LinkedLicenceAssertions.FixNoLicenceSetWithoutLinkedLicence([licence]));
     }
 
     [Fact]
     public void WhenTheSameLinkedLicenceAppearsTwice_ThenItThrows()
     {
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoDuplicateLinkedLicences(["1/2/3", "1/2/3"]));
+            LinkedLicenceAssertions.AssertNoDuplicateLinkedLicences(["1/2/3", "1/2/3"]));
     }
 
     [Fact]
     public void WhenTheLinkedLicencesAreDistinct_ThenItPasses()
     {
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateLinkedLicences(["1/2/3", "4/5/6"]);
+        LinkedLicenceAssertions.AssertNoDuplicateLinkedLicences(["1/2/3", "4/5/6"]);
     }
 
     // The duplicate check compares the numbers as written, so the same licence written two ways
@@ -166,6 +166,6 @@ public class LinkedLicenceGuardTests
     [Fact]
     public void WhenTheSameLicenceIsWrittenTwoWays_ThenItIsNotSeenAsADuplicate()
     {
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateLinkedLicences(["1/2/3", "1 2 3"]);
+        LinkedLicenceAssertions.AssertNoDuplicateLinkedLicences(["1/2/3", "1 2 3"]);
     }
 }

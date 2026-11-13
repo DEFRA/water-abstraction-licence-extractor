@@ -1,6 +1,6 @@
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -56,7 +56,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             expected,
-            AbstractionLicenceSchemaConverter.GetLinkReason($"the licence says {phrase} somewhere", null));
+            LinkReasonHelper.GetLinkReason($"the licence says {phrase} somewhere", null));
     }
 
     [Fact]
@@ -79,20 +79,20 @@ public class LinkReasonTests
     [InlineData("")]
     public void WhenThereIsNoText_ThenThereIsNoReason(string? text)
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetLinkReason(text, null));
+        Assert.Null(LinkReasonHelper.GetLinkReason(text, null));
     }
 
     [Fact]
     public void WhenTheTextMatchesNoPhrase_ThenThereIsNoReason()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetLinkReason("nothing of interest here", null));
+        Assert.Null(LinkReasonHelper.GetLinkReason("nothing of interest here", null));
     }
 
     // textToFind gates the method rather than taking part in the matching.
     [Fact]
     public void WhenTheTextDoesNotCarryTheTextToFind_ThenNoPhraseIsLookedFor()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetLinkReason(
+        Assert.Null(LinkReasonHelper.GetLinkReason(
             "this text mentions revocation",
             "a phrase that is not there"));
     }
@@ -102,7 +102,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             LinkReason.Revocation,
-            AbstractionLicenceSchemaConverter.GetLinkReason(
+            LinkReasonHelper.GetLinkReason(
                 "this text mentions revocation",
                 "mentions"));
     }
@@ -112,7 +112,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             LinkReason.AggregateCondition,
-            AbstractionLicenceSchemaConverter.GetLinkReason("AGGREGATE QUANTITY", null));
+            LinkReasonHelper.GetLinkReason("AGGREGATE QUANTITY", null));
     }
 
     // The three phrases in the list that contain another one, so the only three whose order
@@ -123,7 +123,7 @@ public class LinkReasonTests
     [InlineData("discharge and re-abstraction", LinkReason.DischargeAndReabstractionCondition)]
     public void WhenOnePhraseContainsAnother_ThenTheLongerOneIsTestedFirst(string text, string expected)
     {
-        Assert.Equal(expected, AbstractionLicenceSchemaConverter.GetLinkReason(text, null));
+        Assert.Equal(expected, LinkReasonHelper.GetLinkReason(text, null));
     }
 
     // "aggregate" is a bare word two thirds of the way down the list, so a clause that mentions
@@ -133,7 +133,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             LinkReason.AggregateCondition,
-            AbstractionLicenceSchemaConverter.GetLinkReason(
+            LinkReasonHelper.GetLinkReason(
                 "the aggregate quantity shall not exceed 100 cubic metres",
                 null));
     }
@@ -142,7 +142,7 @@ public class LinkReasonTests
     [Fact]
     public void WhenOnlySomeOfTheAugmentationPhrasesArePresent_ThenThereIsNoReason()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetLinkReason(
+        Assert.Null(LinkReasonHelper.GetLinkReason(
             "readings taken of water discharged",
             null));
     }
@@ -153,7 +153,7 @@ public class LinkReasonTests
     public void TheExcludedReasonsAreExactlyTheNineFlowAndDischargeOnes()
     {
         var excluded = LinkReason.GetAll()
-            .Where(AbstractionLicenceSchemaConverter.IsExcludedLinkReason)
+            .Where(LinkReasonHelper.IsExcludedLinkReason)
             .OrderBy(reason => reason);
 
         Assert.Equal(
@@ -175,7 +175,7 @@ public class LinkReasonTests
     [Fact]
     public void WhenThereIsNoReasonAtAll_ThenItIsNotExcluded()
     {
-        Assert.False(AbstractionLicenceSchemaConverter.IsExcludedLinkReason(null));
+        Assert.False(LinkReasonHelper.IsExcludedLinkReason(null));
     }
 
     // A DocumentLineWord refuses to hold a space, so a line is built word by word and the
@@ -205,7 +205,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             LinkReason.Revocation,
-            AbstractionLicenceSchemaConverter.GetLinkReason(
+            LinkReasonHelper.GetLinkReason(
                 [Section("nothing of interest"), Section("a revocation applies")],
                 null));
     }
@@ -215,7 +215,7 @@ public class LinkReasonTests
     {
         Assert.Equal(
             LinkReason.Revocation,
-            AbstractionLicenceSchemaConverter.GetLinkReason(
+            LinkReasonHelper.GetLinkReason(
                 [Section("a revocation applies"), Section("read in conjunction with another")],
                 null));
     }
@@ -224,7 +224,7 @@ public class LinkReasonTests
     [Fact]
     public void WhenThePhraseIsBrokenOverTwoLines_ThenItIsNotFound()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetLinkReason(
+        Assert.Null(LinkReasonHelper.GetLinkReason(
             [Section("this licence is to be used in", "conjunction with another")],
             null));
     }

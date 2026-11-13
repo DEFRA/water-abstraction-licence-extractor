@@ -6,10 +6,6 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
-/// <summary>
-/// The four guards over a licence's links: that it does not link to itself, that every licence
-/// its sets name is linked, and that no link appears twice.
-/// </summary>
 public class LinkedLicenceGuardTests
 {
     [Fact]

@@ -4,9 +4,6 @@ using WRADI.Core.AbstractionLicence.Models;
 
 namespace WRADI.DocumentType.AbstractionLicence.Helpers;
 
-/// <summary>
-/// Guards over a licence's links. Two of them repair what they find rather than throwing.
-/// </summary>
 public static class LinkedLicenceAssertions
 {
     public static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)

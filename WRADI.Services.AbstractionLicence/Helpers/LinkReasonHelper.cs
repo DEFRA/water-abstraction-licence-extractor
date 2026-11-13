@@ -25,6 +25,9 @@ public static class LinkReasonHelper
         return null;
     }
 
+    // First match wins, so the three phrases that contain a shorter one from the list have to
+    // stay above it: discharge and re-abstraction, simultaneous compensatory discharge,
+    // aggregate conditions.
     public static string? GetLinkReason(string? text, string? textToFind)
     {
         if (string.IsNullOrEmpty(text) || (!string.IsNullOrEmpty(textToFind) && !text.Contains(textToFind)))

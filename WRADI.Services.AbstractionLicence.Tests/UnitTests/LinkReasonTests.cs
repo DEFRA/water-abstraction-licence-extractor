@@ -4,10 +4,6 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
-/// <summary>
-/// The phrase a licence's text has to carry for it to count as linked to another, and which of
-/// those phrases is then thrown away again.
-/// </summary>
 public class LinkReasonTests
 {
     // In the order the branches are tested: the order is what settles a text carrying two of them.

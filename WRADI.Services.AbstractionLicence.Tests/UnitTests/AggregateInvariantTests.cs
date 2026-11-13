@@ -5,8 +5,7 @@ using WRADI.Services.AbstractionLicence.Tests.Helper;
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
 /// <summary>
-/// The three assertions that guard a licence's aggregates. They throw rather than return, so a
-/// violation fails the file.
+/// The three assertions that guard a licence's aggregates.
 /// </summary>
 public class AggregateInvariantTests
 {

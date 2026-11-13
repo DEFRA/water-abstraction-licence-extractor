@@ -94,7 +94,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                    data::jsonb -> 'licenceVersion' ->> 'issuer' AS issuer
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
               AND NULLIF(
                     trim(data::jsonb -> 'licenceVersion' ->> 'issuer'),
                     ''

@@ -164,7 +164,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                    data::jsonb -> 'licenceVersion' ->> 'issuer' AS issuer
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
               AND NULLIF(
                     trim(data::jsonb -> 'licenceVersion' ->> 'issuer'),
                     ''
@@ -455,7 +455,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                    LEFT(data::jsonb -> 'licenceVersion' ->> 'issueDate', 4) AS issue_year
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
               AND NULLIF(
                     trim(data::jsonb -> 'licenceVersion' ->> 'issueDate'),
                     ''
@@ -689,7 +689,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             SELECT count(*)
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -1293,7 +1293,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             FROM licence
             WHERE
                 process_run_id = @ProcessRunId
-                AND data::jsonb ->> 'status' = 'Ok'
+                AND status = 'Ok'
             """);
 
         var parameters = new DynamicParameters();

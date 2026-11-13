@@ -1,6 +1,6 @@
 using WALE.ProcessFile.Core.Constants;
-using WALE.ProcessFile.Core.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -178,35 +178,16 @@ public class LinkReasonTests
         Assert.False(LinkReasonHelper.IsExcludedLinkReason(null));
     }
 
-    // A DocumentLineWord refuses to hold a space, so a line is built word by word and the
-    // column joins them back with one.
-    private static LabelGroupResult Section(params string[] lines) => new()
-    {
-        Text = lines
-            .Select(line => new DocumentLine
-            {
-                Columns =
-                [
-                    new DocumentLineColumn(line
-                        .Split(' ')
-                        .Select(word => new DocumentLineWord(
-                            word,
-                            null,
-                            DocumentLineWordCoordinates.NotKnown(),
-                            null))
-                        .ToList())
-                ]
-            })
-            .ToList()
-    };
-
     [Fact]
     public void WhenTheFirstSectionYieldsNothing_ThenTheNextOneIsRead()
     {
         Assert.Equal(
             LinkReason.Revocation,
             LinkReasonHelper.GetLinkReason(
-                [Section("nothing of interest"), Section("a revocation applies")],
+                [
+                    SectionBuilder.A().WithLines("nothing of interest").Build(),
+                    SectionBuilder.A().WithLines("a revocation applies").Build()
+                ],
                 null));
     }
 
@@ -216,7 +197,10 @@ public class LinkReasonTests
         Assert.Equal(
             LinkReason.Revocation,
             LinkReasonHelper.GetLinkReason(
-                [Section("a revocation applies"), Section("read in conjunction with another")],
+                [
+                    SectionBuilder.A().WithLines("a revocation applies").Build(),
+                    SectionBuilder.A().WithLines("read in conjunction with another").Build()
+                ],
                 null));
     }
 
@@ -225,7 +209,11 @@ public class LinkReasonTests
     public void WhenThePhraseIsBrokenOverTwoLines_ThenItIsNotFound()
     {
         Assert.Null(LinkReasonHelper.GetLinkReason(
-            [Section("this licence is to be used in", "conjunction with another")],
+            [
+                SectionBuilder.A()
+                    .WithLines("this licence is to be used in", "conjunction with another")
+                    .Build()
+            ],
             null));
     }
 }

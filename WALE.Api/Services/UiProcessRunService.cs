@@ -43,7 +43,7 @@ public class UiProcessRunService(
         }
         catch (Exception e)
         {
-            ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - ERROR - started - processRunId-{processRunId} with {e.Message}");
+            ConsoleHelper.WriteLine($"UpdateLicenceListProcessRunAsync - ERROR -  processRunId-{processRunId} with {e}");
 
             await NotifyFailedAsync(processRunId);
             throw;

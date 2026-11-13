@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -40,7 +40,7 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenNoVariationIsNested_ThenTheListComesBackUnchanged()
     {
-        var squashed = AbstractionLicenceSchemaConverter.SquashTwoLevelVariations(
+        var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
             [Variation("1/2/3"), Variation("4/5/6")]);
 
         Assert.Equal(2, squashed.Count);
@@ -52,7 +52,7 @@ public class SquashTwoLevelVariationsTests
         var parent = Variation("1/2/3");
         parent.Variations = [Variation("4/5/6")];
 
-        var squashed = AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([parent]);
+        var squashed = AggregateVariationHelper.SquashTwoLevelVariations([parent]);
 
         Assert.Equal(2, squashed.Count);
         Assert.Null(parent.Variations);
@@ -64,7 +64,7 @@ public class SquashTwoLevelVariationsTests
         var parent = Variation("1/2/3");
         parent.Variations = [Variation("4/5/6")];
 
-        var squashed = AbstractionLicenceSchemaConverter.SquashTwoLevelVariations(
+        var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
             [parent, Variation("4/5/6")]);
 
         Assert.Equal(2, squashed.Count);
@@ -81,7 +81,7 @@ public class SquashTwoLevelVariationsTests
         var secondParent = Variation("4/5/6");
         secondParent.Variations = [Variation("7/8/9")];
 
-        var squashed = AbstractionLicenceSchemaConverter.SquashTwoLevelVariations(
+        var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
             [firstParent, secondParent]);
 
         Assert.Equal(2, squashed.Count(v => v.SourceLicenceNumber == "7/8/9"));
@@ -100,7 +100,7 @@ public class SquashTwoLevelVariationsTests
         var parent = Variation("1/2/3");
         parent.Variations = [child];
 
-        var squashed = AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([parent]);
+        var squashed = AggregateVariationHelper.SquashTwoLevelVariations([parent]);
 
         Assert.Equal(2, squashed.Count);
         Assert.Same(grandchild, Assert.Single(child.Variations!));
@@ -114,7 +114,7 @@ public class SquashTwoLevelVariationsTests
 
         var aggregate = Aggregate(parent);
 
-        AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([Licence(ScrapeStatus.Ok, aggregate)]);
+        AggregateVariationHelper.SquashTwoLevelVariations([Licence(ScrapeStatus.Ok, aggregate)]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }
@@ -130,7 +130,7 @@ public class SquashTwoLevelVariationsTests
 
         var aggregate = Aggregate(parent);
 
-        AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([Licence(status, aggregate)]);
+        AggregateVariationHelper.SquashTwoLevelVariations([Licence(status, aggregate)]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }
@@ -144,7 +144,7 @@ public class SquashTwoLevelVariationsTests
             AbstractionLimits = new AbstractionLimits { Aggregates = null }
         };
 
-        AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([licence]);
+        AggregateVariationHelper.SquashTwoLevelVariations([licence]);
 
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }
@@ -166,7 +166,7 @@ public class SquashTwoLevelVariationsTests
             AggregateSets = [setAggregate]
         };
 
-        AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([licenceSet]);
+        AggregateVariationHelper.SquashTwoLevelVariations([licenceSet]);
 
         Assert.Equal(2, licenceAggregate.Variations!.Length);
         Assert.Equal(2, setAggregate.Variations!.Length);
@@ -185,7 +185,7 @@ public class SquashTwoLevelVariationsTests
             AggregateSets = null
         };
 
-        AbstractionLicenceSchemaConverter.SquashTwoLevelVariations([licenceSet]);
+        AggregateVariationHelper.SquashTwoLevelVariations([licenceSet]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }

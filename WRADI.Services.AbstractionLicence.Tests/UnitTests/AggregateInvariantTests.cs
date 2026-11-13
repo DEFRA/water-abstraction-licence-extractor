@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -39,21 +39,21 @@ public class AggregateInvariantTests
     public void WhenAnOkLicenceHasTwoAggregatesWithTheSameId_ThenItThrows()
     {
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoDuplicateAggregates(
+            AggregateAssertions.AssertNoDuplicateAggregates(
                 [Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"))]));
     }
 
     [Fact]
     public void WhenTheAggregatesDiffer_ThenItPasses()
     {
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateAggregates(
+        AggregateAssertions.AssertNoDuplicateAggregates(
             [Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("4/5/6"))]);
     }
 
     [Fact]
     public void WhenALicenceHasNoAggregates_ThenItPasses()
     {
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateAggregates(
+        AggregateAssertions.AssertNoDuplicateAggregates(
         [
             new Licence
             {
@@ -70,7 +70,7 @@ public class AggregateInvariantTests
         aggregate.Variations = [Variation("9/9/9"), Variation("9/9/9")];
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoDuplicateVariations(
+            AggregateAssertions.AssertNoDuplicateVariations(
                 [Licence(ScrapeStatus.Ok, aggregate)]));
     }
 
@@ -84,10 +84,10 @@ public class AggregateInvariantTests
         var aggregate = Aggregate("1/2/3");
         aggregate.Variations = [Variation("9/9/9"), Variation("9/9/9")];
 
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateAggregates(
+        AggregateAssertions.AssertNoDuplicateAggregates(
             [Licence(status, Aggregate("1/2/3"), Aggregate("1/2/3"))]);
 
-        AbstractionLicenceSchemaConverter.AssertNoDuplicateVariations([Licence(status, aggregate)]);
+        AggregateAssertions.AssertNoDuplicateVariations([Licence(status, aggregate)]);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class AggregateInvariantTests
         aggregate.Variations = [nested];
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoMultipleLevelVariations(
+            AggregateAssertions.AssertNoMultipleLevelVariations(
                 [Licence(ScrapeStatus.Ok, aggregate)]));
     }
 
@@ -116,7 +116,7 @@ public class AggregateInvariantTests
         aggregate.Variations = [nested];
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AssertNoMultipleLevelVariations(
+            AggregateAssertions.AssertNoMultipleLevelVariations(
                 [Licence(ScrapeStatus.Error, aggregate)]));
     }
 
@@ -129,7 +129,7 @@ public class AggregateInvariantTests
         var aggregate = Aggregate("1/2/3");
         aggregate.Variations = [empty];
 
-        AbstractionLicenceSchemaConverter.AssertNoMultipleLevelVariations(
+        AggregateAssertions.AssertNoMultipleLevelVariations(
             [Licence(ScrapeStatus.Ok, aggregate)]);
     }
 }

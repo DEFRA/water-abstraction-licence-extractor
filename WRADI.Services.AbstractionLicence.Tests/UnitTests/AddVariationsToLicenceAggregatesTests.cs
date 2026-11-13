@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -32,7 +32,7 @@ public class AddVariationsToLicenceAggregatesTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"]);
         var mirrored = Aggregate("4/5/6", ["1/2/3"]);
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(ScrapeStatus.Ok, aggregate),
             Licence(ScrapeStatus.Ok, mirrored)
@@ -49,7 +49,7 @@ public class AddVariationsToLicenceAggregatesTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"]);
         var unrelated = Aggregate("7/8/9", ["0/0/0"]);
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(ScrapeStatus.Ok, aggregate),
             Licence(ScrapeStatus.Ok, unrelated)
@@ -66,7 +66,7 @@ public class AddVariationsToLicenceAggregatesTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"]);
         var identical = Aggregate("1/2/3", ["4/5/6"]);
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(ScrapeStatus.Ok, aggregate),
             Licence(ScrapeStatus.Ok, identical)
@@ -86,7 +86,7 @@ public class AddVariationsToLicenceAggregatesTests
             AggregateVariation.FromAggregate(mirrored, "already here")
         ];
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(ScrapeStatus.Ok, aggregate),
             Licence(ScrapeStatus.Ok, mirrored)
@@ -105,7 +105,7 @@ public class AddVariationsToLicenceAggregatesTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"]);
         var mirrored = Aggregate("4/5/6", ["1/2/3"]);
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(status, aggregate),
             Licence(status, mirrored)
@@ -119,7 +119,7 @@ public class AddVariationsToLicenceAggregatesTests
     {
         var aggregate = Aggregate("1/2/3", ["4/5/6"]);
 
-        AbstractionLicenceSchemaConverter.AddVariationsToLicenceAggregates(
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(
         [
             Licence(ScrapeStatus.Ok, aggregate),
             new Licence

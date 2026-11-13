@@ -1,5 +1,5 @@
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -24,7 +24,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenTheSourceAndLinksAndLimitsAllMatch_ThenTheyAreTheSameAggregate()
     {
-        Assert.True(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100),
             Aggregate("A", ["B"], 100)));
     }
@@ -34,7 +34,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenTheSameLimitsArriveInADifferentOrder_ThenTheyAreStillTheSameAggregate()
     {
-        Assert.True(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100, 200),
             Aggregate("A", ["B"], 200, 100)));
     }
@@ -45,7 +45,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenTheSameAggregateIsSeenFromEachLicenceInTurn_ThenItIsNotCountedTwice()
     {
-        Assert.True(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100),
             Aggregate("B", ["A"], 100)));
     }
@@ -53,7 +53,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenTheLimitValuesDiffer_ThenTheyAreDifferentAggregates()
     {
-        Assert.False(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100),
             Aggregate("A", ["B"], 999)));
     }
@@ -61,7 +61,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenOneCoversMoreLicences_ThenTheyAreDifferentAggregates()
     {
-        Assert.False(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100),
             Aggregate("A", ["B", "C"], 100)));
     }
@@ -69,7 +69,7 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenTheLinkedLicencesAreDisjoint_ThenTheyAreDifferentAggregates()
     {
-        Assert.False(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", ["B"], 100),
             Aggregate("A", ["C"], 100)));
     }
@@ -77,11 +77,11 @@ public class AreAggregatesFundamentallyEqualTests
     [Fact]
     public void WhenNeitherHasLinkedLicences_ThenTheLimitsAloneDecide()
     {
-        Assert.True(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", null, 100),
             Aggregate("A", null, 100)));
 
-        Assert.False(AbstractionLicenceSchemaConverter.AreAggregatesFundamentallyEqual(
+        Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
             Aggregate("A", null, 100),
             Aggregate("A", null, 200)));
     }

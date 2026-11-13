@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -44,7 +44,7 @@ public class GetSupersetsTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
         var candidate = Aggregate("7/8/9", ["1/2/3", "4/5/6"], 100);
 
-        var supersets = AbstractionLicenceSchemaConverter.GetSupersets(aggregate, [candidate]);
+        var supersets = AggregateHelper.GetSupersets(aggregate, [candidate]);
 
         Assert.Same(candidate, Assert.Single(supersets));
     }
@@ -55,7 +55,7 @@ public class GetSupersetsTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
         var candidate = Aggregate("7/8/9", ["4/5/6"], 100);
 
-        Assert.Empty(AbstractionLicenceSchemaConverter.GetSupersets(aggregate, [candidate]));
+        Assert.Empty(AggregateHelper.GetSupersets(aggregate, [candidate]));
     }
 
     // The candidate's licence list is built from every candidate's source licence number, not
@@ -67,7 +67,7 @@ public class GetSupersetsTests
         var candidate = Aggregate("7/8/9", ["4/5/6"], 100);
         var sibling = Aggregate("1/2/3", [], 0);
 
-        var supersets = AbstractionLicenceSchemaConverter.GetSupersets(aggregate, [candidate, sibling]);
+        var supersets = AggregateHelper.GetSupersets(aggregate, [candidate, sibling]);
 
         Assert.Same(candidate, Assert.Single(supersets));
     }
@@ -81,7 +81,7 @@ public class GetSupersetsTests
         var candidate = Aggregate("7/8/9", ["1/2/3", "4/5/6"], 60);
         var sibling = Aggregate("0/0/0", [], 40);
 
-        var supersets = AbstractionLicenceSchemaConverter.GetSupersets(aggregate, [candidate, sibling]);
+        var supersets = AggregateHelper.GetSupersets(aggregate, [candidate, sibling]);
 
         Assert.Same(candidate, Assert.Single(supersets));
         Assert.Equal(60, candidate.GetCombinedLimitValue());
@@ -95,7 +95,7 @@ public class GetSupersetsTests
         var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
 
         Assert.Throws<OverflowException>(() =>
-            AbstractionLicenceSchemaConverter.GetSupersets(
+            AggregateHelper.GetSupersets(
                 aggregate,
                 [
                     Aggregate("7/8/9", ["1/2/3", "4/5/6"], 5_000_000_000),
@@ -116,7 +116,7 @@ public class GetSupersetsTests
             ["1/2/3", "4/5/6"],
             [Aggregate("1/2/3", ["4/5/6"], 100)]);
 
-        var supersets = AbstractionLicenceSchemaConverter.GetSupersets(licenceSet, [candidate]);
+        var supersets = AggregateHelper.GetSupersets(licenceSet, [candidate]);
 
         Assert.Same(candidate, Assert.Single(supersets));
     }
@@ -134,7 +134,7 @@ public class GetSupersetsTests
             ["1/2/3", "4/5/6"],
             [Aggregate("1/2/3", ["4/5/6"], 100)]);
 
-        Assert.Empty(AbstractionLicenceSchemaConverter.GetSupersets(licenceSet, [candidate]));
+        Assert.Empty(AggregateHelper.GetSupersets(licenceSet, [candidate]));
     }
 
     [Fact]
@@ -150,7 +150,7 @@ public class GetSupersetsTests
             ["1/2/3", "4/5/6"],
             [Aggregate("1/2/3", ["4/5/6"], 60), Aggregate("4/5/6", [], 40)]);
 
-        Assert.Empty(AbstractionLicenceSchemaConverter.GetSupersets(licenceSet, [candidate]));
+        Assert.Empty(AggregateHelper.GetSupersets(licenceSet, [candidate]));
     }
 
     // A missing aggregate list is compared as zero rather than as unknown, so a set with no
@@ -166,6 +166,6 @@ public class GetSupersetsTests
             null);
 
         Assert.Same(candidate, Assert.Single(
-            AbstractionLicenceSchemaConverter.GetSupersets(licenceSet, [candidate])));
+            AggregateHelper.GetSupersets(licenceSet, [candidate])));
     }
 }

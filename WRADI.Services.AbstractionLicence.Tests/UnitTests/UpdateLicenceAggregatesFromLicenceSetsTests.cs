@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -52,7 +52,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var ownAggregate = Aggregate("1/2/3", [], 50);
         var licence = Licence("1/2/3", [LinkedTo("4/5/6")], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Equal(2, licence.AbstractionLimits.Aggregates!.Length);
@@ -66,7 +66,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var ownAggregate = Aggregate("1/2/3", ["4/5/6"]);
         var licence = Licence("1/2/3", [LinkedTo("4/5/6")], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -81,7 +81,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
 
         var licence = Licence("1/2/3", [], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Same(setAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -105,7 +105,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
             ],
             null);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence, donor], [setAggregate])]);
 
         var synthesised = Assert.Single(licence.LinkedLicences);
@@ -131,7 +131,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
             [LinkedTo("4/5/6", [new ContainedInInformation { Source = InformationSource.Document }])],
             null);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence, donor], [setAggregate])]);
 
         Assert.Same(setAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -147,7 +147,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var donor = Licence("9/9/9", [LinkedTo("4/5/6", [])], null);
 
         Assert.Throws<IndexOutOfRangeException>(() =>
-            AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+            AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
                 [LicenceSet([licence, donor], [setAggregate])]));
     }
 
@@ -160,7 +160,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var ownAggregate = Aggregate("1/2/3", [], 50);
         var licence = Licence("1 2 3", [LinkedTo("4/5/6")], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -172,7 +172,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var ownAggregate = Aggregate("1/2/3", []);
         var licence = Licence("1/2/3", [], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], null)]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -187,7 +187,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var ownAggregate = Aggregate("1/2/3", []);
         var licence = Licence("1/2/3", [], [ownAggregate]);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
@@ -199,7 +199,7 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
         var licence = Licence("1/2/3", [LinkedTo("4/5/6")], null);
 
-        AbstractionLicenceSchemaConverter.UpdateLicenceAggregatesFromLicenceSets(
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
             [LicenceSet([licence], [setAggregate])]);
 
         Assert.Null(licence.AbstractionLimits.Aggregates);

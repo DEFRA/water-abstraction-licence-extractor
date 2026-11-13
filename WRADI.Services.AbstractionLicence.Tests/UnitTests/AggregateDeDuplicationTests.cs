@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -55,7 +55,7 @@ public class AggregateDeDuplicationTests
     {
         var licence = Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         Assert.Single(licence.AbstractionLimits.Aggregates!);
     }
@@ -68,7 +68,7 @@ public class AggregateDeDuplicationTests
             Aggregate("1/2/3", ContainedIn("Schedule", 1)),
             Aggregate("1/2/3", ContainedIn("Conditions", 2)));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         var survivor = Assert.Single(licence.AbstractionLimits.Aggregates!);
         Assert.Equal(2, survivor.ContainedIn!.Length);
@@ -84,7 +84,7 @@ public class AggregateDeDuplicationTests
             Aggregate("1/2/3", ContainedIn("Schedule", 1, InformationDirection.Incoming)),
             Aggregate("1/2/3", ContainedIn("Schedule", 1, InformationDirection.Outgoing)));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         var survivor = Assert.Single(licence.AbstractionLimits.Aggregates!);
         Assert.Single(survivor.ContainedIn!);
@@ -99,7 +99,7 @@ public class AggregateDeDuplicationTests
             ScrapeStatus.Ok,
             Aggregate("1/2/3", ContainedIn("Schedule", 1), ContainedIn("Schedule", 1)));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         var only = Assert.Single(licence.AbstractionLimits.Aggregates!);
         Assert.Equal(2, only.ContainedIn!.Length);
@@ -110,7 +110,7 @@ public class AggregateDeDuplicationTests
     {
         var licence = Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         var survivor = Assert.Single(licence.AbstractionLimits.Aggregates!);
         Assert.Empty(survivor.ContainedIn!);
@@ -123,7 +123,7 @@ public class AggregateDeDuplicationTests
     {
         var licence = Licence(status, Aggregate("1/2/3"), Aggregate("1/2/3"));
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         Assert.Equal(2, licence.AbstractionLimits.Aggregates!.Length);
     }
@@ -137,7 +137,7 @@ public class AggregateDeDuplicationTests
             AbstractionLimits = new AbstractionLimits { Aggregates = null }
         };
 
-        AbstractionLicenceSchemaConverter.DeDuplicateAggregates([licence]);
+        AggregateHelper.DeDuplicateAggregates([licence]);
 
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }
@@ -145,13 +145,13 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenVariationsAreNull_ThenDeDupingThemReturnsNull()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.DeDupeVariations(null));
+        Assert.Null(AggregateVariationHelper.DeDupeVariations(null));
     }
 
     [Fact]
     public void WhenTwoVariationsShareAnId_ThenTheFirstIsKept()
     {
-        var deduped = AbstractionLicenceSchemaConverter.DeDupeVariations(
+        var deduped = AggregateVariationHelper.DeDupeVariations(
             [Variation("9/9/9", "first"), Variation("9/9/9", "second")]);
 
         var survivor = Assert.Single(deduped!);
@@ -164,7 +164,7 @@ public class AggregateDeDuplicationTests
         var aggregate = Aggregate("1/2/3");
         aggregate.Variations = [Variation("9/9/9", "first"), Variation("9/9/9", "second")];
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateVariations([Licence(ScrapeStatus.Ok, aggregate)]);
+        AggregateVariationHelper.RemoveDuplicateVariations([Licence(ScrapeStatus.Ok, aggregate)]);
 
         var survivor = Assert.Single(aggregate.Variations!);
         Assert.Equal("first", survivor.Difference);
@@ -178,7 +178,7 @@ public class AggregateDeDuplicationTests
         var aggregate = Aggregate("1/2/3");
         aggregate.Variations = [Variation("9/9/9", "first"), Variation("9/9/9", "second")];
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateVariations([Licence(status, aggregate)]);
+        AggregateVariationHelper.RemoveDuplicateVariations([Licence(status, aggregate)]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }

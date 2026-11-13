@@ -1,7 +1,6 @@
-using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,38 +10,17 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class GetSupersetsTests
 {
-    private static Aggregate Aggregate(string sourceLicence, string[] linked, double limit) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = linked,
-        Limits = [new AbstractionLimit { Value = limit }]
-    };
-
-    private static Licence Licence(string licenceNumber) => new()
-    {
-        Status = ScrapeStatus.Ok,
-        LicenceNumber = new ValueWithConfidence<string>(licenceNumber, null, null),
-        AbstractionLimits = new AbstractionLimits()
-    };
-
-    private static LicenceSet LicenceSet(
-        LicenceSetType type,
-        string[] licenceNumbers,
-        Aggregate[]? aggregateSets) =>
-        new()
-        {
-            LicenceSetType = type,
-            Licences = licenceNumbers.Select(Licence).ToArray(),
-            AggregateSets = aggregateSets
-        };
+    private static LicenceSetBuilder LicenceSetOf(params string[] licenceNumbers) =>
+        LicenceSetBuilder.A()
+            .Containing(licenceNumbers
+                .Select(licenceNumber => LicenceBuilder.A().Numbered(licenceNumber).Build())
+                .ToArray());
 
     [Fact]
     public void WhenACandidateCoversEveryLicenceAndAddsMore_ThenItIsASuperset()
     {
-        var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
-        var candidate = Aggregate("7/8/9", ["1/2/3", "4/5/6"], 100);
+        var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var candidate = AggregateBuilder.An().For("7/8/9").LinkedTo("1/2/3", "4/5/6").Build();
 
         var supersets = AggregateHelper.GetSupersets(aggregate, [candidate]);
 
@@ -52,8 +30,8 @@ public class GetSupersetsTests
     [Fact]
     public void WhenACandidateIsMissingOneOfTheLicences_ThenItIsNotASuperset()
     {
-        var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
-        var candidate = Aggregate("7/8/9", ["4/5/6"], 100);
+        var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var candidate = AggregateBuilder.An().For("7/8/9").LinkedTo("4/5/6").Build();
 
         Assert.Empty(AggregateHelper.GetSupersets(aggregate, [candidate]));
     }
@@ -63,9 +41,9 @@ public class GetSupersetsTests
     [Fact]
     public void WhenASiblingCandidateSuppliesTheMissingLicence_ThenTheCandidateCountsAsASuperset()
     {
-        var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
-        var candidate = Aggregate("7/8/9", ["4/5/6"], 100);
-        var sibling = Aggregate("1/2/3", [], 0);
+        var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var candidate = AggregateBuilder.An().For("7/8/9").LinkedTo("4/5/6").Build();
+        var sibling = AggregateBuilder.An().For("1/2/3").Limited(0).Build();
 
         var supersets = AggregateHelper.GetSupersets(aggregate, [candidate, sibling]);
 
@@ -77,9 +55,12 @@ public class GetSupersetsTests
     [Fact]
     public void WhenTheCandidatesTotalMatches_ThenACandidateOfADifferentValuePasses()
     {
-        var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
-        var candidate = Aggregate("7/8/9", ["1/2/3", "4/5/6"], 60);
-        var sibling = Aggregate("0/0/0", [], 40);
+        var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+
+        var candidate = AggregateBuilder.An()
+            .For("7/8/9").LinkedTo("1/2/3", "4/5/6").Limited(60).Build();
+
+        var sibling = AggregateBuilder.An().For("0/0/0").Limited(40).Build();
 
         var supersets = AggregateHelper.GetSupersets(aggregate, [candidate, sibling]);
 
@@ -92,29 +73,28 @@ public class GetSupersetsTests
     [Fact]
     public void WhenTheCandidatesTotalsExceedIntMax_ThenItThrows()
     {
-        var aggregate = Aggregate("1/2/3", ["4/5/6"], 100);
+        var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
 
         Assert.Throws<OverflowException>(() =>
             AggregateHelper.GetSupersets(
                 aggregate,
                 [
-                    Aggregate("7/8/9", ["1/2/3", "4/5/6"], 5_000_000_000),
-                    Aggregate("0/0/0", [], 9_000_000_000)
+                    AggregateBuilder.An()
+                        .For("7/8/9").LinkedTo("1/2/3", "4/5/6").Limited(5_000_000_000).Build(),
+                    AggregateBuilder.An().For("0/0/0").Limited(9_000_000_000).Build()
                 ]));
     }
 
     [Fact]
     public void WhenACandidateSetCoversEveryLicenceAndAddsMore_ThenItIsASuperset()
     {
-        var licenceSet = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3"],
-            [Aggregate("1/2/3", [], 100)]);
+        var licenceSet = LicenceSetOf("1/2/3")
+            .WithAggregateSets(AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
-        var candidate = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3", "4/5/6"],
-            [Aggregate("1/2/3", ["4/5/6"], 100)]);
+        var candidate = LicenceSetOf("1/2/3", "4/5/6")
+            .WithAggregateSets(AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build())
+            .Build();
 
         var supersets = AggregateHelper.GetSupersets(licenceSet, [candidate]);
 
@@ -124,15 +104,14 @@ public class GetSupersetsTests
     [Fact]
     public void WhenTheCandidateSetIsOfAnotherType_ThenItIsNotASuperset()
     {
-        var licenceSet = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3"],
-            [Aggregate("1/2/3", [], 100)]);
+        var licenceSet = LicenceSetOf("1/2/3")
+            .WithAggregateSets(AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
-        var candidate = LicenceSet(
-            LicenceSetType.SingleLicenceOnly,
-            ["1/2/3", "4/5/6"],
-            [Aggregate("1/2/3", ["4/5/6"], 100)]);
+        var candidate = LicenceSetOf("1/2/3", "4/5/6")
+            .OfType(LicenceSetType.SingleLicenceOnly)
+            .WithAggregateSets(AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build())
+            .Build();
 
         Assert.Empty(AggregateHelper.GetSupersets(licenceSet, [candidate]));
     }
@@ -140,15 +119,15 @@ public class GetSupersetsTests
     [Fact]
     public void WhenTheCandidateSetHasADifferentNumberOfAggregates_ThenItIsNotASuperset()
     {
-        var licenceSet = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3"],
-            [Aggregate("1/2/3", [], 100)]);
+        var licenceSet = LicenceSetOf("1/2/3")
+            .WithAggregateSets(AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
-        var candidate = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3", "4/5/6"],
-            [Aggregate("1/2/3", ["4/5/6"], 60), Aggregate("4/5/6", [], 40)]);
+        var candidate = LicenceSetOf("1/2/3", "4/5/6")
+            .WithAggregateSets(
+                AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Limited(60).Build(),
+                AggregateBuilder.An().For("4/5/6").Limited(40).Build())
+            .Build();
 
         Assert.Empty(AggregateHelper.GetSupersets(licenceSet, [candidate]));
     }
@@ -158,14 +137,9 @@ public class GetSupersetsTests
     [Fact]
     public void WhenNeitherSetHasAggregates_ThenTheLimitComparisonPasses()
     {
-        var licenceSet = LicenceSet(LicenceSetType.LicencesGroupedByAbstractionLimits, ["1/2/3"], null);
+        var licenceSet = LicenceSetOf("1/2/3").Build();
+        var candidate = LicenceSetOf("1/2/3", "4/5/6").Build();
 
-        var candidate = LicenceSet(
-            LicenceSetType.LicencesGroupedByAbstractionLimits,
-            ["1/2/3", "4/5/6"],
-            null);
-
-        Assert.Same(candidate, Assert.Single(
-            AggregateHelper.GetSupersets(licenceSet, [candidate])));
+        Assert.Same(candidate, Assert.Single(AggregateHelper.GetSupersets(licenceSet, [candidate])));
     }
 }

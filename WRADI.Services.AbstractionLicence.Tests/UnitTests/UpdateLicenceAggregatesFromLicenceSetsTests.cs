@@ -1,7 +1,7 @@
-using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,49 +11,20 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class UpdateLicenceAggregatesFromLicenceSetsTests
 {
-    private static Aggregate Aggregate(string sourceLicence, string[] linked, double limit = 100) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = linked,
-        Limits = [new AbstractionLimit { Value = limit }]
-    };
-
-    private static LinkedLicence LinkedTo(string licenceNumber, ContainedInInformation[]? containedIn = null) => new()
-    {
-        LicenceNumber = licenceNumber,
-        ContainedIn = containedIn
-    };
-
-    private static Licence Licence(
-        string licenceNumber,
-        LinkedLicence[] linkedLicences,
-        Aggregate[]? aggregates) =>
-        new()
-        {
-            Status = ScrapeStatus.Ok,
-            LicenceNumber = new ValueWithConfidence<string>(licenceNumber, null, null),
-            LinkedLicences = linkedLicences,
-            AbstractionLimits = new AbstractionLimits { Aggregates = aggregates }
-        };
-
-    private static LicenceSet LicenceSet(Licence[] licences, Aggregate[]? aggregateSets) => new()
-    {
-        LicenceSetType = LicenceSetType.LicencesGroupedByAbstractionLimits,
-        Licences = licences,
-        AggregateSets = aggregateSets
-    };
-
     [Fact]
     public void WhenTheLicenceAlreadyLinksToEverythingTheSetAggregateNames_ThenItGainsThatAggregate()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var ownAggregate = Aggregate("1/2/3", [], 50);
-        var licence = Licence("1/2/3", [LinkedTo("4/5/6")], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Limited(50).Build();
+
+        var licence = LicenceBuilder.A()
+            .Numbered("1/2/3")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6"))
+            .Holding(ownAggregate)
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Equal(2, licence.AbstractionLimits.Aggregates!.Length);
         Assert.Contains(setAggregate, licence.AbstractionLimits.Aggregates!);
@@ -62,12 +33,17 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheLicenceAlreadyHoldsAnEquivalentAggregate_ThenTheSetAggregateIsNotAdded()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var ownAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var licence = Licence("1/2/3", [LinkedTo("4/5/6")], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+
+        var licence = LicenceBuilder.A()
+            .Numbered("1/2/3")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6"))
+            .Holding(ownAggregate)
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
     }
@@ -75,14 +51,18 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheLicencesAggregateIsAVariationOfTheSetsAndLinksAreMissing_ThenItIsReplaced()
     {
-        var ownAggregate = Aggregate("1/2/3", []);
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        setAggregate.Variations = [AggregateVariation.FromAggregate(ownAggregate, "known variation")];
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Build();
 
-        var licence = Licence("1/2/3", [], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An()
+            .For("1/2/3")
+            .LinkedTo("4/5/6")
+            .Varying(AggregateVariation.FromAggregate(ownAggregate, "known variation"))
+            .Build();
+
+        var licence = LicenceBuilder.A().Numbered("1/2/3").Holding(ownAggregate).Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Same(setAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
     }
@@ -90,23 +70,24 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenALinkIsMissing_ThenItIsSynthesisedFromAnotherLicenceInTheSet()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var licence = Licence("1/2/3", [], [Aggregate("1/2/3", [])]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
 
-        var donor = Licence(
-            "9/9/9",
-            [
-                LinkedTo("4/5/6", [new ContainedInInformation
-                {
-                    Source = InformationSource.Document,
-                    SectionName = "Schedule",
-                    LinkReason = "named in the aggregate"
-                }])
-            ],
-            null);
+        var licence = LicenceBuilder.A()
+            .Numbered("1/2/3")
+            .Holding(AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
+
+        var donor = LicenceBuilder.A()
+            .Numbered("9/9/9")
+            .LinkedTo(LicenceBuilder.LinkTo(
+                "4/5/6",
+                [AggregateBuilder.SeenIn("Schedule", linkReason: "named in the aggregate")]))
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence, donor], [setAggregate])]);
+        [
+            LicenceSetBuilder.A().Containing(licence, donor).WithAggregateSets(setAggregate).Build()
+        ]);
 
         var synthesised = Assert.Single(licence.LinkedLicences);
         Assert.Equal("4/5/6", synthesised.LicenceNumber);
@@ -122,17 +103,20 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheSetAggregateCoversTheLicencesOwn_ThenTheOwnBecomesAVariationOfIt()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var ownAggregate = Aggregate("1/2/3", []);
-        var licence = Licence("1/2/3", [], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Build();
 
-        var donor = Licence(
-            "9/9/9",
-            [LinkedTo("4/5/6", [new ContainedInInformation { Source = InformationSource.Document }])],
-            null);
+        var licence = LicenceBuilder.A().Numbered("1/2/3").Holding(ownAggregate).Build();
+
+        var donor = LicenceBuilder.A()
+            .Numbered("9/9/9")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6", [AggregateBuilder.SeenIn()]))
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence, donor], [setAggregate])]);
+        [
+            LicenceSetBuilder.A().Containing(licence, donor).WithAggregateSets(setAggregate).Build()
+        ]);
 
         Assert.Same(setAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
         Assert.Equal(ownAggregate.Id, Assert.Single(setAggregate.Variations!).Id);
@@ -142,13 +126,26 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheDonorLinkHasNoContainedInEntries_ThenItThrows()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var licence = Licence("1/2/3", [], [Aggregate("1/2/3", [])]);
-        var donor = Licence("9/9/9", [LinkedTo("4/5/6", [])], null);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+
+        var licence = LicenceBuilder.A()
+            .Numbered("1/2/3")
+            .Holding(AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
+
+        var donor = LicenceBuilder.A()
+            .Numbered("9/9/9")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6", []))
+            .Build();
 
         Assert.Throws<IndexOutOfRangeException>(() =>
             AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-                [LicenceSet([licence, donor], [setAggregate])]));
+            [
+                LicenceSetBuilder.A()
+                    .Containing(licence, donor)
+                    .WithAggregateSets(setAggregate)
+                    .Build()
+            ]));
     }
 
     // Licences are matched on the number exactly as written, unlike Aggregate.Id, which strips
@@ -156,12 +153,17 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheLicenceNumberIsWrittenWithDifferentSeparators_ThenTheLicenceIsNotFound()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var ownAggregate = Aggregate("1/2/3", [], 50);
-        var licence = Licence("1 2 3", [LinkedTo("4/5/6")], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Limited(50).Build();
+
+        var licence = LicenceBuilder.A()
+            .Numbered("1 2 3")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6"))
+            .Holding(ownAggregate)
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
     }
@@ -169,11 +171,11 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheSetHasNoAggregateSets_ThenNothingChanges()
     {
-        var ownAggregate = Aggregate("1/2/3", []);
-        var licence = Licence("1/2/3", [], [ownAggregate]);
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").Holding(ownAggregate).Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], null)]);
+            [LicenceSetBuilder.A().Containing(licence).Build()]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
     }
@@ -181,14 +183,12 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheSetAggregateHasNoLinkedLicences_ThenItIsSkipped()
     {
-        var setAggregate = Aggregate("1/2/3", []);
-        setAggregate.LinkedLicences = null;
-
-        var ownAggregate = Aggregate("1/2/3", []);
-        var licence = Licence("1/2/3", [], [ownAggregate]);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").WithNullLinkedLicences().Build();
+        var ownAggregate = AggregateBuilder.An().For("1/2/3").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").Holding(ownAggregate).Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Same(ownAggregate, Assert.Single(licence.AbstractionLimits.Aggregates!));
     }
@@ -196,11 +196,15 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
     [Fact]
     public void WhenTheNamedLicenceHasNoAggregates_ThenItIsLeftAlone()
     {
-        var setAggregate = Aggregate("1/2/3", ["4/5/6"]);
-        var licence = Licence("1/2/3", [LinkedTo("4/5/6")], null);
+        var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
+
+        var licence = LicenceBuilder.A()
+            .Numbered("1/2/3")
+            .LinkedTo(LicenceBuilder.LinkTo("4/5/6"))
+            .Build();
 
         AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [LicenceSet([licence], [setAggregate])]);
+            [LicenceSetBuilder.A().Containing(licence).WithAggregateSets(setAggregate).Build()]);
 
         Assert.Null(licence.AbstractionLimits.Aggregates);
     }

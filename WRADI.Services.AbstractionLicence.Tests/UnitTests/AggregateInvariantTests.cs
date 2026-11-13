@@ -1,7 +1,6 @@
 using WALE.ProcessFile.Core.Enums;
-using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,67 +10,52 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class AggregateInvariantTests
 {
-    private static Aggregate Aggregate(string sourceLicence) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = [],
-        Limits = [new AbstractionLimit { Value = 100 }]
-    };
-
-    private static AggregateVariation Variation(string sourceLicence) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = [],
-        Limits = [new AbstractionLimit { Value = 100 }]
-    };
-
-    private static Licence Licence(ScrapeStatus status, params Aggregate[] aggregates) => new()
-    {
-        Status = status,
-        AbstractionLimits = new AbstractionLimits { Aggregates = aggregates }
-    };
-
     [Fact]
     public void WhenAnOkLicenceHasTwoAggregatesWithTheSameId_ThenItThrows()
     {
         Assert.Throws<Exception>(() =>
             AggregateAssertions.AssertNoDuplicateAggregates(
-                [Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"))]));
+            [
+                LicenceBuilder.A()
+                    .Holding(
+                        AggregateBuilder.An().For("1/2/3").Build(),
+                        AggregateBuilder.An().For("1/2/3").Build())
+                    .Build()
+            ]));
     }
 
     [Fact]
     public void WhenTheAggregatesDiffer_ThenItPasses()
     {
         AggregateAssertions.AssertNoDuplicateAggregates(
-            [Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("4/5/6"))]);
+        [
+            LicenceBuilder.A()
+                .Holding(
+                    AggregateBuilder.An().For("1/2/3").Build(),
+                    AggregateBuilder.An().For("4/5/6").Build())
+                .Build()
+        ]);
     }
 
     [Fact]
     public void WhenALicenceHasNoAggregates_ThenItPasses()
     {
-        AggregateAssertions.AssertNoDuplicateAggregates(
-        [
-            new Licence
-            {
-                Status = ScrapeStatus.Ok,
-                AbstractionLimits = new AbstractionLimits { Aggregates = null }
-            }
-        ]);
+        AggregateAssertions.AssertNoDuplicateAggregates([LicenceBuilder.A().Build()]);
     }
 
     [Fact]
     public void WhenAnOkAggregateHasTwoVariationsWithTheSameId_ThenItThrows()
     {
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [Variation("9/9/9"), Variation("9/9/9")];
+        var aggregate = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(
+                AggregateBuilder.An().For("9/9/9").BuildVariation(),
+                AggregateBuilder.An().For("9/9/9").BuildVariation())
+            .Build();
 
         Assert.Throws<Exception>(() =>
             AggregateAssertions.AssertNoDuplicateVariations(
-                [Licence(ScrapeStatus.Ok, aggregate)]));
+                [LicenceBuilder.A().Holding(aggregate).Build()]));
     }
 
     // Both duplicate checks skip licences that did not extract cleanly, so a failed licence may
@@ -81,27 +65,42 @@ public class AggregateInvariantTests
     [InlineData(ScrapeStatus.TransientError)]
     public void WhenTheLicenceDidNotExtractCleanly_ThenDuplicatesAreIgnored(ScrapeStatus status)
     {
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [Variation("9/9/9"), Variation("9/9/9")];
+        var aggregate = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(
+                AggregateBuilder.An().For("9/9/9").BuildVariation(),
+                AggregateBuilder.An().For("9/9/9").BuildVariation())
+            .Build();
 
         AggregateAssertions.AssertNoDuplicateAggregates(
-            [Licence(status, Aggregate("1/2/3"), Aggregate("1/2/3"))]);
+        [
+            LicenceBuilder.A()
+                .ThatDidNotExtractCleanly(status)
+                .Holding(
+                    AggregateBuilder.An().For("1/2/3").Build(),
+                    AggregateBuilder.An().For("1/2/3").Build())
+                .Build()
+        ]);
 
-        AggregateAssertions.AssertNoDuplicateVariations([Licence(status, aggregate)]);
+        AggregateAssertions.AssertNoDuplicateVariations(
+        [
+            LicenceBuilder.A().ThatDidNotExtractCleanly(status).Holding(aggregate).Build()
+        ]);
     }
 
     [Fact]
     public void WhenAVariationCarriesItsOwnVariations_ThenItThrows()
     {
-        var nested = Variation("9/9/9");
-        nested.Variations = [Variation("8/8/8")];
+        var nested = AggregateBuilder.An()
+            .For("9/9/9")
+            .Varying(AggregateBuilder.An().For("8/8/8").BuildVariation())
+            .BuildVariation();
 
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [nested];
+        var aggregate = AggregateBuilder.An().For("1/2/3").Varying(nested).Build();
 
         Assert.Throws<Exception>(() =>
             AggregateAssertions.AssertNoMultipleLevelVariations(
-                [Licence(ScrapeStatus.Ok, aggregate)]));
+                [LicenceBuilder.A().Holding(aggregate).Build()]));
     }
 
     // The odd one out: unlike the two duplicate checks, this one has no status filter, so a
@@ -109,27 +108,30 @@ public class AggregateInvariantTests
     [Fact]
     public void WhenALicenceDidNotExtractCleanly_ThenNestedVariationsStillThrow()
     {
-        var nested = Variation("9/9/9");
-        nested.Variations = [Variation("8/8/8")];
+        var nested = AggregateBuilder.An()
+            .For("9/9/9")
+            .Varying(AggregateBuilder.An().For("8/8/8").BuildVariation())
+            .BuildVariation();
 
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [nested];
+        var aggregate = AggregateBuilder.An().For("1/2/3").Varying(nested).Build();
 
         Assert.Throws<Exception>(() =>
             AggregateAssertions.AssertNoMultipleLevelVariations(
-                [Licence(ScrapeStatus.Error, aggregate)]));
+            [
+                LicenceBuilder.A()
+                    .ThatDidNotExtractCleanly(ScrapeStatus.Error)
+                    .Holding(aggregate)
+                    .Build()
+            ]));
     }
 
     [Fact]
     public void WhenAVariationHasAnEmptyVariationsArray_ThenItPasses()
     {
-        var empty = Variation("9/9/9");
-        empty.Variations = [];
-
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [empty];
+        var empty = AggregateBuilder.An().For("9/9/9").Varying().BuildVariation();
+        var aggregate = AggregateBuilder.An().For("1/2/3").Varying(empty).Build();
 
         AggregateAssertions.AssertNoMultipleLevelVariations(
-            [Licence(ScrapeStatus.Ok, aggregate)]);
+            [LicenceBuilder.A().Holding(aggregate).Build()]);
     }
 }

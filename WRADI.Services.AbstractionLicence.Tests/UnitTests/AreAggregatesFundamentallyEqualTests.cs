@@ -1,5 +1,5 @@
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -13,20 +13,12 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class AreAggregatesFundamentallyEqualTests
 {
-    private static Aggregate Aggregate(string sourceLicence, string[]? linked, params double[] limits) =>
-        new()
-        {
-            SourceLicenceNumber = sourceLicence,
-            LinkedLicences = linked,
-            Limits = limits.Select(value => new AbstractionLimit { Value = value }).ToList()
-        };
-
     [Fact]
     public void WhenTheSourceAndLinksAndLimitsAllMatch_ThenTheyAreTheSameAggregate()
     {
         Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100),
-            Aggregate("A", ["B"], 100)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build(),
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build()));
     }
 
     // Limits are compared as a set, not a sequence, so the order they were extracted in does not
@@ -35,8 +27,8 @@ public class AreAggregatesFundamentallyEqualTests
     public void WhenTheSameLimitsArriveInADifferentOrder_ThenTheyAreStillTheSameAggregate()
     {
         Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100, 200),
-            Aggregate("A", ["B"], 200, 100)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100, 200).Build(),
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(200, 100).Build()));
     }
 
     // The rule that earns this method its name. One aggregate reached from licence A linking to B,
@@ -46,43 +38,43 @@ public class AreAggregatesFundamentallyEqualTests
     public void WhenTheSameAggregateIsSeenFromEachLicenceInTurn_ThenItIsNotCountedTwice()
     {
         Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100),
-            Aggregate("B", ["A"], 100)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build(),
+            AggregateBuilder.An().For("B").LinkedTo("A").Limited(100).Build()));
     }
 
     [Fact]
     public void WhenTheLimitValuesDiffer_ThenTheyAreDifferentAggregates()
     {
         Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100),
-            Aggregate("A", ["B"], 999)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build(),
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(999).Build()));
     }
 
     [Fact]
     public void WhenOneCoversMoreLicences_ThenTheyAreDifferentAggregates()
     {
         Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100),
-            Aggregate("A", ["B", "C"], 100)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build(),
+            AggregateBuilder.An().For("A").LinkedTo("B", "C").Limited(100).Build()));
     }
 
     [Fact]
     public void WhenTheLinkedLicencesAreDisjoint_ThenTheyAreDifferentAggregates()
     {
         Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", ["B"], 100),
-            Aggregate("A", ["C"], 100)));
+            AggregateBuilder.An().For("A").LinkedTo("B").Limited(100).Build(),
+            AggregateBuilder.An().For("A").LinkedTo("C").Limited(100).Build()));
     }
 
     [Fact]
     public void WhenNeitherHasLinkedLicences_ThenTheLimitsAloneDecide()
     {
         Assert.True(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", null, 100),
-            Aggregate("A", null, 100)));
+            AggregateBuilder.An().For("A").WithNullLinkedLicences().Limited(100).Build(),
+            AggregateBuilder.An().For("A").WithNullLinkedLicences().Limited(100).Build()));
 
         Assert.False(AggregateHelper.AreAggregatesFundamentallyEqual(
-            Aggregate("A", null, 100),
-            Aggregate("A", null, 200)));
+            AggregateBuilder.An().For("A").WithNullLinkedLicences().Limited(100).Build(),
+            AggregateBuilder.An().For("A").WithNullLinkedLicences().Limited(200).Build()));
     }
 }

@@ -1,5 +1,4 @@
-using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -10,22 +9,12 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class AggregateIdTests
 {
-    private static Aggregate Aggregate(string sourceLicence, string[] linked, params double[] limits) =>
-        new()
-        {
-            SourceLicenceNumber = sourceLicence,
-            PrimaryType = PrimaryType.LicenceToLicence,
-            SubType = SubType.PointToPoint,
-            LinkedLicences = linked,
-            Limits = limits.Select(value => new AbstractionLimit { Value = value }).ToList()
-        };
-
     [Fact]
     public void WhenTheSourceAndLinksAndTotalMatch_ThenTheIdMatches()
     {
         Assert.Equal(
-            Aggregate("1/2/3", ["4/5/6"], 100).Id,
-            Aggregate("1/2/3", ["4/5/6"], 100).Id);
+            AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Limited(100).Build().Id,
+            AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Limited(100).Build().Id);
     }
 
     // Separators are stripped, so the same licence written either way is one aggregate.
@@ -33,8 +22,8 @@ public class AggregateIdTests
     public void WhenTheSourceIsWrittenWithDifferentSeparators_ThenTheIdStillMatches()
     {
         Assert.Equal(
-            Aggregate("1/2/3", [], 100).Id,
-            Aggregate("1 2 3", [], 100).Id);
+            AggregateBuilder.An().For("1/2/3").Limited(100).Build().Id,
+            AggregateBuilder.An().For("1 2 3").Limited(100).Build().Id);
     }
 
     // Linked licences are ordered before being appended, so the order they were found in does not
@@ -43,16 +32,16 @@ public class AggregateIdTests
     public void WhenLinkedLicencesArriveInADifferentOrder_ThenTheIdStillMatches()
     {
         Assert.Equal(
-            Aggregate("1/2/3", ["4/5/6", "7/8/9"], 100).Id,
-            Aggregate("1/2/3", ["7/8/9", "4/5/6"], 100).Id);
+            AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6", "7/8/9").Build().Id,
+            AggregateBuilder.An().For("1/2/3").LinkedTo("7/8/9", "4/5/6").Build().Id);
     }
 
     [Fact]
     public void WhenTheCombinedLimitDiffers_ThenTheIdDiffers()
     {
         Assert.NotEqual(
-            Aggregate("1/2/3", [], 100).Id,
-            Aggregate("1/2/3", [], 200).Id);
+            AggregateBuilder.An().For("1/2/3").Limited(100).Build().Id,
+            AggregateBuilder.An().For("1/2/3").Limited(200).Build().Id);
     }
 
     // WRADI-547. GetCombinedLimitValue accumulates in a double and returns an unchecked (int)
@@ -62,8 +51,8 @@ public class AggregateIdTests
     [Fact]
     public void WhenTheCombinedLimitExceedsIntMax_ThenDistinctAggregatesShareAnId()
     {
-        var fiveBillion = Aggregate("1/2/3", [], 5_000_000_000);
-        var nineBillion = Aggregate("1/2/3", [], 9_000_000_000);
+        var fiveBillion = AggregateBuilder.An().For("1/2/3").Limited(5_000_000_000).Build();
+        var nineBillion = AggregateBuilder.An().For("1/2/3").Limited(9_000_000_000).Build();
 
         Assert.Equal(int.MaxValue, fiveBillion.GetCombinedLimitValue());
         Assert.Equal(int.MaxValue, nineBillion.GetCombinedLimitValue());
@@ -77,8 +66,8 @@ public class AggregateIdTests
     {
         var aggregates = new[]
         {
-            Aggregate("1/2/3", [], 5_000_000_000),
-            Aggregate("4/5/6", [], 9_000_000_000)
+            AggregateBuilder.An().For("1/2/3").Limited(5_000_000_000).Build(),
+            AggregateBuilder.An().For("4/5/6").Limited(9_000_000_000).Build()
         };
 
         Assert.Throws<OverflowException>(() => aggregates.Sum(a => a.GetCombinedLimitValue()));
@@ -87,14 +76,7 @@ public class AggregateIdTests
     [Fact]
     public void WhenLimitValuesAreMissing_ThenTheyAreSkippedRatherThanCountedAsZero()
     {
-        var withNull = new Aggregate
-        {
-            SourceLicenceNumber = "1/2/3",
-            PrimaryType = PrimaryType.LicenceToLicence,
-            SubType = SubType.PointToPoint,
-            LinkedLicences = [],
-            Limits = [new AbstractionLimit { Value = 100 }, new AbstractionLimit { Value = null }]
-        };
+        var withNull = AggregateBuilder.An().For("1/2/3").Limited(100, null).Build();
 
         Assert.Equal(100, withNull.GetCombinedLimitValue());
     }

@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,49 +11,14 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class AggregateDeDuplicationTests
 {
-    private static Aggregate Aggregate(string sourceLicence, params ContainedInInformation[] containedIn) =>
-        new()
-        {
-            SourceLicenceNumber = sourceLicence,
-            PrimaryType = PrimaryType.LicenceToLicence,
-            SubType = SubType.PointToPoint,
-            LinkedLicences = [],
-            Limits = [new AbstractionLimit { Value = 100 }],
-            ContainedIn = containedIn.Length == 0 ? null : containedIn
-        };
-
-    private static AggregateVariation Variation(string sourceLicence, string difference) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = [],
-        Limits = [new AbstractionLimit { Value = 100 }],
-        Difference = difference
-    };
-
-    private static ContainedInInformation ContainedIn(
-        string sectionName,
-        int lineNumber,
-        InformationDirection? direction = null) =>
-        new()
-        {
-            Source = InformationSource.Document,
-            SectionName = sectionName,
-            LineNumber = lineNumber,
-            Direction = direction
-        };
-
-    private static Licence Licence(ScrapeStatus status, params Aggregate[] aggregates) => new()
-    {
-        Status = status,
-        AbstractionLimits = new AbstractionLimits { Aggregates = aggregates }
-    };
-
     [Fact]
     public void WhenTwoAggregatesShareAnId_ThenOnlyOneSurvives()
     {
-        var licence = Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"));
+        var licence = LicenceBuilder.A()
+            .Holding(
+                AggregateBuilder.An().For("1/2/3").Build(),
+                AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -63,10 +28,13 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenDuplicatesAreCollapsed_ThenTheirContainedInEntriesAreMerged()
     {
-        var licence = Licence(
-            ScrapeStatus.Ok,
-            Aggregate("1/2/3", ContainedIn("Schedule", 1)),
-            Aggregate("1/2/3", ContainedIn("Conditions", 2)));
+        var licence = LicenceBuilder.A()
+            .Holding(
+                AggregateBuilder.An().For("1/2/3")
+                    .SightedIn(AggregateBuilder.SeenIn("Schedule", 1)).Build(),
+                AggregateBuilder.An().For("1/2/3")
+                    .SightedIn(AggregateBuilder.SeenIn("Conditions", 2)).Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -79,10 +47,15 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenMergedEntriesDifferOnlyOutsideTheMergeKey_ThenOneIsDiscarded()
     {
-        var licence = Licence(
-            ScrapeStatus.Ok,
-            Aggregate("1/2/3", ContainedIn("Schedule", 1, InformationDirection.Incoming)),
-            Aggregate("1/2/3", ContainedIn("Schedule", 1, InformationDirection.Outgoing)));
+        var licence = LicenceBuilder.A()
+            .Holding(
+                AggregateBuilder.An().For("1/2/3")
+                    .SightedIn(AggregateBuilder.SeenIn("Schedule", 1, InformationDirection.Incoming))
+                    .Build(),
+                AggregateBuilder.An().For("1/2/3")
+                    .SightedIn(AggregateBuilder.SeenIn("Schedule", 1, InformationDirection.Outgoing))
+                    .Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -95,9 +68,14 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenNoAggregateIsDuplicated_ThenRepeatedContainedInEntriesAreLeftAlone()
     {
-        var licence = Licence(
-            ScrapeStatus.Ok,
-            Aggregate("1/2/3", ContainedIn("Schedule", 1), ContainedIn("Schedule", 1)));
+        var licence = LicenceBuilder.A()
+            .Holding(
+                AggregateBuilder.An().For("1/2/3")
+                    .SightedIn(
+                        AggregateBuilder.SeenIn("Schedule", 1),
+                        AggregateBuilder.SeenIn("Schedule", 1))
+                    .Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -108,7 +86,11 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenCollapsedDuplicatesHadNoContainedIn_ThenTheSurvivorGetsAnEmptyArray()
     {
-        var licence = Licence(ScrapeStatus.Ok, Aggregate("1/2/3"), Aggregate("1/2/3"));
+        var licence = LicenceBuilder.A()
+            .Holding(
+                AggregateBuilder.An().For("1/2/3").Build(),
+                AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -121,7 +103,12 @@ public class AggregateDeDuplicationTests
     [InlineData(ScrapeStatus.TransientError)]
     public void WhenTheLicenceDidNotExtractCleanly_ThenDuplicateAggregatesSurvive(ScrapeStatus status)
     {
-        var licence = Licence(status, Aggregate("1/2/3"), Aggregate("1/2/3"));
+        var licence = LicenceBuilder.A()
+            .ThatDidNotExtractCleanly(status)
+            .Holding(
+                AggregateBuilder.An().For("1/2/3").Build(),
+                AggregateBuilder.An().For("1/2/3").Build())
+            .Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -131,11 +118,7 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenALicenceHasNoAggregates_ThenDeDuplicatingDoesNothing()
     {
-        var licence = new Licence
-        {
-            Status = ScrapeStatus.Ok,
-            AbstractionLimits = new AbstractionLimits { Aggregates = null }
-        };
+        var licence = LicenceBuilder.A().Build();
 
         AggregateHelper.DeDuplicateAggregates([licence]);
 
@@ -152,7 +135,10 @@ public class AggregateDeDuplicationTests
     public void WhenTwoVariationsShareAnId_ThenTheFirstIsKept()
     {
         var deduped = AggregateVariationHelper.DeDupeVariations(
-            [Variation("9/9/9", "first"), Variation("9/9/9", "second")]);
+        [
+            AggregateBuilder.An().For("9/9/9").BuildVariation("first"),
+            AggregateBuilder.An().For("9/9/9").BuildVariation("second")
+        ]);
 
         var survivor = Assert.Single(deduped!);
         Assert.Equal("first", survivor.Difference);
@@ -161,10 +147,15 @@ public class AggregateDeDuplicationTests
     [Fact]
     public void WhenAnAggregateHasTwoVariationsWithTheSameId_ThenRemovingDuplicatesKeepsTheFirst()
     {
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [Variation("9/9/9", "first"), Variation("9/9/9", "second")];
+        var aggregate = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(
+                AggregateBuilder.An().For("9/9/9").BuildVariation("first"),
+                AggregateBuilder.An().For("9/9/9").BuildVariation("second"))
+            .Build();
 
-        AggregateVariationHelper.RemoveDuplicateVariations([Licence(ScrapeStatus.Ok, aggregate)]);
+        AggregateVariationHelper.RemoveDuplicateVariations(
+            [LicenceBuilder.A().Holding(aggregate).Build()]);
 
         var survivor = Assert.Single(aggregate.Variations!);
         Assert.Equal("first", survivor.Difference);
@@ -175,10 +166,17 @@ public class AggregateDeDuplicationTests
     [InlineData(ScrapeStatus.TransientError)]
     public void WhenTheLicenceDidNotExtractCleanly_ThenDuplicateVariationsSurvive(ScrapeStatus status)
     {
-        var aggregate = Aggregate("1/2/3");
-        aggregate.Variations = [Variation("9/9/9", "first"), Variation("9/9/9", "second")];
+        var aggregate = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(
+                AggregateBuilder.An().For("9/9/9").BuildVariation("first"),
+                AggregateBuilder.An().For("9/9/9").BuildVariation("second"))
+            .Build();
 
-        AggregateVariationHelper.RemoveDuplicateVariations([Licence(status, aggregate)]);
+        AggregateVariationHelper.RemoveDuplicateVariations(
+        [
+            LicenceBuilder.A().ThatDidNotExtractCleanly(status).Holding(aggregate).Build()
+        ]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }

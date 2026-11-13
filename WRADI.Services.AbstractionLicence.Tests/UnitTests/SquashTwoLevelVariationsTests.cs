@@ -1,7 +1,6 @@
 using WALE.ProcessFile.Core.Enums;
-using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,37 +10,14 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class SquashTwoLevelVariationsTests
 {
-    private static AggregateVariation Variation(string sourceLicence, string? difference = null) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = [],
-        Limits = [new AbstractionLimit { Value = 100 }],
-        Difference = difference
-    };
-
-    private static Aggregate Aggregate(params AggregateVariation[] variations) => new()
-    {
-        SourceLicenceNumber = "1/1/1",
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = [],
-        Limits = [new AbstractionLimit { Value = 100 }],
-        Variations = variations
-    };
-
-    private static Licence Licence(ScrapeStatus status, params Aggregate[] aggregates) => new()
-    {
-        Status = status,
-        AbstractionLimits = new AbstractionLimits { Aggregates = aggregates }
-    };
-
     [Fact]
     public void WhenNoVariationIsNested_ThenTheListComesBackUnchanged()
     {
         var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
-            [Variation("1/2/3"), Variation("4/5/6")]);
+        [
+            AggregateBuilder.An().For("1/2/3").BuildVariation(),
+            AggregateBuilder.An().For("4/5/6").BuildVariation()
+        ]);
 
         Assert.Equal(2, squashed.Count);
     }
@@ -49,8 +25,10 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenAVariationIsNested_ThenItIsPromotedAndItsParentIsEmptied()
     {
-        var parent = Variation("1/2/3");
-        parent.Variations = [Variation("4/5/6")];
+        var parent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
         var squashed = AggregateVariationHelper.SquashTwoLevelVariations([parent]);
 
@@ -61,11 +39,13 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenTheNestedVariationIsAlreadyInTheList_ThenItIsNotPromotedAgain()
     {
-        var parent = Variation("1/2/3");
-        parent.Variations = [Variation("4/5/6")];
+        var parent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
         var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
-            [parent, Variation("4/5/6")]);
+            [parent, AggregateBuilder.An().For("4/5/6").BuildVariation()]);
 
         Assert.Equal(2, squashed.Count);
     }
@@ -75,11 +55,15 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenTwoParentsNestTheSameChild_ThenItIsPromotedTwice()
     {
-        var firstParent = Variation("1/2/3");
-        firstParent.Variations = [Variation("7/8/9")];
+        var firstParent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("7/8/9").BuildVariation())
+            .BuildVariation();
 
-        var secondParent = Variation("4/5/6");
-        secondParent.Variations = [Variation("7/8/9")];
+        var secondParent = AggregateBuilder.An()
+            .For("4/5/6")
+            .Varying(AggregateBuilder.An().For("7/8/9").BuildVariation())
+            .BuildVariation();
 
         var squashed = AggregateVariationHelper.SquashTwoLevelVariations(
             [firstParent, secondParent]);
@@ -92,13 +76,10 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenVariationsAreThreeDeep_ThenThePromotedChildKeepsItsOwn()
     {
-        var grandchild = Variation("7/8/9");
+        var grandchild = AggregateBuilder.An().For("7/8/9").BuildVariation();
 
-        var child = Variation("4/5/6");
-        child.Variations = [grandchild];
-
-        var parent = Variation("1/2/3");
-        parent.Variations = [child];
+        var child = AggregateBuilder.An().For("4/5/6").Varying(grandchild).BuildVariation();
+        var parent = AggregateBuilder.An().For("1/2/3").Varying(child).BuildVariation();
 
         var squashed = AggregateVariationHelper.SquashTwoLevelVariations([parent]);
 
@@ -109,12 +90,15 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenALicencesAggregateHasNestedVariations_ThenTheyArePromoted()
     {
-        var parent = Variation("1/2/3");
-        parent.Variations = [Variation("4/5/6")];
+        var parent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
-        var aggregate = Aggregate(parent);
+        var aggregate = AggregateBuilder.An().For("1/1/1").Varying(parent).Build();
 
-        AggregateVariationHelper.SquashTwoLevelVariations([Licence(ScrapeStatus.Ok, aggregate)]);
+        AggregateVariationHelper.SquashTwoLevelVariations(
+            [LicenceBuilder.A().Holding(aggregate).Build()]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }
@@ -125,12 +109,17 @@ public class SquashTwoLevelVariationsTests
     [InlineData(ScrapeStatus.TransientError)]
     public void WhenTheLicenceDidNotExtractCleanly_ThenItsVariationsAreStillSquashed(ScrapeStatus status)
     {
-        var parent = Variation("1/2/3");
-        parent.Variations = [Variation("4/5/6")];
+        var parent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
-        var aggregate = Aggregate(parent);
+        var aggregate = AggregateBuilder.An().For("1/1/1").Varying(parent).Build();
 
-        AggregateVariationHelper.SquashTwoLevelVariations([Licence(status, aggregate)]);
+        AggregateVariationHelper.SquashTwoLevelVariations(
+        [
+            LicenceBuilder.A().ThatDidNotExtractCleanly(status).Holding(aggregate).Build()
+        ]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }
@@ -138,11 +127,7 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenALicenceHasNoAggregates_ThenSquashingDoesNothing()
     {
-        var licence = new Licence
-        {
-            Status = ScrapeStatus.Ok,
-            AbstractionLimits = new AbstractionLimits { Aggregates = null }
-        };
+        var licence = LicenceBuilder.A().Build();
 
         AggregateVariationHelper.SquashTwoLevelVariations([licence]);
 
@@ -152,21 +137,27 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenALicenceSetHasAggregateSets_ThenBothItsLicencesAndItsSetsAreSquashed()
     {
-        var licenceParent = Variation("1/2/3");
-        licenceParent.Variations = [Variation("4/5/6")];
-        var licenceAggregate = Aggregate(licenceParent);
+        var licenceParent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
-        var setParent = Variation("2/3/4");
-        setParent.Variations = [Variation("5/6/7")];
-        var setAggregate = Aggregate(setParent);
+        var licenceAggregate = AggregateBuilder.An().For("1/1/1").Varying(licenceParent).Build();
 
-        var licenceSet = new LicenceSet
-        {
-            Licences = [Licence(ScrapeStatus.Ok, licenceAggregate)],
-            AggregateSets = [setAggregate]
-        };
+        var setParent = AggregateBuilder.An()
+            .For("2/3/4")
+            .Varying(AggregateBuilder.An().For("5/6/7").BuildVariation())
+            .BuildVariation();
 
-        AggregateVariationHelper.SquashTwoLevelVariations([licenceSet]);
+        var setAggregate = AggregateBuilder.An().For("1/1/1").Varying(setParent).Build();
+
+        AggregateVariationHelper.SquashTwoLevelVariations(
+        [
+            LicenceSetBuilder.A()
+                .Containing(LicenceBuilder.A().Holding(licenceAggregate).Build())
+                .WithAggregateSets(setAggregate)
+                .Build()
+        ]);
 
         Assert.Equal(2, licenceAggregate.Variations!.Length);
         Assert.Equal(2, setAggregate.Variations!.Length);
@@ -175,17 +166,19 @@ public class SquashTwoLevelVariationsTests
     [Fact]
     public void WhenALicenceSetHasNoAggregateSets_ThenItsLicencesAreStillSquashed()
     {
-        var parent = Variation("1/2/3");
-        parent.Variations = [Variation("4/5/6")];
-        var aggregate = Aggregate(parent);
+        var parent = AggregateBuilder.An()
+            .For("1/2/3")
+            .Varying(AggregateBuilder.An().For("4/5/6").BuildVariation())
+            .BuildVariation();
 
-        var licenceSet = new LicenceSet
-        {
-            Licences = [Licence(ScrapeStatus.Ok, aggregate)],
-            AggregateSets = null
-        };
+        var aggregate = AggregateBuilder.An().For("1/1/1").Varying(parent).Build();
 
-        AggregateVariationHelper.SquashTwoLevelVariations([licenceSet]);
+        AggregateVariationHelper.SquashTwoLevelVariations(
+        [
+            LicenceSetBuilder.A()
+                .Containing(LicenceBuilder.A().Holding(aggregate).Build())
+                .Build()
+        ]);
 
         Assert.Equal(2, aggregate.Variations!.Length);
     }

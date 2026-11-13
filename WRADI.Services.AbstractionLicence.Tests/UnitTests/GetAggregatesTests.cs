@@ -1,7 +1,5 @@
-using WALE.ProcessFile.Core.Enums;
-using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,29 +9,15 @@ namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 /// </summary>
 public class GetAggregatesTests
 {
-    private static Aggregate Aggregate(string sourceLicence, string[] linked) => new()
-    {
-        SourceLicenceNumber = sourceLicence,
-        PrimaryType = PrimaryType.LicenceToLicence,
-        SubType = SubType.PointToPoint,
-        LinkedLicences = linked,
-        Limits = [new AbstractionLimit { Value = 100 }]
-    };
-
-    private static Licence Licence(string licenceNumber, Aggregate[]? aggregates) => new()
-    {
-        Status = ScrapeStatus.Ok,
-        LicenceNumber = new ValueWithConfidence<string>(licenceNumber, null, null),
-        AbstractionLimits = new AbstractionLimits { Aggregates = aggregates }
-    };
-
     [Fact]
     public void WhenSeveralLicencesHoldAggregates_ThenAllOfThemComeBack()
     {
         var aggregates = AggregateHelper.GetAggregates(
         [
-            Licence("1/2/3", [Aggregate("1/2/3", [])]),
-            Licence("4/5/6", [Aggregate("4/5/6", [])])
+            LicenceBuilder.A().Numbered("1/2/3")
+                .Holding(AggregateBuilder.An().For("1/2/3").Build()).Build(),
+            LicenceBuilder.A().Numbered("4/5/6")
+                .Holding(AggregateBuilder.An().For("4/5/6").Build()).Build()
         ],
             excludeAnyLinksNotInSet: false);
 
@@ -44,17 +28,17 @@ public class GetAggregatesTests
     public void WhenNoLicenceHoldsAnAggregate_ThenNullComesBackRatherThanAnEmptyArray()
     {
         Assert.Null(AggregateHelper.GetAggregates(
-            [Licence("1/2/3", null)],
+            [LicenceBuilder.A().Numbered("1/2/3").Build()],
             excludeAnyLinksNotInSet: false));
     }
 
     [Fact]
     public void WhenAnAggregateIsReturned_ThenItIsACopyRatherThanTheLicencesOwn()
     {
-        var held = Aggregate("1/2/3", []);
+        var held = AggregateBuilder.An().For("1/2/3").Build();
 
         var returned = Assert.Single(AggregateHelper.GetAggregates(
-            [Licence("1/2/3", [held])],
+            [LicenceBuilder.A().Numbered("1/2/3").Holding(held).Build()],
             excludeAnyLinksNotInSet: false)!);
 
         Assert.NotSame(held, returned);
@@ -64,11 +48,10 @@ public class GetAggregatesTests
     [Fact]
     public void WhenTheHeldAggregateNamesALicenceSet_ThenTheCopyDoesNot()
     {
-        var held = Aggregate("1/2/3", []);
-        held.LicenceSetId = "123-456";
+        var held = AggregateBuilder.An().For("1/2/3").InLicenceSet("123-456").Build();
 
         var returned = Assert.Single(AggregateHelper.GetAggregates(
-            [Licence("1/2/3", [held])],
+            [LicenceBuilder.A().Numbered("1/2/3").Holding(held).Build()],
             excludeAnyLinksNotInSet: false)!);
 
         Assert.Null(returned.LicenceSetId);
@@ -79,7 +62,10 @@ public class GetAggregatesTests
     public void WhenLinksOutsideTheSetAreExcluded_ThenAnAggregateNamingAnAbsentLicenceIsDropped()
     {
         Assert.Null(AggregateHelper.GetAggregates(
-            [Licence("1/2/3", [Aggregate("1/2/3", ["4/5/6"])])],
+        [
+            LicenceBuilder.A().Numbered("1/2/3")
+                .Holding(AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build()).Build()
+        ],
             excludeAnyLinksNotInSet: true));
     }
 
@@ -88,8 +74,9 @@ public class GetAggregatesTests
     {
         var aggregates = AggregateHelper.GetAggregates(
         [
-            Licence("1/2/3", [Aggregate("1/2/3", ["4/5/6"])]),
-            Licence("4/5/6", null)
+            LicenceBuilder.A().Numbered("1/2/3")
+                .Holding(AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build()).Build(),
+            LicenceBuilder.A().Numbered("4/5/6").Build()
         ],
             excludeAnyLinksNotInSet: true);
 
@@ -100,7 +87,10 @@ public class GetAggregatesTests
     public void WhenLinksOutsideTheSetAreExcluded_ThenAnAggregateWithNoLinksIsStillKept()
     {
         var aggregates = AggregateHelper.GetAggregates(
-            [Licence("1/2/3", [Aggregate("1/2/3", [])])],
+        [
+            LicenceBuilder.A().Numbered("1/2/3")
+                .Holding(AggregateBuilder.An().For("1/2/3").Build()).Build()
+        ],
             excludeAnyLinksNotInSet: true);
 
         Assert.Single(aggregates!);
@@ -110,7 +100,10 @@ public class GetAggregatesTests
     public void WhenLinksOutsideTheSetAreNotExcluded_ThenAnAggregateNamingAnAbsentLicenceIsKept()
     {
         var aggregates = AggregateHelper.GetAggregates(
-            [Licence("1/2/3", [Aggregate("1/2/3", ["4/5/6"])])],
+        [
+            LicenceBuilder.A().Numbered("1/2/3")
+                .Holding(AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build()).Build()
+        ],
             excludeAnyLinksNotInSet: false);
 
         Assert.Single(aggregates!);

@@ -71,9 +71,9 @@ public class LicenceSet
         return licenceSetType switch
         {
             LicenceSetType.LicencesGroupedByAbstractionLimits => "LIM",
-            LicenceSetType.LicencesGroupedByLineage => "LIN",
+            LicenceSetType.LicencesGroupedByLineage => "HIS",
             LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage => "OTH",
-            LicenceSetType.SingleLicenceOnly => "SIN",
+            LicenceSetType.SingleLicenceOnly => "SNG",
             _ => "UNK"
         };
     }

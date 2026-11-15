@@ -389,7 +389,7 @@ public class PdfPigNoOcrPdfTests1(StandaloneFixture1 fixture)
         Assert.Equal(new DateTime(1968, 05, 15), agreedSchemaLicence.LicenceVersion.OriginalIssueDate);
         Assert.Equal(new DateTime(2022, 07, 05), agreedSchemaLicence.LicenceVersion.IssueDate);
 
-        Assert.Equal("SIN12504059", agreedSchemaLicenceGroup.Last().LicenceSetId);
+        Assert.Equal("SNG12504059", agreedSchemaLicenceGroup.Last().LicenceSetId);
         
         Assert.NotNull(agreedSchemaLicenceGroup.Last().Licences);
         Assert.Single(agreedSchemaLicenceGroup.Last().Licences);

@@ -388,7 +388,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[1].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);
         
@@ -502,8 +502,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
             AbsLicCacheService,
             NaldDataLookupService);
 
-        Assert.Equal("12100001-12100052-12203007", licenceSets[0].LicenceSetId);
-        Assert.Equal(LicenceSetType.Others, licenceSets[0].LicenceSetType);
+        Assert.Equal("OTH12100001-12100052-12203007", licenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[0].LicenceSetType);
         Assert.Equal(3, licenceSets[0].Licences.Length);
         Assert.Equal("1/22/03/007", licenceSets[0].Licences[0].LicenceNumber!.Value);
         Assert.Equal(ScrapeStatus.Ok, licenceSets[0].Licences[0].Status);
@@ -520,8 +520,8 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("1/21/00/052", primaryLicence.LinkedLicences[1].LicenceNumber);
         
         Assert.Single(primaryLicence.LicenceSets);
-        Assert.Equal("12100001-12100052-12203007", primaryLicence.LicenceSets[0].LicenceSetId);
-        Assert.Equal(LicenceSetType.Others, primaryLicence.LicenceSets[0].LicenceSetType);
+        Assert.Equal("OTH12100001-12100052-12203007", primaryLicence.LicenceSets[0].LicenceSetId);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, primaryLicence.LicenceSets[0].LicenceSetType);
         
         var licence2 = licenceSets[0].Licences[1];
         Assert.Equal("1/21/00/001", licence2.LicenceNumber!.Value);

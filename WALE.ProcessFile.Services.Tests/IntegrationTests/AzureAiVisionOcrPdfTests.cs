@@ -732,7 +732,7 @@ public class AzureAiVisionOcrPdfTests(FirstNamesFixture firstNamesFixture)
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(licenceSets);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets[0].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);
 

@@ -124,7 +124,7 @@ public static class SharedHelper
             
             if (licenceSetGroup.Count == 0)
             {
-                // This shouldn't happen
+                // This should be impossible
                 ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - Empty licence set group found");
                 continue;
             }

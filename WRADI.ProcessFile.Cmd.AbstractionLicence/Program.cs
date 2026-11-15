@@ -78,13 +78,13 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-       // .Where(x => x.Key.Contains("12100001__50f99510-da86-49e1-8142-4b6a9aacf5db.pdf", StringComparison.OrdinalIgnoreCase)
+        //.Where(x => x.Key.Contains("121", StringComparison.OrdinalIgnoreCase))
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(100)
+        //.Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -230,6 +230,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
     AbstractionLicenceSchemaConverter.CalculateCombinedAggregates(allLicenceSets);
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Calculated combined aggregates at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+    
+    // Recalculate licence set groups
+    licenceSetGroups = allLicenceSets
+        .GroupBy(ls => ls.LicenceSetId)
+        .Select(IReadOnlyList<LicenceSet> (g) => g.ToList())
+        .ToList();
     
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,

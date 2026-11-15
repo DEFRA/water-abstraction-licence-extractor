@@ -475,7 +475,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
             NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[1].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);
         

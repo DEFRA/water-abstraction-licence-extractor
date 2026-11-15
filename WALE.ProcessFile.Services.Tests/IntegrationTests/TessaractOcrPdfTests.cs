@@ -1858,8 +1858,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             NaldDataLookupService);
 
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("2839220217-283922427", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("0217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("LIM2839220217-283922427", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("LIM0217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
 
         Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 
@@ -1911,8 +1911,8 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
             NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("SNG12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("SNG045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 

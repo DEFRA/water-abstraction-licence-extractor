@@ -379,7 +379,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(b)", agg.Purposes![1].Id);
         Assert.True(agg.Purposes![1].IsImplicit);
         
-        agg = licence.AbstractionLimits.Aggregates[1];
+        agg = licence.AbstractionLimits.Aggregates[3];
         Assert.Equal(3, agg.Limits.Count);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);
@@ -429,7 +429,7 @@ public class TesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(a)", agg.Purposes![0].Id);
         Assert.False(agg.Purposes![0].IsImplicit);
         
-        agg = licence.AbstractionLimits.Aggregates[3];
+        agg = licence.AbstractionLimits.Aggregates[1];
         Assert.Single(agg.Limits);
         Assert.NotNull(agg.ContainedIn);
         Assert.Single(agg.ContainedIn!);

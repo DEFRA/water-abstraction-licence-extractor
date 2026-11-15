@@ -319,7 +319,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(1)", agg.Points![0].Id);
         Assert.False(agg.Points![0].IsImplicit);
         
-        agg = licence.AbstractionLimits.Aggregates[1];
+        agg = licence.AbstractionLimits.Aggregates[3];
         Assert.NotNull(agg.ContainedIn);
         Assert.Equal(2, agg.ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);
@@ -348,7 +348,7 @@ public class RealNaldDataTesseractAndAzureAiVisionOcrPdfTests
         Assert.Equal("(1)", agg.Points![0].Id);
         Assert.True(agg.Points![0].IsImplicit);
         
-        agg = licence.AbstractionLimits.Aggregates[3];
+        agg = licence.AbstractionLimits.Aggregates[1];
         Assert.NotNull(agg.ContainedIn);
         Assert.Equal(2, agg.ContainedIn!.Length);
         Assert.Equal(InformationSource.Document, agg.ContainedIn![0].Source);

@@ -3060,6 +3060,12 @@ public static class AbstractionLicenceSchemaConverter
         Aggregate sourceAggregate,
         Aggregate otherAggregate)
     {
+        if (sourceAggregate.PrimaryType == PrimaryType.InLicence
+            || otherAggregate.PrimaryType == PrimaryType.InLicence)
+        {
+            return false;
+        }
+        
         if (sourceAggregate.LinkedLicences?.Length != otherAggregate.LinkedLicences?.Length)
         {
             return false;

@@ -349,6 +349,25 @@ public class FileDataController(
     }
 
     [HttpGet]
+    public async Task<ActionResult<IEnumerable<LinkedLicence>>> ReferencedAlongsideLinkedLicencesAsync(
+        [FromQuery] Guid fileId,
+        [FromQuery] int processRunId)
+    {
+        var licence = await abstractionLicenceOutputService.GetLicenceAsync(fileId, processRunId);
+        var linkedLicences = licence?.LinkedLicences;
+
+        if (linkedLicences == null)
+        {
+            return NotFound();
+        }
+
+        var filtered = linkedLicences
+            .Where(ll => ll.ContainedIn?.Any(cc => cc.Direction == InformationDirection.ReferencedAlongside) == true);
+
+        return Ok(filtered);
+    }
+    
+    [HttpGet]
     public async Task<ActionResult<IEnumerable<LinkedLicence>>> OutgoingLinkedLicencesAsync(
         [FromQuery] Guid fileId,
         [FromQuery] int processRunId)

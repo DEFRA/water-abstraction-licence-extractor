@@ -477,7 +477,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
 
-        // Swap out linked licence numbers to newest ones where needed
+        // Swap out linked licence numbers to the newest ones where needed
         foreach (var linkedLicence in linkedLicences)
         {
             var (hasSuccessor, history) =
@@ -4976,7 +4976,7 @@ public static class AbstractionLicenceSchemaConverter
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
 
-            var (regionId, naldLicenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            var (regionId, naldDataLicenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
                 scrapedLicenceNumber,
                 naldLicenceType,
@@ -4987,7 +4987,7 @@ public static class AbstractionLicenceSchemaConverter
 
             linkedLicenceNumbers.Add(new LinkedLicence
             {
-                LicenceNumber = naldLicenceNumber2,
+                LicenceNumber = naldDataLicenceNumber,
                 RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
@@ -5025,7 +5025,7 @@ public static class AbstractionLicenceSchemaConverter
                     linkedLicence.LicenceNumber,
                     regionCode))
             .ToList();
-
+        
         const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
             = "shall not exceed the quantity authorised to be abstracted under this licence";
 
@@ -5068,7 +5068,7 @@ public static class AbstractionLicenceSchemaConverter
         var abstractionLinkedLicences = linkedLicenceNumbers
             .Where(lln => lln.ContainedIn?.Any(ci => !IsExcludedLinkReason(ci.LinkReason)) == true)
             .ToList();
-
+        
         var hasLinkedLicenceNumber = abstractionLinkedLicences.Count > 0;
         var isAggregate = hasLinkedLicenceNumber || meetsAggregateConditions;
 
@@ -5389,6 +5389,36 @@ public static class AbstractionLicenceSchemaConverter
             .Select(lln => lln.First())
             .ToArray();
 
+        var newAggregateLinkedLicences = new List<string>();
+            
+        foreach (var aggregateLinkedLicence in aggregateLinkedLicences)
+        {
+            newAggregateLinkedLicences.Add(aggregateLinkedLicence);
+            
+            var (hasSuccessor, history) =
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(aggregateLinkedLicence);
+
+            if (!hasSuccessor)
+            {
+                continue;
+            }
+
+            var followOns = history
+                .SelectMany(h => h.FollowOnLicenceNumbers)
+                .ToList();
+
+            foreach (var followOn in followOns)
+            {
+                if (aggregateLinkedLicences.Contains(followOn))
+                {
+                    continue;
+                }
+                
+                newAggregateLinkedLicences.Add(followOn);
+            }
+        }
+
+        aggregateLinkedLicences = newAggregateLinkedLicences.ToArray();
         AssertNoDuplicateLinkedLicences(aggregateLinkedLicences);
 
         var aggregate = new Aggregate

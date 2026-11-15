@@ -1859,7 +1859,7 @@ public class TessaractOcrPdfTests(FirstNamesFixture firstNamesFixture)
 
         Assert.Single(agreedSchemaLicenceGroup);
         Assert.Equal("LIM2839220217-283922427", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("A0217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("LIM0217-427", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
 
         Assert.Equal(2, agreedSchemaLicenceGroup.First().Licences.Length);
 

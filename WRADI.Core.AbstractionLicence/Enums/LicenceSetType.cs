@@ -5,8 +5,8 @@ public enum LicenceSetType
     Unknown,
     SingleLicenceOnly,
     LicencesGroupedByAbstractionLimits,
-    Others,
-    Lineage,
+    LicencesGroupedByLineage,
+    LicencesGroupedByOtherThenLimitsAndLinegage,
     
     // Oldies for serialisation
     AllLicencesExplicitlyReferencedAnywhere,

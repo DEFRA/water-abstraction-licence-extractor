@@ -1774,7 +1774,7 @@ public static class AbstractionLicenceSchemaConverter
                 returnLicenceSets.Add(
                     new LicenceSet
                     {
-                        LicenceSetType = LicenceSetType.Others,
+                        LicenceSetType = LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage,
                         Licences = otherLicences.ToArray()
                     });
             }
@@ -1810,7 +1810,7 @@ public static class AbstractionLicenceSchemaConverter
                 returnLicenceSets.Add(
                     new LicenceSet
                     {
-                        LicenceSetType = LicenceSetType.Lineage,
+                        LicenceSetType = LicenceSetType.LicencesGroupedByLineage,
                         Licences = historyLicences.ToArray()
                     });
             }
@@ -2128,7 +2128,7 @@ public static class AbstractionLicenceSchemaConverter
 
             foreach (var licenceSet in licence.LicenceSets)
             {
-                var licenceSetIdParts = licenceSet.LicenceSetId?
+                var licenceSetIdParts = (licenceSet.LicenceSetId?[3..]!)
                     .Split('-')
                     .Where(p => p != licenceNumber)
                     .ToList();
@@ -2179,12 +2179,12 @@ public static class AbstractionLicenceSchemaConverter
 
             foreach (var licenceSet in licence.LicenceSets)
             {
-                var licenceSetIdParts = licenceSet.LicenceSetId?
+                var licenceSetIdParts = (licenceSet.LicenceSetId?[3..]!)
                     .Split('-')
                     .Where(p => p != licenceNumber)
                     .ToList();
 
-                foreach (var licenceSetIdPart in licenceSetIdParts!)
+                foreach (var licenceSetIdPart in licenceSetIdParts)
                 {
                     var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
                         .Replace(".", string.Empty)
@@ -2243,7 +2243,7 @@ public static class AbstractionLicenceSchemaConverter
                                         }
 
                                         var cloned = ci.Clone();
-                                        cloned.Direction = InformationDirection.InSameGroup;
+                                        cloned.Direction = InformationDirection.ReferencedAlongside;
                                         cloned.SourceLicence = l.LicenceNumber?.Value;
 
                                         containedInList.Add(cloned);
@@ -2525,7 +2525,7 @@ public static class AbstractionLicenceSchemaConverter
                                     .Select(ci =>
                                     {
                                         var cloned = ci.Clone();
-                                        cloned.Direction = InformationDirection.InSameGroup;
+                                        cloned.Direction = InformationDirection.ReferencedAlongside;
                                         cloned.SourceLicence = missingLinkedLicenceStep1!.LicenceNumber?.Value;
 
                                         return cloned;
@@ -5293,7 +5293,7 @@ public static class AbstractionLicenceSchemaConverter
         var aggregate = new Aggregate
         {
             LicenceSetId = abstractionLinkedLicences.Count > 0
-                ? LicenceSet.GetLicenceSetId(ls)
+                ? LicenceSet.GetLicenceSetId(ls, LicenceSetType.LicencesGroupedByAbstractionLimits)
                 : null,
             SourceLicenceNumber = licenceNumber,
             SourceLicenceVersionId = licenceVersionId,

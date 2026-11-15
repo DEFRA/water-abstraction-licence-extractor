@@ -487,8 +487,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(agreedSchemaLicenceGroup);
-        Assert.Equal("12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
-        Assert.Equal("045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
+        Assert.Equal("SIN12203045", agreedSchemaLicenceGroup[0].LicenceSetId);
+        Assert.Equal("SIN045", agreedSchemaLicenceGroup[0].ShortLicenceSetId);
         
         Assert.Single(agreedSchemaLicenceGroup.First().Licences);
 
@@ -533,8 +533,8 @@ public class TesseractAndAwsTextractOcrPdfTests(SingletonAwsTextractFixture text
             AbsLicCacheService, NaldDataLookupService);
         
         Assert.Single(licenceSets);
-        Assert.Equal("12305001-12405001-12405035-12501004-12505001-12505002-12505003-12505004-12505005-12505007-12505008", licenceSets[0].LicenceSetId);
-        Assert.Equal("001-001-035-004-001-002-003-004-005-007-008", licenceSets[0].ShortLicenceSetId);
+        Assert.Equal("OTH12305001-12405001-12405035-12501004-12505001-12505002-12505003-12505004-12505005-12505007-12505008", licenceSets[0].LicenceSetId);
+        Assert.Equal("OTH001-001-035-004-001-002-003-004-005-007-008", licenceSets[0].ShortLicenceSetId);
         
         Assert.Equal(11, licenceSets.First().Licences.Length);
 

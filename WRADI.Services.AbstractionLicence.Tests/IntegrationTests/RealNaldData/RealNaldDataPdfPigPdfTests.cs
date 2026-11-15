@@ -301,8 +301,8 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
-        Assert.Equal(LicenceSetType.Others, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[1].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);
         
@@ -462,7 +462,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
             NaldDataLookupService);
         
         Assert.Single(licenceSets);
-        Assert.Equal(LicenceSetType.Lineage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets[0].LicenceSetType);
 
         Assert.Equal(2, licenceSets.First().Licences.Length);
         
@@ -672,7 +672,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.Equal(2, licenceSets.Count);
         
-        Assert.Equal(LicenceSetType.Lineage, licenceSets.Last().LicenceSetType);        
+        Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets.Last().LicenceSetType);        
         Assert.Equal(2, licenceSets.First().Licences.Length);
         
         var licence =  licenceSets.First().Licences[0];

@@ -77,9 +77,6 @@ public class UiProcessRunService(
         int processRunId,
         ProcessRunQuery query)
     {
-        var completeNumber = 1;
-        var fileNumber = 1;
-        
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var licenceNumberFlagReasonsTask =
@@ -96,9 +93,6 @@ public class UiProcessRunService(
             .Where(licence => licence.Status == ScrapeStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
                 licence,
-                DateTime.Now,
-                completeNumber++,
-                fileNumber++,
                 licenceSets))
             .ToList();
         

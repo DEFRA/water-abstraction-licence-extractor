@@ -78,13 +78,13 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("121", StringComparison.OrdinalIgnoreCase))
+        //.Where(x => x.Key.Contains("12504008", StringComparison.OrdinalIgnoreCase))
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(10)
+        .Take(50)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);

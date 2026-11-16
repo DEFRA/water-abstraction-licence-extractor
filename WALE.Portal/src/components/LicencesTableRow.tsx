@@ -1,11 +1,18 @@
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import { getVerificationWithNotesFirstPart, getVerificationWithNotesTooltip, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
+import {ContainedInInformation, InformationSource, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {
+    getVerificationTypeBackgroundColor,
+    getVerificationTypeInitials,
+    getVerificationWithNotesFirstPart,
+    getVerificationWithNotesTooltip
+} from "../utils/verificationUtils.ts";
 import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
 import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 import {getVerificationSectionsToDisplay} from "../utils/verificationSections.ts";
+import NaldTag from "./NaldTag.tsx";
+import DocumentTag from "./DocumentTag.tsx";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
@@ -22,6 +29,46 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         sectionVerifications.map(section => section.licenceSectionName),
         verificationSections);
 
+    let toShortId = function(id: string){
+        const parts = id.split("-");
+        let sb = [];
+        
+        for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            let shortPart = '';
+            
+            if (i == 1) {
+                shortPart = 'LV'
+            }
+            else if (i == 2 || i == parts.length - 1) {
+                shortPart = part;
+            }
+            else {
+                shortPart = part.substring(part.length - 3);
+            }
+            
+            sb.push(shortPart);
+        }
+        
+        return sb.join('-');
+    }
+    
+    let naldCi = function(aggregateId : string) {
+        let ci = new ContainedInInformation();
+        ci.source = InformationSource.Nald;
+
+        console.log(aggregateId);        
+        return [ci];
+    }
+
+    let documentCi = function(aggregateId : string) {
+        let ci = new ContainedInInformation();
+        ci.source = InformationSource.Document;
+
+        console.log(aggregateId);
+        return [ci];
+    }
+    
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -41,8 +88,22 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
             <td>{dashesIfNullOrZero(item.limitsCount)}</td>
             <td>
-                <strong>File:</strong> {(item.aggregatesCount ?? 0) > 0 ? "True" : "False"} ({dashesIfNull(item.aggregatesCount)})
-                <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
+                {item.aggregateIds != null && item.aggregateIds!.length > 0 &&
+                <ul>
+                    {item.aggregateIds.map((aggregateId) => {
+                        return (
+                            <li>
+                                {toShortId(aggregateId)}
+                                <NaldTag containedIn={item.naldHasAggregateCondition ? naldCi(aggregateId) : []}/>
+                                <DocumentTag containedIn={(item.aggregatesCount ?? 0) > 0 ? documentCi(aggregateId) : []}/>
+                            </li>);
+                    })}
+                </ul>
+                }
+                {item.aggregateIds === null || item.aggregateIds!.length === 0 &&
+                    <span>--</span>
+                }
+            </td>
             <td>{(item.ocr ? "True" : "False")}</td>
             <td>
                 <strong>Doc:</strong><br /> {dashesIfNullOrEmpty(item.issueDate)}

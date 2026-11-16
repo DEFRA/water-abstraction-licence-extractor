@@ -5396,7 +5396,7 @@ public static class AbstractionLicenceSchemaConverter
             .ToArray();
 
         var newAggregateLinkedLicences = new List<string>();
-            
+
         foreach (var aggregateLinkedLicence in aggregateLinkedLicences)
         {
             newAggregateLinkedLicences.Add(aggregateLinkedLicence);

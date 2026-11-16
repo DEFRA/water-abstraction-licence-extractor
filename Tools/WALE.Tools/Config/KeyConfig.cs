@@ -17,6 +17,7 @@ public static class KeyConfig
             
             _config = new ConfigurationBuilder()
                 .AddUserSecrets<Program>()
+                .AddEnvironmentVariables()
                 .Build();
             
             return _config;
@@ -458,6 +459,13 @@ public static class KeyConfig
             return _awsS3AssetsBucketName;
         }
     }
+
+    // Shared, not this tool's own allowance: a concurrent Lambda run or a second tool is
+    // spending the same budget.
+    public static int ApiRequestsPerSecond =>
+        int.TryParse(Config["ApiRequestsPerSecond"], out var requestsPerSecond)
+            ? requestsPerSecond
+            : 50;
 
     // Optional - only needed when AwsS3AccessKey/AwsS3SecretKey are a temporary STS session
     // rather than a long-lived IAM user's credentials.

@@ -63,7 +63,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         verificationType: undefined,
         sortField: '',
         sortAscending: true,
-        licenceNumbers: []
+        licenceNumbers: [],
+        verificationSections: undefined
     });
     const [outputList, setOutputList] = useState<OutputListDataItem[]>([]);
     const [cumulativeFilterCounts, setCumulativeFilterCounts] = useState<CumulativeFilterCounts | undefined>(undefined);
@@ -76,7 +77,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
 
     const [licenceSetsTotals, setLicenceSetsTotals] = useState<LicenceSetsTotals | undefined>(undefined);
     const [verifyType, setVerifyType] = useState('');
-    const totals = useTotals(outputList, verifyType);
+    const [verifySections, setVerifySections] = useState<string[] | undefined>(undefined);
+    const totals = useTotals(outputList, verifyType, verifySections);
 
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
@@ -111,6 +113,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.ShortLicenceSetId +
                 currentQuery.linkedLicencesType +
                 currentQuery.verificationType +
+                currentQuery.verificationSections +
             currentQuery.sortField +
             currentQuery.sortAscending;
 
@@ -146,12 +149,14 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.verificationType,
                 currentQuery.sortField,
                 currentQuery.sortAscending,
-                currentQuery.licenceNumbers
+                currentQuery.licenceNumbers,
+                currentQuery.verificationSections
             );
 
             setOutputList(listDataItems.records);
             setCumulativeFilterCounts(listDataItems.cumulativeFilterCounts);
             setVerifyType(currentQuery.verificationType ?? '');
+            setVerifySections(currentQuery.verificationSections);
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
             setIssueDates(listDataItems.issueDates ?? []);
@@ -217,7 +222,8 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     undefined,
                     undefined,
                     undefined,
-                    [licenceNumber]
+                    [licenceNumber],
+                    undefined
                 ).then(result => {
                     const resolvedItem = result.records?.find(item => item.fileId === fileId);
                     if (resolvedItem) {
@@ -253,6 +259,43 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 const updatedItem = outputList.find(item => item.fileId === modal.fileId);
                 if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(modal.outputListDataItem)) {
                     updateModalOutputItem(modal.fileId, updatedItem);
+                }
+                if (!updatedItem) {
+                    const licenceNumber = getLicenceNumber(modal.fileId);
+                    if (licenceNumber) {
+                        waleApiClient.getProcessRunList(
+                            processRunId,
+                            'N/A',
+                            '',
+                            0,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            [licenceNumber],
+                            undefined
+                        ).then(result => {
+                            const resolvedItem = result.records?.find(item => item.fileId === modal.fileId);
+                            if (resolvedItem) {
+                                updateModalOutputItem(modal.fileId, resolvedItem);
+                            }
+                        }).catch(err => {
+                            console.error('Error resolving linked licence report data:', err);
+                        });
+                    }
                 }
             }
         });
@@ -359,6 +402,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                                 onOpenReport={openReportWithId}
                                 onOpenLicenceSetReport={openLicenceSetReportWithId}
                                 showSingles={showSingles}
+                                verificationSections={verifySections}
                             />
                         ))}
                         </tbody>

@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(90)]
+[Migration(92)]
 public sealed class AddLicenceListItemCrossRunIndex : Migration
 {
     public override void Up()

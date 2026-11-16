@@ -124,14 +124,17 @@ public static class ReadSqlHelper
         StringBuilder sql,
         string? primaryTypeFilter)
     {
-        if (primaryTypeFilter is "InLicence" or "Both")
+        switch (primaryTypeFilter)
         {
-            sql.AppendLine("  AND has_in_licence_aggregate");
-        }
-
-        if (primaryTypeFilter is "LicenceToLicence" or "Both")
-        {
-            sql.AppendLine("  AND has_licence_to_licence_aggregate");
+            case "InLicence":
+                sql.AppendLine("  AND has_in_licence_aggregate AND NOT has_licence_to_licence_aggregate");
+                break;
+            case "LicenceToLicence":
+                sql.AppendLine("  AND has_licence_to_licence_aggregate AND NOT has_in_licence_aggregate");
+                break;
+            case "Both":
+                sql.AppendLine("  AND has_in_licence_aggregate AND has_licence_to_licence_aggregate");
+                break;
         }
     }
     
@@ -371,11 +374,29 @@ public static class ReadSqlHelper
     public static void AddVerificationTypeFilter(
         StringBuilder sql,
         DynamicParameters parameters,
-        string? verificationType)
+        string? verificationType,
+        string[]? verificationSections = null)
     {
         if (string.IsNullOrWhiteSpace(verificationType))
         {
             return;
+        }
+
+        var filteredVerificationSections = verificationSections?
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var sectionClause = string.Empty;
+
+        if (filteredVerificationSections is { Length: > 0 })
+        {
+            sectionClause = "AND section.licence_section_name = ANY(@VerificationSections)";
+
+            parameters.Add(
+                "VerificationSections",
+                filteredVerificationSections);
         }
 
         if (verificationType.Equals(
@@ -383,7 +404,7 @@ public static class ReadSqlHelper
                 StringComparison.OrdinalIgnoreCase))
         {
             sql.AppendLine(
-                """
+                $"""
                   AND EXISTS (
                       SELECT 1
                       FROM licence_list_item_verification_section section
@@ -393,8 +414,7 @@ public static class ReadSqlHelper
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
                         AND item.is_flagged = true
-                        -- WRADI-400: Aggregates flags suppressed; remove this line to restore
-                        AND section.licence_section_name <> 'Aggregates'
+                        {sectionClause}
                   )
                 """);
 
@@ -406,7 +426,7 @@ public static class ReadSqlHelper
                 StringComparison.OrdinalIgnoreCase))
         {
             sql.AppendLine(
-                """
+                $"""
                   AND NOT EXISTS (
                       SELECT 1
                       FROM licence_list_item_verification_section section
@@ -416,6 +436,7 @@ public static class ReadSqlHelper
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
                         AND cardinality(item.verification_types) > 0
+                        {sectionClause}
                   )
                 """);
 
@@ -427,7 +448,7 @@ public static class ReadSqlHelper
                 StringComparison.OrdinalIgnoreCase))
         {
             sql.AppendLine(
-                """
+                $"""
                   AND EXISTS (
                       SELECT 1
                       FROM licence_list_item_verification_section section
@@ -437,6 +458,7 @@ public static class ReadSqlHelper
                       WHERE section.licence_list_item_id =
                             licence_list_item.licence_list_item_id
                         AND cardinality(item.verification_types) > 0
+                        {sectionClause}
                   )
                 """);
 
@@ -444,7 +466,7 @@ public static class ReadSqlHelper
         }
 
         sql.AppendLine(
-            """
+            $"""
               AND EXISTS (
                   SELECT 1
                   FROM licence_list_item_verification_section section
@@ -454,6 +476,7 @@ public static class ReadSqlHelper
                   WHERE section.licence_list_item_id =
                         licence_list_item.licence_list_item_id
                     AND lower(item.current_verification_type) = lower(@VerificationType)
+                    {sectionClause}
               )
             """);
 

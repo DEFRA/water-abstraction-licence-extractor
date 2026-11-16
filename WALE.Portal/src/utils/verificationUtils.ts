@@ -120,7 +120,7 @@ export const groupLinkedLicencesByFollowOn = (
         .forEach(item => {
             if (!item.licenceNumber) return;
             const from = normaliseLicenceNumber(item.licenceNumber);
-            (item.followOnLicenceNumbers ?? []).forEach(followOn => {
+            (item.followOnLicenceNumbers ?? []).forEach((followOn: string) => {
                 const to = normaliseLicenceNumber(followOn);
                 addEdge(followOns, from, to);
                 addEdge(predecessors, to, from);

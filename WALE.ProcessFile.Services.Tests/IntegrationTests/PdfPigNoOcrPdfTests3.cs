@@ -324,24 +324,31 @@ public class PdfPigNoOcrPdfTests3(StandaloneFixture3 fixture)
         var config = await LookupConfigurationAsync(1, 2, TestConfig.PdfFolder);
         config.CacheService = specialCacheServices.CacheService;
         
-        var agreedSchemaLicenceGroup = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = (await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             config,
             AbsLicCacheService, NaldDataLookupService)).Last();
 
-        var primaryLicence = agreedSchemaLicenceGroup.Licences.First();
+        var primaryLicence = licenceSets.Licences.First();
 
-        Assert.Single(primaryLicence.LinkedLicences);
+        Assert.Equal(2, primaryLicence.LinkedLicences.Length);
 
         Assert.Equal("NE/026/0034/052", primaryLicence.LinkedLicences[0].LicenceNumber);
-        Assert.Equal(3, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
+        Assert.Equal(4, primaryLicence.LinkedLicences[0].ContainedIn!.Length);
         Assert.Equal("AbstractionLimits", primaryLicence.LinkedLicences[0].ContainedIn![0].SectionName);
         Assert.Equal("AggregateCondition", primaryLicence.LinkedLicences[0].ContainedIn![0].LinkReason);
         Assert.Equal("FurtherConditions", primaryLicence.LinkedLicences[0].ContainedIn![1].SectionName);
         Assert.Equal("SimultaneousDischargeCondition", primaryLicence.LinkedLicences[0].ContainedIn![1].LinkReason);
         Assert.Equal("Additional", primaryLicence.LinkedLicences[0].ContainedIn![2].SectionName);
         Assert.Equal("AggregateConditions", primaryLicence.LinkedLicences[0].ContainedIn![2].LinkReason);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[0].ContainedIn![3].SectionName);
+        Assert.Equal("MinorVariation", primaryLicence.LinkedLicences[0].ContainedIn![3].LinkReason);
+        
+        Assert.Equal("NE/026/0034/008", primaryLicence.LinkedLicences[1].LicenceNumber);
+        Assert.Single(primaryLicence.LinkedLicences[1].ContainedIn!);
+        Assert.Equal("LicenceHistory", primaryLicence.LinkedLicences[1].ContainedIn![0].SectionName);
+        Assert.Equal("MinorVariation", primaryLicence.LinkedLicences[1].ContainedIn![0].LinkReason);
     }
 }

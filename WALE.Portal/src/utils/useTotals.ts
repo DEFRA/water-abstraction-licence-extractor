@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { OutputListDataItem } from '../api/generated/apiClient';
 import type {OutputListDataItemKey} from "./types.ts";
+import {isVerificationSectionSelected} from "./verificationSections.ts";
 
 export interface Totals {
     filename: number;
@@ -20,7 +21,7 @@ export interface Totals {
     status: number;
 }
 
-export function useTotals(filteredData: OutputListDataItem[], sectionVerification : string): Totals {
+export function useTotals(filteredData: OutputListDataItem[], sectionVerification : string, verificationSections?: string[]): Totals {
     return useMemo(() => {
         return {
             filename: countNonEmpty(filteredData, 'filename', ''),
@@ -35,11 +36,11 @@ export function useTotals(filteredData: OutputListDataItem[], sectionVerificatio
             issuer: countNonEmpty(filteredData, 'issuer', ''),
             meansFound: countNonEmpty(filteredData, 'meansFound', false),
             linkedLicences: countNonEmpty(filteredData, 'linkedLicences', []),
-            licenceSectionVerifications: countNonEmptyVerificationTypes(filteredData, sectionVerification),
+            licenceSectionVerifications: countNonEmptyVerificationTypes(filteredData, sectionVerification, verificationSections),
             licenceSets: countNonEmptyLicenceSets(filteredData),
             status: filteredData.length // Status always has a value
         };
-    }, [filteredData]);
+    }, [filteredData, sectionVerification, verificationSections]);
 }
 
 function countNonEmpty(
@@ -97,7 +98,7 @@ function countNonEmptyLicenceSets(data: OutputListDataItem[]): number {
     return count;
 }
 
-function countNonEmptyVerificationTypes(data: OutputListDataItem[], verificationType: string): number {
+function countNonEmptyVerificationTypes(data: OutputListDataItem[], verificationType: string, verificationSections?: string[]): number {
     let count = 0;
 
     for (const item of data) {
@@ -106,6 +107,10 @@ function countNonEmptyVerificationTypes(data: OutputListDataItem[], verification
 
         if (Array.isArray(value) && value.length > 0) {
             value.forEach(section => {
+                if (!isVerificationSectionSelected(section.licenceSectionName, verificationSections)) {
+                    return;
+                }
+
                 const sectionItems = section.licenceSectionItems ?? [];
 
                 if (verificationType === "") {

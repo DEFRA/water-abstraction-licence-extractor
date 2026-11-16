@@ -36,7 +36,7 @@ public static class GenerateWrInspectionReportCsv
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
             300,
-            50);
+            KeyConfig.ApiRequestsPerSecond);
         
         ICacheService cacheService = new ApiCacheService(httpClient);
         IOutputService outputService = new ApiOutputService(httpClient);

@@ -164,7 +164,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                    data::jsonb -> 'licenceVersion' ->> 'issuer' AS issuer
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
               AND NULLIF(
                     trim(data::jsonb -> 'licenceVersion' ->> 'issuer'),
                     ''
@@ -455,7 +455,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                    LEFT(data::jsonb -> 'licenceVersion' ->> 'issueDate', 4) AS issue_year
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
               AND NULLIF(
                     trim(data::jsonb -> 'licenceVersion' ->> 'issueDate'),
                     ''
@@ -689,7 +689,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             SELECT count(*)
             FROM licence
             WHERE process_run_id = @ProcessRunId
-              AND data::jsonb ->> 'status' = 'Ok'
+              AND status = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -1471,7 +1471,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             FROM licence
             WHERE
                 process_run_id = @ProcessRunId
-                AND data::jsonb ->> 'status' = 'Ok'
+                AND status = 'Ok'
             """);
 
         var parameters = new DynamicParameters();
@@ -3450,22 +3450,30 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
     private static void AddAggregatePrimaryTypeFilter(StringBuilder sql, string? primaryTypeFilter)
     {
-        if (primaryTypeFilter is "InLicence" or "Both")
+        switch (primaryTypeFilter)
         {
-            AddAggregateOfPrimaryTypeExists(sql, "InLicence");
-        }
-
-        if (primaryTypeFilter is "LicenceToLicence" or "Both")
-        {
-            AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence");
+            case "InLicence":
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: false);
+                break;
+            case "LicenceToLicence":
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: false);
+                break;
+            case "Both":
+                AddAggregateOfPrimaryTypeExists(sql, "InLicence", exists: true);
+                AddAggregateOfPrimaryTypeExists(sql, "LicenceToLicence", exists: true);
+                break;
         }
     }
 
-    private static void AddAggregateOfPrimaryTypeExists(StringBuilder sql, string primaryType)
+    private static void AddAggregateOfPrimaryTypeExists(StringBuilder sql, string primaryType, bool exists)
     {
+        var existsKeyword = exists ? "EXISTS" : "NOT EXISTS";
+
         sql.AppendLine(
             $"""
-               AND EXISTS (
+               AND {existsKeyword} (
                    SELECT 1
                    FROM jsonb_array_elements(
                        COALESCE(
@@ -3809,9 +3817,7 @@ private async Task<
             verification_item.current_verification_type
         AS CurrentVerificationType,
 
-            -- WRADI-400: Aggregates flags suppressed; revert to `verification_item.is_flagged` to restore
-            (verification_item.is_flagged
-                AND verification_section.licence_section_name <> 'Aggregates')
+            verification_item.is_flagged
                 AS IsFlagged,
 
             verification_item.flag_reason
@@ -4514,7 +4520,8 @@ private async Task<
         ReadSqlHelper.AddVerificationTypeFilter(
             sql,
             parameters,
-            query.VerificationType);
+            query.VerificationType,
+            query.VerificationSections);
 
         ReadSqlHelper.AddLicenceNumbersFilter(
             sql,

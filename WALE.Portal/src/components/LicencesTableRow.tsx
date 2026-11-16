@@ -5,6 +5,7 @@ import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
 import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
+import {getVerificationSectionsToDisplay} from "../utils/verificationSections.ts";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
@@ -17,9 +18,15 @@ interface OutputItemTableRowProps {
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
+    verificationSections?: string[];
 }
 
-function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, linkToEstate, onOpenReport, onOpenLicenceSetReport, showSingles}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, linkToEstate, onOpenReport, onOpenLicenceSetReport, showSingles, verificationSections}: OutputItemTableRowProps) {
+    const sectionVerifications = item.licenceSectionVerifications ?? [];
+    const sectionsToDisplay = getVerificationSectionsToDisplay(
+        sectionVerifications.map(section => section.licenceSectionName),
+        verificationSections);
+
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center', position: 'relative'}}>
@@ -87,14 +94,16 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, loo
                 />
             </td>
             <td>
-                {((item.licenceSectionVerifications?.length ?? 0) > 0 ?
-                    [...item.licenceSectionVerifications!]
-                        .sort((a, b) => compareAlphanumeric(a.licenceSectionName, b.licenceSectionName))
-                        .map((section) => (
-                            <div key={section.licenceSectionName} style={{ marginBottom: '10px' }}>
-                                <strong>{section.licenceSectionName}</strong>
-                                <UnorderedListOfStrings items={
-                                    [...(section.licenceSectionItems || [])]
+                {sectionsToDisplay.map((sectionName) => {
+                    const sectionItems = sectionVerifications
+                        .filter(section => section.licenceSectionName === sectionName)
+                        .flatMap(section => section.licenceSectionItems ?? []);
+
+                    return (
+                            <div key={sectionName} style={{ marginBottom: '10px' }}>
+                                <strong>{sectionName}</strong>
+                                {sectionItems.length === 0 ? <div>No verifications</div> : <UnorderedListOfStrings items={
+                                    [...sectionItems]
                                         .sort((a, b) => compareAlphanumeric(a.licenceSectionItemId, b.licenceSectionItemId))
                                         .map((v) => {
                                             const itemId = v.licenceSectionItemId ?? "Unknown";
@@ -122,10 +131,10 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, loo
                                                 </span>
                                             );
                                         })
-                                }/>
+                                }/>}
                             </div>
-                        ))
-                    : 'No verifications')}
+                    );
+                })}
             </td>
         </tr>
     );

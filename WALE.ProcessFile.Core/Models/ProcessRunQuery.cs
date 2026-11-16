@@ -45,6 +45,8 @@ public class ProcessRunQuery
     
     public string[]? LicenceNumbers { get; init; }
 
+    public string[]? VerificationSections { get; init; }
+
     /// Memberwise so a subclass survives the copy with its own fields - LicenceEstateQuery is one.
     public ProcessRunQuery Clone() => (ProcessRunQuery)MemberwiseClone();
 }

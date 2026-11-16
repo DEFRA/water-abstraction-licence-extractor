@@ -135,36 +135,50 @@ public class DatabaseAbstractionLicenceOutputService(
         var licenceSetLicences = await databaseReadService.GetLicenceSetLicencesAsync(
             processRun.ProcessRunId);
 
-        var missingLicenceIds = licenceSetLicences.Where(lsl => lsl.LicenceId == null);
+        var missingLicenceIds = licenceSetLicences
+            .Where(lsl => lsl.LicenceId == null)
+            .ToList();
 
-        foreach (var missingLicenceId in missingLicenceIds)
+        const int chunkSize = 10;
+        var missingLicenceIdsChunks = missingLicenceIds.Chunk(chunkSize);
+
+        foreach (var missingLicenceIdsChunk in missingLicenceIdsChunks)
         {
-            if (missingLicenceId.LicenceNumber == null)
-            {
-                continue;
-            }
+            var taskList = missingLicenceIdsChunk
+                .Select(missingLicenceId => UpdateLicenceSetLicenceInternalAsync(
+                    missingLicenceId,
+                    processRun.ProcessRunId))
+                .ToList();
 
-            var licenceTransformed = FormattingHelper.FormatLicenceNumber(
-                missingLicenceId.LicenceNumber,
-                GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
-
-            var licence =
-                await databaseReadService.GetLicenceAsync(
-                    licenceTransformed,
-                    processRun.ProcessRunId);
-
-            if (licence == null)
-            {
-                // TODO log - shouldn't happen
-                continue;
-            }
-
-            missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
-            
-            await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
+            await Task.WhenAll(taskList);
         }
 
         await ogDatabaseWriteService.UpdateProcessRunAsync(processRun);
+    }
+
+    private async Task UpdateLicenceSetLicenceInternalAsync(LicenceSetLicence missingLicenceId, int processRunId)
+    {
+        if (missingLicenceId.LicenceNumber == null)
+        {
+            return;
+        }
+
+        var licenceTransformed = FormattingHelper.FormatLicenceNumber(
+            missingLicenceId.LicenceNumber,
+            GeneralConstants.UnsetRegionCode)!; // Used as not known real region code
+
+        var licence = await databaseReadService.GetLicenceAsync(
+            licenceTransformed,
+            processRunId);
+
+        if (licence == null)
+        {
+            // TODO log - shouldn't happen
+            return;
+        }
+
+        missingLicenceId.LicenceId = (int)licence.NoneSchemaData["licenceId"]!;
+        await databaseWriteService.UpdateLicenceSetLicenceAsync(missingLicenceId);
     }
 
     public Task UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers)

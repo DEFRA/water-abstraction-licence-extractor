@@ -6,7 +6,7 @@ public enum LicenceSetType
     SingleLicenceOnly,
     LicencesGroupedByAbstractionLimits,
     LicencesGroupedByLineage,
-    LicencesGroupedByOtherThenLimitsAndLinegage,
+    LicencesGroupedByOtherThenLimitsAndLineage,
     
     // Oldies for serialisation
     AllLicencesExplicitlyReferencedAnywhere,
@@ -14,5 +14,6 @@ public enum LicenceSetType
     AllLicencesImplicitlyReferencedInLimits,
     AllLicencesIncludingImplicitlyReferenced,
     FullyEncompassedIn,
-    PartiallyEncompassedIn
+    PartiallyEncompassedIn,
+    LicencesGroupedByOtherThenLimitsAndLinegage // Mispelling
 }

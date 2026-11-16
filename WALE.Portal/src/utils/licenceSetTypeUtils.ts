@@ -1,17 +1,19 @@
 // Use a const object instead of an enum
 export const LicenceSetType = {
     Unknown: 0,
-    SingleLicenceOnly: 1,
-    LicencesGroupedByAbstractionLimits: 2,
-    Others: 3,
+    SingleLicenceOnly : 1,
+    LicencesGroupedByAbstractionLimits : 2,
+    LicencesGroupedByLineage : 3,
+    LicencesGroupedByOtherThenLimitsAndLineage : 4,
 
     // Oldies for serialisation
-    AllLicencesExplicitlyReferencedAnywhere: 4,
-    AllLicencesExplicitlyReferencedInLimits: 5,
-    AllLicencesImplicitlyReferencedInLimits: 6,
-    AllLicencesIncludingImplicitlyReferenced: 7,
-    FullyEncompassedIn: 8,
-    PartiallyEncompassedIn: 9
+    AllLicencesExplicitlyReferencedAnywhere: 5,
+    AllLicencesExplicitlyReferencedInLimits: 6,
+    AllLicencesImplicitlyReferencedInLimits: 7,
+    AllLicencesIncludingImplicitlyReferenced: 8,
+    FullyEncompassedIn: 9,
+    PartiallyEncompassedIn: 10,
+    LicencesGroupedByOtherThenLimitsAndLinegage: 11
 } as const;
 
 // Create a type from the object values
@@ -21,7 +23,8 @@ export const licenceSetTypeClassMap: Record<number, string> = {
     [LicenceSetType.Unknown]: 'unknown',
     [LicenceSetType.SingleLicenceOnly]: 'singleLicenceOnly',
     [LicenceSetType.LicencesGroupedByAbstractionLimits]: 'licencesGroupedByAbstractionLimits',
-    [LicenceSetType.Others]: 'others',
+    [LicenceSetType.LicencesGroupedByLineage]: 'licencesGroupedByLineage',
+    [LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage]: 'licencesGroupedByOtherThenLimitsAndLineage',
     
     [LicenceSetType.AllLicencesExplicitlyReferencedAnywhere]: 'unknown',
     [LicenceSetType.AllLicencesExplicitlyReferencedInLimits]: 'unknown',

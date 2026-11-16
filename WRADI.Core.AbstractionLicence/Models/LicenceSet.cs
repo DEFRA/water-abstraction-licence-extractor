@@ -72,7 +72,7 @@ public class LicenceSet
         {
             LicenceSetType.LicencesGroupedByAbstractionLimits => "LIM",
             LicenceSetType.LicencesGroupedByLineage => "HIS",
-            LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage => "OTH",
+            LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage => "OTH",
             LicenceSetType.SingleLicenceOnly => "SNG",
             _ => "UNK"
         };

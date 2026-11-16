@@ -381,7 +381,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             <p style={{color: '#888', marginBottom: '16px'}}>Incoming or referenced alongside links found.</p>
                             <ul style={{
                                 listStyle: "none"
-                            }}    >
+                            }}>
                                 {implicitLinkedLicences.map((ll, index) => {
                                     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
                                     const licenceNumber = ll.licenceNumber;

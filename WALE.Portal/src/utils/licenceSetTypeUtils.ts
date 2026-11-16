@@ -13,7 +13,9 @@ export const LicenceSetType = {
     AllLicencesIncludingImplicitlyReferenced: 8,
     FullyEncompassedIn: 9,
     PartiallyEncompassedIn: 10,
-    LicencesGroupedByOtherThenLimitsAndLinegage: 11
+    LicencesGroupedByOtherThenLimitsAndLinegage: 11,
+    Others: 12,
+    Lineage: 13,
 } as const;
 
 // Create a type from the object values
@@ -31,7 +33,10 @@ export const licenceSetTypeClassMap: Record<number, string> = {
     [LicenceSetType.AllLicencesImplicitlyReferencedInLimits]: 'unknown',
     [LicenceSetType.AllLicencesIncludingImplicitlyReferenced]: 'unknown',
     [LicenceSetType.FullyEncompassedIn]: 'unknown',
-    [LicenceSetType.PartiallyEncompassedIn]: 'unknown'
+    [LicenceSetType.PartiallyEncompassedIn]: 'unknown',
+    [LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage]: 'licencesGroupedByOtherThenLimitsAndLineage',
+    [LicenceSetType.Others]: 'licencesGroupedByOtherThenLimitsAndLineage',
+    [LicenceSetType.Lineage]: 'licencesGroupedByLineage'
 };
 
 export function getLicenceSetTypeClass(type: number | undefined | null): string {

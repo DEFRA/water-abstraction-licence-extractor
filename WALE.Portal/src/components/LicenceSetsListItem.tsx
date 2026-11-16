@@ -17,7 +17,7 @@ export function LicenceSetsListItem({fileId, licenceId, matchesResultId, licence
 
     let groupedByAbstractionLimits = licenceSetType === "licencesGroupedByAbstractionLimits";
     let singleLicenceOnly = licenceSetType === "singleLicenceOnly";
-    let others = licenceSetType === "others" || licenceSetType === "licencesGroupedByOtherThenLimitsAndLineage";
+    let others = licenceSetType === "licencesGroupedByOtherThenLimitsAndLineage";
     let lineage = licenceSetType === "licencesGroupedByLineage";
 
     let color = groupedByAbstractionLimits ? "hotpink" : "red";

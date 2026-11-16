@@ -15,5 +15,7 @@ public enum LicenceSetType
     AllLicencesIncludingImplicitlyReferenced,
     FullyEncompassedIn,
     PartiallyEncompassedIn,
-    LicencesGroupedByOtherThenLimitsAndLinegage // Mispelling
+    LicencesGroupedByOtherThenLimitsAndLinegage, // Mispelling
+    Others,
+    Lineage
 }

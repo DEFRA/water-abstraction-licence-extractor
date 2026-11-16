@@ -302,7 +302,7 @@ public class RealNaldDataPdfPigNoOcrPdfTests1
         
         Assert.Equal(2, licenceSets.Count);
         Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets[0].LicenceSetType);
-        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[1].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage, licenceSets[1].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);
         

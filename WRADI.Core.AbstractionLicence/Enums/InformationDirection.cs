@@ -5,5 +5,8 @@ public enum InformationDirection
     Unknown,
     Incoming,
     Outgoing,
-    ReferencedAlongside
+    ReferencedAlongside,
+    
+    // Old ones
+    InSameGroup
 }

@@ -10065,13 +10065,14 @@ export enum LicenceSetType {
     SingleLicenceOnly = "SingleLicenceOnly",
     LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
     LicencesGroupedByLineage = "LicencesGroupedByLineage",
-    LicencesGroupedByOtherThenLimitsAndLinegage = "LicencesGroupedByOtherThenLimitsAndLinegage",
+    LicencesGroupedByOtherThenLimitsAndLineage = "LicencesGroupedByOtherThenLimitsAndLineage",
     AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
     AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
     AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
     AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
     FullyEncompassedIn = "FullyEncompassedIn",
     PartiallyEncompassedIn = "PartiallyEncompassedIn",
+    LicencesGroupedByOtherThenLimitsAndLinegage = "LicencesGroupedByOtherThenLimitsAndLinegage",
 }
 
 export enum LicenceType {

@@ -1774,7 +1774,7 @@ public static class AbstractionLicenceSchemaConverter
                 returnLicenceSets.Add(
                     new LicenceSet
                     {
-                        LicenceSetType = LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage,
+                        LicenceSetType = LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage,
                         Licences = otherLicences.ToArray()
                     });
             }

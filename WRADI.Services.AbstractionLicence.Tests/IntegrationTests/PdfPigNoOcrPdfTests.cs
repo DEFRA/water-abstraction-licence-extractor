@@ -134,7 +134,7 @@ public class PdfPigNoOcrPdfTests
             NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage, licenceSets[0].LicenceSetType);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licenceSets[1].LicenceSetType);
         
         Assert.Equal(3, licenceSets.Last().Licences.Length);
@@ -342,7 +342,7 @@ public class PdfPigNoOcrPdfTests
             NaldDataLookupService);
         
         Assert.Equal(2, licenceSets.Count);
-        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLinegage, licenceSets[0].LicenceSetType);
+        Assert.Equal(LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage, licenceSets[0].LicenceSetType);
         Assert.Equal(LicenceSetType.LicencesGroupedByLineage, licenceSets[1].LicenceSetType);
         
         Assert.Equal(2, licenceSets.First().Licences.Length);

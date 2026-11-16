@@ -7,6 +7,9 @@ import {useFileIdMap} from "../utils/useFileIdMap.tsx";
 import {AggregateTag} from "./AggregateTag.tsx";
 import NaldOnlyTag from "./NaldOnlyTag.tsx";
 import ImpoundmentTag from "./ImpoundmentTag.tsx";
+import {ReferencedAlongsideTag} from "./ReferencedAlongsideTag.tsx";
+import {IncomingTag} from "./IncomingTag.tsx";
+import {OutgoingTag} from "./OutgoingTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -49,6 +52,9 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 </a>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                <ReferencedAlongsideTag containedIn={linkedLicence.containedIn}/>
+                <IncomingTag containedIn={linkedLicence.containedIn}/>
+                <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
@@ -59,6 +65,9 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 {styledLicenceNumber}
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                <ReferencedAlongsideTag containedIn={linkedLicence.containedIn}/>
+                <IncomingTag containedIn={linkedLicence.containedIn}/>
+                <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>

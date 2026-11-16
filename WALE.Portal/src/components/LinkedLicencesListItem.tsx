@@ -10,6 +10,7 @@ import ImpoundmentTag from "./ImpoundmentTag.tsx";
 import {ReferencedAlongsideTag} from "./ReferencedAlongsideTag.tsx";
 import {IncomingTag} from "./IncomingTag.tsx";
 import {OutgoingTag} from "./OutgoingTag.tsx";
+import {HistoryTag} from "./HistoryTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -56,6 +57,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <IncomingTag containedIn={linkedLicence.containedIn}/>
                 <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <HistoryTag containedIn={linkedLicence.containedIn}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );
@@ -69,6 +71,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <IncomingTag containedIn={linkedLicence.containedIn}/>
                 <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <HistoryTag containedIn={linkedLicence.containedIn}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );

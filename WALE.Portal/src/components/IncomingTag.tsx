@@ -5,10 +5,10 @@ interface IncomingTagProps {
 }
 
 export function IncomingTag({containedIn}: IncomingTagProps) {
-    const isReferencedAlongside = !!containedIn?.find(ci =>
+    const isIncoming = !!containedIn?.find(ci =>
         ci.direction === NullableOfInformationDirection.Incoming);
     
-    if (!isReferencedAlongside) {
+    if (!isIncoming) {
         return null;
     }
 

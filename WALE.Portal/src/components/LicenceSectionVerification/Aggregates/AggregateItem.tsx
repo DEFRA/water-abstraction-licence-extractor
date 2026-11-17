@@ -473,7 +473,7 @@ export const AggregateItem = ({
                         <div key={idx} style={cardStyle}>
                             <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
                                 <div style={{flex: '0 0 100px'}}>
-                                    <label style={labelStyle}>Id:</label>
+                                    <label style={labelStyle}>Document Identifier:</label>
                                     <input type="text" value={point.id || ''}
                                            onChange={(e) => handlePointChange(idx, 'id', e.target.value)} style={inputStyle}/>
                                 </div>
@@ -510,7 +510,7 @@ export const AggregateItem = ({
                         <div key={idx} style={cardStyle}>
                             <div style={{display: 'flex', gap: '8px', alignItems: 'end'}}>
                                 <div style={{flex: '0 0 100px'}}>
-                                    <label style={labelStyle}>Id:</label>
+                                    <label style={labelStyle}>Document Identifier:</label>
                                     <input type="text" value={purpose.id || ''}
                                            onChange={(e) => handlePurposeChange(idx, 'id', e.target.value)} style={inputStyle}/>
                                 </div>

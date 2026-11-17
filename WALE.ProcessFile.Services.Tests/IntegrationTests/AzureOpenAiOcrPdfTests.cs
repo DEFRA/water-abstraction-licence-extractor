@@ -200,18 +200,17 @@ public class AzureOpenAiOcrPdfTests
         
         // TODO - other 2 things
 
-        var agreedSchemaLicenceGroup = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
+        var licenceSets = await AbstractionLicenceSchemaConverter.ToLicenceSetsAsync(
             resultFull,
             _pdfDataExtractor,
             0,
             await LookupConfigurationAsync(TestConfig.PdfFolder),
             AbsLicCacheService, NaldDataLookupService);
         
-        Assert.Equal(2, agreedSchemaLicenceGroup.Count);
-        Assert.Single(agreedSchemaLicenceGroup.First().Licences);
-        Assert.Equal(2, agreedSchemaLicenceGroup.Last().Licences.Length);
+        Assert.Single(licenceSets);
+        Assert.Equal(2, licenceSets.Last().Licences.Length);
 
-        var agreedSchemaLicence = agreedSchemaLicenceGroup.First().Licences.First();
+        var agreedSchemaLicence = licenceSets.First().Licences.First();
         Assert.Equal("11/42/28.2/7", agreedSchemaLicence.LicenceNumber?.Value);
         
         Assert.Single(agreedSchemaLicence.LinkedLicences);

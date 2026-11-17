@@ -279,6 +279,58 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         response.EnsureSuccessStatusCode();
     }
 
+    /// Page text runs to hundreds of kilobytes, so the batch is split to stay inside the
+    /// request size limit that GET 413s already show is real.
+    private const int MaxBatchedPageLinesBytes = 4 * 1024 * 1024;
+
+    public async Task SaveNoOcrPagesTextLinesAsync(
+        List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
+    {
+        var batch = new List<(NoOcrServicePageCacheRequest Request, string PageLines)>();
+        var batchBytes = 0;
+
+        foreach (var page in pages)
+        {
+            if (batch.Count > 0 && batchBytes + page.PageLines.Length > MaxBatchedPageLinesBytes)
+            {
+                await PostPagesTextLinesAsync(batch);
+                batch = [];
+                batchBytes = 0;
+            }
+
+            batch.Add(page);
+            batchBytes += page.PageLines.Length;
+        }
+
+        if (batch.Count > 0)
+        {
+            await PostPagesTextLinesAsync(batch);
+        }
+    }
+
+    private async Task PostPagesTextLinesAsync(
+        List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
+    {
+        var path = "/Extractor/NoOcr/SaveMultipleNoOcrPageTextLines";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            pages = pages.Select(page => new
+            {
+                page.Request.FileId,
+                page.Request.PageNumber,
+                page.Request.NoOcrServiceName,
+                page.Request.ProcessRunId,
+                pageLines = page.PageLines
+            })
+        }, JsonHelper.GetSerializerOptions());
+
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
         NoOcrServicePageCacheRequest request,
         string pageLines)

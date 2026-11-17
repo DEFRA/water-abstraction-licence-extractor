@@ -83,14 +83,13 @@ public class DatabaseOutputService(
         return databaseWriteService.ReportErrorProcessRunFileAsync(processRunFile);
     }
     
-    public async Task SaveMatchesAsync(
-        List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    public async Task SaveMatchesAsync(List<MatchToSave> matches)
     {
         var tasks = new List<Task>();
 
         foreach (var match in matches)
         {
-            tasks.Add(SaveMatchAsync(match.matchesResultId, match.labelName, match.labelGroupName, match.data));
+            tasks.Add(SaveMatchAsync(match.MatchesResultId, match.LabelName, match.LabelGroupName, match.Data!));
 
             if (tasks.Count == 5)
             {

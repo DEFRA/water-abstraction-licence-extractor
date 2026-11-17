@@ -125,7 +125,7 @@ public class LinkedLicenceGuardTests
         other.RegionId = 3;
         other.Filename = "4-5-6.pdf";
 
-        LinkedLicenceAssertions.FixNoLicenceSetWithoutLinkedLicence([licence, other]);
+        LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence([licence, other]);
 
         var added = Assert.Single(licence.LinkedLicences);
         Assert.Equal("4/5/6", added.LicenceNumber);
@@ -141,7 +141,7 @@ public class LinkedLicenceGuardTests
         var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
 
         Assert.Throws<Exception>(() =>
-            LinkedLicenceAssertions.FixNoLicenceSetWithoutLinkedLicence([licence]));
+            LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence([licence]));
     }
 
     [Fact]

@@ -32,6 +32,7 @@ try
             true,
             true);
 
+        Environment.ExitCode = 1;
         return;
     }
 
@@ -79,6 +80,10 @@ catch (Exception ex)
         true,
         true,
         true);
+
+    // The caller has only the exit code to go on, so exiting zero here is indistinguishable
+    // from OCR that ran and found no text.
+    Environment.ExitCode = 1;
 }
 
 return;

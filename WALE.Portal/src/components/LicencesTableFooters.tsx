@@ -76,19 +76,23 @@ export function LicencesTableFooters({ totals, cumulativeTotals }: LicencesTable
                         textDecoration: 'underline',
                         color: 'deeppink'
                     }}>Pink</span> - Grouped by abstraction limits<br/>
+                    <span style={{
+                        fontWeight: 'bold',
+                        textDecoration: 'underline',
+                        color: 'orange'
+                    }}>Orange</span> - Grouped by Lineage<br/>
                     <span
                         style={{
                             fontWeight: 'bold',
                             textDecoration: 'underline',
                             color: 'forestgreen'
                         }}>Green</span> - Single licence only<br/>
-                    <span style={{fontWeight: 'bold', textDecoration: 'underline'}}>Black</span> - Others<br/>
+                    <span style={{fontWeight: 'bold', textDecoration: 'underline'}}>Black</span> - Other than limit or lineage<br/>
                     <span style={{
                         fontWeight: 'bold',
                         textDecoration: 'underline',
-                        color: 'orange'
-                    }}>Orange</span> - Unknown
-
+                        color: 'red'
+                    }}>Red</span> - Unknown grouping
                 </td>
                 <td></td>
             </tr>

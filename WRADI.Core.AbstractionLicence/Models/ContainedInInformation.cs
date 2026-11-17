@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Enums;
 
@@ -8,10 +7,13 @@ namespace WRADI.Core.AbstractionLicence.Models;
 public class ContainedInInformation
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public InformationSource Source { get; init; }
+    public InformationDirection? Direction { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public InformationDirection? Direction { get; init; }
+    public InformationSource Source { get; init; }
+    
+    // Only set when source is 'SameGroup'
+    public string? SourceLicence { get; set; }
     
     public string? SectionName { get; init; }
     
@@ -37,6 +39,7 @@ public class ContainedInInformation
         return new ContainedInInformation
         {
             Source = Source,
+            SourceLicence = SourceLicence,
             Direction = Direction,
             SectionName = SectionName,
             LinkReason = LinkReason,

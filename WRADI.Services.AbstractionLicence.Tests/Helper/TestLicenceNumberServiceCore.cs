@@ -20,4 +20,10 @@ public class TestLicenceNumberServiceCore : ILicenceNumberServiceCore
     {
         return (false, []);
     }
+
+    public (bool HasPredecessor, List<NaldLicenceNumberHistory> History) AnyOlderLicenceNumber(
+        string? licenceNumber)
+    {
+        return (false, []);
+    }
 }

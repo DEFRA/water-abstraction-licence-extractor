@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Exceptions;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -77,13 +78,13 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-       // .Where(x => x.Key.Contains("12100001__50f99510-da86-49e1-8142-4b6a9aacf5db.pdf", StringComparison.OrdinalIgnoreCase)
+        //.Where(x => x.Key.Contains("121", StringComparison.OrdinalIgnoreCase))
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        //.Take(100)
+        //.Take(10)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -230,6 +231,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Calculated combined aggregates at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     
+    // Recalculate licence set groups
+    licenceSetGroups = allLicenceSets
+        .GroupBy(ls => ls.LicenceSetId)
+        .Select(IReadOnlyList<LicenceSet> (g) => g.ToList())
+        .ToList();
+    
     await SharedHelper.UpdateAndSaveLicenceSetsAsync(
         licenceSetGroups,
         allLicenceSets,
@@ -343,6 +350,29 @@ async Task<List<LicenceSet>> ScrapeDocumentAsync(
     catch (Exception ex)
     {
         ConsoleHelper.WriteLine($"FATAL ERROR - WALE.Cmd:{pdfDataExtractor.Id}  - {pdfFilename} threw fatal error - {ex}");
+
+        // The result is already saved Ok by this point, so without this a post-extraction failure
+        // reads as a clean success and a re-run skips the file. Status mapping mirrors
+        // PdfDataExtractorService, which keeps a transient row reclaimable.
+        try
+        {
+            await lookupConfig.OutputService.SaveErrorMatchesResultAsync(
+                pdfFilename,
+                dmsDataForFile.FileId,
+                processRun.ProcessRunId,
+                ex.ToString(),
+                lookupConfig.UseLockExclusivity,
+                ex is OcrServiceTransientException
+                    ? ScrapeStatus.TransientError
+                    : ScrapeStatus.Error);
+        }
+        catch (Exception saveEx)
+        {
+            // Reporting must not take down the run; the console line above is then the only record.
+            ConsoleHelper.WriteLine(
+                $"ERROR - WALE.Cmd:{pdfDataExtractor.Id} - could not record the fatal for {pdfFilename} - {saveEx}");
+        }
+
         return [];
     }
     finally

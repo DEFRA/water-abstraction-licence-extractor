@@ -7,16 +7,18 @@ namespace WRADI.Core.AbstractionLicence.Models;
 
 public class LicenceSet
 {
-    public string LicenceSetId => GetLicenceSetId(Licences);
+    public string LicenceSetId => GetLicenceSetId(Licences, LicenceSetType);
 
-    public static string GetLicenceSetId(Licence[] licences)
+    public static string GetLicenceSetId(Licence[] licences, LicenceSetType licenceSetType)
     {
         var licencesAlphabetical = licences.OrderBy(licence => licence.LicenceNumber?.Value);
+
         var outputSb = new StringBuilder();
+        outputSb.Append(GetShortLetterType(licenceSetType));
         
         foreach (var licence in licencesAlphabetical)
         {
-            if (outputSb.Length > 0)
+            if (outputSb.Length > 3)
             {
                 outputSb.Append('-');
             }
@@ -30,16 +32,18 @@ public class LicenceSet
         return outputSb.ToString();
     }
     
-    public string ShortLicenceSetId => GetShortLicenceSetId(Licences);
-    
-    public static string GetShortLicenceSetId(Licence[] licences)
+    public string ShortLicenceSetId => GetShortLicenceSetId(Licences, LicenceSetType);
+
+    private static string GetShortLicenceSetId(Licence[] licences, LicenceSetType licenceSetType)
     {
         var licencesAlphabetical = licences.OrderBy(licence => licence.LicenceNumber?.Value);
+
         var outputSb = new StringBuilder();
+        outputSb.Append(GetShortLetterType(licenceSetType));
         
         foreach (var licence in licencesAlphabetical)
         {
-            if (outputSb.Length > 0)
+            if (outputSb.Length > 3)
             {
                 outputSb.Append('-');
             }
@@ -60,6 +64,18 @@ public class LicenceSet
         }
 
         return outputSb.ToString();
+    }
+
+    private static string GetShortLetterType(LicenceSetType licenceSetType)
+    {
+        return licenceSetType switch
+        {
+            LicenceSetType.LicencesGroupedByAbstractionLimits => "LIM",
+            LicenceSetType.LicencesGroupedByLineage => "HIS",
+            LicenceSetType.LicencesGroupedByOtherThenLimitsAndLineage => "OTH",
+            LicenceSetType.SingleLicenceOnly => "SNG",
+            _ => "UNK"
+        };
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]

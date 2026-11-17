@@ -50,6 +50,12 @@ public static class AggregateHelper
         Aggregate sourceAggregate,
         Aggregate otherAggregate) 
     {
+        if (sourceAggregate.PrimaryType == PrimaryType.InLicence
+            || otherAggregate.PrimaryType == PrimaryType.InLicence)
+        {
+            return false;
+        }
+        
         if (sourceAggregate.LinkedLicences?.Length != otherAggregate.LinkedLicences?.Length)
         {
             return false;
@@ -285,7 +291,7 @@ public static class AggregateHelper
 
                 var aggregateLicences = aggregate.LinkedLicences!.ToList();
                 aggregateLicences.Add(aggregate.SourceLicenceNumber!);
-                
+
                 foreach (var linkedLicence in aggregateLicences)
                 {
                     var licenceSetLicence = licenceSet.Licences
@@ -300,7 +306,7 @@ public static class AggregateHelper
 
                     var licenceAlreadyHasAggregate = licenceSetLicence.AbstractionLimits.Aggregates!
                         .Any(agg => AreAggregatesFundamentallyEqual(agg, aggregate));
-                    
+
                     foreach (var licenceAggregate in licenceSetLicence.AbstractionLimits.Aggregates!)
                     {
                         var matchingVariations = aggregate.Variations?
@@ -311,37 +317,39 @@ public static class AggregateHelper
                         {
                             newAggregates.Add(licenceAggregate);
                         }
-                        
+
                         var missingLinkedLicences = aggregate.LinkedLicences
                             .Where(ll => licenceSetLicence.LinkedLicences.All(ll2 => ll2.LicenceNumber != ll)
-                                && ll != licenceSetLicence.LicenceNumber?.Value)
+                                         && ll != licenceSetLicence.LicenceNumber?.Value)
                             .ToList();
 
                         if (missingLinkedLicences.Count == 0)
                         {
                             if (!newAggregates.Contains(licenceAggregate))
                             {
-                                newAggregates.Add(licenceAggregate);                                
+                                newAggregates.Add(licenceAggregate);
                             }
 
                             if (!licenceAlreadyHasAggregate)
                             {
                                 newAggregates.Add(aggregate);
                             }
-                            
+
                             continue;
                         }
-                        
+
                         newAggregates.Add(aggregate);
-                        
+
                         var newLinkedLicences = new List<LinkedLicence>();
                         newLinkedLicences.AddRange(licenceSetLicence.LinkedLicences);
                         newLinkedLicences.AddRange(missingLinkedLicences
                             .Select(missingLinkedLicenceNumber =>
                             {
-                                var missingLinkedLicence = licenceSet.Licences
+                                var missingLinkedLicenceStep1 = licenceSet.Licences
                                     .FirstOrDefault(l => l.LinkedLicences.Any(ll =>
-                                        ll.LicenceNumber == missingLinkedLicenceNumber))?
+                                        ll.LicenceNumber == missingLinkedLicenceNumber));
+
+                                var missingLinkedLicence = missingLinkedLicenceStep1?
                                     .LinkedLicences
                                     .FirstOrDefault(ll => ll.LicenceNumber == missingLinkedLicenceNumber);
 
@@ -350,32 +358,36 @@ public static class AggregateHelper
                                     // TODO look in to how this can happen / log
                                     return null;
                                 }
-                                    
+
+                                // 1/25/03/031/R02 is a rare (only?) case of this
+
+                                var containedIn = missingLinkedLicence.ContainedIn!
+                                    .Select(ci =>
+                                    {
+                                        var cloned = ci.Clone();
+                                        cloned.Direction = InformationDirection.ReferencedAlongside;
+                                        cloned.SourceLicence = missingLinkedLicenceStep1!.LicenceNumber?.Value;
+
+                                        return cloned;
+                                    })
+                                    .ToArray();
+
                                 return new LinkedLicence
                                 {
                                     LicenceNumber = missingLinkedLicenceNumber,
                                     RegionId = licenceSetLicence.RegionId,
                                     IsBecauseOfAggregate = true,
-                                    ContainedIn =
-                                    [
-                                        new ContainedInInformation
-                                        {
-                                            Direction = InformationDirection.InSameGroup,
-                                            Source = InformationSource.OtherDocument,
-                                            SectionName = missingLinkedLicence.ContainedIn![0].SectionName,
-                                            LinkReason = missingLinkedLicence.ContainedIn![0].LinkReason
-                                        }
-                                    ]
+                                    ContainedIn = containedIn
                                 };
                             })
                             .Where(x => x != null)
                             .Select(x => x!));
-                        
+
                         licenceSetLicence.LinkedLicences = newLinkedLicences.ToArray();
                     }
 
                     var newNewAggregates = new List<Aggregate>();
-                    
+
                     foreach (var newAggregate in newAggregates)
                     {
                         var otherAggregates = newAggregates
@@ -405,18 +417,18 @@ public static class AggregateHelper
                                 {
                                     variations.AddRange(superset.Variations);
                                 }
-                    
+
                                 variations.Add(AggregateVariation.FromAggregate(
                                     newAggregate,
                                     AggregateVariation.DifferentOrder));
-                        
+
                                 superset.Variations = variations.ToArray();
                             }
                         }
                     }
-                    
+
                     newAggregates = newNewAggregates;
-                    
+
                     licenceSetLicence.AbstractionLimits.Aggregates = newAggregates.Count > 0
                         ? newAggregates.ToArray()
                         : null;

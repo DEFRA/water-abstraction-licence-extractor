@@ -14,4 +14,7 @@ public class NullLicenceNumberService : ILicenceNumberServiceCore
 
     public (bool HasSuccessor, List<NaldLicenceNumberHistory> History) AnyNewerLicenceNumber(
         string? licenceNumber) => (false, []);
+
+    public (bool HasPredecessor, List<NaldLicenceNumberHistory> History) AnyOlderLicenceNumber(
+        string? licenceNumber) => (false, []);
 }

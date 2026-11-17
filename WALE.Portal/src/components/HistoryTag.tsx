@@ -1,4 +1,4 @@
-import {ContainedInInformation, NullableOfInformationDirection} from "../api/generated/apiClient.ts";
+import {ContainedInInformation} from "../api/generated/apiClient.ts";
 
 interface HistoryTagProps {
     containedIn?: ContainedInInformation[];

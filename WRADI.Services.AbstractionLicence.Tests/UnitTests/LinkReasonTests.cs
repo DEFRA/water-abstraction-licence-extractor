@@ -55,6 +55,18 @@ public class LinkReasonTests
             LinkReasonHelper.GetLinkReason($"the licence says {phrase} somewhere", null));
     }
 
+    // Set from NALD licence history rather than matched in the document, so no phrase reaches
+    // them. LinkReason.IsLineageRelated is not the same set - it includes OriginalLicence, which
+    // does have a phrase.
+    private static readonly string[] SetFromLicenceHistory =
+    [
+        LinkReason.IssuedSeparately,
+        LinkReason.LicenceHasBeenSplit,
+        LinkReason.MinorVariation,
+        LinkReason.Predecessor,
+        LinkReason.Successor
+    ];
+
     [Fact]
     public void EveryLinkReasonButEmptyIsReachableFromSomePhrase()
     {
@@ -65,6 +77,7 @@ public class LinkReasonTests
 
         var declared = LinkReason.GetAll()
             .Where(reason => reason != LinkReason.Empty)
+            .Except(SetFromLicenceHistory)
             .OrderBy(reason => reason);
 
         Assert.Equal(declared, reached);

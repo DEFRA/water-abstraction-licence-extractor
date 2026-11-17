@@ -76,10 +76,12 @@ public class LinkedLicenceGuardTests
             fixWhenDetected: false);
     }
 
+    // Set ids carry a three-character type prefix (LIM/SNG/OTH) that the assertions strip before
+    // splitting, so a fixture id without one loses its first licence.
     [Fact]
     public void WhenASetNamesALicenceTheLinksDoNotCover_ThenItThrows()
     {
-        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("LIM123-456").Build();
 
         Assert.Throws<Exception>(() =>
             LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]));
@@ -88,7 +90,7 @@ public class LinkedLicenceGuardTests
     [Fact]
     public void WhenTheOnlyPartOfTheSetIdIsTheLicenceItself_ThenNoLinkIsNeeded()
     {
-        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("SNG123").Build();
 
         LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence([licence]);
     }
@@ -99,7 +101,7 @@ public class LinkedLicenceGuardTests
     {
         var licence = LicenceBuilder.A()
             .Numbered("1/2/3")
-            .InLicenceSets("123-456")
+            .InLicenceSets("LIM123-456")
             .LinkedTo(LicenceBuilder.LinkTo("4.5 6"))
             .Build();
 
@@ -119,7 +121,7 @@ public class LinkedLicenceGuardTests
     [Fact]
     public void WhenFixingASetWithAMissingLink_ThenTheLinkIsBuiltFromTheOtherLicence()
     {
-        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("LIM123-456").Build();
 
         var other = LicenceBuilder.A().Numbered("4/5/6").Build();
         other.RegionId = 3;
@@ -131,14 +133,15 @@ public class LinkedLicenceGuardTests
         Assert.Equal("4/5/6", added.LicenceNumber);
         Assert.Equal(3, added.RegionId);
         Assert.Equal("4-5-6.pdf", added.Filename);
-        Assert.Equal(InformationDirection.InSameGroup, added.ContainedIn![0].Direction);
-        Assert.Equal(InformationSource.Unknown, added.ContainedIn![0].Source);
+
+        // ContainedIn is gathered from licences referencing both sides, so a set of two yields none.
+        Assert.Empty(added.ContainedIn!);
     }
 
     [Fact]
     public void WhenTheNamedLicenceIsNotAmongTheLicences_ThenFixingThrows()
     {
-        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("123-456").Build();
+        var licence = LicenceBuilder.A().Numbered("1/2/3").InLicenceSets("LIM123-456").Build();
 
         Assert.Throws<Exception>(() =>
             LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence([licence]));

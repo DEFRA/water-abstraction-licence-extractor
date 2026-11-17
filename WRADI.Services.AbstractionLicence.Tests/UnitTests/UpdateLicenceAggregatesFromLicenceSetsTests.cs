@@ -93,8 +93,12 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         Assert.True(synthesised.IsBecauseOfAggregate);
         Assert.Equal("Schedule", synthesised.ContainedIn![0].SectionName);
         Assert.Equal("named in the aggregate", synthesised.ContainedIn![0].LinkReason);
-        Assert.Equal(InformationDirection.InSameGroup, synthesised.ContainedIn![0].Direction);
-        Assert.Equal(InformationSource.OtherDocument, synthesised.ContainedIn![0].Source);
+        Assert.Equal(InformationDirection.ReferencedAlongside, synthesised.ContainedIn![0].Direction);
+        Assert.Equal("9/9/9", synthesised.ContainedIn![0].SourceLicence);
+
+        // The entry is cloned from the donor's, so only Direction and SourceLicence are set here -
+        // Source stays as the donor saw it.
+        Assert.Equal(InformationSource.Document, synthesised.ContainedIn![0].Source);
     }
 
     // The licence's own aggregate covers fewer licences for the same total, so the set aggregate
@@ -121,9 +125,8 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
         Assert.Equal(ownAggregate.Id, Assert.Single(setAggregate.Variations!).Id);
     }
 
-    // The donor's first ContainedIn entry is read without checking there is one.
     [Fact]
-    public void WhenTheDonorLinkHasNoContainedInEntries_ThenItThrows()
+    public void WhenTheDonorLinkHasNoContainedInEntries_ThenTheSynthesisedLinkHasNoneEither()
     {
         var setAggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
 
@@ -137,14 +140,17 @@ public class UpdateLicenceAggregatesFromLicenceSetsTests
             .LinkedTo(LicenceBuilder.LinkTo("4/5/6", []))
             .Build();
 
-        Assert.Throws<IndexOutOfRangeException>(() =>
-            AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
-            [
-                LicenceSetBuilder.A()
-                    .Containing(licence, donor)
-                    .WithAggregateSets(setAggregate)
-                    .Build()
-            ]));
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(
+        [
+            LicenceSetBuilder.A()
+                .Containing(licence, donor)
+                .WithAggregateSets(setAggregate)
+                .Build()
+        ]);
+
+        var synthesised = Assert.Single(licence.LinkedLicences);
+        Assert.Equal("4/5/6", synthesised.LicenceNumber);
+        Assert.Empty(synthesised.ContainedIn!);
     }
 
     // Licences are matched on the number exactly as written, unlike Aggregate.Id, which strips

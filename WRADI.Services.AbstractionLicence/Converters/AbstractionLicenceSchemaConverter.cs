@@ -730,7 +730,7 @@ public static class AbstractionLicenceSchemaConverter
         return false;
     }
 
-    private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
+    internal static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
     {
         foreach (var grp in individual)
         {
@@ -752,7 +752,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static AbstractionLimitGroup[] AddNaldLimits(
+    internal static AbstractionLimitGroup[] AddNaldLimits(
         NaldAbstractionData? naldData,
         AbstractionLimitGroup[] individuals,
         Aggregate[] aggregates)
@@ -837,7 +837,7 @@ public static class AbstractionLicenceSchemaConverter
         return individualsList.ToArray();
     }
 
-    private static AbstractionLimit? GetAbstractionLimit(
+    internal static AbstractionLimit? GetAbstractionLimit(
         double? value,
         LimitPeriodType periodType,
         Purpose[] purposes,
@@ -863,7 +863,7 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
+    internal static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
     {
         return limitLeft.PeriodType == limitRight.PeriodType
                && AreValuesEqual(
@@ -871,12 +871,12 @@ public static class AbstractionLicenceSchemaConverter
                    ValueInBaseUnits(limitRight.Value, limitRight.Units));
     }
 
-    private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
+    internal static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
     {
         return group.Limits.Any(groupLimit => AreLimitsEqual(groupLimit, limitToFind));
     }
 
-    private static void AddNaldLimits(
+    internal static void AddNaldLimits(
         List<AbstractionLimit> naldLimits,
         List<AbstractionLimitGroup> existingLimitGroups,
         ref List<AbstractionLimitGroup> individuals)
@@ -2073,7 +2073,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static void AddLicencesReferencedInLimitsToLicenceSets(
+    internal static void AddLicencesReferencedInLimitsToLicenceSets(
         List<LicenceSet> licenceSets,
         Licence primaryLicence,
         List<Licence> allLicences,
@@ -2728,7 +2728,7 @@ public static class AbstractionLicenceSchemaConverter
         return licence;
     }
 
-    private static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
+    internal static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
     {
         if (match == null)
         {
@@ -2770,7 +2770,7 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    private static TimePeriod? GetTimePeriod(LabelGroupResult? match)
+    internal static TimePeriod? GetTimePeriod(LabelGroupResult? match)
     {
         if (match == null)
         {
@@ -4358,7 +4358,7 @@ public static class AbstractionLicenceSchemaConverter
         return percentageDiff is >= 0 and <= maxTolerance;
     }
 
-    private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
+    internal static void NullOutLimitLevelPointsAndPurposesIfRelevant(
         AbstractionLimitGroup limitGroup,
         List<AbstractionLimit> abstractionLimits)
     {
@@ -4442,7 +4442,7 @@ public static class AbstractionLicenceSchemaConverter
         return limitPurposes;
     }
     
-    private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
+    internal static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
     {
         var abstractionLimitsSection = matches
             .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
@@ -4487,7 +4487,7 @@ public static class AbstractionLicenceSchemaConverter
         return null;
     }
 
-    private static PeriodOfAbstraction[] GetPeriods(
+    internal static PeriodOfAbstraction[] GetPeriods(
         List<LabelGroupResult> matches,
         NaldAbstractionData? naldDataLine,
         ref Dictionary<string, object?> noneSchemaData)
@@ -5282,7 +5282,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
 
-    private static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
+    internal static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
     {
         if (naldDataLine == null)
         {
@@ -5301,7 +5301,7 @@ public static class AbstractionLicenceSchemaConverter
         return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
     }
 
-    private static string? GetNaldPeriodEndDate(NaldAbstractionData? naldDataLine, string? description)
+    internal static string? GetNaldPeriodEndDate(NaldAbstractionData? naldDataLine, string? description)
     {
         if (naldDataLine?.Periods.Count is null or 0)
         {
@@ -5811,7 +5811,7 @@ public static class AbstractionLicenceSchemaConverter
         return x.Split('$');
     }
 
-    private static LimitPeriodType ToLimitPeriodType(string? text)
+    internal static LimitPeriodType ToLimitPeriodType(string? text)
     {
         return text?.ToLower() switch
         {

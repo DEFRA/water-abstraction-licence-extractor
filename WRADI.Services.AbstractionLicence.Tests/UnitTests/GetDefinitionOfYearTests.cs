@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Enums;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -14,7 +14,7 @@ public class GetDefinitionOfYearTests
     {
         var matches = Section(PointSub(Definition("beginning on 1 April", "1 April", "31 March")));
 
-        var period = AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches);
+        var period = LimitPeriodHelper.GetDefinitionOfYear(matches);
 
         Assert.NotNull(period);
         Assert.Equal("1 April", period.StartDate);
@@ -30,7 +30,7 @@ public class GetDefinitionOfYearTests
     {
         var matches = Section(PointSub(Definition(text, "1 April", "31 March")));
 
-        Assert.Equal(expected, AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches)!.Inclusive);
+        Assert.Equal(expected, LimitPeriodHelper.GetDefinitionOfYear(matches)!.Inclusive);
     }
 
     // The wording test is case sensitive, unlike the same check in GetTimePeriod.
@@ -39,7 +39,7 @@ public class GetDefinitionOfYearTests
     {
         var matches = Section(PointSub(Definition("Beginning on 1 April", "1 April", "31 March")));
 
-        Assert.False(AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches)!.Inclusive);
+        Assert.False(LimitPeriodHelper.GetDefinitionOfYear(matches)!.Inclusive);
     }
 
     // Start is the first date result and end is the last, so a definition carrying one date
@@ -49,7 +49,7 @@ public class GetDefinitionOfYearTests
     {
         var matches = Section(PointSub(Definition("beginning on 1 April", "1 April")));
 
-        var period = AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches);
+        var period = LimitPeriodHelper.GetDefinitionOfYear(matches);
 
         Assert.Equal("1 April", period!.StartDate);
         Assert.Equal("1 April", period.EndDate);
@@ -60,7 +60,7 @@ public class GetDefinitionOfYearTests
     {
         var matches = Section(PointSub(Definition("beginning on 1 April")));
 
-        var period = AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches);
+        var period = LimitPeriodHelper.GetDefinitionOfYear(matches);
 
         Assert.NotNull(period);
         Assert.Null(period.StartDate);
@@ -75,7 +75,7 @@ public class GetDefinitionOfYearTests
             PointSub(Definition("beginning on 1 April", "1 April", "31 March")),
             PointSub(Definition("beginning on 1 May", "1 May", "30 April")));
 
-        Assert.Equal("1 April", AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches)!.StartDate);
+        Assert.Equal("1 April", LimitPeriodHelper.GetDefinitionOfYear(matches)!.StartDate);
     }
 
     [Theory]
@@ -87,7 +87,7 @@ public class GetDefinitionOfYearTests
             ? Section(PointSub())
             : [new LabelGroupResult { LabelGroupName = "SomethingElse" }];
 
-        Assert.Null(AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches));
+        Assert.Null(LimitPeriodHelper.GetDefinitionOfYear(matches));
     }
 
     // The definition is looked up with SingleOrDefault, so two of them under one point sub throw
@@ -100,7 +100,7 @@ public class GetDefinitionOfYearTests
             Definition("beginning on 1 May", "1 May", "30 April")));
 
         Assert.Throws<InvalidOperationException>(() =>
-            AbstractionLicenceSchemaConverter.GetDefinitionOfYear(matches));
+            LimitPeriodHelper.GetDefinitionOfYear(matches));
     }
 
     private static List<LabelGroupResult> Section(params LabelGroupResult[] pointSubs)

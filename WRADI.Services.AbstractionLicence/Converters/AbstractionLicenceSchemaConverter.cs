@@ -132,7 +132,7 @@ public static class AbstractionLicenceSchemaConverter
             naldDataLookupService,
             noneSchemaData);
 
-        var periods = GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             matches,
             naldAbstractionDataLine,
             ref noneSchemaData);
@@ -571,7 +571,7 @@ public static class AbstractionLicenceSchemaConverter
 
         // TODO - add NALD aggregates
 
-        individual = AddNaldLimits(naldAbstractionDataLine, individual, aggregates);
+        individual = AbstractionLimitHelper.AddNaldLimits(naldAbstractionDataLine, individual, aggregates);
 
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
@@ -584,8 +584,8 @@ public static class AbstractionLicenceSchemaConverter
 
         HoistContainedInSections(individual, aggregates);
 
-        RemoveDuplicateLimitsPerGroup(individual);
-        RemoveDuplicateLimitsPerGroup(aggregates
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(individual);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(aggregates
             .Select(AbstractionLimitGroup (agg) => agg)
             .ToArray());
 
@@ -633,7 +633,7 @@ public static class AbstractionLicenceSchemaConverter
             Points = points,
             Purposes = purposes,
             PeriodsOfAbstraction = periods,
-            DefinitionOfYear = GetDefinitionOfYear(matches),
+            DefinitionOfYear = LimitPeriodHelper.GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
@@ -730,236 +730,12 @@ public static class AbstractionLicenceSchemaConverter
         return false;
     }
 
-    internal static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
-    {
-        foreach (var grp in individual)
-        {
-            grp.Limits = grp.Limits
-                .GroupBy(l => new
-                {
-                    l.Value,
-                    l.Units,
-                    l.PeriodType,
-                    Points = l.Points?
-                        .Select(p => $"{p.Id}_{p.NaldId}")
-                        .ToArray(),
-                    Purposes = l.Purposes?
-                        .Select(p => $"{p.Id}_{string.Join('_', p.NaldIds ?? [])}")
-                        .ToArray()
-                })
-                .Select(g => g.First())
-                .ToList();
-        }
-    }
 
-    internal static AbstractionLimitGroup[] AddNaldLimits(
-        NaldAbstractionData? naldData,
-        AbstractionLimitGroup[] individuals,
-        Aggregate[] aggregates)
-    {
-        if (naldData == null)
-        {
-            return individuals;
-        }
 
-        var individualsList = individuals.ToList();
 
-        var existingLimitGroups = individuals.ToList();
-        existingLimitGroups.AddRange(aggregates);
 
-        var periodTypes = new List<LimitPeriodType>
-        {
-            LimitPeriodType.PerYear,
-            LimitPeriodType.PerDay,
-            LimitPeriodType.PerHour,
-            LimitPeriodType.PerSecond
-        };
 
-        var containedIn = new ContainedInInformation
-        {
-            Source = InformationSource.Nald
-        };
 
-        var limits = new List<AbstractionLimit>();
-
-        foreach (var periodType in periodTypes)
-        {
-            var groupedNaldLimits = naldData.Purposes
-                .GroupBy(l =>
-                {
-                    return periodType switch
-                    {
-                        LimitPeriodType.PerYear => l.Quantity.AnnualQty,
-                        LimitPeriodType.PerDay => l.Quantity.DailyQty,
-                        LimitPeriodType.PerHour => l.Quantity.HourlyQty,
-                        LimitPeriodType.PerSecond => l.Quantity.InstQty,
-                        _ => throw new Exception("Period type not known")
-                    };
-                })
-                .Where(g => g.Key != null)
-                .ToList();
-
-            // Get Nald limits
-            foreach (var groupedLimit in groupedNaldLimits)
-            {
-                var purposes = groupedLimit
-                    .Select(x => new Purpose
-                    {
-                        NaldIds = [x.Id.ToString()] // TOOD check the grouping here
-                    })
-                    .ToArray();
-
-                var points = groupedLimit
-                    .SelectMany(nl => nl.PointIds)
-                    .Distinct()
-                    .Select(p => new Point { NaldId = p.ToString() })
-                    .ToArray();
-
-                var limit = GetAbstractionLimit(
-                    groupedLimit.Key,
-                    periodType,
-                    purposes,
-                    points,
-                    containedIn);
-
-                if (limit != null)
-                {
-                    limits.Add(limit);
-                }
-            }
-        }
-
-        AddNaldLimits(
-            limits,
-            existingLimitGroups,
-            ref individualsList);
-
-        return individualsList.ToArray();
-    }
-
-    internal static AbstractionLimit? GetAbstractionLimit(
-        double? value,
-        LimitPeriodType periodType,
-        Purpose[] purposes,
-        Point[] points,
-        ContainedInInformation containedIn)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        const string litres = "litres";
-        const string cubicMeters = "cubic metres";
-
-        return new AbstractionLimit
-        {
-            Units = periodType == LimitPeriodType.PerSecond ? litres : cubicMeters,
-            Value = value,
-            PeriodType = periodType,
-            Purposes = purposes,
-            Points = points,
-            ContainedIn = [containedIn]
-        };
-    }
-
-    internal static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
-    {
-        return limitLeft.PeriodType == limitRight.PeriodType
-               && AreValuesEqual(
-                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
-                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
-    }
-
-    internal static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
-    {
-        return group.Limits.Any(groupLimit => AreLimitsEqual(groupLimit, limitToFind));
-    }
-
-    internal static void AddNaldLimits(
-        List<AbstractionLimit> naldLimits,
-        List<AbstractionLimitGroup> existingLimitGroups,
-        ref List<AbstractionLimitGroup> individuals)
-    {
-        var unmatchedNaldLimits = new List<AbstractionLimit>();
-
-        foreach (var naldLimit in naldLimits)
-        {
-            var matchingIndividualGroups = existingLimitGroups
-                .Where(individualGroup => GroupContainsLimit(individualGroup, naldLimit))
-                .ToList();
-
-            if (matchingIndividualGroups.Count >= 1)
-            {
-                foreach (var matchingIndividualGroup in matchingIndividualGroups)
-                {
-                    // At the group level
-                    if (matchingIndividualGroup.ContainedIn?.Length >= 1)
-                    {
-                        var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
-
-                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
-                        {
-                            // Already have it in contained in
-                            continue;
-                        }
-
-                        containedInList.Add(new ContainedInInformation
-                        {
-                            Source = InformationSource.Nald
-                        });
-
-                        matchingIndividualGroup.ContainedIn = containedInList.ToArray();
-                        continue;
-                    }
-
-                    // At a limit level
-                    foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
-                    {
-                        var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();
-
-                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
-                        {
-                            // Already have it in contained in
-                            continue;
-                        }
-
-                        containedInList.Add(new ContainedInInformation
-                        {
-                            Source = InformationSource.Nald
-                        });
-
-                        matchingIndividualGroupLimit.ContainedIn = containedInList.ToArray();
-                    }
-                }
-
-                continue;
-            }
-
-            unmatchedNaldLimits.Add(naldLimit);
-        }
-
-        if (unmatchedNaldLimits.Count == 0)
-        {
-            return;
-        }
-
-        var newGroup = new AbstractionLimitGroup
-        {
-            Limits = unmatchedNaldLimits
-        };
-
-        individuals.Add(newGroup);
-    }
-
-    private static double? ValueInBaseUnits(double? value, string? units)
-    {
-        const string baseUnit = "litres";
-
-        return string.IsNullOrEmpty(units)
-            ? value
-            : UnitHelper.Convert(value!.Value, units, baseUnit);
-    }
 
     private static void HoistContainedInSections(
         AbstractionLimitGroup[] individuals,
@@ -1636,7 +1412,7 @@ public static class AbstractionLicenceSchemaConverter
                     .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
                     .ToList();
 
-                AssertNoDuplicateLicences(licencesReferencedInLimits);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(licencesReferencedInLimits);
 
                 var licenceSet = new LicenceSet
                 {
@@ -1737,7 +1513,7 @@ public static class AbstractionLicenceSchemaConverter
 
             if (otherLicences.Count >= 2)
             {
-                AssertNoDuplicateLicences(otherLicences);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(otherLicences);
 
                 returnLicenceSets.Add(
                     new LicenceSet
@@ -1773,7 +1549,7 @@ public static class AbstractionLicenceSchemaConverter
 
             if (historyLicences.Count >= 2)
             {
-                AssertNoDuplicateLicences(historyLicences);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(historyLicences);
 
                 var licenceSet = new LicenceSet
                 {
@@ -1819,7 +1595,7 @@ public static class AbstractionLicenceSchemaConverter
                 ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
             .ToList();
 
-        AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             returnLicenceSets,
             primaryLicence,
             allLicences,
@@ -1882,7 +1658,7 @@ public static class AbstractionLicenceSchemaConverter
         // Check for dupes
         foreach (var returnLicenceSet in returnLicenceSets)
         {
-            AssertNoDuplicateLicences(returnLicenceSet.Licences);
+            LinkedLicenceAssertions.AssertNoDuplicateLicences(returnLicenceSet.Licences);
         }
 
         LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
@@ -2045,84 +1821,7 @@ public static class AbstractionLicenceSchemaConverter
 
 
 
-    private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
-    {
-        var grouped = licences
-            .GroupBy(l => l.LicenceNumber?.Value);
 
-        foreach (var group in grouped)
-        {
-            if (group.Count() >= 2)
-            {
-                throw new Exception("Duplicate licences detected");
-            }
-
-            foreach (var licence in group)
-            {
-                var groupedLinked = licence.LinkedLicences
-                    .GroupBy(l => l.LicenceNumber);
-
-                foreach (var linkedLicenceGroup in groupedLinked)
-                {
-                    if (linkedLicenceGroup.Count() >= 2)
-                    {
-                        throw new Exception("Duplicate linked licences detected");
-                    }
-                }
-            }
-        }
-    }
-
-    internal static void AddLicencesReferencedInLimitsToLicenceSets(
-        List<LicenceSet> licenceSets,
-        Licence primaryLicence,
-        List<Licence> allLicences,
-        List<LicenceSet> explicitlyReferencedLimitsLicenceSets)
-    {
-        var licenceSetsInLimits = licenceSets
-            .Where(ls => ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
-            .ToList();
-
-        if (explicitlyReferencedLimitsLicenceSets.Count == 0 || licenceSetsInLimits.Count == 0)
-        {
-            return;
-        }
-
-        var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
-            .Where(linkedLicence =>
-                linkedLicence.ContainedIn?.Any(ci =>
-                    linkedLicence.IsBecauseOfAggregate == true
-                    || ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
-            .Select(ll => ll.LicenceNumber)
-            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
-            .Where(ln => ln != null)
-            .Select(ln => ln!)
-            .ToList();
-
-        var allLicenceSetInLimitsLicences = licenceSetsInLimits
-            .SelectMany(ls => ls.Licences)
-            .ToList();
-
-        var missingLicences = updatedLicencesReferencedInLimits
-            .Where(l => allLicenceSetInLimitsLicences.All(ll => l.LicenceNumber?.Value != ll.LicenceNumber?.Value))
-            .ToList();
-
-        if (missingLicences.Count < 1)
-        {
-            return;
-        }
-
-        // Just add them to the first group, as we don't know which to add them to - this logic might need
-        // revisting/expanding in future
-        var firstLicenceSetInLimits = licenceSetsInLimits[0];
-
-        var newLicences = new List<Licence>();
-        newLicences.AddRange(firstLicenceSetInLimits.Licences);
-        newLicences.AddRange(missingLicences);
-
-        firstLicenceSetInLimits.Licences = newLicences.ToArray();
-        AssertNoDuplicateLicences(firstLicenceSetInLimits.Licences);
-    }
 
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(
         Licence primaryLicence,
@@ -2728,96 +2427,7 @@ public static class AbstractionLicenceSchemaConverter
         return licence;
     }
 
-    internal static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
-    {
-        if (match == null)
-        {
-            return null;
-        }
 
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase)
-                      || value.Contains("Up to and including", StringComparison.OrdinalIgnoreCase);
-
-        if (!isFrom && !isUntil)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Up to and including", "~", StringComparison.OrdinalIgnoreCase)
-            .Split('~');
-
-        var datePart = parts.Length >= 2 ? parts[1] : null;
-
-        if (datePart == null)
-        {
-            return null;
-        }
-
-        return new TimeCutoff
-        {
-            CutoffType = isFrom ? CutoffType.From : CutoffType.Upto,
-            Date = datePart.Trim()
-        };
-    }
-
-    internal static TimePeriod? GetTimePeriod(LabelGroupResult? match)
-    {
-        if (match == null)
-        {
-            return null;
-        }
-
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        value = value.Replace(" and ending on ", " to ");
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
-
-        if (isFrom || isUntil)
-        {
-            return null;
-        }
-
-        var hasTo = value.Contains(" to ", StringComparison.OrdinalIgnoreCase);
-        var hasBeginningOn = value.Contains("beginning on ", StringComparison.OrdinalIgnoreCase);
-
-        if (!hasTo && !hasBeginningOn)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("beginning on ", string.Empty)
-            .Split(" to ");
-
-        if (parts.Length == 1)
-        {
-            return null;
-        }
-
-        return new TimePeriod
-        {
-            StartDate = parts[0],
-            EndDate = parts.Length > 1 ? parts[1] : null,
-            PeriodType = AbstractionPeriodType.SetPeriod,
-            Inclusive = true
-        };
-    }
 
     private static async Task<(
         List<LinkedLicence> LinkedLicences,
@@ -2902,7 +2512,7 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var abstractionLimitGroup in abstractionLimits)
         {
-            NullOutLimitLevelPointsAndPurposesIfRelevant(abstractionLimitGroup, abstractionLimitGroup.Limits);
+            AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(abstractionLimitGroup, abstractionLimitGroup.Limits);
         }
 
         return (sectionLinkedLicences, abstractionLimits, aggregates);
@@ -3385,7 +2995,7 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var individualGroup in allIndividualGroups)
         {
-            NullOutLimitLevelPointsAndPurposesIfRelevant(individualGroup, individualGroup.Limits);
+            AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(individualGroup, individualGroup.Limits);
         }
 
         return (
@@ -3777,7 +3387,7 @@ public static class AbstractionLicenceSchemaConverter
             .Where(sibling => sibling.MatchedLabelName == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
 
-        var timeCutoff = GetTimeCutoff(
+        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(
             siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var valueResults = siblings
@@ -4004,7 +3614,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 individualGroups.Add(new AbstractionLimitGroup
                 {
-                    TimePeriod = GetTimePeriod(datePurpose),
+                    TimePeriod = LimitPeriodHelper.GetTimePeriod(datePurpose),
                     DocumentIdentifier = documentIdentifier,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
@@ -4109,7 +3719,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 var abstractionLimit = new AbstractionLimit
                 {
-                    PeriodType = ToLimitPeriodType(text),
+                    PeriodType = LimitPeriodHelper.ToLimitPeriodType(text),
                     Value = number,
                     Units = units,
                     Points = limitPoints?.ToArray(),
@@ -4238,7 +3848,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var pointsLoop = aggregateAbstractionLimits.First().Points;
         var purposesLoop = aggregateAbstractionLimits.First().Purposes;
-        var timePeriod = GetTimePeriod(
+        var timePeriod = LimitPeriodHelper.GetTimePeriod(
             siblings?.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var lls = abstractionLinkedLicences.ToList();
@@ -4334,7 +3944,7 @@ public static class AbstractionLicenceSchemaConverter
             aggregate.SubType = SubType.PurposeToPurpose;
         }
 
-        NullOutLimitLevelPointsAndPurposesIfRelevant(aggregate, aggregateAbstractionLimits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(aggregate, aggregateAbstractionLimits);
 
         if (!isExcludedLinkReason)
         {
@@ -4344,48 +3954,7 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
-    public static bool AreValuesEqual(double? value1, double? value2)
-    {
-        if (value1 == null || value2 == null)
-        {
-            return false;
-        }
 
-        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
-        const double maxTolerance = 0.75;
-
-        var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
-        return percentageDiff is >= 0 and <= maxTolerance;
-    }
-
-    internal static void NullOutLimitLevelPointsAndPurposesIfRelevant(
-        AbstractionLimitGroup limitGroup,
-        List<AbstractionLimit> abstractionLimits)
-    {
-        if (limitGroup.Purposes?.Length > 0)
-        {
-            foreach (var aggregateLimit in abstractionLimits)
-            {
-                aggregateLimit.Purposes = null;
-            }
-        }
-        else if (limitGroup.Purposes?.Length == 0)
-        {
-            limitGroup.Purposes = null;
-        }
-
-        if (limitGroup.Points?.Length > 0)
-        {
-            foreach (var aggregateLimit in abstractionLimits)
-            {
-                aggregateLimit.Points = null;
-            }
-        }
-        else if (limitGroup.Points?.Length == 0)
-        {
-            limitGroup.Points = null;
-        }
-    }
 
     private static int GetPositionRelativeToDateLines(
         List<LabelGroupResult>? dateLines,
@@ -4442,170 +4011,7 @@ public static class AbstractionLicenceSchemaConverter
         return limitPurposes;
     }
     
-    internal static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
-    {
-        var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
 
-        var abstractionLimitPoints = abstractionLimitsSection?
-            .SubResults
-            .Where(res => res.MatchedLabelName == "AbstractionLimitPoint")
-            .ToList();
-
-        var abstractionLimitPointSubs = abstractionLimitPoints?
-            .SelectMany(res => res.SubResults)
-            .Where(res => res.MatchedLabelName == "AbstractionLimitPointSub")
-            .ToList();
-
-        if (abstractionLimitPointSubs != null)
-        {
-            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
-            {
-                var definition = abstractionLimitPointSub.SubResults
-                    .SingleOrDefault(sr => sr.MatchedLabelName == "AYearDefinitionLine");
-
-                if (definition == null)
-                {
-                    continue;
-                }
-
-                var dates = definition.SubResults;
-                var text = definition.Text?.FirstOrDefault()?.Text;
-                var inclusive = text?.Contains("beginning on") == true
-                                || text?.Contains("ending on") == true;
-
-                return new TimePeriod
-                {
-                    PeriodType = AbstractionPeriodType.SetPeriod,
-                    Inclusive = inclusive,
-                    StartDate = dates.FirstOrDefault()?.Text?.FirstOrDefault()?.Text,
-                    EndDate = dates.LastOrDefault()?.Text?.FirstOrDefault()?.Text
-                };
-            }
-        }
-
-        return null;
-    }
-
-    internal static PeriodOfAbstraction[] GetPeriods(
-        List<LabelGroupResult> matches,
-        NaldAbstractionData? naldDataLine,
-        ref Dictionary<string, object?> noneSchemaData)
-    {
-        noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
-
-        var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
-        var returnList = new List<PeriodOfAbstraction>();
-
-        if (periodResults == null)
-        {
-            return returnList.ToArray();
-        }
-
-        if (periodResults.MatchedLabelName == "DuringTheMonthsXToYOnlyText")
-        {
-            if (periodResults.SubResults.Count != 2)
-            {
-                return returnList.ToArray();
-            }
-
-            returnList.Add(new PeriodOfAbstraction
-            {
-                PeriodType = AbstractionPeriodType.SetPeriod,
-                Description = periodResults.Text?.FirstOrDefault()?.Text,
-                Inclusive = true,
-                StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
-                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
-            });
-        }
-
-        foreach (var pointResult in periodResults.SubResults)
-        {
-            var periodPeriodNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabelName == "PeriodPeriodNumber");
-
-            var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabelName == "PeriodTextWithoutPurposeAndPoint")?
-                .Text?
-                .Select(t => t.Text)
-                .ToList();
-
-            if (textWithoutNumber == null && periodPeriodNumber == null)
-            {
-                continue;
-            }
-
-            var tKey = "Up to and Including ";
-
-            var allTextWithoutNumber = textWithoutNumber?
-                .Where(t => !t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            if (allTextWithoutNumber == null)
-            {
-                continue;
-            }
-
-            var upToAndIncludeLine = textWithoutNumber?
-                .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
-            TimeCutoff? timeCutoff = null;
-
-            if (upToAndIncludeLine != null)
-            {
-                var date = upToAndIncludeLine.Replace(tKey, string.Empty);
-
-                timeCutoff = new TimeCutoff
-                {
-                    CutoffType = CutoffType.Upto,
-                    Date = date
-                };
-            }
-
-            var text = textWithoutNumber != null
-                ? string.Join('\n', textWithoutNumber)
-                : null;
-
-            var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
-            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
-
-            var inclusive = text?.Contains("inclusive",
-                StringComparison.OrdinalIgnoreCase) ?? false;
-
-            var allYear = text == "All year";
-
-            // TODO next bit should be done in config
-            var dateParts = text?
-                .Replace("From", string.Empty)
-                .Replace("inclusive", string.Empty)
-                .Split(" to ");
-
-            var startDate = dateParts?[0].Trim();
-            var endDate = dateParts?.Length >= 2 ? dateParts[1].Trim() : null;
-
-            returnList.Add(new PeriodOfAbstraction
-            {
-                Id = number,
-                PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
-                Description = text,
-                Inclusive = inclusive,
-                StartDate = startDate,
-                EndDate = endDate,
-                TimeCutoff = timeCutoff,
-                PointIds = null, // TODO set purpose ids and point ids
-                PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
-            });
-        }
-
-        return returnList.ToArray();
-    }
 
     private static MeanOfAbstraction[] GetMeansOfAbstraction(
         List<LabelGroupResult> matches,
@@ -5282,39 +4688,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
 
-    internal static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
-    {
-        if (naldDataLine == null)
-        {
-        }
 
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodStartDay != null);
-
-        return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
-    }
-
-    internal static string? GetNaldPeriodEndDate(NaldAbstractionData? naldDataLine, string? description)
-    {
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodEndDay != null);
-
-        return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
-    }
 
     private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
         string licenceNumber,
@@ -5811,27 +5185,6 @@ public static class AbstractionLicenceSchemaConverter
         return x.Split('$');
     }
 
-    internal static LimitPeriodType ToLimitPeriodType(string? text)
-    {
-        return text?.ToLower() switch
-        {
-            "per second" => LimitPeriodType.PerSecond,
-            "per minute" => LimitPeriodType.PerMinute,
-            "per hour" => LimitPeriodType.PerHour,
-            "per day" => LimitPeriodType.PerDay,
-            "per week" => LimitPeriodType.PerWeek,
-            "per month" => LimitPeriodType.PerMonth,
-            "per annum" => LimitPeriodType.PerYear,
-            "per year" => LimitPeriodType.PerYear,
-            "aggregate annual abstraction" => LimitPeriodType.PerYear,
-            "in total" => LimitPeriodType.InTotal,
-            "total annual quantity" => LimitPeriodType.InTotal,
-            "consecutive five year" => LimitPeriodType.Per5Years,
-            "five consecutive years" => LimitPeriodType.Per5Years,
-            "over any 5-year period" => LimitPeriodType.Per5Years,
-            _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
-        };
-    }
 
     private static string? GetNaldType(NaldAbstractionData? naldDataLine)
     {

@@ -1,6 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,7 +11,7 @@ public class TimePeriodAndCutoffTests
     [Fact]
     public void WhenBothEndsAreNamed_ThenItIsASetPeriod()
     {
-        var period = AbstractionLicenceSchemaConverter.GetTimePeriod(Match("1 April to 31 March"));
+        var period = LimitPeriodHelper.GetTimePeriod(Match("1 April to 31 March"));
 
         Assert.NotNull(period);
         Assert.Equal("1 April", period.StartDate);
@@ -25,7 +25,7 @@ public class TimePeriodAndCutoffTests
     [InlineData("beginning on 1 April to 31 March")]
     public void TheWordingIsNormalisedBeforeSplitting(string text)
     {
-        var period = AbstractionLicenceSchemaConverter.GetTimePeriod(Match(text));
+        var period = LimitPeriodHelper.GetTimePeriod(Match(text));
 
         Assert.NotNull(period);
         Assert.Equal("1 April", period.StartDate);
@@ -42,14 +42,14 @@ public class TimePeriodAndCutoffTests
     [InlineData("   ")]
     public void OneSidedOrUnparseableTextIsNotAPeriod(string text)
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetTimePeriod(Match(text)));
+        Assert.Null(LimitPeriodHelper.GetTimePeriod(Match(text)));
     }
 
     [Fact]
     public void WhenThereIsNoMatch_ThenThereIsNoPeriodAndNoCutoff()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetTimePeriod(null));
-        Assert.Null(AbstractionLicenceSchemaConverter.GetTimeCutoff(null));
+        Assert.Null(LimitPeriodHelper.GetTimePeriod(null));
+        Assert.Null(LimitPeriodHelper.GetTimeCutoff(null));
     }
 
     // "From" and "Until" on a two-ended phrase win over the period reading, so such text yields
@@ -57,9 +57,9 @@ public class TimePeriodAndCutoffTests
     [Fact]
     public void WhenAFromPhraseAlsoNamesAnEnd_ThenOnlyTheStartSurvives()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetTimePeriod(Match("From 1 April to 31 March")));
+        Assert.Null(LimitPeriodHelper.GetTimePeriod(Match("From 1 April to 31 March")));
 
-        var cutoff = AbstractionLicenceSchemaConverter.GetTimeCutoff(Match("From 1 April to 31 March"));
+        var cutoff = LimitPeriodHelper.GetTimeCutoff(Match("From 1 April to 31 March"));
 
         Assert.NotNull(cutoff);
         Assert.Equal(CutoffType.From, cutoff.CutoffType);
@@ -72,7 +72,7 @@ public class TimePeriodAndCutoffTests
     [InlineData("Up to and including 31 March", CutoffType.Upto, "31 March")]
     public void ASingleBoundaryBecomesACutoff(string text, CutoffType expectedType, string expectedDate)
     {
-        var cutoff = AbstractionLicenceSchemaConverter.GetTimeCutoff(Match(text));
+        var cutoff = LimitPeriodHelper.GetTimeCutoff(Match(text));
 
         Assert.NotNull(cutoff);
         Assert.Equal(expectedType, cutoff.CutoffType);
@@ -85,7 +85,7 @@ public class TimePeriodAndCutoffTests
     [InlineData("")]
     public void TextNamingNoBoundaryIsNotACutoff(string text)
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetTimeCutoff(Match(text)));
+        Assert.Null(LimitPeriodHelper.GetTimeCutoff(Match(text)));
     }
 
     private static LabelGroupResult Match(string text)

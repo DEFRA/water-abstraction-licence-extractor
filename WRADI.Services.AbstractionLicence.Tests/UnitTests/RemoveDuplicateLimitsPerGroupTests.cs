@@ -1,6 +1,6 @@
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -13,7 +13,7 @@ public class RemoveDuplicateLimitsPerGroupTests
             Limit(100, "litres", LimitPeriodType.PerDay),
             Limit(100, "litres", LimitPeriodType.PerDay));
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([group]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
         Assert.Single(group.Limits);
     }
@@ -25,7 +25,7 @@ public class RemoveDuplicateLimitsPerGroupTests
             Limit(100, "litres", LimitPeriodType.PerDay),
             Limit(200, "litres", LimitPeriodType.PerDay));
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([group]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
         Assert.Equal(2, group.Limits.Count);
     }
@@ -39,7 +39,7 @@ public class RemoveDuplicateLimitsPerGroupTests
             Limit(1_000, "gallons", LimitPeriodType.PerDay),
             Limit(4_546.09, "litres", LimitPeriodType.PerDay));
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([group]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
         Assert.Equal(2, group.Limits.Count);
     }
@@ -55,7 +55,7 @@ public class RemoveDuplicateLimitsPerGroupTests
             LimitWithPoint(100, "litres", LimitPeriodType.PerDay, "P1", "N1"),
             LimitWithPoint(100, "litres", LimitPeriodType.PerDay, "P1", "N1"));
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([group]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
         Assert.Equal(2, group.Limits.Count);
     }
@@ -69,7 +69,7 @@ public class RemoveDuplicateLimitsPerGroupTests
             new AbstractionLimit { Value = 100, Units = "litres", PeriodType = LimitPeriodType.PerDay, Points = shared },
             new AbstractionLimit { Value = 100, Units = "litres", PeriodType = LimitPeriodType.PerDay, Points = shared });
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([group]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
         Assert.Equal(2, group.Limits.Count);
     }
@@ -83,7 +83,7 @@ public class RemoveDuplicateLimitsPerGroupTests
 
         var second = GroupOf(Limit(100, "litres", LimitPeriodType.PerDay));
 
-        AbstractionLicenceSchemaConverter.RemoveDuplicateLimitsPerGroup([first, second]);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([first, second]);
 
         Assert.Single(first.Limits);
         Assert.Single(second.Limits);

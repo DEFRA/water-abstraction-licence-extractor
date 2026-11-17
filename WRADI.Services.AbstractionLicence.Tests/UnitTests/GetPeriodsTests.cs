@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -12,7 +12,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        Assert.Empty(AbstractionLicenceSchemaConverter.GetPeriods(
+        Assert.Empty(LimitPeriodHelper.GetPeriods(
             [new LabelGroupResult { LabelGroupName = "SomethingElse" }], null, ref data));
     }
 
@@ -22,11 +22,11 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        AbstractionLicenceSchemaConverter.GetPeriods([], null, ref data);
+        LimitPeriodHelper.GetPeriods([], null, ref data);
 
         Assert.True(data.ContainsKey("NaldPeriodsData"));
         Assert.Throws<ArgumentException>(() =>
-            AbstractionLicenceSchemaConverter.GetPeriods([], null, ref data));
+            LimitPeriodHelper.GetPeriods([], null, ref data));
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "From 1 April to 31 October"))], null, ref data);
 
         var period = Assert.Single(periods);
@@ -53,7 +53,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", text))], null, ref data);
 
         Assert.Equal(expected, Assert.Single(periods).PeriodType);
@@ -66,7 +66,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "1 April to 31 October Inclusive"))], null, ref data);
 
         var period = Assert.Single(periods);
@@ -79,7 +79,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "1 April to 31 October inclusive"))], null, ref data);
 
         Assert.Equal("31 October", Assert.Single(periods).EndDate);
@@ -92,7 +92,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "1 April to 31 October", "Up to and Including 2030"))], null, ref data);
 
         var period = Assert.Single(periods);
@@ -106,7 +106,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        Assert.Empty(AbstractionLicenceSchemaConverter.GetPeriods(
+        Assert.Empty(LimitPeriodHelper.GetPeriods(
             [Section(new LabelGroupResult())], null, ref data));
     }
 
@@ -116,7 +116,7 @@ public class GetPeriodsTests
     {
         var data = Bag();
 
-        var period = Assert.Single(AbstractionLicenceSchemaConverter.GetPeriods(
+        var period = Assert.Single(LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "1 April to 31 October"))], null, ref data));
 
         Assert.Null(period.PointIds);
@@ -134,7 +134,7 @@ public class GetPeriodsTests
             Periods = [new NaldDataPeriod { PeriodStartDay = 1, PeriodStartMonth = 4, PeriodEndDay = 31, PeriodEndMonth = 10 }]
         };
 
-        var periods = AbstractionLicenceSchemaConverter.GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             [Section(Period("1", "1 April to 31 October"), Period("2", "1 May to 30 September"))],
             nald,
             ref data);

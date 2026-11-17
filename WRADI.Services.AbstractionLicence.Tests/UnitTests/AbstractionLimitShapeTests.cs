@@ -1,6 +1,6 @@
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -9,7 +9,7 @@ public class AbstractionLimitShapeTests
     [Fact]
     public void WhenThereIsNoValue_ThenThereIsNoLimit()
     {
-        Assert.Null(AbstractionLicenceSchemaConverter.GetAbstractionLimit(
+        Assert.Null(AbstractionLimitHelper.GetAbstractionLimit(
             null, LimitPeriodType.PerDay, [], [], Contained()));
     }
 
@@ -22,7 +22,7 @@ public class AbstractionLimitShapeTests
     [InlineData(LimitPeriodType.InTotal, "cubic metres")]
     public void TheUnitIsChosenByPeriod(LimitPeriodType periodType, string expectedUnits)
     {
-        var limit = AbstractionLicenceSchemaConverter.GetAbstractionLimit(
+        var limit = AbstractionLimitHelper.GetAbstractionLimit(
             100, periodType, [], [], Contained());
 
         Assert.Equal(expectedUnits, limit!.Units);
@@ -35,7 +35,7 @@ public class AbstractionLimitShapeTests
         Purpose[] purposes = [new Purpose { Id = "U1" }];
         var containedIn = Contained();
 
-        var limit = AbstractionLicenceSchemaConverter.GetAbstractionLimit(
+        var limit = AbstractionLimitHelper.GetAbstractionLimit(
             42, LimitPeriodType.PerDay, purposes, points, containedIn);
 
         Assert.Equal(42, limit!.Value);
@@ -52,7 +52,7 @@ public class AbstractionLimitShapeTests
         var limits = new List<AbstractionLimit> { LimitWith(purposes: [new Purpose { Id = "U1" }]) };
         var group = new AbstractionLimitGroup { Purposes = [new Purpose { Id = "U2" }], Limits = limits };
 
-        AbstractionLicenceSchemaConverter.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
 
         Assert.Null(limits[0].Purposes);
         Assert.NotNull(group.Purposes);
@@ -64,7 +64,7 @@ public class AbstractionLimitShapeTests
         var limits = new List<AbstractionLimit> { LimitWith(points: [new Point { Id = "P1" }]) };
         var group = new AbstractionLimitGroup { Points = [new Point { Id = "P2" }], Limits = limits };
 
-        AbstractionLicenceSchemaConverter.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
 
         Assert.Null(limits[0].Points);
         Assert.NotNull(group.Points);
@@ -82,7 +82,7 @@ public class AbstractionLimitShapeTests
 
         var group = new AbstractionLimitGroup { Points = [], Purposes = [], Limits = limits };
 
-        AbstractionLicenceSchemaConverter.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
 
         Assert.Null(group.Points);
         Assert.Null(group.Purposes);
@@ -100,7 +100,7 @@ public class AbstractionLimitShapeTests
 
         var group = new AbstractionLimitGroup { Limits = limits };
 
-        AbstractionLicenceSchemaConverter.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(group, limits);
 
         Assert.Null(group.Points);
         Assert.NotNull(limits[0].Points);

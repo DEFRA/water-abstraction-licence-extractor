@@ -1,6 +1,6 @@
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 
@@ -19,7 +19,7 @@ public class AddLicencesReferencedInLimitsTests
         var other = LicenceBuilder.A().Numbered("4/5/6").Build();
         var limitsSet = LimitsSetOf(primary);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary, other], [limitsSet]);
 
         Assert.Equal(["1/2/3", "4/5/6"], limitsSet.Licences.Select(l => l.LicenceNumber?.Value));
@@ -36,7 +36,7 @@ public class AddLicencesReferencedInLimitsTests
         var other = LicenceBuilder.A().Numbered("4/5/6").Build();
         var limitsSet = LimitsSetOf(primary, other);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary, other], [limitsSet]);
 
         Assert.Equal(2, limitsSet.Licences.Length);
@@ -53,7 +53,7 @@ public class AddLicencesReferencedInLimitsTests
 
         var limitsSet = LimitsSetOf(primary);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary, LicenceBuilder.A().Numbered("4/5/6").Build()], []);
 
         Assert.Single(limitsSet.Licences);
@@ -72,7 +72,7 @@ public class AddLicencesReferencedInLimitsTests
             .Containing(primary)
             .Build();
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [lineageSet], primary, [primary, LicenceBuilder.A().Numbered("4/5/6").Build()], [lineageSet]);
 
         Assert.Single(lineageSet.Licences);
@@ -89,7 +89,7 @@ public class AddLicencesReferencedInLimitsTests
 
         var limitsSet = LimitsSetOf(primary);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary, LicenceBuilder.A().Numbered("4/5/6").Build()], [limitsSet]);
 
         Assert.Single(limitsSet.Licences);
@@ -107,7 +107,7 @@ public class AddLicencesReferencedInLimitsTests
         var primary = LicenceBuilder.A().Numbered("1/2/3").LinkedTo(link).Build();
         var limitsSet = LimitsSetOf(primary);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary, LicenceBuilder.A().Numbered("4/5/6").Build()], [limitsSet]);
 
         Assert.Single(limitsSet.Licences);
@@ -123,7 +123,7 @@ public class AddLicencesReferencedInLimitsTests
 
         var limitsSet = LimitsSetOf(primary);
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [limitsSet], primary, [primary], [limitsSet]);
 
         Assert.Single(limitsSet.Licences);
@@ -143,7 +143,7 @@ public class AddLicencesReferencedInLimitsTests
         var first = LimitsSetOf(primary);
         var second = LimitsSetOf(LicenceBuilder.A().Numbered("7/8/9").Build());
 
-        AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             [first, second], primary, [primary, other], [first]);
 
         Assert.Equal(2, first.Licences.Length);
@@ -164,7 +164,7 @@ public class AddLicencesReferencedInLimitsTests
         var limitsSet = LimitsSetOf(primary);
 
         Assert.Throws<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AddLicencesReferencedInLimitsToLicenceSets(
+            AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
                 [limitsSet], primary, [primary, LicenceBuilder.A().Numbered("4/5/6").Build()], [limitsSet]));
     }
 

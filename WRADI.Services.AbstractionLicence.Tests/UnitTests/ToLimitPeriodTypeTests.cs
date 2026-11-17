@@ -1,5 +1,5 @@
 using WRADI.Core.AbstractionLicence.Enums;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -22,7 +22,7 @@ public class ToLimitPeriodTypeTests
     [InlineData("over any 5-year period", LimitPeriodType.Per5Years)]
     public void EachKnownPhraseMapsToItsPeriod(string text, LimitPeriodType expected)
     {
-        Assert.Equal(expected, AbstractionLicenceSchemaConverter.ToLimitPeriodType(text));
+        Assert.Equal(expected, LimitPeriodHelper.ToLimitPeriodType(text));
     }
 
     [Theory]
@@ -31,7 +31,7 @@ public class ToLimitPeriodTypeTests
     [InlineData("pEr DaY")]
     public void TheMatchIgnoresCase(string text)
     {
-        Assert.Equal(LimitPeriodType.PerDay, AbstractionLicenceSchemaConverter.ToLimitPeriodType(text));
+        Assert.Equal(LimitPeriodType.PerDay, LimitPeriodHelper.ToLimitPeriodType(text));
     }
 
     // Only the exact phrase matches - no trimming, so whitespace from the document is fatal.
@@ -44,7 +44,7 @@ public class ToLimitPeriodTypeTests
     [InlineData(null)]
     public void AnythingElseThrows(string? text)
     {
-        Assert.Throws<NotSupportedException>(() => AbstractionLicenceSchemaConverter.ToLimitPeriodType(text));
+        Assert.Throws<NotSupportedException>(() => LimitPeriodHelper.ToLimitPeriodType(text));
     }
 
     // Unknown and NotApplicable are set elsewhere rather than matched from the document, so no
@@ -58,7 +58,7 @@ public class ToLimitPeriodTypeTests
                 try
                 {
                     return Phrases.Any(p =>
-                        AbstractionLicenceSchemaConverter.ToLimitPeriodType(p) == periodType);
+                        LimitPeriodHelper.ToLimitPeriodType(p) == periodType);
                 }
                 catch (NotSupportedException)
                 {

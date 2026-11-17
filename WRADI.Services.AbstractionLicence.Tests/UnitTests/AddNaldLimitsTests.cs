@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -15,7 +15,7 @@ public class AddNaldLimitsTests
         var group = GroupOf(Document(), Limit(100, "litres"));
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
 
         Assert.Contains(group.ContainedIn!, ci => ci.Source == InformationSource.Nald);
         Assert.Empty(individuals);
@@ -28,7 +28,7 @@ public class AddNaldLimitsTests
         group.ContainedIn = [new ContainedInInformation { Source = InformationSource.Nald }];
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
 
         Assert.Single(group.ContainedIn!);
     }
@@ -43,7 +43,7 @@ public class AddNaldLimitsTests
         var group = new AbstractionLimitGroup { Limits = [limit] };
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
 
         Assert.Contains(limit.ContainedIn!, ci => ci.Source == InformationSource.Nald);
     }
@@ -57,7 +57,7 @@ public class AddNaldLimitsTests
         var individuals = new List<AbstractionLimitGroup>();
 
         Assert.Throws<ArgumentNullException>(() =>
-            AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
+            AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
     }
 
     // Matching converts first, so the same quantity written in another unit still counts as found.
@@ -67,7 +67,7 @@ public class AddNaldLimitsTests
         var group = GroupOf(Document(), Limit(4_546.09, "litres"));
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(1_000, "gallons")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([Limit(1_000, "gallons")], [group], ref individuals);
 
         Assert.Contains(group.ContainedIn!, ci => ci.Source == InformationSource.Nald);
         Assert.Empty(individuals);
@@ -79,7 +79,7 @@ public class AddNaldLimitsTests
         var group = GroupOf(Document(), Limit(100, "litres"));
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(999, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([Limit(999, "litres")], [group], ref individuals);
 
         var added = Assert.Single(individuals);
         Assert.Equal(999, Assert.Single(added.Limits).Value);
@@ -92,7 +92,7 @@ public class AddNaldLimitsTests
     {
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits(
+        AbstractionLimitHelper.AddNaldLimits(
             [Limit(10, "litres"), Limit(20, "litres", LimitPeriodType.PerYear)],
             [],
             ref individuals);
@@ -105,7 +105,7 @@ public class AddNaldLimitsTests
     {
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLicenceSchemaConverter.AddNaldLimits([], [], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([], [], ref individuals);
 
         Assert.Empty(individuals);
     }
@@ -118,7 +118,7 @@ public class AddNaldLimitsTests
         var individuals = new List<AbstractionLimitGroup>();
 
         Assert.ThrowsAny<Exception>(() =>
-            AbstractionLicenceSchemaConverter.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
+            AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
     }
 
     private static AbstractionLimitGroup GroupOf(ContainedInInformation containedIn, params AbstractionLimit[] limits)

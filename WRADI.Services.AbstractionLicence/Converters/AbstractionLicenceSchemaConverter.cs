@@ -361,13 +361,13 @@ public static class AbstractionLicenceSchemaConverter
             var paddedAllDocumentLinkedLicenceNumber =
                 FormattingHelper.FormatLicenceNumber(anywhereInDocumentLinkedLicence.LicenceNumber, regionCode);
 
-            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
+            if (LicenceNumberHelper.ContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
             {
                 continue;
             }
 
             var found = linkedLicences
-                .Any(linkedLicence => LicenceNumberContainsOther(
+                .Any(linkedLicence => LicenceNumberHelper.ContainsOther(
                     paddedAllDocumentLinkedLicenceNumber,
                     linkedLicence.LicenceNumber,
                     regionCode));
@@ -395,7 +395,7 @@ public static class AbstractionLicenceSchemaConverter
                                 }
                             ) == true;
 
-                        return onlyInLicenceHistory && LicenceNumberContainsOther(
+                        return onlyInLicenceHistory && LicenceNumberHelper.ContainsOther(
                             paddedAllDocumentLinkedLicenceNumber,
                             paddedLinkedLicenceNumber,
                             regionCode);
@@ -412,7 +412,7 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             var licenceContainsOther = linkedLicences
-                .Where(linkedLicence2 => LicenceNumberContainsOther(
+                .Where(linkedLicence2 => LicenceNumberHelper.ContainsOther(
                     linkedLicence2.LicenceNumber,
                     anywhereInDocumentLinkedLicence.LicenceNumber,
                     regionCode))
@@ -1281,7 +1281,7 @@ public static class AbstractionLicenceSchemaConverter
 
         uniqueLinkedLicences = uniqueLinkedLicences
             .Where(linkedLicence =>
-                !LicenceNumberContainsOther(
+                !LicenceNumberHelper.ContainsOther(
                     licenceNumber,
                     linkedLicence.linkedLicence.LicenceNumber,
                     linkedLicence.regionId))
@@ -1292,7 +1292,7 @@ public static class AbstractionLicenceSchemaConverter
         foreach (var linkedLicence in uniqueLinkedLicences)
         {
             if (newLinkedLicences.Any(newLinkedLicence =>
-                    LicenceNumberContainsOther(
+                    LicenceNumberHelper.ContainsOther(
                         newLinkedLicence.LicenceNumber,
                         linkedLicence.linkedLicence.LicenceNumber,
                         linkedLicence.linkedLicence.RegionId ?? 0)))
@@ -1470,39 +1470,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         return text;
-    }
-
-    private static bool LicenceNumberContainsOther(
-        string? licenceNumber1,
-        string? licenceNumber2,
-        int regionId)
-    {
-        var licenceNumberStripped1 = FormattingHelper.StripForComparison(licenceNumber1, regionId);
-
-        if (string.IsNullOrWhiteSpace(licenceNumberStripped1))
-        {
-            return false;
-        }
-
-        var licenceNumberStripped2 = FormattingHelper.StripForComparison(licenceNumber2, regionId);
-
-        if (string.IsNullOrWhiteSpace(licenceNumberStripped2))
-        {
-            return false;
-        }
-
-        const string r1 = "R1";
-        const string r01 = "R01";
-
-        var firstContainsR1 = licenceNumberStripped1.Contains(r1) || licenceNumberStripped1.Contains(r01);
-        var secondContainsR1 = licenceNumberStripped2.Contains(r1) || licenceNumberStripped2.Contains(r01);
-
-        var only1HasR1 = (firstContainsR1 && !secondContainsR1)
-                         || (!firstContainsR1 && secondContainsR1);
-
-        return !only1HasR1
-               && (licenceNumberStripped1.Contains(licenceNumberStripped2)
-                   || licenceNumberStripped2.Contains(licenceNumberStripped1));
     }
 
     private static async Task<LinkedLicence> ToLinkedLicenceAsync(
@@ -3924,7 +3891,7 @@ public static class AbstractionLicenceSchemaConverter
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
             .Where(linkedLicence =>
-                !LicenceNumberContainsOther(
+                !LicenceNumberHelper.ContainsOther(
                     licenceNumber,
                     linkedLicence.LicenceNumber,
                     regionCode))

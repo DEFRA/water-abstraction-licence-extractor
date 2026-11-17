@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace WRADI.Core.AbstractionLicence.Models;
 
 public class OutputListDataItem

@@ -23,6 +23,8 @@ public sealed class LicenceListItem
     public int AggregatesCount { get; set; }
 
     public string[] AggregateIds { get; set; } = [];
+    
+    public string[] Aggregates { get; set; } = [];
 
     public bool? NaldAggregate { get; set; }
 

@@ -84,7 +84,7 @@ public class UiProcessRunService(
         
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
-            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
+            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences);
         
         var verificationsBySection = await verificationsBySectionTask;
         var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
@@ -96,11 +96,19 @@ public class UiProcessRunService(
                 licenceSets))
             .ToList();
         
+        var paginationOutputLinesWithAgg = paginationOutputLines
+            .Where(pol => pol.Aggregates?.Length > 0)
+            .ToList();
+        
         var paginationListData = JsOutputHelper.ToListData(
             paginationOutputLines,
             processRunId,
             verificationsBySection);
 
+        var paginationListDataWithAgg = paginationListData
+            .Where(pol => pol.aggregates?.Length > 0)
+            .ToList();
+        
         foreach (var listDataItem in paginationListData)
         {
             if (!licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
@@ -134,8 +142,7 @@ public class UiProcessRunService(
             {
                 try
                 {
-                    await licenceListRepository.UpsertLicenceListItemManyAsync(
-                        batch);
+                    await licenceListRepository.UpsertLicenceListItemManyAsync(batch);
                     
                     processedCount += batch.Length;
 

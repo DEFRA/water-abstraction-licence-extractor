@@ -186,7 +186,7 @@ public class ProcessRunsController(
                 }
                 catch
                 {
-                    // intentionally swallowed
+                    // intentionally swallowed as it's part of a fire and forget
                 }
             }));
         }

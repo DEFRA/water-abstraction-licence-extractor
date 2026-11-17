@@ -52,24 +52,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         
         return sb.join('-');
     }
-    
-    let naldCi = function(aggregate : Aggregate) {
-        let ci = new ContainedInInformation();
-        ci.source = InformationSource.Nald;
-
-        debugger;
-        console.log(aggregate);        
-        return [ci];
-    }
-
-    let documentCi = function(aggregate : Aggregate) {
-        let ci = new ContainedInInformation();
-        ci.source = InformationSource.Document;
-
-        console.log(aggregate);
-        return [ci];
-    }
-    
+        
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -89,20 +72,19 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
             <td>{dashesIfNullOrZero(item.limitsCount)}</td>
             <td>
-                {
-                    item.aggregates != null && item.aggregates!.length > 0 &&
-                <ul>
-                    {item.aggregates.map((aggregate) => {
-                        return (
-                            <li>
-                                {toShortId(aggregate.id)}
-                                <NaldTag containedIn={item.naldHasAggregateCondition ? naldCi(aggregate) : []}/>
-                                <DocumentTag containedIn={(item.aggregatesCount ?? 0) > 0 ? documentCi(aggregate) : []}/>
-                            </li>);
-                    })}
-                </ul>
+                {item.aggregates != null && item.aggregates!.length > 0 &&
+                    <ul>
+                        {item.aggregates.map((aggregate) => {
+                            return (
+                                <li>
+                                    {toShortId(aggregate.id)}
+                                    <NaldTag containedIn={aggregate.containedIn}/>
+                                    <DocumentTag containedIn={aggregate.containedIn}/>
+                                </li>);
+                        })}
+                    </ul>
                 }
-                {item.aggregateIds === null || item.aggregateIds!.length === 0 &&
+                {(item.aggregates === null || item.aggregates!.length === 0) &&
                     <span>--</span>
                 }
             </td>

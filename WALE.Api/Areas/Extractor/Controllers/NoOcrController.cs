@@ -33,6 +33,26 @@ public class NoOcrController(
     }
     
     [HttpPost]
+    public async Task<ActionResult> SaveMultipleNoOcrPageTextLinesAsync(
+        [FromBody] SaveMultipleNoOcrPageTextLinesRequest request)
+    {
+        await cacheService.SaveNoOcrPagesTextLinesAsync(
+            request.pages
+                .Select(page => (
+                    new NoOcrServicePageCacheRequest
+                    {
+                        FileId = page.fileId,
+                        PageNumber = page.pageNumber,
+                        NoOcrServiceName = page.noOcrServiceName,
+                        ProcessRunId = page.processRunId
+                    },
+                    page.pageLines!))
+                .ToList());
+
+        return Ok();
+    }
+
+    [HttpPost]
     public async Task<ActionResult> SaveNoOcrPagesMetadataAsync(
         [FromBody] SaveNoOcrPageTextLinesRequest request)
     {

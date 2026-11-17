@@ -12,7 +12,8 @@ export function LicenceSetsList({item, onOpenLicenceSetReport, showSingles}: Lic
     if (!item.licenceSets?.length) {
         return '--';
     }
-    
+
+    showSingles = true;
     let hasOnlySingles = item.licenceSets.every(ls => getLicenceSetTypeClass(ls.licenceSetType) == 'singleLicenceOnly');
     
     if (!showSingles && hasOnlySingles)

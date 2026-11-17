@@ -34,8 +34,7 @@ public interface IOutputService
 
     public Task<ProcessRunFile> ReportErrorProcessRunFileAsync(ProcessRunFile processRunFile);
     
-    public Task SaveMatchesAsync(
-        List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches);
+    public Task SaveMatchesAsync(List<MatchToSave> matches);
 
     public Task SaveMatchAsync(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data);
 

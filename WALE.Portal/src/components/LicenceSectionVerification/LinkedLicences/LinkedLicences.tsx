@@ -94,14 +94,31 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                 setError(null);
                 try {
 
-                    const implicitResults = await waleApiClient.incomingLinkedLicences(fileId, processRunId);
-                    setImplicitLinkedLicences(implicitResults || []);
+                    const incomingLinkedLicencesTask = waleApiClient.incomingLinkedLicences(
+                        fileId,
+                        processRunId);
 
-                    const scrapeResults = await waleApiClient.outgoingLinkedLicences(fileId, processRunId);
-                    setLinkedLicences(scrapeResults || []);
+                    const referencedAlongsideLinkedLicencesTask = waleApiClient.referencedAlongsideLinkedLicences(
+                        fileId,
+                        processRunId);
+
+                    const outgoingLinkedLicences = await waleApiClient.outgoingLinkedLicences(
+                        fileId,
+                        processRunId);
                     
+                    setLinkedLicences(outgoingLinkedLicences || []);
                     
-                    setScrapedData(scrapeResults?.map(ll => LinkedLicence.fromJS(ll)) || []);
+                    const incomingLinkedLicences = await incomingLinkedLicencesTask;
+                    const referencedAlongsideLinkedLicences = await referencedAlongsideLinkedLicencesTask;
+
+                    let combined = incomingLinkedLicences.concat(referencedAlongsideLinkedLicences);
+
+                    combined = combined.filter((obj, index, self) =>
+                        index === self.findIndex((t) => t.licenceNumber === obj.licenceNumber)
+                    );
+                    
+                    setImplicitLinkedLicences(combined || []);
+                    setScrapedData(outgoingLinkedLicences?.map(ll => LinkedLicence.fromJS(ll)) || []);
 
                     if (!scrapedView) {
                         const currentOutgoingLinkedLicences = (currentLicence?.linkedLicences || [])
@@ -361,10 +378,10 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             borderRadius: '4px',
                             textAlign: 'center'
                         }}>
-                            <p style={{color: '#888', marginBottom: '16px'}}>Incoming links found.</p>
+                            <p style={{color: '#888', marginBottom: '16px'}}>Incoming or referenced alongside links found.</p>
                             <ul style={{
                                 listStyle: "none"
-                            }}    >
+                            }}>
                                 {implicitLinkedLicences.map((ll, index) => {
                                     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
                                     const licenceNumber = ll.licenceNumber;
@@ -420,7 +437,7 @@ export const LinkedLicences = forwardRef<ILicenceSectionBody, LinkedLicencesProp
                             borderRadius: '4px',
                             textAlign: 'center'
                         }}>
-                            <p style={{color: '#888', marginBottom: '16px'}}>No Incoming links found.</p>
+                            <p style={{color: '#888', marginBottom: '16px'}}>No Incoming or referenced alongside links found.</p>
                         </div>
                     )}
                 </div>

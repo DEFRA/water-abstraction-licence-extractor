@@ -2747,6 +2747,43 @@ export class Client {
     /**
      * @return OK
      */
+    saveMultipleNoOcrPageTextLines(body: SaveMultipleNoOcrPageTextLinesRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/NoOcr/SaveMultipleNoOcrPageTextLines";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSaveMultipleNoOcrPageTextLines(_response);
+        });
+    }
+
+    protected processSaveMultipleNoOcrPageTextLines(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     saveNoOcrPagesMetadata(body: SaveNoOcrPageTextLinesRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/NoOcr/SaveNoOcrPagesMetadata";
         url_ = url_.replace(/[?&]$/, "");
@@ -4642,6 +4679,60 @@ export class Client {
      * @param processRunId (optional) 
      * @return OK
      */
+    referencedAlongsideLinkedLicences(fileId: string | undefined, processRunId: number | undefined): Promise<LinkedLicence[]> {
+        let url_ = this.baseUrl + "/BFF/FileData/ReferencedAlongsideLinkedLicences?";
+        if (fileId === null)
+            throw new globalThis.Error("The parameter 'fileId' cannot be null.");
+        else if (fileId !== undefined)
+            url_ += "fileId=" + encodeURIComponent("" + fileId) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "processRunId=" + encodeURIComponent("" + processRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processReferencedAlongsideLinkedLicences(_response);
+        });
+    }
+
+    protected processReferencedAlongsideLinkedLicences(response: Response): Promise<LinkedLicence[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LinkedLicence.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LinkedLicence[]>(null as any);
+    }
+
+    /**
+     * @param fileId (optional) 
+     * @param processRunId (optional) 
+     * @return OK
+     */
     outgoingLinkedLicences(fileId: string | undefined, processRunId: number | undefined): Promise<LinkedLicence[]> {
         let url_ = this.baseUrl + "/BFF/FileData/OutgoingLinkedLicences?";
         if (fileId === null)
@@ -5050,6 +5141,48 @@ export class Client {
     }
 
     protected processCreateLicenceSectionVerification(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    uiCreateLicenceSectionVerification(body: LicenceSectionVerification): Promise<number> {
+        let url_ = this.baseUrl + "/BFF/FileData/UiCreateLicenceSectionVerification";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUiCreateLicenceSectionVerification(_response);
+        });
+    }
+
+    protected processUiCreateLicenceSectionVerification(response: Response): Promise<number> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -7766,12 +7899,13 @@ export interface ICondition {
 }
 
 export class ContainedInInformation implements IContainedInInformation {
-    source?: InformationSource;
     direction?: NullableOfInformationDirection | undefined;
+    source?: InformationSource;
+    sourceLicence?: string | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
-    history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    history?: any[] | undefined;
     documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
@@ -7794,15 +7928,16 @@ export class ContainedInInformation implements IContainedInInformation {
                 if (_data.hasOwnProperty(property))
                     this[property] = _data[property];
             }
-            this.source = _data["source"];
             this.direction = _data["direction"];
+            this.source = _data["source"];
+            this.sourceLicence = _data["sourceLicence"];
             this.sectionName = _data["sectionName"];
             this.linkReason = _data["linkReason"];
             this.acinCode = _data["acinCode"];
             if (Array.isArray(_data["history"])) {
                 this.history = [] as any;
                 for (let item of _data["history"])
-                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+                    this.history!.push(item);
             }
             this.documentIdentifier = _data["documentIdentifier"];
             if (_data["sourceFields"]) {
@@ -7830,15 +7965,16 @@ export class ContainedInInformation implements IContainedInInformation {
             if (this.hasOwnProperty(property))
                 data[property] = this[property];
         }
-        data["source"] = this.source;
         data["direction"] = this.direction;
+        data["source"] = this.source;
+        data["sourceLicence"] = this.sourceLicence;
         data["sectionName"] = this.sectionName;
         data["linkReason"] = this.linkReason;
         data["acinCode"] = this.acinCode;
         if (Array.isArray(this.history)) {
             data["history"] = [];
             for (let item of this.history)
-                data["history"].push(item ? item.toJSON() : undefined as any);
+                data["history"].push(item);
         }
         data["documentIdentifier"] = this.documentIdentifier;
         if (this.sourceFields) {
@@ -7855,12 +7991,13 @@ export class ContainedInInformation implements IContainedInInformation {
 }
 
 export interface IContainedInInformation {
-    source?: InformationSource;
     direction?: NullableOfInformationDirection | undefined;
+    source?: InformationSource;
+    sourceLicence?: string | undefined;
     sectionName?: string | undefined;
     linkReason?: string | undefined;
     acinCode?: string | undefined;
-    history?: NaldLicenceNumberHistoryOutput[] | undefined;
+    history?: any[] | undefined;
     documentIdentifier?: string | undefined;
     sourceFields?: { [key: string]: string; } | undefined;
     lineNumber?: number | undefined;
@@ -8734,7 +8871,7 @@ export class LabelGroupResult implements ILabelGroupResult {
     matchedLabelPosition?: NullableOfLabelPosition | undefined;
     matchedLabelTextFirstLine?: string | undefined;
     confidence?: number | undefined;
-    subResults?: any[];
+    subResults?: LabelGroupResult2[];
     alternativeMatches?: any[];
 
     [key: string]: any;
@@ -8777,7 +8914,7 @@ export class LabelGroupResult implements ILabelGroupResult {
             if (Array.isArray(_data["subResults"])) {
                 this.subResults = [] as any;
                 for (let item of _data["subResults"])
-                    this.subResults!.push(item);
+                    this.subResults!.push(LabelGroupResult2.fromJS(item));
             }
             if (Array.isArray(_data["alternativeMatches"])) {
                 this.alternativeMatches = [] as any;
@@ -8823,7 +8960,7 @@ export class LabelGroupResult implements ILabelGroupResult {
         if (Array.isArray(this.subResults)) {
             data["subResults"] = [];
             for (let item of this.subResults)
-                data["subResults"].push(item);
+                data["subResults"].push(item ? item.toJSON() : undefined as any);
         }
         if (Array.isArray(this.alternativeMatches)) {
             data["alternativeMatches"] = [];
@@ -8851,7 +8988,147 @@ export interface ILabelGroupResult {
     matchedLabelPosition?: NullableOfLabelPosition | undefined;
     matchedLabelTextFirstLine?: string | undefined;
     confidence?: number | undefined;
-    subResults?: any[];
+    subResults?: LabelGroupResult2[];
+    alternativeMatches?: any[];
+
+    [key: string]: any;
+}
+
+export class LabelGroupResult2 implements ILabelGroupResult2 {
+    text?: DocumentLine[] | undefined;
+    matchedPosition?: MatchedPosition;
+    isOcr?: boolean;
+    labelStartPageNumber?: number;
+    labelStartLineNumber?: number;
+    labelStartCharPosition?: number;
+    labelEndPageNumber?: number;
+    labelEndLineNumber?: number;
+    labelEndCharPosition?: number;
+    serviceName?: string | undefined;
+    labelGroupName?: string | undefined;
+    matchedLabelName?: string | undefined;
+    matchedLabelRelatedName?: string | undefined;
+    matchedLabelPosition?: NullableOfLabelPosition | undefined;
+    matchedLabelTextFirstLine?: string | undefined;
+    confidence?: number | undefined;
+    subResults?: LabelGroupResult2[];
+    alternativeMatches?: any[];
+
+    [key: string]: any;
+
+    constructor(data?: ILabelGroupResult2) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["text"])) {
+                this.text = [] as any;
+                for (let item of _data["text"])
+                    this.text!.push(DocumentLine.fromJS(item));
+            }
+            this.matchedPosition = _data["matchedPosition"];
+            this.isOcr = _data["isOcr"];
+            this.labelStartPageNumber = _data["labelStartPageNumber"];
+            this.labelStartLineNumber = _data["labelStartLineNumber"];
+            this.labelStartCharPosition = _data["labelStartCharPosition"];
+            this.labelEndPageNumber = _data["labelEndPageNumber"];
+            this.labelEndLineNumber = _data["labelEndLineNumber"];
+            this.labelEndCharPosition = _data["labelEndCharPosition"];
+            this.serviceName = _data["serviceName"];
+            this.labelGroupName = _data["labelGroupName"];
+            this.matchedLabelName = _data["matchedLabelName"];
+            this.matchedLabelRelatedName = _data["matchedLabelRelatedName"];
+            this.matchedLabelPosition = _data["matchedLabelPosition"];
+            this.matchedLabelTextFirstLine = _data["matchedLabelTextFirstLine"];
+            this.confidence = _data["confidence"];
+            if (Array.isArray(_data["subResults"])) {
+                this.subResults = [] as any;
+                for (let item of _data["subResults"])
+                    this.subResults!.push(LabelGroupResult2.fromJS(item));
+            }
+            if (Array.isArray(_data["alternativeMatches"])) {
+                this.alternativeMatches = [] as any;
+                for (let item of _data["alternativeMatches"])
+                    this.alternativeMatches!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LabelGroupResult2 {
+        data = typeof data === 'object' ? data : {};
+        let result = new LabelGroupResult2();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.text)) {
+            data["text"] = [];
+            for (let item of this.text)
+                data["text"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["matchedPosition"] = this.matchedPosition;
+        data["isOcr"] = this.isOcr;
+        data["labelStartPageNumber"] = this.labelStartPageNumber;
+        data["labelStartLineNumber"] = this.labelStartLineNumber;
+        data["labelStartCharPosition"] = this.labelStartCharPosition;
+        data["labelEndPageNumber"] = this.labelEndPageNumber;
+        data["labelEndLineNumber"] = this.labelEndLineNumber;
+        data["labelEndCharPosition"] = this.labelEndCharPosition;
+        data["serviceName"] = this.serviceName;
+        data["labelGroupName"] = this.labelGroupName;
+        data["matchedLabelName"] = this.matchedLabelName;
+        data["matchedLabelRelatedName"] = this.matchedLabelRelatedName;
+        data["matchedLabelPosition"] = this.matchedLabelPosition;
+        data["matchedLabelTextFirstLine"] = this.matchedLabelTextFirstLine;
+        data["confidence"] = this.confidence;
+        if (Array.isArray(this.subResults)) {
+            data["subResults"] = [];
+            for (let item of this.subResults)
+                data["subResults"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.alternativeMatches)) {
+            data["alternativeMatches"] = [];
+            for (let item of this.alternativeMatches)
+                data["alternativeMatches"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILabelGroupResult2 {
+    text?: DocumentLine[] | undefined;
+    matchedPosition?: MatchedPosition;
+    isOcr?: boolean;
+    labelStartPageNumber?: number;
+    labelStartLineNumber?: number;
+    labelStartCharPosition?: number;
+    labelEndPageNumber?: number;
+    labelEndLineNumber?: number;
+    labelEndCharPosition?: number;
+    serviceName?: string | undefined;
+    labelGroupName?: string | undefined;
+    matchedLabelName?: string | undefined;
+    matchedLabelRelatedName?: string | undefined;
+    matchedLabelPosition?: NullableOfLabelPosition | undefined;
+    matchedLabelTextFirstLine?: string | undefined;
+    confidence?: number | undefined;
+    subResults?: LabelGroupResult2[];
     alternativeMatches?: any[];
 
     [key: string]: any;
@@ -9787,13 +10064,15 @@ export enum LicenceSetType {
     Unknown = "Unknown",
     SingleLicenceOnly = "SingleLicenceOnly",
     LicencesGroupedByAbstractionLimits = "LicencesGroupedByAbstractionLimits",
-    Others = "Others",
+    LicencesGroupedByLineage = "LicencesGroupedByLineage",
+    LicencesGroupedByOtherThenLimitsAndLineage = "LicencesGroupedByOtherThenLimitsAndLineage",
     AllLicencesExplicitlyReferencedAnywhere = "AllLicencesExplicitlyReferencedAnywhere",
     AllLicencesExplicitlyReferencedInLimits = "AllLicencesExplicitlyReferencedInLimits",
     AllLicencesImplicitlyReferencedInLimits = "AllLicencesImplicitlyReferencedInLimits",
     AllLicencesIncludingImplicitlyReferenced = "AllLicencesIncludingImplicitlyReferenced",
     FullyEncompassedIn = "FullyEncompassedIn",
     PartiallyEncompassedIn = "PartiallyEncompassedIn",
+    LicencesGroupedByOtherThenLimitsAndLinegage = "LicencesGroupedByOtherThenLimitsAndLinegage",
 }
 
 export enum LicenceType {
@@ -9824,6 +10103,7 @@ export class LicenceVersion implements ILicenceVersion {
     naldStatus?: string | undefined;
     dmsFileIdStatus?: string | undefined;
     dmsFileIdStatusDateUtc?: Date | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
 
     [key: string]: any;
 
@@ -9861,6 +10141,11 @@ export class LicenceVersion implements ILicenceVersion {
             this.naldStatus = _data["naldStatus"];
             this.dmsFileIdStatus = _data["dmsFileIdStatus"];
             this.dmsFileIdStatusDateUtc = _data["dmsFileIdStatusDateUtc"] ? new Date(_data["dmsFileIdStatusDateUtc"].toString()) : undefined as any;
+            if (Array.isArray(_data["history"])) {
+                this.history = [] as any;
+                for (let item of _data["history"])
+                    this.history!.push(NaldLicenceNumberHistoryOutput.fromJS(item));
+            }
         }
     }
 
@@ -9896,6 +10181,11 @@ export class LicenceVersion implements ILicenceVersion {
         data["naldStatus"] = this.naldStatus;
         data["dmsFileIdStatus"] = this.dmsFileIdStatus;
         data["dmsFileIdStatusDateUtc"] = this.dmsFileIdStatusDateUtc ? this.dmsFileIdStatusDateUtc.toISOString() : undefined as any;
+        if (Array.isArray(this.history)) {
+            data["history"] = [];
+            for (let item of this.history)
+                data["history"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -9920,6 +10210,7 @@ export interface ILicenceVersion {
     naldStatus?: string | undefined;
     dmsFileIdStatus?: string | undefined;
     dmsFileIdStatusDateUtc?: Date | undefined;
+    history?: NaldLicenceNumberHistoryOutput[] | undefined;
 
     [key: string]: any;
 }
@@ -10057,7 +10348,7 @@ export enum MatchedPosition {
 
 export class MatchesResult implements IMatchesResult {
     regionCode?: number;
-    matches?: LabelGroupResult[] | undefined;
+    matches?: LabelGroupResult2[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
     servicesUsed?: string[];
@@ -10091,7 +10382,7 @@ export class MatchesResult implements IMatchesResult {
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
-                    this.matches!.push(LabelGroupResult.fromJS(item));
+                    this.matches!.push(LabelGroupResult2.fromJS(item));
             }
             this.numberOfPages = _data["numberOfPages"];
             this.scannedFile = _data["scannedFile"];
@@ -10167,7 +10458,7 @@ export class MatchesResult implements IMatchesResult {
 
 export interface IMatchesResult {
     regionCode?: number;
-    matches?: LabelGroupResult[] | undefined;
+    matches?: LabelGroupResult2[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
     servicesUsed?: string[];
@@ -10185,7 +10476,7 @@ export interface IMatchesResult {
 
 export class MatchesResult2 implements IMatchesResult2 {
     regionCode?: number;
-    matches?: LabelGroupResult[] | undefined;
+    matches?: LabelGroupResult2[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
     servicesUsed?: string[];
@@ -10219,7 +10510,7 @@ export class MatchesResult2 implements IMatchesResult2 {
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
-                    this.matches!.push(LabelGroupResult.fromJS(item));
+                    this.matches!.push(LabelGroupResult2.fromJS(item));
             }
             this.numberOfPages = _data["numberOfPages"];
             this.scannedFile = _data["scannedFile"];
@@ -10295,7 +10586,7 @@ export class MatchesResult2 implements IMatchesResult2 {
 
 export interface IMatchesResult2 {
     regionCode?: number;
-    matches?: LabelGroupResult[] | undefined;
+    matches?: LabelGroupResult2[] | undefined;
     numberOfPages?: number;
     scannedFile?: boolean;
     servicesUsed?: string[];
@@ -10307,6 +10598,66 @@ export interface IMatchesResult2 {
     matchesResultId?: number;
     fileId?: string;
     status?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class MatchToSave implements IMatchToSave {
+    matchesResultId?: number;
+    labelName?: string | undefined;
+    labelGroupName?: string | undefined;
+    data?: LabelGroupResult | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMatchToSave) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.matchesResultId = _data["matchesResultId"];
+            this.labelName = _data["labelName"];
+            this.labelGroupName = _data["labelGroupName"];
+            this.data = _data["data"] ? LabelGroupResult.fromJS(_data["data"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): MatchToSave {
+        data = typeof data === 'object' ? data : {};
+        let result = new MatchToSave();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["matchesResultId"] = this.matchesResultId;
+        data["labelName"] = this.labelName;
+        data["labelGroupName"] = this.labelGroupName;
+        data["data"] = this.data ? this.data.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface IMatchToSave {
+    matchesResultId?: number;
+    labelName?: string | undefined;
+    labelGroupName?: string | undefined;
+    data?: LabelGroupResult | undefined;
 
     [key: string]: any;
 }
@@ -10371,6 +10722,7 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
     status?: string | undefined;
     licenceNumber?: string | undefined;
     followOnLicenceNumbers?: string[];
+    precedingLicenceNumbers?: string[];
     source?: string | undefined;
 
     [key: string]: any;
@@ -10397,6 +10749,11 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
                 for (let item of _data["followOnLicenceNumbers"])
                     this.followOnLicenceNumbers!.push(item);
             }
+            if (Array.isArray(_data["precedingLicenceNumbers"])) {
+                this.precedingLicenceNumbers = [] as any;
+                for (let item of _data["precedingLicenceNumbers"])
+                    this.precedingLicenceNumbers!.push(item);
+            }
             this.source = _data["source"];
         }
     }
@@ -10421,6 +10778,11 @@ export class NaldLicenceNumberHistoryOutput implements INaldLicenceNumberHistory
             for (let item of this.followOnLicenceNumbers)
                 data["followOnLicenceNumbers"].push(item);
         }
+        if (Array.isArray(this.precedingLicenceNumbers)) {
+            data["precedingLicenceNumbers"] = [];
+            for (let item of this.precedingLicenceNumbers)
+                data["precedingLicenceNumbers"].push(item);
+        }
         data["source"] = this.source;
         return data;
     }
@@ -10430,6 +10792,7 @@ export interface INaldLicenceNumberHistoryOutput {
     status?: string | undefined;
     licenceNumber?: string | undefined;
     followOnLicenceNumbers?: string[];
+    precedingLicenceNumbers?: string[];
     source?: string | undefined;
 
     [key: string]: any;
@@ -10595,7 +10958,7 @@ export enum NullableOfInformationDirection {
     Unknown = "Unknown",
     Incoming = "Incoming",
     Outgoing = "Outgoing",
-    InSameGroup = "InSameGroup",
+    ReferencedAlongside = "ReferencedAlongside",
 }
 
 export enum NullableOfLabelPosition {
@@ -12412,7 +12775,7 @@ export interface ISaveLicenceSetsRequest {
 }
 
 export class SaveMatchesRequest implements ISaveMatchesRequest {
-    matches?: ValueTupleOfintAndstringAndstringAndLabelGroupResult[] | undefined;
+    matches?: MatchToSave[] | undefined;
 
     [key: string]: any;
 
@@ -12434,7 +12797,7 @@ export class SaveMatchesRequest implements ISaveMatchesRequest {
             if (Array.isArray(_data["matches"])) {
                 this.matches = [] as any;
                 for (let item of _data["matches"])
-                    this.matches!.push(ValueTupleOfintAndstringAndstringAndLabelGroupResult.fromJS(item));
+                    this.matches!.push(MatchToSave.fromJS(item));
             }
         }
     }
@@ -12462,7 +12825,7 @@ export class SaveMatchesRequest implements ISaveMatchesRequest {
 }
 
 export interface ISaveMatchesRequest {
-    matches?: ValueTupleOfintAndstringAndstringAndLabelGroupResult[] | undefined;
+    matches?: MatchToSave[] | undefined;
 
     [key: string]: any;
 }
@@ -12583,6 +12946,62 @@ export interface ISaveMatchResultRequest {
     matches?: MatchesResult | undefined;
     processRunId?: number;
     isUpdate?: boolean;
+
+    [key: string]: any;
+}
+
+export class SaveMultipleNoOcrPageTextLinesRequest implements ISaveMultipleNoOcrPageTextLinesRequest {
+    pages?: SaveNoOcrPageTextLinesRequest[];
+
+    [key: string]: any;
+
+    constructor(data?: ISaveMultipleNoOcrPageTextLinesRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["pages"])) {
+                this.pages = [] as any;
+                for (let item of _data["pages"])
+                    this.pages!.push(SaveNoOcrPageTextLinesRequest.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): SaveMultipleNoOcrPageTextLinesRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SaveMultipleNoOcrPageTextLinesRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.pages)) {
+            data["pages"] = [];
+            for (let item of this.pages)
+                data["pages"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ISaveMultipleNoOcrPageTextLinesRequest {
+    pages?: SaveNoOcrPageTextLinesRequest[];
 
     [key: string]: any;
 }
@@ -13146,50 +13565,6 @@ export interface IUpdateLicenceRequest {
     licence?: string | undefined;
     licenceId?: number;
     processRunId?: number;
-
-    [key: string]: any;
-}
-
-export class ValueTupleOfintAndstringAndstringAndLabelGroupResult implements IValueTupleOfintAndstringAndstringAndLabelGroupResult {
-
-    [key: string]: any;
-
-    constructor(data?: IValueTupleOfintAndstringAndstringAndLabelGroupResult) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            for (var property in _data) {
-                if (_data.hasOwnProperty(property))
-                    this[property] = _data[property];
-            }
-        }
-    }
-
-    static fromJS(data: any): ValueTupleOfintAndstringAndstringAndLabelGroupResult {
-        data = typeof data === 'object' ? data : {};
-        let result = new ValueTupleOfintAndstringAndstringAndLabelGroupResult();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        for (var property in this) {
-            if (this.hasOwnProperty(property))
-                data[property] = this[property];
-        }
-        return data;
-    }
-}
-
-export interface IValueTupleOfintAndstringAndstringAndLabelGroupResult {
 
     [key: string]: any;
 }

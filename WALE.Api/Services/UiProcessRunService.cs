@@ -174,25 +174,23 @@ public class UiProcessRunService(
     
     private async Task NotifyCompletedAsync(int processRunId, double secondsTaken)
     {
-        await hubContext.Clients
-            .Group($"process-{processRunId}")
+        await hubContext.Clients.All
             .SendAsync("ProcessCompleted", new
             {
                 ProcessRunId = processRunId,
                 Status = "Completed",
-                Message = $"Licence List Data refresh completed successfully for {processRunId} in {secondsTaken} seconds."
+                Message = $"Licence List Data refresh completed successfully for process run {processRunId} in {secondsTaken:F2} seconds."
             });
     }
 
     private async Task NotifyFailedAsync(int processRunId)
     {
-        await hubContext.Clients
-            .Group($"process-{processRunId}")
+        await hubContext.Clients.All
             .SendAsync("ProcessFailed", new
             {
                 ProcessRunId = processRunId,
                 Status = "Failed",
-                Message = $"Licence List Data refresh failed  for {processRunId}."
+                Message = $"Licence List Data refresh failed for process run {processRunId}."
             });
     }
 }

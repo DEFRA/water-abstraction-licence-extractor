@@ -170,7 +170,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return processRunFile;
     }
 
-    public async Task SaveMatchesAsync(List<(int matchesResultId, string? labelName, string? labelGroupName, LabelGroupResult data)> matches)
+    public async Task SaveMatchesAsync(List<MatchToSave> matches)
     {
         var path = "/Extractor/Match/SaveMultiple";
 

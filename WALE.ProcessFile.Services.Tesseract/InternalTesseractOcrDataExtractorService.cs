@@ -61,7 +61,9 @@ public class InternalTesseractOcrDataExtractorService(
         {
             try
             {
-                if (bytes.Length == 0)
+                // One entry per screenshot provider, and a provider with no stored render comes
+                // back null - skipping it leaves the other provider's page to be read.
+                if (bytes is null || bytes.Length == 0)
                 {
                     ConsoleHelper.WriteLine($"WARNING - TesseractInternal - Couldn't process as bytes length was zero - {fileId}");
                     continue;

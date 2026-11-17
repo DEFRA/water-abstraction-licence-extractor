@@ -333,6 +333,12 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                         .map((index) => {
                             const aggregate = aggregates[index];
                             const itemId = aggregateIds[index];
+                            
+                            if (!!aggregate.sourceLicenceNumber
+                                && aggregate.sourceLicenceNumber !== licence?.licenceNumber?.value) {
+                                return false;
+                            }
+                            
                             return (
                                 <AggregateItem
                                     key={index}
@@ -371,6 +377,22 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                 />
                             );
                         })}
+                </div>
+                <div style={{marginTop: '16px', textAlign: 'center'}}>
+                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates;</p>
+                    <ul>
+                        {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
+                            .map((index) => {
+                                const aggregate = aggregates[index];
+
+                                if (aggregate.sourceLicenceNumber === licence?.licenceNumber?.value) {
+                                    return false;
+                                }
+
+                                return (
+                                    <li>{aggregate.id}</li>);
+                            })}
+                    </ul>
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (

@@ -20,6 +20,7 @@ import ExportImportVerifications from "../components/ExportImportVerifications.t
 import RefreshLicenceListData from "../components/RefreshLicenceListData";
 import ExportLicenceEstate from "../components/ExportLicenceEstate.tsx";
 import LicenceFinderAction from "../components/LicenceFinderAction";
+import PageNotifications from "../components/PageNotifications";
 import {FileIdMapProvider, useFileIdMap} from "../utils/useFileIdMap.tsx";
 
 function ListSearchPage() {
@@ -260,6 +261,43 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(modal.outputListDataItem)) {
                     updateModalOutputItem(modal.fileId, updatedItem);
                 }
+                if (!updatedItem) {
+                    const licenceNumber = getLicenceNumber(modal.fileId);
+                    if (licenceNumber) {
+                        waleApiClient.getProcessRunList(
+                            processRunId,
+                            'N/A',
+                            '',
+                            0,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            undefined,
+                            [licenceNumber],
+                            undefined
+                        ).then(result => {
+                            const resolvedItem = result.records?.find(item => item.fileId === modal.fileId);
+                            if (resolvedItem) {
+                                updateModalOutputItem(modal.fileId, resolvedItem);
+                            }
+                        }).catch(err => {
+                            console.error('Error resolving linked licence report data:', err);
+                        });
+                    }
+                }
             }
         });
     }, [outputList, modals, updateModalOutputItem]);
@@ -275,6 +313,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             <div style={{ position: 'absolute', top: 5, left: 5, cursor: 'pointer'}} onClick={toHome}>&#8617;</div>
             
             <h1>
+                <PageNotifications />
                 <a
                     href="#"
                     id="licencesLink"

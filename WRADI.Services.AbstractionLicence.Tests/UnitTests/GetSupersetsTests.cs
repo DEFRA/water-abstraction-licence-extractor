@@ -67,20 +67,22 @@ public class GetSupersetsTests
         Assert.Equal(60, candidate.GetCombinedLimitValue());
     }
 
-    // WRADI-547. Summing GetCombinedLimitValue's int throws before any candidate is returned.
+    // WRADI-547. Totals this size used to throw while being summed, before any candidate could be
+    // considered.
     [Fact]
-    public void WhenTheCandidatesTotalsExceedIntMax_ThenItThrows()
+    public void WhenTheCandidatesTotalsExceedIntMax_ThenTheyAreStillCompared()
     {
         var aggregate = AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Build();
 
-        Assert.Throws<OverflowException>(() =>
-            AggregateHelper.GetSupersets(
-                aggregate,
-                [
-                    AggregateBuilder.An()
-                        .For("7/8/9").LinkedTo("1/2/3", "4/5/6").Limited(5_000_000_000).Build(),
-                    AggregateBuilder.An().For("0/0/0").Limited(9_000_000_000).Build()
-                ]));
+        var supersets = AggregateHelper.GetSupersets(
+            aggregate,
+            [
+                AggregateBuilder.An()
+                    .For("7/8/9").LinkedTo("1/2/3", "4/5/6").Limited(5_000_000_000).Build(),
+                AggregateBuilder.An().For("0/0/0").Limited(9_000_000_000).Build()
+            ]);
+
+        Assert.Empty(supersets);
     }
 
     [Fact]

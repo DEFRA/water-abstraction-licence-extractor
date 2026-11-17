@@ -43,25 +43,22 @@ public class AggregateIdTests
             AggregateBuilder.An().For("1/2/3").Limited(200).Build().Id);
     }
 
-    // WRADI-547. GetCombinedLimitValue accumulates in a double and returns an unchecked (int)
-    // cast, which saturates at int.MaxValue. Every aggregate above that total reports the same
-    // value, so distinct aggregates collapse onto one Id - and Id is what the dedup and the
-    // duplicate assertion work from.
+    // WRADI-547. A litre total above int.MaxValue is ordinary for one licence, and the value used
+    // to be cast to int, so every aggregate past that point reported int.MaxValue and collapsed
+    // onto one Id - which is what the dedup and the duplicate assertion work from.
     [Fact]
-    public void WhenTheCombinedLimitExceedsIntMax_ThenDistinctAggregatesShareAnId()
+    public void WhenTheCombinedLimitExceedsIntMax_ThenAggregatesKeepDistinctIds()
     {
         var fiveBillion = AggregateBuilder.An().For("1/2/3").Limited(5_000_000_000).Build();
         var nineBillion = AggregateBuilder.An().For("1/2/3").Limited(9_000_000_000).Build();
 
-        Assert.Equal(int.MaxValue, fiveBillion.GetCombinedLimitValue());
-        Assert.Equal(int.MaxValue, nineBillion.GetCombinedLimitValue());
-        Assert.Equal(fiveBillion.Id, nineBillion.Id);
+        Assert.Equal(5_000_000_000, fiveBillion.GetCombinedLimitValue());
+        Assert.Equal(9_000_000_000, nineBillion.GetCombinedLimitValue());
+        Assert.NotEqual(fiveBillion.Id, nineBillion.Id);
     }
 
-    // The same overflow is loud rather than silent once the values are summed across aggregates,
-    // which is the path GetSupersets takes.
     [Fact]
-    public void WhenCombinedLimitsAreSummedAcrossAggregates_ThenTheOverflowThrows()
+    public void WhenCombinedLimitsAreSummedAcrossAggregates_ThenTheTotalIsExact()
     {
         var aggregates = new[]
         {
@@ -69,7 +66,7 @@ public class AggregateIdTests
             AggregateBuilder.An().For("4/5/6").Limited(9_000_000_000).Build()
         };
 
-        Assert.Throws<OverflowException>(() => aggregates.Sum(a => a.GetCombinedLimitValue()));
+        Assert.Equal(14_000_000_000, aggregates.Sum(a => a.GetCombinedLimitValue()));
     }
 
     [Fact]

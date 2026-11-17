@@ -53,7 +53,7 @@ public class Aggregate : AbstractionLimitGroup
                 outputSb.Append($"-{DocumentIdentifier.Replace(".", "_")}");
             }
             
-            outputSb.Append($"-C{GetCombinedLimitValue()}");
+            outputSb.Append($"-C{(long)GetCombinedLimitValue()}");
             return outputSb.ToString();
         }
     }
@@ -61,7 +61,7 @@ public class Aggregate : AbstractionLimitGroup
     // Only is set when inside a Licence rather then inside a LicenceSet
     public string? LicenceSetId { get; set; }
 
-    public int GetCombinedLimitValue()
+    public double GetCombinedLimitValue()
     {
         var combinedValue = 0.0;
         
@@ -75,7 +75,7 @@ public class Aggregate : AbstractionLimitGroup
             combinedValue += limit.Value!.Value;
         }
 
-        return (int)combinedValue;
+        return combinedValue;
     }
     
     public string? SourceLicenceNumber { get; set; }

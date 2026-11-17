@@ -1,11 +1,11 @@
-import {ContainedInInformation, InformationSource, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {Aggregate, ContainedInInformation, InformationSource, OutputListDataItem} from "../api/generated/apiClient.ts";
 import {
     getVerificationTypeBackgroundColor,
     getVerificationTypeInitials,
     getVerificationWithNotesFirstPart,
     getVerificationWithNotesTooltip
 } from "../utils/verificationUtils.ts";
-import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
+import {compareAlphanumeric, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
@@ -29,8 +29,8 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         sectionVerifications.map(section => section.licenceSectionName),
         verificationSections);
 
-    let toShortId = function(id: string){
-        const parts = id.split("-");
+    let toShortId = function(id: string | undefined){
+        const parts = (id ?? "").split("-");
         let sb = [];
         
         for (let i = 0; i < parts.length; i++) {
@@ -53,19 +53,20 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         return sb.join('-');
     }
     
-    let naldCi = function(aggregateId : string) {
+    let naldCi = function(aggregate : Aggregate) {
         let ci = new ContainedInInformation();
         ci.source = InformationSource.Nald;
 
-        console.log(aggregateId);        
+        debugger;
+        console.log(aggregate);        
         return [ci];
     }
 
-    let documentCi = function(aggregateId : string) {
+    let documentCi = function(aggregate : Aggregate) {
         let ci = new ContainedInInformation();
         ci.source = InformationSource.Document;
 
-        console.log(aggregateId);
+        console.log(aggregate);
         return [ci];
     }
     
@@ -88,14 +89,15 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
             <td>{dashesIfNullOrZero(item.limitsCount)}</td>
             <td>
-                {item.aggregateIds != null && item.aggregateIds!.length > 0 &&
+                {
+                    item.aggregates != null && item.aggregates!.length > 0 &&
                 <ul>
-                    {item.aggregateIds.map((aggregateId) => {
+                    {item.aggregates.map((aggregate) => {
                         return (
                             <li>
-                                {toShortId(aggregateId)}
-                                <NaldTag containedIn={item.naldHasAggregateCondition ? naldCi(aggregateId) : []}/>
-                                <DocumentTag containedIn={(item.aggregatesCount ?? 0) > 0 ? documentCi(aggregateId) : []}/>
+                                {toShortId(aggregate.id)}
+                                <NaldTag containedIn={item.naldHasAggregateCondition ? naldCi(aggregate) : []}/>
+                                <DocumentTag containedIn={(item.aggregatesCount ?? 0) > 0 ? documentCi(aggregate) : []}/>
                             </li>);
                     })}
                 </ul>

@@ -45,6 +45,15 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             }
             else {
                 shortPart = part.substring(part.length - 3);
+                
+                if (shortPart.startsWith('R')) {
+                    shortPart = part.substring(part.length - 6);                    
+                } else if (shortPart.startsWith('A')
+                    || shortPart.startsWith('B')
+                    || shortPart.startsWith('G')
+                    || shortPart.startsWith('S')) {
+                    shortPart = part.substring(part.length - 4);
+                }
             }
             
             sb.push(shortPart);

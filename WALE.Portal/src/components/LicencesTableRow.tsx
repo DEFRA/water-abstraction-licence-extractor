@@ -1,4 +1,4 @@
-import {Aggregate, ContainedInInformation, InformationSource, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {OutputListDataItem} from "../api/generated/apiClient.ts";
 import {
     getVerificationTypeBackgroundColor,
     getVerificationTypeInitials,

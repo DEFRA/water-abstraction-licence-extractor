@@ -1,11 +1,18 @@
-import {OutputListDataItem} from "../api/generated/apiClient.ts";
-import { getVerificationWithNotesFirstPart, getVerificationWithNotesTooltip, getVerificationTypeBackgroundColor, getVerificationTypeInitials} from "../utils/verificationUtils.ts";
-import {compareAlphanumeric, dashesIfNull, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
+import {Aggregate, ContainedInInformation, InformationSource, OutputListDataItem} from "../api/generated/apiClient.ts";
+import {
+    getVerificationTypeBackgroundColor,
+    getVerificationTypeInitials,
+    getVerificationWithNotesFirstPart,
+    getVerificationWithNotesTooltip
+} from "../utils/verificationUtils.ts";
+import {compareAlphanumeric, dashesIfNullOrEmpty, dashesIfNullOrZero} from "../utils/formatting.ts";
 import UnorderedListOfStrings from "./UnorderedListOfStrings";
 import LicenceSetsList from "./LicenceSetsList";
 import LinkedLicencesList from "./LinkedLicencesList";
 import LicenceNumberFlagTag from "./LicenceNumberFlagTag";
 import {getVerificationSectionsToDisplay} from "../utils/verificationSections.ts";
+import NaldTag from "./NaldTag.tsx";
+import DocumentTag from "./DocumentTag.tsx";
 
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
@@ -22,6 +29,39 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         sectionVerifications.map(section => section.licenceSectionName),
         verificationSections);
 
+    let toShortId = function(id: string | undefined){
+        const parts = (id ?? "").split("-");
+        let sb = [];
+        
+        for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            let shortPart = '';
+            
+            if (i == 1) {
+                shortPart = 'LV'
+            }
+            else if (i == 2 || i == parts.length - 1) {
+                shortPart = part;
+            }
+            else {
+                shortPart = part.substring(part.length - 3);
+                
+                if (shortPart.startsWith('R')) {
+                    shortPart = part.substring(part.length - 6);                    
+                } else if (shortPart.startsWith('A')
+                    || shortPart.startsWith('B')
+                    || shortPart.startsWith('G')
+                    || shortPart.startsWith('S')) {
+                    shortPart = part.substring(part.length - 4);
+                }
+            }
+            
+            sb.push(shortPart);
+        }
+        
+        return sb.join('-');
+    }
+        
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
             <td style={{textAlign: 'center'}}>
@@ -41,8 +81,22 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             <td>{((item.points?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.points!}/> : '--')}</td>
             <td>{dashesIfNullOrZero(item.limitsCount)}</td>
             <td>
-                <strong>File:</strong> {(item.aggregatesCount ?? 0) > 0 ? "True" : "False"} ({dashesIfNull(item.aggregatesCount)})
-                <br /><strong>Nald:</strong> {item.naldHasAggregateCondition ? "True" : "False"}</td>
+                {item.aggregates != null && item.aggregates!.length > 0 &&
+                    <ul>
+                        {item.aggregates.map((aggregate) => {
+                            return (
+                                <li>
+                                    {toShortId(aggregate.id)}
+                                    <NaldTag containedIn={aggregate.containedIn}/>
+                                    <DocumentTag containedIn={aggregate.containedIn}/>
+                                </li>);
+                        })}
+                    </ul>
+                }
+                {(item.aggregates === null || item.aggregates!.length === 0) &&
+                    <span>--</span>
+                }
+            </td>
             <td>{(item.ocr ? "True" : "False")}</td>
             <td>
                 <strong>Doc:</strong><br /> {dashesIfNullOrEmpty(item.issueDate)}

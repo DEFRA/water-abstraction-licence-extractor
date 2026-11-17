@@ -14,8 +14,7 @@ public class AbstractionLimitShapeTests
             null, LimitPeriodType.PerDay, [], [], Contained()));
     }
 
-    // The unit comes from the period alone, not from anything the document said: a rate is litres
-    // and every other period is cubic metres.
+    // The unit comes from the period alone, not from anything the document said.
     [Theory]
     [InlineData(LimitPeriodType.PerSecond, "litres")]
     [InlineData(LimitPeriodType.PerDay, "cubic metres")]

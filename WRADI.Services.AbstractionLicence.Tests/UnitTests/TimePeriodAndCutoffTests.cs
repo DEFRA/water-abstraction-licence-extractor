@@ -33,7 +33,6 @@ public class TimePeriodAndCutoffTests
         Assert.Equal("31 March", period.EndDate);
     }
 
-    // A one-sided phrase belongs to GetTimeCutoff, so the period parser declines it.
     [Theory]
     [InlineData("From 1 April")]
     [InlineData("Until 31 March")]

@@ -45,10 +45,8 @@ public class RemoveDuplicateLimitsPerGroupTests
         Assert.Equal(2, group.Limits.Count);
     }
 
-    // The grouping key projects Points and Purposes with Select(...).ToArray(), so each limit gets
-    // a fresh array, and arrays compare by reference. Any limit carrying points or purposes
-    // therefore has a key no other limit can match, and is never de-duplicated - sharing one
-    // source array does not help, because the projection copies it either way.
+    // The grouping key projects Points and Purposes with Select(...).ToArray(), and arrays compare
+    // by reference, so a limit carrying either has a key nothing else can match.
     [Fact]
     public void WhenIdenticalLimitsCarryPoints_ThenNeitherIsRemoved()
     {

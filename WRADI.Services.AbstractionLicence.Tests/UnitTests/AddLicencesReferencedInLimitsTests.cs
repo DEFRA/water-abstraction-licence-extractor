@@ -78,7 +78,6 @@ public class AddLicencesReferencedInLimitsTests
         Assert.Single(lineageSet.Licences);
     }
 
-    // A link that names some other section is not a limits reference.
     [Fact]
     public void WhenTheLinkCameFromAnotherSection_ThenItIsNotAdded()
     {
@@ -150,7 +149,6 @@ public class AddLicencesReferencedInLimitsTests
         Assert.Single(second.Licences);
     }
 
-    // The same licence named twice is collected twice, and the duplicate assertion then throws.
     [Fact]
     public void WhenTheSameLicenceIsNamedTwice_ThenTheDuplicateAssertionThrows()
     {

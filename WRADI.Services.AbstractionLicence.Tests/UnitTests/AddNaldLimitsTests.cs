@@ -34,7 +34,6 @@ public class AddNaldLimitsTests
         Assert.Single(group.ContainedIn!);
     }
 
-    // With no provenance on the group, each limit in it is marked instead.
     [Fact]
     public void WhenTheGroupCarriesNone_ThenNaldIsAddedToEveryLimit()
     {
@@ -61,7 +60,6 @@ public class AddNaldLimitsTests
             AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals));
     }
 
-    // Matching converts first, so the same quantity written in another unit still counts as found.
     [Fact]
     public void TheMatchIsMadeInBaseUnits()
     {

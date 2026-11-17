@@ -54,8 +54,6 @@ public class NaldPeriodDateTests
         Assert.Equal("6/6", LimitPeriodHelper.GetNaldPeriodEndDate(nald, null));
     }
 
-    // Each end of the range is chosen independently, so the two dates can come from different
-    // periods.
     [Fact]
     public void TheStartAndEndCanBeTakenFromDifferentPeriods()
     {
@@ -80,7 +78,6 @@ public class NaldPeriodDateTests
             LimitPeriodHelper.GetNaldPeriodStartDate(nald, null));
     }
 
-    // The description parameter is not read by either method.
     [Fact]
     public void TheDescriptionMakesNoDifference()
     {

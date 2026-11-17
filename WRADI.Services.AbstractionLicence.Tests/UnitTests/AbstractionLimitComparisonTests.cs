@@ -63,7 +63,7 @@ public class AbstractionLimitComparisonTests
     }
 
     // Line grouping can weld a unit to the next word, and the conversion refuses it rather than
-    // returning no answer - so one unreadable unit fails the comparison for the whole document.
+    // returning no answer, so the comparison throws instead of reporting not-equal.
     [Fact]
     public void WhenAUnitCannotBeConverted_ThenComparingThrows()
     {

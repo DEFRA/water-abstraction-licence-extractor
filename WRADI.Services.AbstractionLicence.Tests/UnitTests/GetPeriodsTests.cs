@@ -45,7 +45,6 @@ public class GetPeriodsTests
         Assert.Equal(AbstractionPeriodType.SetPeriod, period.PeriodType);
     }
 
-    // "All year" has to match exactly - anything else is read as a set period.
     [Theory]
     [InlineData("All year", AbstractionPeriodType.PerYear)]
     [InlineData("all year", AbstractionPeriodType.SetPeriod)]
@@ -111,7 +110,6 @@ public class GetPeriodsTests
             [Section(new LabelGroupResult())], null, ref data));
     }
 
-    // Points and purposes are left unset, which the method notes as still to do.
     [Fact]
     public void ThePointAndPurposeIdsAreNeverSet()
     {

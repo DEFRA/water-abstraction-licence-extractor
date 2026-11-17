@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -154,7 +155,7 @@ public class GetPeriodsTests
         return new LabelGroupResult
         {
             LabelGroupName = "PeriodsOfAbstraction",
-            Text = Lines("periods"),
+            Text = LabelGroupResultBuilder.TextToLines("periods"),
             SubResults = periods
         };
     }
@@ -165,30 +166,14 @@ public class GetPeriodsTests
         {
             SubResults =
             [
-                new LabelGroupResult { MatchedLabelName = "PeriodPeriodNumber", Text = Lines(number) },
+                new LabelGroupResult { MatchedLabelName = "PeriodPeriodNumber", Text = LabelGroupResultBuilder.TextToLines(number) },
                 new LabelGroupResult
                 {
                     MatchedLabelName = "PeriodTextWithoutPurposeAndPoint",
-                    Text = textLines.SelectMany(Lines).ToList()
+                    Text = textLines.SelectMany(LabelGroupResultBuilder.TextToLines).ToList()
                 }
             ]
         };
     }
 
-    private static List<DocumentLine> Lines(string text)
-    {
-        return
-        [
-            new DocumentLine
-            {
-                Columns =
-                [
-                    new DocumentLineColumn
-                    {
-                        Words = text.Split(' ').Select(w => new DocumentLineWord { Text = w }).ToList()
-                    }
-                ]
-            }
-        ];
-    }
 }

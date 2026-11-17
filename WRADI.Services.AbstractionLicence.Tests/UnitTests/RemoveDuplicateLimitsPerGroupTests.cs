@@ -1,6 +1,7 @@
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -9,9 +10,9 @@ public class RemoveDuplicateLimitsPerGroupTests
     [Fact]
     public void WhenTwoLimitsAreIdentical_ThenOneIsKept()
     {
-        var group = GroupOf(
-            Limit(100, "litres", LimitPeriodType.PerDay),
-            Limit(100, "litres", LimitPeriodType.PerDay));
+        var group = AbstractionLimitBuilder.GroupOf(
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build());
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
@@ -21,9 +22,9 @@ public class RemoveDuplicateLimitsPerGroupTests
     [Fact]
     public void WhenTheLimitsDiffer_ThenBothAreKept()
     {
-        var group = GroupOf(
-            Limit(100, "litres", LimitPeriodType.PerDay),
-            Limit(200, "litres", LimitPeriodType.PerDay));
+        var group = AbstractionLimitBuilder.GroupOf(
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(200, "litres").Per(LimitPeriodType.PerDay).Build());
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
@@ -35,9 +36,9 @@ public class RemoveDuplicateLimitsPerGroupTests
     [Fact]
     public void WhenTheSameQuantityIsWrittenInDifferentUnits_ThenBothAreKept()
     {
-        var group = GroupOf(
-            Limit(1_000, "gallons", LimitPeriodType.PerDay),
-            Limit(4_546.09, "litres", LimitPeriodType.PerDay));
+        var group = AbstractionLimitBuilder.GroupOf(
+            AbstractionLimitBuilder.A().Of(1_000, "gallons").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(4_546.09, "litres").Per(LimitPeriodType.PerDay).Build());
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
@@ -51,9 +52,9 @@ public class RemoveDuplicateLimitsPerGroupTests
     [Fact]
     public void WhenIdenticalLimitsCarryPoints_ThenNeitherIsRemoved()
     {
-        var group = GroupOf(
-            LimitWithPoint(100, "litres", LimitPeriodType.PerDay, "P1", "N1"),
-            LimitWithPoint(100, "litres", LimitPeriodType.PerDay, "P1", "N1"));
+        var group = AbstractionLimitBuilder.GroupOf(
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).At("P1").Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).At("P1").Build());
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([group]);
 
@@ -65,7 +66,7 @@ public class RemoveDuplicateLimitsPerGroupTests
     {
         Point[] shared = [new Point { Id = "P1", NaldId = "N1" }];
 
-        var group = GroupOf(
+        var group = AbstractionLimitBuilder.GroupOf(
             new AbstractionLimit { Value = 100, Units = "litres", PeriodType = LimitPeriodType.PerDay, Points = shared },
             new AbstractionLimit { Value = 100, Units = "litres", PeriodType = LimitPeriodType.PerDay, Points = shared });
 
@@ -77,11 +78,11 @@ public class RemoveDuplicateLimitsPerGroupTests
     [Fact]
     public void EachGroupIsDeDupedOnItsOwn()
     {
-        var first = GroupOf(
-            Limit(100, "litres", LimitPeriodType.PerDay),
-            Limit(100, "litres", LimitPeriodType.PerDay));
+        var first = AbstractionLimitBuilder.GroupOf(
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build());
 
-        var second = GroupOf(Limit(100, "litres", LimitPeriodType.PerDay));
+        var second = AbstractionLimitBuilder.GroupOf(AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build());
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup([first, second]);
 
@@ -89,25 +90,6 @@ public class RemoveDuplicateLimitsPerGroupTests
         Assert.Single(second.Limits);
     }
 
-    private static AbstractionLimitGroup GroupOf(params AbstractionLimit[] limits)
-    {
-        return new AbstractionLimitGroup { Limits = limits.ToList() };
-    }
 
-    private static AbstractionLimit Limit(double? value, string? units, LimitPeriodType periodType)
-    {
-        return new AbstractionLimit { Value = value, Units = units, PeriodType = periodType };
-    }
 
-    private static AbstractionLimit LimitWithPoint(
-        double? value, string? units, LimitPeriodType periodType, string id, string naldId)
-    {
-        return new AbstractionLimit
-        {
-            Value = value,
-            Units = units,
-            PeriodType = periodType,
-            Points = [new Point { Id = id, NaldId = naldId }]
-        };
-    }
 }

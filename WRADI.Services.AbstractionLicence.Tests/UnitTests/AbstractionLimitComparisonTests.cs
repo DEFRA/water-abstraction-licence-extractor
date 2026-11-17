@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -11,16 +12,16 @@ public class AbstractionLimitComparisonTests
     public void WhenThePeriodAndTheConvertedValueMatch_ThenTheLimitsAreEqual()
     {
         Assert.True(AbstractionLimitHelper.AreLimitsEqual(
-            Limit(1_000, "gallons", LimitPeriodType.PerDay),
-            Limit(4_546.09, "litres", LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(1_000, "gallons").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(4_546.09, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
     [Fact]
     public void WhenOnlyThePeriodDiffers_ThenTheLimitsAreNotEqual()
     {
         Assert.False(AbstractionLimitHelper.AreLimitsEqual(
-            Limit(100, "litres", LimitPeriodType.PerDay),
-            Limit(100, "litres", LimitPeriodType.PerYear)));
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerYear).Build()));
     }
 
     // AreValuesEqual allows 0.75% between the document and NALD.
@@ -30,8 +31,8 @@ public class AbstractionLimitComparisonTests
     public void ValuesWithinTheToleranceCount(double left, double right, bool expected)
     {
         Assert.Equal(expected, AbstractionLimitHelper.AreLimitsEqual(
-            Limit(left, "litres", LimitPeriodType.PerDay),
-            Limit(right, "litres", LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(left, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(right, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
     // AreValuesEqual divides by the left value, so a zero never compares equal - not even to
@@ -40,16 +41,16 @@ public class AbstractionLimitComparisonTests
     public void WhenBothValuesAreZero_ThenTheLimitsAreNotEqual()
     {
         Assert.False(AbstractionLimitHelper.AreLimitsEqual(
-            Limit(0, "litres", LimitPeriodType.PerDay),
-            Limit(0, "litres", LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(0, "litres").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(0, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
     [Fact]
     public void WhenEitherValueIsMissing_ThenTheLimitsAreNotEqual()
     {
         Assert.False(AbstractionLimitHelper.AreLimitsEqual(
-            Limit(null, null, LimitPeriodType.PerDay),
-            Limit(100, null, LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(null, null).Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, null).Per(LimitPeriodType.PerDay).Build()));
     }
 
     // No units means the number is taken as litres rather than refused.
@@ -57,8 +58,8 @@ public class AbstractionLimitComparisonTests
     public void WhenUnitsAreMissing_ThenTheValueIsComparedAsIs()
     {
         Assert.True(AbstractionLimitHelper.AreLimitsEqual(
-            Limit(100, null, LimitPeriodType.PerDay),
-            Limit(100, "litres", LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(100, null).Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
     // Line grouping can weld a unit to the next word, and the conversion refuses it rather than
@@ -67,8 +68,8 @@ public class AbstractionLimitComparisonTests
     public void WhenAUnitCannotBeConverted_ThenComparingThrows()
     {
         Assert.ThrowsAny<Exception>(() => AbstractionLimitHelper.AreLimitsEqual(
-            Limit(100, "acre feet", LimitPeriodType.PerDay),
-            Limit(100, "litres", LimitPeriodType.PerDay)));
+            AbstractionLimitBuilder.A().Of(100, "acre feet").Per(LimitPeriodType.PerDay).Build(),
+            AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
     [Fact]
@@ -76,22 +77,18 @@ public class AbstractionLimitComparisonTests
     {
         var group = new AbstractionLimitGroup
         {
-            Limits = [Limit(50, "litres", LimitPeriodType.PerDay), Limit(1_000, "gallons", LimitPeriodType.PerYear)]
+            Limits = [AbstractionLimitBuilder.A().Of(50, "litres").Per(LimitPeriodType.PerDay).Build(), AbstractionLimitBuilder.A().Of(1_000, "gallons").Per(LimitPeriodType.PerYear).Build()]
         };
 
         Assert.True(AbstractionLimitHelper.GroupContainsLimit(
-            group, Limit(4_546.09, "litres", LimitPeriodType.PerYear)));
+            group, AbstractionLimitBuilder.A().Of(4_546.09, "litres").Per(LimitPeriodType.PerYear).Build()));
     }
 
     [Fact]
     public void WhenTheGroupIsEmpty_ThenNothingIsFound()
     {
         Assert.False(AbstractionLimitHelper.GroupContainsLimit(
-            new AbstractionLimitGroup(), Limit(50, "litres", LimitPeriodType.PerDay)));
+            new AbstractionLimitGroup(), AbstractionLimitBuilder.A().Of(50, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
-    private static AbstractionLimit Limit(double? value, string? units, LimitPeriodType periodType)
-    {
-        return new AbstractionLimit { Value = value, Units = units, PeriodType = periodType };
-    }
 }

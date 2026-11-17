@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Enums;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -12,10 +13,10 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenTheGroupCarriesProvenance_ThenNaldIsAddedAtTheGroupLevel()
     {
-        var group = GroupOf(Document(), Limit(100, "litres"));
+        var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(100, "litres").Build());
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals);
 
         Assert.Contains(group.ContainedIn!, ci => ci.Source == InformationSource.Nald);
         Assert.Empty(individuals);
@@ -24,11 +25,11 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenNaldIsAlreadyNamedOnTheGroup_ThenItIsNotAddedTwice()
     {
-        var group = GroupOf(Document(), Limit(100, "litres"));
+        var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(100, "litres").Build());
         group.ContainedIn = [new ContainedInInformation { Source = InformationSource.Nald }];
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals);
 
         Assert.Single(group.ContainedIn!);
     }
@@ -37,13 +38,13 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenTheGroupCarriesNone_ThenNaldIsAddedToEveryLimit()
     {
-        var limit = Limit(100, "litres");
+        var limit = AbstractionLimitBuilder.A().Of(100, "litres").Build();
         limit.ContainedIn = [Document()];
 
         var group = new AbstractionLimitGroup { Limits = [limit] };
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals);
 
         Assert.Contains(limit.ContainedIn!, ci => ci.Source == InformationSource.Nald);
     }
@@ -53,21 +54,21 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenNeitherTheGroupNorItsLimitCarriesProvenance_ThenItThrows()
     {
-        var group = new AbstractionLimitGroup { Limits = [Limit(100, "litres")] };
+        var group = new AbstractionLimitGroup { Limits = [AbstractionLimitBuilder.A().Of(100, "litres").Build()] };
         var individuals = new List<AbstractionLimitGroup>();
 
         Assert.Throws<ArgumentNullException>(() =>
-            AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
+            AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals));
     }
 
     // Matching converts first, so the same quantity written in another unit still counts as found.
     [Fact]
     public void TheMatchIsMadeInBaseUnits()
     {
-        var group = GroupOf(Document(), Limit(4_546.09, "litres"));
+        var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(4_546.09, "litres").Build());
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLimitHelper.AddNaldLimits([Limit(1_000, "gallons")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(1_000, "gallons").Build()], [group], ref individuals);
 
         Assert.Contains(group.ContainedIn!, ci => ci.Source == InformationSource.Nald);
         Assert.Empty(individuals);
@@ -76,10 +77,10 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenNothingMatches_ThenTheNaldLimitBecomesANewGroup()
     {
-        var group = GroupOf(Document(), Limit(100, "litres"));
+        var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(100, "litres").Build());
         var individuals = new List<AbstractionLimitGroup>();
 
-        AbstractionLimitHelper.AddNaldLimits([Limit(999, "litres")], [group], ref individuals);
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(999, "litres").Build()], [group], ref individuals);
 
         var added = Assert.Single(individuals);
         Assert.Equal(999, Assert.Single(added.Limits).Value);
@@ -93,7 +94,7 @@ public class AddNaldLimitsTests
         var individuals = new List<AbstractionLimitGroup>();
 
         AbstractionLimitHelper.AddNaldLimits(
-            [Limit(10, "litres"), Limit(20, "litres", LimitPeriodType.PerYear)],
+            [AbstractionLimitBuilder.A().Of(10, "litres").Build(), AbstractionLimitBuilder.A().Of(20, "litres").Per(LimitPeriodType.PerYear).Build()],
             [],
             ref individuals);
 
@@ -114,23 +115,14 @@ public class AddNaldLimitsTests
     [Fact]
     public void WhenAnExistingLimitHasAnUnreadableUnit_ThenTheMergeThrows()
     {
-        var group = GroupOf(Document(), Limit(100, "acre feet"));
+        var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(100, "acre feet").Build());
         var individuals = new List<AbstractionLimitGroup>();
 
         Assert.ThrowsAny<Exception>(() =>
-            AbstractionLimitHelper.AddNaldLimits([Limit(100, "litres")], [group], ref individuals));
+            AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals));
     }
 
-    private static AbstractionLimitGroup GroupOf(ContainedInInformation containedIn, params AbstractionLimit[] limits)
-    {
-        return new AbstractionLimitGroup { ContainedIn = [containedIn], Limits = limits.ToList() };
-    }
 
-    private static AbstractionLimit Limit(
-        double value, string units, LimitPeriodType periodType = LimitPeriodType.PerDay)
-    {
-        return new AbstractionLimit { Value = value, Units = units, PeriodType = periodType };
-    }
 
     private static ContainedInInformation Document()
     {

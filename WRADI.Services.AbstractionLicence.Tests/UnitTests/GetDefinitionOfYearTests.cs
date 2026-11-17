@@ -2,6 +2,7 @@ using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -136,27 +137,11 @@ public class GetDefinitionOfYearTests
         return new LabelGroupResult
         {
             MatchedLabelName = "AYearDefinitionLine",
-            Text = Lines(text),
+            Text = LabelGroupResultBuilder.TextToLines(text),
             SubResults = dates
-                .Select(date => new LabelGroupResult { Text = Lines(date) })
+                .Select(date => new LabelGroupResult { Text = LabelGroupResultBuilder.TextToLines(date) })
                 .ToList()
         };
     }
 
-    private static List<DocumentLine> Lines(string text)
-    {
-        return
-        [
-            new DocumentLine
-            {
-                Columns =
-                [
-                    new DocumentLineColumn
-                    {
-                        Words = text.Split(' ').Select(w => new DocumentLineWord { Text = w }).ToList()
-                    }
-                ]
-            }
-        ];
-    }
 }

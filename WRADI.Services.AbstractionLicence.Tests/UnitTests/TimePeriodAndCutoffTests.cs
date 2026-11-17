@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.DocumentType.AbstractionLicence.Helpers;
+using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -90,23 +91,6 @@ public class TimePeriodAndCutoffTests
 
     private static LabelGroupResult Match(string text)
     {
-        return new LabelGroupResult
-        {
-            Text =
-            [
-                new DocumentLine
-                {
-                    Columns =
-                    [
-                        new DocumentLineColumn
-                        {
-                            Words = text.Split(' ')
-                                .Select(word => new DocumentLineWord { Text = word })
-                                .ToList()
-                        }
-                    ]
-                }
-            ]
-        };
+        return LabelGroupResultBuilder.A().Saying(text).Build();
     }
 }

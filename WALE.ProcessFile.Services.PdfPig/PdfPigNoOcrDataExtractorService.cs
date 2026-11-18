@@ -294,7 +294,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         var dtProcessPagesStart = DateTime.Now;
         
         var processPageTasks = new List<Task<IReadOnlyList<DocumentLine>>>();
-        const int maxSimultaneousToProcess = 3;
+        const int maxSimultaneousToProcess = 6; // TODO tweak more
         
         foreach (var page in pages)
         {
@@ -352,7 +352,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 : throw new Exception("Page number is missing"))
             .ToList();
         
-        await cacheService.SaveNoOcrPagesMetadataAsync(
+        var saveNoOcrPagesMetadataTask = cacheService.SaveNoOcrPagesMetadataAsync(
             new NoOcrServiceMetadataCacheRequest
             {
                 FileId = pdfDocument.FileId,
@@ -366,6 +366,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .OrderBy(page => page.Request.PageNumber)
                 .ToList());
 
+        await saveNoOcrPagesMetadataTask;
+        
         documentLines = documentLines
             .OrderBy(documentLine => documentLine.PageNumber)
             .ThenBy(documentLine => documentLine.LineNumber)
@@ -380,6 +382,27 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return documentLines;
     }
 
+    private async Task SavePageScreenshotInternalAsync(
+        PdfDocument pdfDocument,
+        PdfPage page,
+        IOutputService outputService,
+        int processRunId)
+    {
+        var dtStart = DateTime.Now;
+        var sizeTask = SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);
+        
+        if (page.Number == 1)
+        {
+            await outputService.SaveThumbnailAsync(pdfDocument.FileId);
+        }
+        
+        await sizeTask;
+        var roundedSizeMb = (await sizeTask / 1024.0 / 1024.0).ToString("0.0");
+        
+        ConsoleHelper.WriteLine(
+            $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SavePageScreenshotAsync P{page.Number} ({roundedSizeMb}mb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
+    }
+
     private async Task<IReadOnlyList<DocumentLine>> ProcessPageAsync(
         PdfDocument pdfDocument,
         PdfPage page,
@@ -390,17 +413,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         ConcurrentBag<Dictionary<string, object>> pagesMetadata,
         ConcurrentBag<(NoOcrServicePageCacheRequest Request, string PageLines)> pagesTextLines)
     {
-        var dtStart = DateTime.Now;
-        var size = await SavePageScreenshotAsync(outputService, pdfDocument, page.Number, Name, processRunId);
-        var roundedSizeMb = (size / 1024.0 / 1024.0).ToString("0.0");
-
-        if (page.Number == 1)
-        {
-            await outputService.SaveThumbnailAsync(pdfDocument.FileId);
-        }
-        
-        ConsoleHelper.WriteLine(
-            $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - SavePageScreenshotAsync P{page.Number} ({roundedSizeMb}mb) took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
+        var saveScreenshotAsync = SavePageScreenshotInternalAsync(
+            pdfDocument,
+            page,
+            outputService,
+            processRunId);
         
         var pageRequest = new NoOcrServicePageCacheRequest
         {
@@ -426,10 +443,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         if (FormattingHelper.IsPageEmpty(page.DigitalText))
         {
             pagesTextLines.Add((pageRequest, "[]"));
+
+            await saveScreenshotAsync;
             return [];
         }
 
-        dtStart = DateTime.Now;
+        var dtStart = DateTime.Now;
         var pdfPigPageLines = await GetPageLinesAsync((Page)page.InternalPage!.UnderlyingObject);
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - GetPageLinesAsync took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
@@ -441,6 +460,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         if (pdfPigPageLines.Count == 0)
         {
+            await saveScreenshotAsync;
             return [];
         }
             
@@ -454,6 +474,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
 
         ConsoleHelper.WriteLine(
             $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - FormatPageLines took {(DateTime.Now - dtStart).TotalSeconds} seconds - {pdfDocument.PdfFilename}");
+        
+        await saveScreenshotAsync;
         
         if (DataHelper.LikelyMapPage(pageLinesFormatted, numberOfImages))
         {

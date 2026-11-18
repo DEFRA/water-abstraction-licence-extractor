@@ -187,6 +187,8 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             return ("error", imageNumber);
         }
         
+        var dtStart = DateTime.Now;
+        
         var size = await cacheService.SaveImageOnPageAsync(
             bytes!,
             pix?.Width ?? -1,
@@ -199,7 +201,10 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
             processRunId);
         
         var roundedSizeKb = (size / 1024.0).ToString("0.0");
-        ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} ({roundedSizeKb}kb) - {fileId}");
+        var tsDuration = DateTime.Now - dtStart;
+        
+        ConsoleHelper.WriteLine($"INFO - PdfPigNoOcrImageService - Saved page image P{pageNumber} I{imageNumber} " +
+            $"({roundedSizeKb}kb) in {tsDuration.TotalMilliseconds}ms - {fileId}");
         
         return (returnExtension, imageNumber);
     }

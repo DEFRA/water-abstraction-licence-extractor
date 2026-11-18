@@ -135,7 +135,13 @@ public class DatabaseOutputService(
     {
         return await databaseReadService.GetSimpleMatchResults(processRunId);
     }
-    
+
+    public Task FilletDocumentAsync(string? pdfFileName, Guid fileId, int regionId, int processRunId,
+        int skipFileWhenMoreThenPages)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,

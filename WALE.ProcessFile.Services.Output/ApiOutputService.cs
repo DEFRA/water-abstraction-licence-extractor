@@ -288,6 +288,39 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             JsonHelper.GetWireSerializerOptions())!;
     }
 
+    public async Task FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int regionId,
+        int processRunId,
+        int skipFileWhenMoreThenPages)
+    {
+        const string path = "/Extractor/Licence/FilletDocument";
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                pdfFileName,
+                fileId,
+                regionId,
+                processRunId,
+                skipFileWhenMoreThenPages
+            },
+            JsonHelper.GetWireSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,

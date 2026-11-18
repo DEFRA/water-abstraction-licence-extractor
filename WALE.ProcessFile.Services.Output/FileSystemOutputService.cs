@@ -282,4 +282,10 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
+
+    public Task FilletDocumentAsync(string? pdfFileName, Guid fileId, int regionId, int processRunId,
+        int skipFileWhenMoreThenPages)
+    {
+        throw new NotImplementedException();
+    }
 }

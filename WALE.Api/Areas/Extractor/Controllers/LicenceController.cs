@@ -143,11 +143,8 @@ public class LicenceController(
     }
 
     [HttpPost]
-    public async Task<IActionResult> FilletDocumentAsync(
-        [FromForm] string requestStr) // TODO change this to from body
+    public async Task<IActionResult> FilletDocumentAsync([FromBody] FilletDocumentRequest request)
     {
-        var request = JsonSerializer.Deserialize<FilletDocumentRequest>(requestStr,  JsonHelper.GetSerializerOptions())!;
-        
         if (request.pdfFileName == null)
         {
             return BadRequest($"{nameof(request.pdfFileName)} is null");
@@ -168,7 +165,8 @@ public class LicenceController(
             GetMinimalLookupConfiguration(
                 request.skipFileWhenMoreThenPages,
                 request.regionId),
-            request.processRunId);
+            request.processRunId,
+            false);
 
         if (pdfDocument == null)
         {

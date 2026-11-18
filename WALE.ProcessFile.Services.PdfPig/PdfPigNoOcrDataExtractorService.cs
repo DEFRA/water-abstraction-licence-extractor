@@ -27,8 +27,19 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         INoOcrPdfDocumentService noOcrPdfDocumentService,
         INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration,
-        int processRunId)
+        int processRunId,
+        bool shouldFilletExternally)
     {
+        if (shouldFilletExternally)
+        {
+            await outputService.FilletDocumentAsync(
+                pdfFileName,
+                fileId,
+                configuration.RegionId,
+                processRunId,
+                configuration.SkipFileWhenMoreThenPages);
+        }
+
         var dtStart = DateTime.Now;
         var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
@@ -72,6 +83,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 allDocumentLines);
         
             return pdfDocument;
+        }
+        
+        if (shouldFilletExternally)
+        {
+            throw new Exception("External filleting should have meant we don't get a none-cached entry back");
         }
 
         if (await pdfDocument.OpenInternalDocumentAsync() == null)

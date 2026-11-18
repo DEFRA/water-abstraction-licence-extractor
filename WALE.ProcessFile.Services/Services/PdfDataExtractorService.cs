@@ -304,7 +304,8 @@ public class PdfDataExtractorService(
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
             configuration,
-            processRunId);
+            processRunId,
+            true);
 
         if (pdfDocument == null)
         {

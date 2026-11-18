@@ -99,4 +99,11 @@ public interface IOutputService
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
+    
+    Task FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int regionId,
+        int processRunId,
+        int skipFileWhenMoreThenPages);
 }

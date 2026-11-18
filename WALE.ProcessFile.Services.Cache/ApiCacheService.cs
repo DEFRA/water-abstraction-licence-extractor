@@ -293,7 +293,10 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         {
             if (batch.Count > 0 && batchBytes + page.PageLines.Length > MaxBatchedPageLinesBytes)
             {
+                // Push what's already there (not including this page)
                 await PostPagesTextLinesAsync(batch);
+                
+                // Reset batch
                 batch = [];
                 batchBytes = 0;
             }

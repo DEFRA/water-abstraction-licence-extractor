@@ -511,28 +511,7 @@ public static class AbstractionLicenceSchemaConverter
                 // Add to an existing ones history
                 if (existing != null)
                 {
-                    var currentContainedIn = new List<ContainedInInformation>();
-                    foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
-                    {
-                        if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
-                        {
-                           currentContainedIn.Add(new ContainedInInformation
-                           {
-                               Source = GetFollowOnSource(currentContained.Source),
-                               Direction = currentContained.Direction,
-                               SectionName =  currentContained.SectionName,
-                               LinkReason =  currentContained.LinkReason,
-                               LineNumber =  currentContained.LineNumber,
-                               PageNumber = currentContained.PageNumber
-                           }); 
-                        }
-                        else
-                        {
-                            currentContainedIn.Add(currentContained);
-                        }
-                    }
-
-                    existing.ContainedIn = currentContainedIn.ToArray();
+                    AddFollowOnContainedIns(linkedLicence, existing);
                     continue;
                 }
 
@@ -661,6 +640,32 @@ public static class AbstractionLicenceSchemaConverter
             RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode,
             ProcessRunId = processRunId
         };
+    }
+
+    private static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
+    {
+        var currentContainedIn = new List<ContainedInInformation>();
+        foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
+        {
+            if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
+            {
+                currentContainedIn.Add(new ContainedInInformation
+                {
+                    Source = GetFollowOnSource(currentContained.Source),
+                    Direction = currentContained.Direction,
+                    SectionName =  currentContained.SectionName,
+                    LinkReason =  currentContained.LinkReason,
+                    LineNumber =  currentContained.LineNumber,
+                    PageNumber = currentContained.PageNumber
+                }); 
+            }
+            else
+            {
+                currentContainedIn.Add(currentContained);
+            }
+        }
+
+        existing.ContainedIn = currentContainedIn.ToArray();
     }
 
     private static InformationSource GetFollowOnSource(InformationSource currentContainedSource)

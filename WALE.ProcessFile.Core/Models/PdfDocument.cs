@@ -184,12 +184,13 @@ public class PdfDocument(
             return memoryStream.ToArray();                
         }
         
-        // Jon Skeet's accepted answer 
         return ReadStreamFully(stream);
     }
     
     private static byte[] ReadStreamFully(Stream input)
     {
+        // Jon Skeet's accepted answer on StackOverflow
+        
         input.Position = 0;
         
         var buffer = new byte[16*1024];

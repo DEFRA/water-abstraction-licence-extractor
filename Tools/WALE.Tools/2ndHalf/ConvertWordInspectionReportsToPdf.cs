@@ -123,7 +123,7 @@ public static class ConvertWordInspectionReportsToPdf
             {
                 var path = Path.Combine(workingDirectory, key);
 
-                await using var source = await fileService.GetFileAsStreamAsync(key);
+                await using var source = await fileService.GetFileAsStreamAsync(key, false);
 
                 if (source == null)
                 {

@@ -15,7 +15,7 @@ public interface IFileService
     
     public Task<List<string>> GetFileNamesWithPrefixAsync(string prefix, StorageFolder folder);
     
-    public Task<Stream?> GetFileAsStreamAsync(string filename);
+    public Task<Stream?> GetFileAsStreamAsync(string filename, bool readIntoMemory);
 
     public Task<byte[]> GetFileAsBytesAsync(string filename, int chunkIndex, int chunkSize);
     

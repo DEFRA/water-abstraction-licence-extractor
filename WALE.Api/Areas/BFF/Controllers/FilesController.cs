@@ -34,7 +34,7 @@ public class FilesController(IFileService fileService) : Controller
     [HttpGet]
     public async Task<ActionResult> GetRawAsync([FromQuery] string filename)
     {
-        var stream = await fileService.GetFileAsStreamAsync(filename);
+        var stream = await fileService.GetFileAsStreamAsync(filename, false);
         if (stream == null) return NotFound();
 
         return File(stream, IngressFormats.ContentTypeForFile(filename), filename);

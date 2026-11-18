@@ -40,7 +40,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Attempting to get pdf document from cache (API)" +
                 $" took {durationMs}ms - {pdfFileName}");
         }
-        
+
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,

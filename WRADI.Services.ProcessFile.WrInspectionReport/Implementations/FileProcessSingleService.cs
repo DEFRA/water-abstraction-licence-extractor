@@ -146,7 +146,7 @@ public class FileProcessSingleService(
     {
         try
         {
-            await using var stream = await fileService.GetFileAsStreamAsync(pdfFilename);
+            await using var stream = await fileService.GetFileAsStreamAsync(pdfFilename, false);
 
             if (stream == null)
             {

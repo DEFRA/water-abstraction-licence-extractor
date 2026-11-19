@@ -87,7 +87,7 @@ export const LinkedLicenceItem = ({
             const newSection = new ContainedInInformation({
                 source: InformationSource.Document,
                 direction: NullableOfInformationDirection.Outgoing,
-                sectionName: 'Unkown',
+                sectionName: 'Unknown',
                 linkReason: 'N/A',
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];

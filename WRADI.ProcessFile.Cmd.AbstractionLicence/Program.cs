@@ -98,8 +98,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
-            Description = $"Run using {services.FileService!.IngressFolderPath}"
-                + (regionCode == null ? ", all regions" : $", region {regionCode}")
+            Description = (services.FileService!.IngressFolderPath == "N/A"
+                    ? string.Empty
+                    : $"Run using {services.FileService.IngressFolderPath}, ")
+                + (regionCode == null
+                    ? "all regions"
+                    : RegionHelper.GetRegionName(regionCode.Value))
                 + (includeNonLiveLicences ? ", including non-live licences" : string.Empty)
                 + (string.IsNullOrWhiteSpace(fileFilter) ? string.Empty : $", files matching '{fileFilter}'")
                 + (maxFiles == null ? string.Empty : $", capped at {maxFiles} files"),

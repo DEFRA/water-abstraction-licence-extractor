@@ -1,4 +1,5 @@
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -283,9 +284,24 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
-    public Task FilletDocumentAsync(string? pdfFileName, Guid fileId, int regionId, int processRunId,
-        int skipFileWhenMoreThenPages)
+    public async Task FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
     {
-        throw new NotImplementedException();
+        await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFileName!,
+            fileId,
+            lookupConfiguration.OutputService,
+            lookupConfiguration.CacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            lookupConfiguration,
+            processRunId,
+            false);
     }
 }

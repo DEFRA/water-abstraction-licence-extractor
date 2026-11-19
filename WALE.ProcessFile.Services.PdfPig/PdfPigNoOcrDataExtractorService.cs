@@ -35,9 +35,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             await outputService.FilletDocumentAsync(
                 pdfFileName,
                 fileId,
-                configuration.RegionId,
                 processRunId,
-                configuration.SkipFileWhenMoreThenPages);
+                configuration,
+                this,
+                noOcrPdfDocumentService,
+                noOcrAlternativePdfDocumentService);
         }
 
         var dtStart = DateTime.Now;

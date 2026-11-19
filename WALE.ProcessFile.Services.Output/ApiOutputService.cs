@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -291,20 +292,23 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public async Task FilletDocumentAsync(
         string? pdfFileName,
         Guid fileId,
-        int regionId,
         int processRunId,
-        int skipFileWhenMoreThenPages)
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
     {
         const string path = "/Extractor/Licence/FilletDocument";
+        var dtStart = DateTime.UtcNow;
 
         var json = JsonSerializer.Serialize(
             new
             {
                 pdfFileName,
                 fileId,
-                regionId,
+                lookupConfiguration.RegionId,
                 processRunId,
-                skipFileWhenMoreThenPages
+                lookupConfiguration.SkipFileWhenMoreThenPages
             },
             JsonHelper.GetWireSerializerOptions());
 
@@ -318,6 +322,9 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
                 new Uri(httpClient.BaseAddress!, path),
                 httpContent));
 
+        var tsDuration = DateTime.UtcNow - dtStart;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(FilletDocumentAsync)} for {pdfFileName} responded '{response}', took {tsDuration.TotalMilliseconds}ms");
+        
         response.EnsureSuccessStatusCode();
     }
 
@@ -377,7 +384,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         if (_showAllLogs)
         {
-            ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
+            ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(SavePageScreenshotTaskAsync)} API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
         }
 
         return bytes.Length;
@@ -556,7 +563,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         if (_showAllLogs)
         {
-            ConsoleHelper.WriteLine($"SavePageScreenshotThumbnailAsync API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
+            ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(SavePageScreenshotThumbnailAsync)} API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
         }
     }
     

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -136,8 +137,14 @@ public class DatabaseOutputService(
         return await databaseReadService.GetSimpleMatchResults(processRunId);
     }
 
-    public Task FilletDocumentAsync(string? pdfFileName, Guid fileId, int regionId, int processRunId,
-        int skipFileWhenMoreThenPages)
+    public Task FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
     {
         throw new NotImplementedException();
     }

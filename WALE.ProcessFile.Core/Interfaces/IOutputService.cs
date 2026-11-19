@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Models;
 
@@ -99,11 +100,13 @@ public interface IOutputService
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
-    
+
     Task FilletDocumentAsync(
         string? pdfFileName,
         Guid fileId,
-        int regionId,
         int processRunId,
-        int skipFileWhenMoreThenPages);
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService);
 }

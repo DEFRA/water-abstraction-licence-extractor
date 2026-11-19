@@ -53,6 +53,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
+    var regionCode = configuration.GetValue<int?>("RegionCode");
+    var includeNonLiveLicences = configuration.GetValue<bool>("IncludeNonLiveLicences");
+    var fileFilter = configuration.GetValue<string?>("FileFilter");
+    var maxFiles = configuration.GetValue<int?>("MaxFiles");
 
     if (services.RefreshCache)
     {
@@ -74,7 +78,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
             services.DmsReportPath!,
             false,
             abstractionLicenceCacheService,
-            configuration.GetValue<bool>("CheckWeHaveFileToProcess"));
+            configuration.GetValue<bool>("CheckWeHaveFileToProcess"),
+            includeNonLiveLicences);
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
@@ -82,9 +87,10 @@ async Task ProgramAsync(IConfiguration configurationItem)
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
-        .Where(x => x.Value.Item2.RegionCode == 3) // North east
-        //.Skip(10)
-        .Take(50)
+        .Where(x => regionCode == null || x.Value.Item2.RegionCode == regionCode)
+        .Where(x => string.IsNullOrWhiteSpace(fileFilter)
+            || x.Key.StartsWith(fileFilter, StringComparison.OrdinalIgnoreCase))
+        .Take(maxFiles ?? int.MaxValue)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -92,7 +98,15 @@ async Task ProgramAsync(IConfiguration configurationItem)
     var processRunTask = outputService.StartProcessRunAsync(
         new ProcessRun
         {
-            Description = $"Run using {services.FileService!.IngressFolderPath}",
+            Description = (services.FileService!.IngressFolderPath == "N/A"
+                    ? string.Empty
+                    : $"Run using {services.FileService.IngressFolderPath}, ")
+                + (regionCode == null
+                    ? "all regions"
+                    : RegionHelper.GetRegionName(regionCode.Value))
+                + (includeNonLiveLicences ? ", including non-live licences" : string.Empty)
+                + (string.IsNullOrWhiteSpace(fileFilter) ? string.Empty : $", files matching '{fileFilter}'")
+                + (maxFiles == null ? string.Empty : $", capped at {maxFiles} files"),
             StartDateTimeUtc = startDateTimeUtc,
             NumberOfFiles = filesToProcess.Count
         });

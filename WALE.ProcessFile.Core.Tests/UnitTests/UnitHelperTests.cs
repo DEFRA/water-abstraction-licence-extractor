@@ -88,4 +88,33 @@ public class UnitHelperTests
         var result = UnitHelper.Convert(sourceValue, sourceUnits, destinationUnits);
         Assert.Equal(expected, result);
     }
+
+    // Seen on four Thames licences, where "gallons" ran into "AUTHORISED TO BE ABSTRACTED".
+    [Theory]
+    [InlineData("gallons to", 4.54609)]
+    [InlineData("gallons upy", 4.54609)]
+    [InlineData("gallons mper100)86", 4.54609)]
+    [InlineData("million gallons to", 4_546_090)]
+    public void WhenTheUnitCarriesAFollowingWord_ThenTheUnitItStartsWithIsUsed(
+        string sourceUnits, double expected)
+    {
+        Assert.Equal(expected, UnitHelper.Convert(1, sourceUnits, "litres"));
+    }
+
+    [Theory]
+    [InlineData("per gallon")]
+    [InlineData("acre feet")]
+    public void WhenTheTextDoesNotStartWithAUnit_ThenItStillDoesNotMap(string sourceUnits)
+    {
+        Assert.Throws<Exception>(() => UnitHelper.Convert(1, sourceUnits, "litres"));
+    }
+
+    [Fact]
+    public void WhenAUnitDoesNotMap_ThenTheMessageNamesTheKeyThatWasLookedUp()
+    {
+        var thrown = Assert.Throws<Exception>(() => UnitHelper.Convert(1, "per gallon", "litres"));
+
+        Assert.Contains("pergallon", thrown.Message);
+        Assert.DoesNotContain("pergallons", thrown.Message);
+    }
 }

@@ -3549,13 +3549,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                     out var itemLinkedLicences)
                     ? itemLinkedLicences.ToList()
                     : [],
-
                 LicenceSets = licenceSets.TryGetValue(
                     parent.LicenceListItemId,
                     out var itemLicenceSets)
                     ? itemLicenceSets.ToList()
                     : [],
-                
                 VerificationSections =
                     verificationSections.TryGetValue(
                         parent.LicenceListItemId,
@@ -4145,6 +4143,7 @@ private async Task<
             limits_count AS LimitsCount,
             aggregates_count AS AggregatesCount,
             aggregate_ids AS AggregateIds,
+            aggregates AS Aggregates,
             nald_aggregate as NaldAggregate,
             ocr AS Ocr,
             issue_date AS IssueDate,

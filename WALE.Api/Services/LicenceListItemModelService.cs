@@ -69,6 +69,8 @@ public class LicenceListItemModelService
             LimitsCount = source.limitsCount,
             AggregatesCount = source.aggregatesCount,
             AggregateIds = source.aggregateIds ?? [],
+            Aggregates = source.aggregates?
+                .Select(agg => JsonSerializer.Serialize(agg, JsonHelper.GetSerializerOptions())).ToArray() ?? [],
             HasInLicenceAggregate = HasAggregateOfType(source.aggregates, PrimaryType.InLicence),
             HasLicenceToLicenceAggregate = HasAggregateOfType(source.aggregates, PrimaryType.LicenceToLicence),
             Ocr = source.ocr,
@@ -126,6 +128,9 @@ public class LicenceListItemModelService
 
             limitsCount = licence.LimitsCount,
             aggregateIds = licence.AggregateIds,
+            aggregates = licence.Aggregates
+                .Select(agg => JsonSerializer.Deserialize<Aggregate>(agg, JsonHelper.GetSerializerOptions()))
+                .ToArray()!,
             naldHasAggregateCondition = licence.NaldAggregate,
             ocr = licence.Ocr,
             issueDate = licence.IssueDate?.ToString("yyyy-MM-dd"),
@@ -147,7 +152,6 @@ public class LicenceListItemModelService
                 .ToArray(),
             
             licenceSectionVerifications = source.VerificationSections.ToArray()
-            
         };
     }
 

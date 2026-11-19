@@ -77,9 +77,6 @@ public class UiProcessRunService(
         int processRunId,
         ProcessRunQuery query)
     {
-        var completeNumber = 1;
-        var fileNumber = 1;
-        
         var verificationsBySectionTask =
             abstractionLicenceOutputService.GetVerificationLookupsBySectionNameAsync(processRunId);
         var licenceNumberFlagReasonsTask =
@@ -87,7 +84,7 @@ public class UiProcessRunService(
         
         var licences = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, query);
         var licenceSets =
-            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences); 
+            await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licences);
         
         var verificationsBySection = await verificationsBySectionTask;
         var licenceNumberFlagReasons = await licenceNumberFlagReasonsTask;
@@ -96,10 +93,11 @@ public class UiProcessRunService(
             .Where(licence => licence.Status == ScrapeStatus.Ok)
             .Select(licence => JsOutputHelper.ToOutputLine(
                 licence,
-                DateTime.Now,
-                completeNumber++,
-                fileNumber++,
                 licenceSets))
+            .ToList();
+        
+        var paginationOutputLinesWithAgg = paginationOutputLines
+            .Where(pol => pol.Aggregates?.Length > 0)
             .ToList();
         
         var paginationListData = JsOutputHelper.ToListData(
@@ -107,6 +105,10 @@ public class UiProcessRunService(
             processRunId,
             verificationsBySection);
 
+        var paginationListDataWithAgg = paginationListData
+            .Where(pol => pol.aggregates?.Length > 0)
+            .ToList();
+        
         foreach (var listDataItem in paginationListData)
         {
             if (!licenceNumberFlagReasons.TryGetValue(listDataItem.licenceId, out var flagReason))
@@ -140,8 +142,7 @@ public class UiProcessRunService(
             {
                 try
                 {
-                    await licenceListRepository.UpsertLicenceListItemManyAsync(
-                        batch);
+                    await licenceListRepository.UpsertLicenceListItemManyAsync(batch);
                     
                     processedCount += batch.Length;
 
@@ -174,25 +175,23 @@ public class UiProcessRunService(
     
     private async Task NotifyCompletedAsync(int processRunId, double secondsTaken)
     {
-        await hubContext.Clients
-            .Group($"process-{processRunId}")
+        await hubContext.Clients.All
             .SendAsync("ProcessCompleted", new
             {
                 ProcessRunId = processRunId,
                 Status = "Completed",
-                Message = $"Licence List Data refresh completed successfully for {processRunId} in {secondsTaken} seconds."
+                Message = $"Licence List Data refresh completed successfully for process run {processRunId} in {secondsTaken:F2} seconds."
             });
     }
 
     private async Task NotifyFailedAsync(int processRunId)
     {
-        await hubContext.Clients
-            .Group($"process-{processRunId}")
+        await hubContext.Clients.All
             .SendAsync("ProcessFailed", new
             {
                 ProcessRunId = processRunId,
                 Status = "Failed",
-                Message = $"Licence List Data refresh failed  for {processRunId}."
+                Message = $"Licence List Data refresh failed for process run {processRunId}."
             });
     }
 }

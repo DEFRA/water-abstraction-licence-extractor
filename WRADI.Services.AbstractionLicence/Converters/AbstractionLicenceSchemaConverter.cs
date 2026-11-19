@@ -132,7 +132,7 @@ public static class AbstractionLicenceSchemaConverter
             naldDataLookupService,
             noneSchemaData);
 
-        var periods = GetPeriods(
+        var periods = LimitPeriodHelper.GetPeriods(
             matches,
             naldAbstractionDataLine,
             ref noneSchemaData);
@@ -285,7 +285,7 @@ public static class AbstractionLicenceSchemaConverter
                             Direction = naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                 ? InformationDirection.Incoming
                                 : InformationDirection.Outgoing,
-                            LinkReason = GetLinkReason(
+                            LinkReason = LinkReasonHelper.GetLinkReason(
                                 naldLinkedLicence.SourceFields![naldLinkedLicence.FromField],
                                 naldLinkedLicence.LinkType == NaldLinkedLicenceType.Incoming
                                     ? licenceNumber
@@ -361,13 +361,13 @@ public static class AbstractionLicenceSchemaConverter
             var paddedAllDocumentLinkedLicenceNumber =
                 FormattingHelper.FormatLicenceNumber(anywhereInDocumentLinkedLicence.LicenceNumber, regionCode);
 
-            if (LicenceNumberContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
+            if (LicenceNumberHelper.ContainsOther(licenceNumber, paddedAllDocumentLinkedLicenceNumber, regionCode))
             {
                 continue;
             }
 
             var found = linkedLicences
-                .Any(linkedLicence => LicenceNumberContainsOther(
+                .Any(linkedLicence => LicenceNumberHelper.ContainsOther(
                     paddedAllDocumentLinkedLicenceNumber,
                     linkedLicence.LicenceNumber,
                     regionCode));
@@ -395,7 +395,7 @@ public static class AbstractionLicenceSchemaConverter
                                 }
                             ) == true;
 
-                        return onlyInLicenceHistory && LicenceNumberContainsOther(
+                        return onlyInLicenceHistory && LicenceNumberHelper.ContainsOther(
                             paddedAllDocumentLinkedLicenceNumber,
                             paddedLinkedLicenceNumber,
                             regionCode);
@@ -412,7 +412,7 @@ public static class AbstractionLicenceSchemaConverter
             }
 
             var licenceContainsOther = linkedLicences
-                .Where(linkedLicence2 => LicenceNumberContainsOther(
+                .Where(linkedLicence2 => LicenceNumberHelper.ContainsOther(
                     linkedLicence2.LicenceNumber,
                     anywhereInDocumentLinkedLicence.LicenceNumber,
                     regionCode))
@@ -477,7 +477,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
 
-        // Swap out linked licence numbers to newest ones where needed
+        // Swap out linked licence numbers to the newest ones where needed
         foreach (var linkedLicence in linkedLicences)
         {
             var (hasSuccessor, history) =
@@ -511,10 +511,7 @@ public static class AbstractionLicenceSchemaConverter
                 // Add to an existing ones history
                 if (existing != null)
                 {
-                    var newContainedIn = existing.ContainedIn?.ToList() ?? [];
-                    newContainedIn.AddRange(linkedLicence.ContainedIn!);
-
-                    existing.ContainedIn = newContainedIn.ToArray();
+                    AddFollowOnContainedIns(linkedLicence, existing);
                     continue;
                 }
 
@@ -571,7 +568,7 @@ public static class AbstractionLicenceSchemaConverter
 
         // TODO - add NALD aggregates
 
-        individual = AddNaldLimits(naldAbstractionDataLine, individual, aggregates);
+        individual = AbstractionLimitHelper.AddNaldLimits(naldAbstractionDataLine, individual, aggregates);
 
         (individual, aggregates) = PromoteAnyIndividualLimitsThatShouldBeAggregates(
             individual,
@@ -584,8 +581,8 @@ public static class AbstractionLicenceSchemaConverter
 
         HoistContainedInSections(individual, aggregates);
 
-        RemoveDuplicateLimitsPerGroup(individual);
-        RemoveDuplicateLimitsPerGroup(aggregates
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(individual);
+        AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(aggregates
             .Select(AbstractionLimitGroup (agg) => agg)
             .ToArray());
 
@@ -633,7 +630,7 @@ public static class AbstractionLicenceSchemaConverter
             Points = points,
             Purposes = purposes,
             PeriodsOfAbstraction = periods,
-            DefinitionOfYear = GetDefinitionOfYear(matches),
+            DefinitionOfYear = LimitPeriodHelper.GetDefinitionOfYear(matches),
             AbstractionLimits = limits,
             LinkedLicences = linkedLicences.ToArray(),
             NoneSchemaData = noneSchemaData,
@@ -642,6 +639,45 @@ public static class AbstractionLicenceSchemaConverter
             LicenceType = licenceType,
             RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode,
             ProcessRunId = processRunId
+        };
+    }
+
+    private static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
+    {
+        var currentContainedIn = new List<ContainedInInformation>();
+        foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
+        {
+            if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
+            {
+                currentContainedIn.Add(new ContainedInInformation
+                {
+                    Source = GetFollowOnSource(currentContained.Source),
+                    Direction = currentContained.Direction,
+                    SectionName =  currentContained.SectionName,
+                    LinkReason =  currentContained.LinkReason,
+                    LineNumber =  currentContained.LineNumber,
+                    PageNumber = currentContained.PageNumber
+                }); 
+            }
+            else
+            {
+                currentContainedIn.Add(currentContained);
+            }
+        }
+
+        existing.ContainedIn = currentContainedIn.ToArray();
+    }
+
+    private static InformationSource GetFollowOnSource(InformationSource currentContainedSource)
+    {
+        return currentContainedSource switch
+        {
+            InformationSource.Unknown => InformationSource.UnknownFollowOn,
+            InformationSource.Nald => InformationSource.NaldFollowOn,
+            InformationSource.Document => InformationSource.DocumentFollowOn,
+            InformationSource.OtherDocument => InformationSource.OtherDocumentFollowOn,
+            InformationSource.MixedSourcesOrMixedReasons => InformationSource.MixedFollowOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(currentContainedSource), currentContainedSource, null)
         };
     }
 
@@ -730,236 +766,12 @@ public static class AbstractionLicenceSchemaConverter
         return false;
     }
 
-    private static void RemoveDuplicateLimitsPerGroup(AbstractionLimitGroup[] individual)
-    {
-        foreach (var grp in individual)
-        {
-            grp.Limits = grp.Limits
-                .GroupBy(l => new
-                {
-                    l.Value,
-                    l.Units,
-                    l.PeriodType,
-                    Points = l.Points?
-                        .Select(p => $"{p.Id}_{p.NaldId}")
-                        .ToArray(),
-                    Purposes = l.Purposes?
-                        .Select(p => $"{p.Id}_{string.Join('_', p.NaldIds ?? [])}")
-                        .ToArray()
-                })
-                .Select(g => g.First())
-                .ToList();
-        }
-    }
 
-    private static AbstractionLimitGroup[] AddNaldLimits(
-        NaldAbstractionData? naldData,
-        AbstractionLimitGroup[] individuals,
-        Aggregate[] aggregates)
-    {
-        if (naldData == null)
-        {
-            return individuals;
-        }
 
-        var individualsList = individuals.ToList();
 
-        var existingLimitGroups = individuals.ToList();
-        existingLimitGroups.AddRange(aggregates);
 
-        var periodTypes = new List<LimitPeriodType>
-        {
-            LimitPeriodType.PerYear,
-            LimitPeriodType.PerDay,
-            LimitPeriodType.PerHour,
-            LimitPeriodType.PerSecond
-        };
 
-        var containedIn = new ContainedInInformation
-        {
-            Source = InformationSource.Nald
-        };
 
-        var limits = new List<AbstractionLimit>();
-
-        foreach (var periodType in periodTypes)
-        {
-            var groupedNaldLimits = naldData.Purposes
-                .GroupBy(l =>
-                {
-                    return periodType switch
-                    {
-                        LimitPeriodType.PerYear => l.Quantity.AnnualQty,
-                        LimitPeriodType.PerDay => l.Quantity.DailyQty,
-                        LimitPeriodType.PerHour => l.Quantity.HourlyQty,
-                        LimitPeriodType.PerSecond => l.Quantity.InstQty,
-                        _ => throw new Exception("Period type not known")
-                    };
-                })
-                .Where(g => g.Key != null)
-                .ToList();
-
-            // Get Nald limits
-            foreach (var groupedLimit in groupedNaldLimits)
-            {
-                var purposes = groupedLimit
-                    .Select(x => new Purpose
-                    {
-                        NaldIds = [x.Id.ToString()] // TOOD check the grouping here
-                    })
-                    .ToArray();
-
-                var points = groupedLimit
-                    .SelectMany(nl => nl.PointIds)
-                    .Distinct()
-                    .Select(p => new Point { NaldId = p.ToString() })
-                    .ToArray();
-
-                var limit = GetAbstractionLimit(
-                    groupedLimit.Key,
-                    periodType,
-                    purposes,
-                    points,
-                    containedIn);
-
-                if (limit != null)
-                {
-                    limits.Add(limit);
-                }
-            }
-        }
-
-        AddNaldLimits(
-            limits,
-            existingLimitGroups,
-            ref individualsList);
-
-        return individualsList.ToArray();
-    }
-
-    private static AbstractionLimit? GetAbstractionLimit(
-        double? value,
-        LimitPeriodType periodType,
-        Purpose[] purposes,
-        Point[] points,
-        ContainedInInformation containedIn)
-    {
-        if (value == null)
-        {
-            return null;
-        }
-
-        const string litres = "litres";
-        const string cubicMeters = "cubic metres";
-
-        return new AbstractionLimit
-        {
-            Units = periodType == LimitPeriodType.PerSecond ? litres : cubicMeters,
-            Value = value,
-            PeriodType = periodType,
-            Purposes = purposes,
-            Points = points,
-            ContainedIn = [containedIn]
-        };
-    }
-
-    private static bool AreLimitsEqual(AbstractionLimit limitLeft, AbstractionLimit limitRight)
-    {
-        return limitLeft.PeriodType == limitRight.PeriodType
-               && AreValuesEqual(
-                   ValueInBaseUnits(limitLeft.Value, limitLeft.Units),
-                   ValueInBaseUnits(limitRight.Value, limitRight.Units));
-    }
-
-    private static bool GroupContainsLimit(AbstractionLimitGroup group, AbstractionLimit limitToFind)
-    {
-        return group.Limits.Any(groupLimit => AreLimitsEqual(groupLimit, limitToFind));
-    }
-
-    private static void AddNaldLimits(
-        List<AbstractionLimit> naldLimits,
-        List<AbstractionLimitGroup> existingLimitGroups,
-        ref List<AbstractionLimitGroup> individuals)
-    {
-        var unmatchedNaldLimits = new List<AbstractionLimit>();
-
-        foreach (var naldLimit in naldLimits)
-        {
-            var matchingIndividualGroups = existingLimitGroups
-                .Where(individualGroup => GroupContainsLimit(individualGroup, naldLimit))
-                .ToList();
-
-            if (matchingIndividualGroups.Count >= 1)
-            {
-                foreach (var matchingIndividualGroup in matchingIndividualGroups)
-                {
-                    // At the group level
-                    if (matchingIndividualGroup.ContainedIn?.Length >= 1)
-                    {
-                        var containedInList = matchingIndividualGroup.ContainedIn!.ToList();
-
-                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
-                        {
-                            // Already have it in contained in
-                            continue;
-                        }
-
-                        containedInList.Add(new ContainedInInformation
-                        {
-                            Source = InformationSource.Nald
-                        });
-
-                        matchingIndividualGroup.ContainedIn = containedInList.ToArray();
-                        continue;
-                    }
-
-                    // At a limit level
-                    foreach (var matchingIndividualGroupLimit in matchingIndividualGroup.Limits)
-                    {
-                        var containedInList = matchingIndividualGroupLimit.ContainedIn!.ToList();
-
-                        if (containedInList.Any(ci => ci.Source == InformationSource.Nald))
-                        {
-                            // Already have it in contained in
-                            continue;
-                        }
-
-                        containedInList.Add(new ContainedInInformation
-                        {
-                            Source = InformationSource.Nald
-                        });
-
-                        matchingIndividualGroupLimit.ContainedIn = containedInList.ToArray();
-                    }
-                }
-
-                continue;
-            }
-
-            unmatchedNaldLimits.Add(naldLimit);
-        }
-
-        if (unmatchedNaldLimits.Count == 0)
-        {
-            return;
-        }
-
-        var newGroup = new AbstractionLimitGroup
-        {
-            Limits = unmatchedNaldLimits
-        };
-
-        individuals.Add(newGroup);
-    }
-
-    private static double? ValueInBaseUnits(double? value, string? units)
-    {
-        const string baseUnit = "litres";
-
-        return string.IsNullOrEmpty(units)
-            ? value
-            : UnitHelper.Convert(value!.Value, units, baseUnit);
-    }
 
     private static void HoistContainedInSections(
         AbstractionLimitGroup[] individuals,
@@ -1281,7 +1093,7 @@ public static class AbstractionLicenceSchemaConverter
 
         uniqueLinkedLicences = uniqueLinkedLicences
             .Where(linkedLicence =>
-                !LicenceNumberContainsOther(
+                !LicenceNumberHelper.ContainsOther(
                     licenceNumber,
                     linkedLicence.linkedLicence.LicenceNumber,
                     linkedLicence.regionId))
@@ -1292,7 +1104,7 @@ public static class AbstractionLicenceSchemaConverter
         foreach (var linkedLicence in uniqueLinkedLicences)
         {
             if (newLinkedLicences.Any(newLinkedLicence =>
-                    LicenceNumberContainsOther(
+                    LicenceNumberHelper.ContainsOther(
                         newLinkedLicence.LicenceNumber,
                         linkedLicence.linkedLicence.LicenceNumber,
                         linkedLicence.linkedLicence.RegionId ?? 0)))
@@ -1472,39 +1284,6 @@ public static class AbstractionLicenceSchemaConverter
         return text;
     }
 
-    private static bool LicenceNumberContainsOther(
-        string? licenceNumber1,
-        string? licenceNumber2,
-        int regionId)
-    {
-        var licenceNumberStripped1 = FormattingHelper.StripForComparison(licenceNumber1, regionId);
-
-        if (string.IsNullOrWhiteSpace(licenceNumberStripped1))
-        {
-            return false;
-        }
-
-        var licenceNumberStripped2 = FormattingHelper.StripForComparison(licenceNumber2, regionId);
-
-        if (string.IsNullOrWhiteSpace(licenceNumberStripped2))
-        {
-            return false;
-        }
-
-        const string r1 = "R1";
-        const string r01 = "R01";
-
-        var firstContainsR1 = licenceNumberStripped1.Contains(r1) || licenceNumberStripped1.Contains(r01);
-        var secondContainsR1 = licenceNumberStripped2.Contains(r1) || licenceNumberStripped2.Contains(r01);
-
-        var only1HasR1 = (firstContainsR1 && !secondContainsR1)
-                         || (!firstContainsR1 && secondContainsR1);
-
-        return !only1HasR1
-               && (licenceNumberStripped1.Contains(licenceNumberStripped2)
-                   || licenceNumberStripped2.Contains(licenceNumberStripped1));
-    }
-
     private static async Task<LinkedLicence> ToLinkedLicenceAsync(
         string? linkedLicenceNumber,
         string? scrapedLinkedLicenceNumber,
@@ -1619,7 +1398,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 LicenceSetType = LicenceSetType.SingleLicenceOnly,
                 Licences = [licence],
-                AggregateSets = GetAggregates(
+                AggregateSets = AggregateHelper.GetAggregates(
                     [licence],
                     true)
             };
@@ -1669,7 +1448,7 @@ public static class AbstractionLicenceSchemaConverter
                     .Select(grp => grp.OrderBy(l => l.Status == ScrapeStatus.Ok ? 0 : 1).First())
                     .ToList();
 
-                AssertNoDuplicateLicences(licencesReferencedInLimits);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(licencesReferencedInLimits);
 
                 var licenceSet = new LicenceSet
                 {
@@ -1687,10 +1466,11 @@ public static class AbstractionLicenceSchemaConverter
                         continue;
                     }
 
-                    if (matchingLicenceSet.AggregateSets.Any(agg => AreAggregatesFundamentallyEqual(agg, aggregate)))
+                    if (matchingLicenceSet.AggregateSets.Any(
+                        agg => AggregateHelper.AreAggregatesFundamentallyEqual(agg, aggregate)))
                     {
                         var primary = matchingLicenceSet.AggregateSets.First(agg =>
-                            AreAggregatesFundamentallyEqual(agg, aggregate));
+                            AggregateHelper.AreAggregatesFundamentallyEqual(agg, aggregate));
 
                         var variations = new List<AggregateVariation>();
                         variations.AddRange(primary.Variations ?? []);
@@ -1769,7 +1549,7 @@ public static class AbstractionLicenceSchemaConverter
 
             if (otherLicences.Count >= 2)
             {
-                AssertNoDuplicateLicences(otherLicences);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(otherLicences);
 
                 returnLicenceSets.Add(
                     new LicenceSet
@@ -1805,7 +1585,7 @@ public static class AbstractionLicenceSchemaConverter
 
             if (historyLicences.Count >= 2)
             {
-                AssertNoDuplicateLicences(historyLicences);
+                LinkedLicenceAssertions.AssertNoDuplicateLicences(historyLicences);
 
                 var licenceSet = new LicenceSet
                 {
@@ -1833,33 +1613,33 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         returnLicenceSets = EnrichAndGroupLicenceSets(returnLicenceSets);
-        UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
+        AggregateHelper.UpdateLicenceAggregatesFromLicenceSets(returnLicenceSets);
 
-        SquashTwoLevelVariations(allLicences);
-        SquashTwoLevelVariations(returnLicenceSets);
-
-        AssertNoMultipleLevelVariations(returnLicenceSets);
-        AssertNoMultipleLevelVariations(allLicences);
-
-        AddVariationsToLicenceAggregates(allLicences);
-
-        AssertNoMultipleLevelVariations(returnLicenceSets);
-        AssertNoMultipleLevelVariations(allLicences);
-
+        AggregateVariationHelper.SquashTwoLevelVariations(allLicences);
+        AggregateVariationHelper.SquashTwoLevelVariations(returnLicenceSets);
+        
+        AggregateAssertions.AssertNoMultipleLevelVariations(returnLicenceSets);
+        AggregateAssertions.AssertNoMultipleLevelVariations(allLicences);
+        
+        AggregateVariationHelper.AddVariationsToLicenceAggregates(allLicences);
+        
+        AggregateAssertions.AssertNoMultipleLevelVariations(returnLicenceSets);
+        AggregateAssertions.AssertNoMultipleLevelVariations(allLicences);
+        
         var licencesGroupedByAbstractionLimitsLicenceSets = returnLicenceSets
             .Where(ls =>
                 ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
             .ToList();
 
-        AddLicencesReferencedInLimitsToLicenceSets(
+        AbstractionLimitHelper.AddLicencesReferencedInLimitsToLicenceSets(
             returnLicenceSets,
             primaryLicence,
             allLicences,
             licencesGroupedByAbstractionLimitsLicenceSets);
 
-        AssertNoMultipleLevelVariations(returnLicenceSets);
-        AssertNoMultipleLevelVariations(allLicences);
-
+        AggregateAssertions.AssertNoMultipleLevelVariations(returnLicenceSets);
+        AggregateAssertions.AssertNoMultipleLevelVariations(allLicences);
+        
         foreach (var licence in allLicences)
         {
             tStart = DateTime.Now;
@@ -1914,19 +1694,19 @@ public static class AbstractionLicenceSchemaConverter
         // Check for dupes
         foreach (var returnLicenceSet in returnLicenceSets)
         {
-            AssertNoDuplicateLicences(returnLicenceSet.Licences);
+            LinkedLicenceAssertions.AssertNoDuplicateLicences(returnLicenceSet.Licences);
         }
 
-        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
+        LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
 
-        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
-        AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
-        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        LinkedLicenceAssertions.AssertOrFixNoLicenceIsLinkedToItself(allLicences, true);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
-        RemoveDuplicateVariations(allLicences);
+        AggregateVariationHelper.RemoveDuplicateVariations(allLicences);
 
-        DeDuplicateAggregates(allLicences);
-        AssertNoDuplicateAggregates(allLicences);
+        AggregateHelper.DeDuplicateAggregates(allLicences);
+        AggregateAssertions.AssertNoDuplicateAggregates(allLicences);
 
         returnLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(returnLicenceSets, true, true);
 
@@ -2070,633 +1850,14 @@ public static class AbstractionLicenceSchemaConverter
         return allNoneSingleSets.Count >= 1 ? allNoneSingleSets : licenceSetsList;
     }
 
-    private static void DeDuplicateAggregates(IEnumerable<Licence> licences)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
 
-        foreach (var licence in okayLicences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
 
-            var groupedAggregates = licence.AbstractionLimits.Aggregates
-                .GroupBy(a => a.Id)
-                .ToArray();
 
-            if (!groupedAggregates.Any(agg => agg.Count() > 1))
-            {
-                continue;
-            }
 
-            var newAggregates = new List<Aggregate>();
 
-            foreach (var aggregateGroup in groupedAggregates)
-            {
-                if (aggregateGroup.Count() == 1)
-                {
-                    newAggregates.Add(aggregateGroup.First());
-                    continue;
-                }
 
-                var containedInList = new List<ContainedInInformation>();
 
-                foreach (var aggregate in aggregateGroup)
-                {
-                    if (aggregate.ContainedIn == null)
-                    {
-                        continue;
-                    }
 
-                    containedInList.AddRange(aggregate.ContainedIn);
-                }
-
-                var returnAggregate = aggregateGroup.First();
-                returnAggregate.ContainedIn = containedInList
-                    .GroupBy(ci => new { ci.Source, ci.SectionName, ci.LineNumber, ci.DocumentIdentifier })
-                    .Select(grp => grp.First())
-                    .ToArray();
-
-                newAggregates.Add(returnAggregate);
-            }
-
-            licence.AbstractionLimits.Aggregates = newAggregates.ToArray();
-        }
-    }
-
-    private static void AssertNoDuplicateAggregates(IEnumerable<Licence> licences)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
-
-        foreach (var licence in okayLicences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            var groupedAggregates = licence.AbstractionLimits.Aggregates
-                .GroupBy(v => v.Id)
-                .Where(v => v.Count() > 1)
-                .ToList();
-
-            if (groupedAggregates.Any())
-            {
-                throw new Exception($"Grouped aggregates found for {licence.LicenceNumber?.Value}");
-            }
-        }
-    }
-
-    private static AggregateVariation[]? DeDupeVariations(AggregateVariation[]? variations)
-    {
-        return variations?
-            .GroupBy(v => v.Id)
-            .Select(v => v.First())
-            .ToArray();
-    }
-
-    private static void AssertOrFixNoLicenceIsLinkedToItself(IEnumerable<Licence> licences, bool fixWhenDetected)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
-
-        foreach (var licence in okayLicences)
-        {
-            if (licence.LicenceNumber == null)
-            {
-                continue;
-            }
-
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates!)
-            {
-                if (aggregate.LinkedLicences == null
-                    || aggregate.SourceLicenceNumber != licence.LicenceNumber.Value)
-                {
-                    continue;
-                }
-
-                var newLinkedLicences = new List<string>();
-
-                foreach (var linkedLicence in aggregate.LinkedLicences)
-                {
-                    if (linkedLicence == licence.LicenceNumber.Value)
-                    {
-                        if (fixWhenDetected)
-                        {
-                            continue;
-                        }
-
-                        throw new Exception("Licence has aggregate licence linking to itself");
-                    }
-
-                    newLinkedLicences.Add(linkedLicence);
-                }
-
-                aggregate.LinkedLicences = newLinkedLicences.ToArray();
-            }
-        }
-    }
-
-    private static void AssertNoLicenceSetWithoutLinkedLicence(IEnumerable<Licence> licences)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
-
-        foreach (var licence in okayLicences)
-        {
-            if (licence.LicenceNumber == null)
-            {
-                continue;
-            }
-
-            var licenceNumber = licence.LicenceNumber!.Value!
-                .Replace(".", string.Empty)
-                .Replace("-", string.Empty)
-                .Replace("/", string.Empty)
-                .Replace(" ", string.Empty);
-
-            foreach (var licenceSet in licence.LicenceSets)
-            {
-                var licenceSetIdParts = (licenceSet.LicenceSetId?[3..]!)
-                    .Split('-')
-                    .Where(p => p != licenceNumber)
-                    .ToList();
-
-                foreach (var licenceSetIdPart in licenceSetIdParts!)
-                {
-                    var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
-                        .Replace(".", string.Empty)
-                        .Replace("-", string.Empty)
-                        .Replace("/", string.Empty)
-                        .Replace(" ", string.Empty) == licenceSetIdPart);
-
-                    if (!hasLinkedLicence)
-                    {
-                        throw new Exception(
-                            $"Licence set mentions licence {licenceSetIdPart} that isn't in linked licences");
-                    }
-                }
-            }
-        }
-    }
-
-    private static void FixNoLicenceSetWithoutLicenceHavingLinkedLicence(IEnumerable<Licence> licences)
-    {
-        var allLicences = licences.ToList();
-
-        var okayLicences = allLicences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
-
-        var uniqueLicences = allLicences
-            .GroupBy(l => l.LicenceNumber?.Value)
-            .Select(g => g.First())
-            .ToList();
-
-        foreach (var licence in okayLicences)
-        {
-            if (licence.LicenceNumber == null)
-            {
-                continue;
-            }
-
-            var licenceNumber = licence.LicenceNumber!.Value!
-                .Replace(".", string.Empty)
-                .Replace("-", string.Empty)
-                .Replace("/", string.Empty)
-                .Replace(" ", string.Empty);
-
-            foreach (var licenceSet in licence.LicenceSets)
-            {
-                var licenceSetIdParts = (licenceSet.LicenceSetId?[3..]!)
-                    .Split('-')
-                    .Where(p => p != licenceNumber)
-                    .ToList();
-
-                foreach (var licenceSetIdPart in licenceSetIdParts)
-                {
-                    var hasLinkedLicence = licence.LinkedLicences.Any(ll => ll.LicenceNumber!
-                        .Replace(".", string.Empty)
-                        .Replace("-", string.Empty)
-                        .Replace("/", string.Empty)
-                        .Replace(" ", string.Empty) == licenceSetIdPart);
-
-                    if (!hasLinkedLicence)
-                    {
-                        var licenceToAdd = uniqueLicences.FirstOrDefault(ll => ll.LicenceNumber!.Value!
-                            .Replace(".", string.Empty)
-                            .Replace("-", string.Empty)
-                            .Replace("/", string.Empty)
-                            .Replace(" ", string.Empty) == licenceSetIdPart);
-
-                        if (licenceToAdd == null)
-                        {
-                            throw new Exception($"Cant find licence to add {licenceToAdd}");
-                        }
-
-                        var newLinkedLicences = licence.LinkedLicences.ToList();
-
-                        var licencesReferencingBoth = uniqueLicences
-                            .Where(al =>
-                            {
-                                var contains1 =
-                                    al.LinkedLicences.Any(ll => ll.LicenceNumber == licence.LicenceNumber.Value);
-                                var contains2 = al.LinkedLicences.Any(ll =>
-                                    ll.LicenceNumber == licenceToAdd.LicenceNumber?.Value);
-
-                                return contains1 && contains2;
-                            })
-                            .ToList();
-
-                        var containedIn = licencesReferencingBoth
-                            .SelectMany(l =>
-                            {
-                                var containedInList = new List<ContainedInInformation>();
-
-                                var innerLinkedLicences = l.LinkedLicences
-                                    .Where(ll => ll.LicenceNumber == licence.LicenceNumber.Value)
-                                    .ToList();
-
-                                foreach (var ll in innerLinkedLicences)
-                                {
-                                    if (ll.ContainedIn == null)
-                                    {
-                                        return containedInList;
-                                    }
-
-                                    foreach (var ci in ll.ContainedIn!)
-                                    {
-                                        if (ci.Direction != InformationDirection.Outgoing)
-                                        {
-                                            continue;
-                                        }
-
-                                        var cloned = ci.Clone();
-                                        cloned.Direction = InformationDirection.ReferencedAlongside;
-                                        cloned.SourceLicence = l.LicenceNumber?.Value;
-
-                                        containedInList.Add(cloned);
-                                    }
-                                }
-
-                                return containedInList;
-                            })
-                            .ToArray();
-
-                        newLinkedLicences.Add(new LinkedLicence
-                        {
-                            LicenceNumber = licenceToAdd.LicenceNumber!.Value,
-                            RegionId = licenceToAdd.RegionId,
-                            ContainedIn = containedIn,
-                            NaldStatus = licenceToAdd.NaldStatus,
-                            Filename = licenceToAdd.Filename,
-                            DmsPath = licenceToAdd.DmsPath,
-                            DmsFileId = licenceToAdd.DmsFileId,
-                            DmsPermitNumber = licenceToAdd.DmsPermitNumber,
-                            LicenceType = licenceToAdd.LicenceType,
-                            LicenceVersion = licenceToAdd.LicenceVersion
-                        });
-
-                        licence.LinkedLicences = newLinkedLicences.ToArray();
-                    }
-                }
-            }
-        }
-    }
-
-    private static void AssertNoDuplicateLinkedLicences(string[] linkedLicences)
-    {
-        var grouped = linkedLicences.GroupBy(l => l);
-
-        foreach (var group in grouped)
-        {
-            if (group.Count() >= 2)
-            {
-                throw new Exception("Duplicate linked licence detected");
-            }
-        }
-    }
-
-    private static void AssertNoMultipleLevelVariations(IEnumerable<Licence> licences)
-    {
-        foreach (var licence in licences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                foreach (var variation in aggregate.Variations)
-                {
-                    if (variation.Variations == null)
-                    {
-                        continue;
-                    }
-
-                    if (variation.Variations.Length >= 1)
-                    {
-                        throw new Exception("Multi level variation detected");
-                    }
-                }
-            }
-        }
-    }
-
-    private static void AssertNoMultipleLevelVariations(IEnumerable<LicenceSet> licenceSets)
-    {
-        foreach (var licenceSet in licenceSets)
-        {
-            AssertNoMultipleLevelVariations(licenceSet.Licences);
-
-            if (licenceSet.AggregateSets == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licenceSet.AggregateSets)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                foreach (var variation in aggregate.Variations)
-                {
-                    if (variation.Variations == null)
-                    {
-                        continue;
-                    }
-
-                    if (variation.Variations.Length >= 1)
-                    {
-                        throw new Exception("Multi level variation detected");
-                    }
-                }
-            }
-        }
-    }
-
-    private static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
-    {
-        var grouped = licences
-            .GroupBy(l => l.LicenceNumber?.Value);
-
-        foreach (var group in grouped)
-        {
-            if (group.Count() >= 2)
-            {
-                throw new Exception("Duplicate licences detected");
-            }
-
-            foreach (var licence in group)
-            {
-                var groupedLinked = licence.LinkedLicences
-                    .GroupBy(l => l.LicenceNumber);
-
-                foreach (var linkedLicenceGroup in groupedLinked)
-                {
-                    if (linkedLicenceGroup.Count() >= 2)
-                    {
-                        throw new Exception("Duplicate linked licences detected");
-                    }
-                }
-            }
-        }
-    }
-
-    private static void AddLicencesReferencedInLimitsToLicenceSets(
-        List<LicenceSet> licenceSets,
-        Licence primaryLicence,
-        List<Licence> allLicences,
-        List<LicenceSet> explicitlyReferencedLimitsLicenceSets)
-    {
-        var licenceSetsInLimits = licenceSets
-            .Where(ls => ls.LicenceSetType == LicenceSetType.LicencesGroupedByAbstractionLimits)
-            .ToList();
-
-        if (explicitlyReferencedLimitsLicenceSets.Count == 0 || licenceSetsInLimits.Count == 0)
-        {
-            return;
-        }
-
-        var updatedLicencesReferencedInLimits = primaryLicence.LinkedLicences
-            .Where(linkedLicence =>
-                linkedLicence.ContainedIn?.Any(ci =>
-                    linkedLicence.IsBecauseOfAggregate == true
-                    || ci.SectionName == DocumentSectionNames.AbstractionLimits) == true)
-            .Select(ll => ll.LicenceNumber)
-            .Select(ln => allLicences.FirstOrDefault(l => l.LicenceNumber?.Value == ln))
-            .Where(ln => ln != null)
-            .Select(ln => ln!)
-            .ToList();
-
-        var allLicenceSetInLimitsLicences = licenceSetsInLimits
-            .SelectMany(ls => ls.Licences)
-            .ToList();
-
-        var missingLicences = updatedLicencesReferencedInLimits
-            .Where(l => allLicenceSetInLimitsLicences.All(ll => l.LicenceNumber?.Value != ll.LicenceNumber?.Value))
-            .ToList();
-
-        if (missingLicences.Count < 1)
-        {
-            return;
-        }
-
-        // Just add them to the first group, as we don't know which to add them to - this logic might need
-        // revisting/expanding in future
-        var firstLicenceSetInLimits = licenceSetsInLimits[0];
-
-        var newLicences = new List<Licence>();
-        newLicences.AddRange(firstLicenceSetInLimits.Licences);
-        newLicences.AddRange(missingLicences);
-
-        firstLicenceSetInLimits.Licences = newLicences.ToArray();
-        AssertNoDuplicateLicences(firstLicenceSetInLimits.Licences);
-    }
-
-    private static void UpdateLicenceAggregatesFromLicenceSets(List<LicenceSet> licenceSets)
-    {
-        foreach (var licenceSet in licenceSets)
-        {
-            if (licenceSet.AggregateSets == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licenceSet.AggregateSets!)
-            {
-                if (aggregate.LinkedLicences == null)
-                {
-                    continue;
-                }
-
-                var aggregateLicences = aggregate.LinkedLicences!.ToList();
-                aggregateLicences.Add(aggregate.SourceLicenceNumber!);
-
-                foreach (var linkedLicence in aggregateLicences)
-                {
-                    var licenceSetLicence = licenceSet.Licences
-                        .FirstOrDefault(l => l.LicenceNumber?.Value == linkedLicence);
-
-                    if (licenceSetLicence?.AbstractionLimits.Aggregates == null)
-                    {
-                        continue;
-                    }
-
-                    var newAggregates = new List<Aggregate>();
-
-                    var licenceAlreadyHasAggregate = licenceSetLicence.AbstractionLimits.Aggregates!
-                        .Any(agg => AreAggregatesFundamentallyEqual(agg, aggregate));
-
-                    foreach (var licenceAggregate in licenceSetLicence.AbstractionLimits.Aggregates!)
-                    {
-                        var matchingVariations = aggregate.Variations?
-                            .Where(v => v.Id == licenceAggregate.Id)
-                            .ToList() ?? [];
-
-                        if (matchingVariations.Count == 0)
-                        {
-                            newAggregates.Add(licenceAggregate);
-                        }
-
-                        var missingLinkedLicences = aggregate.LinkedLicences
-                            .Where(ll => licenceSetLicence.LinkedLicences.All(ll2 => ll2.LicenceNumber != ll)
-                                         && ll != licenceSetLicence.LicenceNumber?.Value)
-                            .ToList();
-
-                        if (missingLinkedLicences.Count == 0)
-                        {
-                            if (!newAggregates.Contains(licenceAggregate))
-                            {
-                                newAggregates.Add(licenceAggregate);
-                            }
-
-                            if (!licenceAlreadyHasAggregate)
-                            {
-                                newAggregates.Add(aggregate);
-                            }
-
-                            continue;
-                        }
-
-                        newAggregates.Add(aggregate);
-
-                        var newLinkedLicences = new List<LinkedLicence>();
-                        newLinkedLicences.AddRange(licenceSetLicence.LinkedLicences);
-                        newLinkedLicences.AddRange(missingLinkedLicences
-                            .Select(missingLinkedLicenceNumber =>
-                            {
-                                var missingLinkedLicenceStep1 = licenceSet.Licences
-                                    .FirstOrDefault(l => l.LinkedLicences.Any(ll =>
-                                        ll.LicenceNumber == missingLinkedLicenceNumber));
-
-                                var missingLinkedLicence = missingLinkedLicenceStep1?
-                                    .LinkedLicences
-                                    .FirstOrDefault(ll => ll.LicenceNumber == missingLinkedLicenceNumber);
-
-                                if (missingLinkedLicence == null)
-                                {
-                                    // TODO look in to how this can happen / log
-                                    return null;
-                                }
-
-                                // 1/25/03/031/R02 is a rare (only?) case of this
-
-                                var containedIn = missingLinkedLicence.ContainedIn!
-                                    .Select(ci =>
-                                    {
-                                        var cloned = ci.Clone();
-                                        cloned.Direction = InformationDirection.ReferencedAlongside;
-                                        cloned.SourceLicence = missingLinkedLicenceStep1!.LicenceNumber?.Value;
-
-                                        return cloned;
-                                    })
-                                    .ToArray();
-
-                                return new LinkedLicence
-                                {
-                                    LicenceNumber = missingLinkedLicenceNumber,
-                                    RegionId = licenceSetLicence.RegionId,
-                                    IsBecauseOfAggregate = true,
-                                    ContainedIn = containedIn
-                                };
-                            })
-                            .Where(x => x != null)
-                            .Select(x => x!));
-
-                        licenceSetLicence.LinkedLicences = newLinkedLicences.ToArray();
-                    }
-
-                    var newNewAggregates = new List<Aggregate>();
-
-                    foreach (var newAggregate in newAggregates)
-                    {
-                        var otherAggregates = newAggregates
-                            .Where(agg => agg != newAggregate)
-                            .ToList();
-
-                        var supersets = GetSupersets(newAggregate, otherAggregates);
-
-                        if (supersets.Count == 0)
-                        {
-                            newNewAggregates.Add(newAggregate);
-                        }
-                        else
-                        {
-                            foreach (var superset in supersets)
-                            {
-                                var contained = superset.Variations?.Any(v => v.Id == newAggregate.Id) == true;
-
-                                if (contained)
-                                {
-                                    continue;
-                                }
-
-                                var variations = new List<AggregateVariation>();
-
-                                if (superset.Variations != null)
-                                {
-                                    variations.AddRange(superset.Variations);
-                                }
-
-                                variations.Add(AggregateVariation.FromAggregate(
-                                    newAggregate,
-                                    AggregateVariation.DifferentOrder));
-
-                                superset.Variations = variations.ToArray();
-                            }
-                        }
-                    }
-
-                    newAggregates = newNewAggregates;
-
-                    licenceSetLicence.AbstractionLimits.Aggregates = newAggregates.Count > 0
-                        ? newAggregates.ToArray()
-                        : null;
-                }
-            }
-        }
-    }
 
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(
         Licence primaryLicence,
@@ -2794,8 +1955,8 @@ public static class AbstractionLicenceSchemaConverter
                 returnList.Add(licenceSet);
                 continue;
             }
-
-            var supersets = GetSupersets(licenceSet, otherLicenceSets);
+            
+            var supersets = AggregateHelper.GetSupersets(licenceSet, otherLicenceSets);
 
             if (supersets.Count > 0)
             {
@@ -2815,312 +1976,6 @@ public static class AbstractionLicenceSchemaConverter
             .ToList();
 
         return returnList;
-    }
-
-    private static List<Aggregate> GetSupersets(
-        Aggregate aggregate,
-        List<Aggregate> otherAggregates)
-    {
-        var returnList = new List<Aggregate>();
-
-        var aggregateLinkedLicenceIds = (aggregate.LinkedLicences ?? []).ToList();
-        aggregateLinkedLicenceIds.AddRange(aggregate.SourceLicenceNumber!);
-
-        aggregateLinkedLicenceIds = aggregateLinkedLicenceIds
-            .Distinct()
-            .ToList();
-
-        foreach (var otherAggregate in otherAggregates)
-        {
-            var otherAggregateSetLicenceIds = (otherAggregate.LinkedLicences ?? []).ToList();
-
-            otherAggregateSetLicenceIds.AddRange(
-                otherAggregates.Select(a => a.SourceLicenceNumber!));
-
-            otherAggregateSetLicenceIds = otherAggregateSetLicenceIds
-                .Distinct()
-                .ToList();
-
-            if (otherAggregateSetLicenceIds.Count == 0)
-            {
-                continue;
-            }
-
-            var notFound = false;
-
-            foreach (var licenceId in aggregateLinkedLicenceIds)
-            {
-                if (otherAggregateSetLicenceIds.Contains(licenceId))
-                {
-                    continue;
-                }
-
-                notFound = true;
-                break;
-            }
-
-            var hasMoreLicences = otherAggregateSetLicenceIds.Count > aggregateLinkedLicenceIds.Count;
-
-            var sameCombinedValue = FloatingEqualTo(
-                otherAggregates.Sum(a => a.GetCombinedLimitValue()),
-                aggregate.GetCombinedLimitValue());
-
-            if (!notFound
-                && hasMoreLicences
-                && sameCombinedValue)
-            {
-                returnList.Add(otherAggregate);
-            }
-        }
-
-        return returnList;
-    }
-
-    private static List<LicenceSet> GetSupersets(LicenceSet licenceSet, List<LicenceSet> otherLicenceSets)
-    {
-        var returnList = new List<LicenceSet>();
-
-        foreach (var otherLicenceSet in otherLicenceSets)
-        {
-            var otherLicenceSetLicenceIds = otherLicenceSet.Licences
-                .Select(l => l.LicenceNumber?.Value)
-                .ToList();
-
-            var notFound = false;
-
-            foreach (var licence in licenceSet.Licences)
-            {
-                if (otherLicenceSetLicenceIds.Contains(licence.LicenceNumber?.Value))
-                {
-                    continue;
-                }
-
-                notFound = true;
-                break;
-            }
-
-            var hasMoreLicences = otherLicenceSet.Licences.Length > licenceSet.Licences.Length;
-            var sameAggregateCount = otherLicenceSet.AggregateSets?.Length
-                                     == licenceSet.AggregateSets?.Length;
-
-            var otherLicenceSetCombinedValue =
-                otherLicenceSet.AggregateSets?.Sum(agg => agg.GetCombinedLimitValue());
-
-            var licenceSetCombinedValue =
-                licenceSet.AggregateSets?.Sum(agg => agg.GetCombinedLimitValue());
-
-            var sameCombinedValue = FloatingEqualTo(otherLicenceSetCombinedValue, licenceSetCombinedValue);
-            var sameType = licenceSet.LicenceSetType == otherLicenceSet.LicenceSetType;
-
-            if (!notFound
-                && hasMoreLicences
-                && sameAggregateCount
-                && sameCombinedValue
-                && sameType)
-            {
-                returnList.Add(otherLicenceSet);
-            }
-        }
-
-        return returnList;
-    }
-
-    private static void AddVariationsToLicenceAggregates(List<Licence> allLicences)
-    {
-        foreach (var sourceLicence in allLicences)
-        {
-            var sourceAggregates = sourceLicence.AbstractionLimits.Aggregates;
-            if (sourceAggregates == null || sourceAggregates.Length == 0)
-            {
-                continue;
-            }
-
-            var otherLicences = allLicences.Except([sourceLicence]).ToList();
-
-            foreach (var otherLicence in otherLicences)
-            {
-                var otherAggregates = otherLicence.AbstractionLimits.Aggregates;
-                if (otherAggregates == null || otherAggregates.Length == 0)
-                {
-                    continue;
-                }
-
-                foreach (var otherAggregate in otherAggregates)
-                {
-                    var matchingSourceAggregate = sourceAggregates
-                        .FirstOrDefault(sourceAggregate => AreAggregatesFundamentallyEqual(
-                            sourceAggregate,
-                            otherAggregate));
-
-                    if (matchingSourceAggregate == null)
-                    {
-                        continue;
-                    }
-
-                    if (matchingSourceAggregate.Variations?.Any(v => v.Id == otherAggregate.Id) == true)
-                    {
-                        continue;
-                    }
-
-                    var variations = new List<AggregateVariation>();
-
-                    if (matchingSourceAggregate.Variations != null)
-                    {
-                        variations.AddRange(matchingSourceAggregate.Variations);
-                    }
-
-                    variations.Add(AggregateVariation.FromAggregate(
-                        otherAggregate,
-                        AggregateVariation.DifferentOrder));
-
-                    variations = SquashTwoLevelVariations(variations)
-                        .Where(v => v.Id != matchingSourceAggregate.Id)
-                        .ToList();
-
-                    matchingSourceAggregate.Variations = variations.Count >= 1 ? variations.ToArray() : null;
-                }
-            }
-        }
-    }
-
-    private static void SquashTwoLevelVariations(List<LicenceSet> licenceSets)
-    {
-        foreach (var licenceSet in licenceSets)
-        {
-            SquashTwoLevelVariations(licenceSet.Licences);
-
-            if (licenceSet.AggregateSets == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licenceSet.AggregateSets)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                aggregate.Variations = SquashTwoLevelVariations(aggregate.Variations).ToArray();
-            }
-        }
-    }
-
-    private static void SquashTwoLevelVariations(IEnumerable<Licence> licences)
-    {
-        foreach (var licence in licences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                aggregate.Variations = SquashTwoLevelVariations(aggregate.Variations).ToArray();
-            }
-        }
-    }
-
-    private static List<AggregateVariation> SquashTwoLevelVariations(IEnumerable<AggregateVariation> variations)
-    {
-        var newVariations = new List<AggregateVariation>();
-        var variationsList = variations.ToList();
-
-        foreach (var variation in variationsList)
-        {
-            newVariations.Add(variation);
-
-            if (!(variation.Variations?.Length > 0))
-            {
-                continue;
-            }
-
-            var uniqueVariations = variation.Variations
-                .Where(vv =>
-                {
-                    var contained = variationsList.Any(v => v.Id == vv.Id);
-                    return !contained;
-                })
-                .ToList();
-
-            newVariations.AddRange(uniqueVariations);
-            variation.Variations = null;
-        }
-
-        return newVariations;
-    }
-
-    private static bool AreAggregatesFundamentallyEqual(
-        Aggregate sourceAggregate,
-        Aggregate otherAggregate)
-    {
-        if (sourceAggregate.PrimaryType == PrimaryType.InLicence
-            || otherAggregate.PrimaryType == PrimaryType.InLicence)
-        {
-            return false;
-        }
-        
-        if (sourceAggregate.LinkedLicences?.Length != otherAggregate.LinkedLicences?.Length)
-        {
-            return false;
-        }
-
-        if (sourceAggregate.Limits.Count != otherAggregate.Limits.Count)
-        {
-            return false;
-        }
-
-        if (sourceAggregate.LinkedLicences != null && otherAggregate.LinkedLicences != null)
-        {
-            // Source contains a linked licence not in other
-            foreach (var sourceLinkedLicence in sourceAggregate.LinkedLicences!)
-            {
-                if (sourceLinkedLicence != otherAggregate.SourceLicenceNumber
-                    && !otherAggregate.LinkedLicences.Contains(sourceLinkedLicence))
-                {
-                    return false;
-                }
-            }
-
-            // Other contains a linked licence not in source
-            foreach (var otherLinkedLicence in otherAggregate.LinkedLicences!)
-            {
-                if (otherLinkedLicence != sourceAggregate.SourceLicenceNumber
-                    && !sourceAggregate.LinkedLicences.Contains(otherLinkedLicence))
-                {
-                    return false;
-                }
-            }
-        }
-
-        foreach (var sourceLimit in sourceAggregate.Limits)
-        {
-            if (otherAggregate.Limits.All(otherLimit => !otherLimit.Value.FloatingEqualTo(sourceLimit.Value)))
-            {
-                return false;
-            }
-        }
-
-        foreach (var otherLimit in otherAggregate.Limits)
-        {
-            if (sourceAggregate.Limits.All(sourceLimit => !sourceLimit.Value.FloatingEqualTo(otherLimit.Value)))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static bool FloatingEqualTo(this double? value1, double? value2)
-    {
-        return Math.Abs((value1 ?? 0) - (value2 ?? 0)) < 0.0000001;
     }
 
     private static async Task<DmsFileIdInformation?> RecordFileIdAsync(
@@ -3386,45 +2241,6 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static Aggregate[]? GetAggregates(
-        IReadOnlyList<Licence> licences,
-        bool excludeAnyLinksNotInSet)
-    {
-        var aggregates = new List<Aggregate>();
-
-        foreach (var licence in licences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            var relevantAggregates = licence.AbstractionLimits.Aggregates;
-
-            if (excludeAnyLinksNotInSet)
-            {
-                relevantAggregates = relevantAggregates
-                    .Where(agg => agg.LinkedLicences == null
-                                  || agg.LinkedLicences.Length == 0
-                                  || agg.LinkedLicences.All(lln => licences.Any(l => l.LicenceNumber?.Value == lln)))
-                    .ToArray();
-            }
-
-            aggregates.AddRange(relevantAggregates);
-        }
-
-        aggregates = aggregates
-            .Select(agg => agg.Clone())
-            .ToList();
-
-        foreach (var aggregate in aggregates)
-        {
-            aggregate.LicenceSetId = null;
-        }
-
-        return aggregates.Count == 0 ? null : aggregates.ToArray();
-    }
-
     private static async Task<List<Licence>> GetLinkedLicencesAsync(
         Licence primaryLicence,
         IPdfDataExtractorService pdfDataExtractorService,
@@ -3647,96 +2463,7 @@ public static class AbstractionLicenceSchemaConverter
         return licence;
     }
 
-    private static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
-    {
-        if (match == null)
-        {
-            return null;
-        }
 
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase)
-                      || value.Contains("Up to and including", StringComparison.OrdinalIgnoreCase);
-
-        if (!isFrom && !isUntil)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Up to and including", "~", StringComparison.OrdinalIgnoreCase)
-            .Split('~');
-
-        var datePart = parts.Length >= 2 ? parts[1] : null;
-
-        if (datePart == null)
-        {
-            return null;
-        }
-
-        return new TimeCutoff
-        {
-            CutoffType = isFrom ? CutoffType.From : CutoffType.Upto,
-            Date = datePart.Trim()
-        };
-    }
-
-    private static TimePeriod? GetTimePeriod(LabelGroupResult? match)
-    {
-        if (match == null)
-        {
-            return null;
-        }
-
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        value = value.Replace(" and ending on ", " to ");
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
-
-        if (isFrom || isUntil)
-        {
-            return null;
-        }
-
-        var hasTo = value.Contains(" to ", StringComparison.OrdinalIgnoreCase);
-        var hasBeginningOn = value.Contains("beginning on ", StringComparison.OrdinalIgnoreCase);
-
-        if (!hasTo && !hasBeginningOn)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("beginning on ", string.Empty)
-            .Split(" to ");
-
-        if (parts.Length == 1)
-        {
-            return null;
-        }
-
-        return new TimePeriod
-        {
-            StartDate = parts[0],
-            EndDate = parts.Length > 1 ? parts[1] : null,
-            PeriodType = AbstractionPeriodType.SetPeriod,
-            Inclusive = true
-        };
-    }
 
     private static async Task<(
         List<LinkedLicence> LinkedLicences,
@@ -3821,7 +2548,7 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var abstractionLimitGroup in abstractionLimits)
         {
-            NullOutLimitLevelPointsAndPurposesIfRelevant(abstractionLimitGroup, abstractionLimitGroup.Limits);
+            AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(abstractionLimitGroup, abstractionLimitGroup.Limits);
         }
 
         return (sectionLinkedLicences, abstractionLimits, aggregates);
@@ -3876,7 +2603,7 @@ public static class AbstractionLicenceSchemaConverter
                     Source = InformationSource.Document,
                     Direction = InformationDirection.Outgoing,
                     SectionName = sectionName,
-                    LinkReason = GetLinkReason(
+                    LinkReason = LinkReasonHelper.GetLinkReason(
                         [GetParent(section, linkedLicenceNumber)],
                         linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                     LineNumber = linkedLicenceNumber.LabelStartLineNumber,
@@ -3980,7 +2707,7 @@ public static class AbstractionLicenceSchemaConverter
                         Source = InformationSource.Document,
                         Direction = InformationDirection.Outgoing,
                         SectionName = GetUnknownSectionName(generalLinkedLicenceNumber.LabelStartPageNumber),
-                        LinkReason = GetLinkReason([generalLinkedLicenceNumber], scrapedLicenceNumber),
+                        LinkReason = LinkReasonHelper.GetLinkReason([generalLinkedLicenceNumber], scrapedLicenceNumber),
                         LineNumber = generalLinkedLicenceNumber.LabelStartLineNumber,
                         PageNumber = generalLinkedLicenceNumber.LabelStartPageNumber
                     }
@@ -4129,7 +2856,7 @@ public static class AbstractionLicenceSchemaConverter
                         Direction = InformationDirection.Outgoing,
                         SectionName = DocumentSectionNames.LicenceHistory,
                         LinkReason =
-                            GetLinkReason([licenceHistorySection],
+                            LinkReasonHelper.GetLinkReason([licenceHistorySection],
                                 scrapedLicenceNumber), // We haven't split licence history into sections like the others
                         LineNumber = linkedLicenceNumber.LabelStartLineNumber,
                         PageNumber = linkedLicenceNumber.LabelStartPageNumber
@@ -4241,222 +2968,7 @@ public static class AbstractionLicenceSchemaConverter
         return returnList;
     }
 
-    private static string? GetLinkReason(List<LabelGroupResult> sections, string? textToFind)
-    {
-        foreach (var section in sections)
-        {
-            var text = string.Join('\n', section.Text!.Select(t => t.Text));
-            var result = GetLinkReason(text, textToFind);
-
-            if (!string.IsNullOrEmpty(result))
-            {
-                return result;
-            }
-        }
-
-        return null;
-    }
-
-    private static string? GetLinkReason(string? text, string? textToFind)
-    {
-        if (string.IsNullOrEmpty(text) || (!string.IsNullOrEmpty(textToFind) && !text.Contains(textToFind)))
-        {
-            return null;
-        }
-
-        if (text.Contains("minor variation", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.MinorVariation;
-        }
-
-        if (text.Contains("licence has been split", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.LicenceHasBeenSplit;
-        }
-
-        if (text.Contains("issued separately", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.IssuedSeparately;
-        }
-
-        if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ReleaseOfWater;
-        }
-
-        if (text.Contains("quantity of water released", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ReleaseOfWater;
-        }
-
-        if (text.Contains("rate of flow", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.RateOfFlow;
-        }
-
-        if (text.Contains("minimum value", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.MinimumValue;
-        }
-
-        if (text.Contains("lapsed licence", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.LapsedLicence;
-        }
-
-        if (text.Contains("discharge and re-abstraction", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.DischargeAndReabstractionCondition;
-        }
-
-        if (text.Contains("simultaneous discharge", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.SimultaneousDischargeCondition;
-        }
-
-        if (text.Contains("simultaneous abstraction", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.SimultaneousAbstractionCondition;
-        }
-
-        if (text.Contains("simultaneous compensatory discharge", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.SimultaneousCompensatoryDischargeCondition;
-        }
-
-        if (text.Contains("compensatory discharge", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.CompensatoryDischargeCondition;
-        }
-
-        if (text.Contains("compensation flow", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.CompensationFlow;
-        }
-
-        if (text.Contains("read in conjunction", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ReadInConjunction;
-        }
-
-        if (text.Contains("The donor licence was", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.DonorLicence;
-        }
-
-        if (text.Contains("used in conjunction", StringComparison.OrdinalIgnoreCase)
-            || text.Contains("use in conjunction", StringComparison.OrdinalIgnoreCase)) // misspelling
-        {
-            return LinkReason.UsedInConjunction;
-        }
-
-        if (text.Contains("revocation", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.Revocation;
-        }
-
-        if (text.Contains("when the flow", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.WhenTheFlow;
-        }
-
-        if (text.Contains("aggregate conditions", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.AggregateConditions;
-        }
-
-        if (text.Contains("emergency circumstances", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.EmergencyCircumstances;
-        }
-
-        if (text.Contains("Dewatering Discharge", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.DewateringDischargeCondition;
-        }
-
-        if (text.Contains("when added to", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.WhenAddedTo;
-        }
-
-        if (text.Contains("subsequent abstraction", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.SubsequentAbstraction;
-        }
-
-        if (text.Contains("re-abstraction", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ReAbstraction;
-        }
-
-        if (text.Contains("readings", StringComparison.OrdinalIgnoreCase)
-            && text.Contains("discharged", StringComparison.OrdinalIgnoreCase)
-            && text.Contains("augmentation", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ReadingsDischargedAugmentationCondition;
-        }
-
-        if (text.Contains("aggregate", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.AggregateCondition;
-        }
-
-        if (text.Contains("in total between", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.AggregateCondition;
-        }
-
-        if (text.Contains("in an emergency", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.InAnEmergency;
-        }
-
-        if (text.Contains("shall not exceed", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ShallNotExceed;
-        }
-
-        if (text.Contains("supporting", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.Supporting;
-        }
-
-        if (text.Contains("original licence", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.OriginalLicence;
-        }
-
-        if (text.Contains("transferred to this", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.TransferredToThis;
-        }
-
-        if (text.Contains("coincident", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.Coincident;
-        }
-
-        if (text.Contains("shall be supported", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ShallBeSupported;
-        }
-
-        if (text.Contains("residual flow", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.ResidualFlow;
-        }
-
-        if (text.Contains("authorised by", StringComparison.OrdinalIgnoreCase))
-        {
-            return LinkReason.AuthorisedBy;
-        }
-
-        return null;
-    }
-
-    private static async Task<(Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal, LinkedLicence[]
-            linkedLicences)>
+    private static async Task<(Aggregate[] aggregates, AbstractionLimitGroup[] indiviudal, LinkedLicence[] linkedLicences)>
         GetAbstractionLimitsAsync(
             List<LabelGroupResult> matches,
             string? licenceNumber,
@@ -4519,7 +3031,7 @@ public static class AbstractionLicenceSchemaConverter
 
         foreach (var individualGroup in allIndividualGroups)
         {
-            NullOutLimitLevelPointsAndPurposesIfRelevant(individualGroup, individualGroup.Limits);
+            AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(individualGroup, individualGroup.Limits);
         }
 
         return (
@@ -4563,9 +3075,8 @@ public static class AbstractionLicenceSchemaConverter
             noneSchemaData.Add(TemplateFeatures.LimitPointsTable, limitPointTable != null);
         }
 
-        var linkReason =
-            GetLinkReason([abstractionLimitPointSub], " "); // Text to find being a space is a bit of a hack
-
+        var linkReason = LinkReasonHelper.GetLinkReason([abstractionLimitPointSub], " "); // Text to find being a space is a bit of a hack
+        
         var containedIn = new ContainedInInformation[]
         {
             new()
@@ -4588,9 +3099,9 @@ public static class AbstractionLicenceSchemaConverter
         var containsLegalText = abstractionLimitPointSub.SubResults
             .Any(x => x.MatchedLabelName == "LegalText");
 
-        var sectionReason = GetLinkReason([abstractionLimitPointSub], string.Empty);
+        var sectionReason = LinkReasonHelper.GetLinkReason([abstractionLimitPointSub], string.Empty);
 
-        if (IsExcludedLinkReason(sectionReason))
+        if (LinkReasonHelper.IsExcludedLinkReason(sectionReason))
         {
             return;
         }
@@ -4912,7 +3423,7 @@ public static class AbstractionLicenceSchemaConverter
             .Where(sibling => sibling.MatchedLabelName == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
 
-        var timeCutoff = GetTimeCutoff(
+        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(
             siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var valueResults = siblings
@@ -4982,7 +3493,7 @@ public static class AbstractionLicenceSchemaConverter
                 scrapedLicenceNumber,
                 lookupConfiguration.CacheService);
 
-            var (regionId, naldLicenceNumber2, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
+            var (regionId, naldDataLicenceNumber, licenceType, licenceStatus) = await GetNaldLicenceDataAsync(
                 naldLicenceNumber,
                 scrapedLicenceNumber,
                 naldLicenceType,
@@ -4993,7 +3504,7 @@ public static class AbstractionLicenceSchemaConverter
 
             linkedLicenceNumbers.Add(new LinkedLicence
             {
-                LicenceNumber = naldLicenceNumber2,
+                LicenceNumber = naldDataLicenceNumber,
                 RegionId = regionId,
                 RawScrapedLicenceNumber = scrapedLicenceNumber,
                 DmsPermitNumber = dmsFileData?.PermitNumber,
@@ -5010,7 +3521,7 @@ public static class AbstractionLicenceSchemaConverter
                         Source = InformationSource.Document,
                         Direction = InformationDirection.Outgoing,
                         SectionName = sectionName,
-                        LinkReason = GetLinkReason([abstractionLimitPointSub],
+                        LinkReason = LinkReasonHelper.GetLinkReason([abstractionLimitPointSub],
                             linkedLicenceNumber.Text?.FirstOrDefault()?.Text),
                         LineNumber = linkedLicenceNumber.LabelStartLineNumber,
                         PageNumber = linkedLicenceNumber.LabelStartPageNumber,
@@ -5026,12 +3537,12 @@ public static class AbstractionLicenceSchemaConverter
                     linkedLicence.LicenceNumber!,
                     regionCode) != false)
             .Where(linkedLicence =>
-                !LicenceNumberContainsOther(
+                !LicenceNumberHelper.ContainsOther(
                     licenceNumber,
                     linkedLicence.LicenceNumber,
                     regionCode))
             .ToList();
-
+        
         const string shallNotExceedTheQuantityAuthorisedToBeAbstractedUnderThisLicence
             = "shall not exceed the quantity authorised to be abstracted under this licence";
 
@@ -5045,8 +3556,8 @@ public static class AbstractionLicenceSchemaConverter
                 .Select(ll => ll.LicenceNumber!)
                 .ToArray();
 
-            AssertNoDuplicateLinkedLicences(licenceNumbersRaw);
-
+            LinkedLicenceAssertions.AssertNoDuplicateLinkedLicences(licenceNumbersRaw);
+            
             allAggregates.AddRange(
                 previouslyFoundIndividualLimits
                     .Select(previouslyFoundIndividualLimit =>
@@ -5072,9 +3583,9 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         var abstractionLinkedLicences = linkedLicenceNumbers
-            .Where(lln => lln.ContainedIn?.Any(ci => !IsExcludedLinkReason(ci.LinkReason)) == true)
+            .Where(lln => lln.ContainedIn?.Any(ci => !LinkReasonHelper.IsExcludedLinkReason(ci.LinkReason)) == true)
             .ToList();
-
+        
         var hasLinkedLicenceNumber = abstractionLinkedLicences.Count > 0;
         var isAggregate = hasLinkedLicenceNumber || meetsAggregateConditions;
 
@@ -5139,7 +3650,7 @@ public static class AbstractionLicenceSchemaConverter
             {
                 individualGroups.Add(new AbstractionLimitGroup
                 {
-                    TimePeriod = GetTimePeriod(datePurpose),
+                    TimePeriod = LimitPeriodHelper.GetTimePeriod(datePurpose),
                     DocumentIdentifier = documentIdentifier,
                     Limits = [],
                     Points = limitPoints?.ToArray(),
@@ -5165,8 +3676,8 @@ public static class AbstractionLicenceSchemaConverter
             individualGroups.Add(allIndividualGroups[0]);
         }
 
-        var isExcludedLinkReason = IsExcludedLinkReason(linkReason);
-
+        var isExcludedLinkReason = LinkReasonHelper.IsExcludedLinkReason(linkReason);
+        
         var relatedNamesDict = new Dictionary<string, int>();
         var aggregateAbstractionLimits = new List<AbstractionLimit>();
 
@@ -5244,7 +3755,7 @@ public static class AbstractionLicenceSchemaConverter
 
                 var abstractionLimit = new AbstractionLimit
                 {
-                    PeriodType = ToLimitPeriodType(text),
+                    PeriodType = LimitPeriodHelper.ToLimitPeriodType(text),
                     Value = number,
                     Units = units,
                     Points = limitPoints?.ToArray(),
@@ -5373,7 +3884,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var pointsLoop = aggregateAbstractionLimits.First().Points;
         var purposesLoop = aggregateAbstractionLimits.First().Purposes;
-        var timePeriod = GetTimePeriod(
+        var timePeriod = LimitPeriodHelper.GetTimePeriod(
             siblings?.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
 
         var lls = abstractionLinkedLicences.ToList();
@@ -5395,7 +3906,37 @@ public static class AbstractionLicenceSchemaConverter
             .Select(lln => lln.First())
             .ToArray();
 
-        AssertNoDuplicateLinkedLicences(aggregateLinkedLicences);
+        var newAggregateLinkedLicences = new List<string>();
+
+        foreach (var aggregateLinkedLicence in aggregateLinkedLicences)
+        {
+            newAggregateLinkedLicences.Add(aggregateLinkedLicence);
+            
+            var (hasSuccessor, history) =
+                lookupConfiguration.LicenceNumberService.AnyNewerLicenceNumber(aggregateLinkedLicence);
+
+            if (!hasSuccessor)
+            {
+                continue;
+            }
+
+            var followOns = history
+                .SelectMany(h => h.FollowOnLicenceNumbers)
+                .ToList();
+
+            foreach (var followOn in followOns)
+            {
+                if (aggregateLinkedLicences.Contains(followOn))
+                {
+                    continue;
+                }
+                
+                newAggregateLinkedLicences.Add(followOn);
+            }
+        }
+
+        aggregateLinkedLicences = newAggregateLinkedLicences.ToArray();
+        LinkedLicenceAssertions.AssertNoDuplicateLinkedLicences(aggregateLinkedLicences);
 
         var aggregate = new Aggregate
         {
@@ -5439,7 +3980,7 @@ public static class AbstractionLicenceSchemaConverter
             aggregate.SubType = SubType.PurposeToPurpose;
         }
 
-        NullOutLimitLevelPointsAndPurposesIfRelevant(aggregate, aggregateAbstractionLimits);
+        AbstractionLimitHelper.NullOutLimitLevelPointsAndPurposesIfRelevant(aggregate, aggregateAbstractionLimits);
 
         if (!isExcludedLinkReason)
         {
@@ -5449,48 +3990,7 @@ public static class AbstractionLicenceSchemaConverter
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
 
-    public static bool AreValuesEqual(double? value1, double? value2)
-    {
-        if (value1 == null || value2 == null)
-        {
-            return false;
-        }
 
-        // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
-        const double maxTolerance = 0.75;
-
-        var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
-        return percentageDiff is >= 0 and <= maxTolerance;
-    }
-
-    private static void NullOutLimitLevelPointsAndPurposesIfRelevant(
-        AbstractionLimitGroup limitGroup,
-        List<AbstractionLimit> abstractionLimits)
-    {
-        if (limitGroup.Purposes?.Length > 0)
-        {
-            foreach (var aggregateLimit in abstractionLimits)
-            {
-                aggregateLimit.Purposes = null;
-            }
-        }
-        else if (limitGroup.Purposes?.Length == 0)
-        {
-            limitGroup.Purposes = null;
-        }
-
-        if (limitGroup.Points?.Length > 0)
-        {
-            foreach (var aggregateLimit in abstractionLimits)
-            {
-                aggregateLimit.Points = null;
-            }
-        }
-        else if (limitGroup.Points?.Length == 0)
-        {
-            limitGroup.Points = null;
-        }
-    }
 
     private static int GetPositionRelativeToDateLines(
         List<LabelGroupResult>? dateLines,
@@ -5546,184 +4046,8 @@ public static class AbstractionLicenceSchemaConverter
 
         return limitPurposes;
     }
+    
 
-    private static bool IsExcludedLinkReason(string? linkReason)
-    {
-        return linkReason is LinkReason.SimultaneousDischargeCondition
-            or LinkReason.CompensatoryDischargeCondition
-            or LinkReason.DewateringDischargeCondition
-            or LinkReason.ReadingsDischargedAugmentationCondition
-            or LinkReason.CompensationFlow
-            or LinkReason.RateOfFlow
-            or LinkReason.WhenTheFlow
-            or LinkReason.MinimumValue
-            or LinkReason.ReleaseOfWater;
-    }
-
-    private static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
-    {
-        var abstractionLimitsSection = matches
-            .FirstOrDefault(result => result.LabelGroupName == DocumentSectionNames.AbstractionLimits);
-
-        var abstractionLimitPoints = abstractionLimitsSection?
-            .SubResults
-            .Where(res => res.MatchedLabelName == "AbstractionLimitPoint")
-            .ToList();
-
-        var abstractionLimitPointSubs = abstractionLimitPoints?
-            .SelectMany(res => res.SubResults)
-            .Where(res => res.MatchedLabelName == "AbstractionLimitPointSub")
-            .ToList();
-
-        if (abstractionLimitPointSubs != null)
-        {
-            foreach (var abstractionLimitPointSub in abstractionLimitPointSubs)
-            {
-                var definition = abstractionLimitPointSub.SubResults
-                    .SingleOrDefault(sr => sr.MatchedLabelName == "AYearDefinitionLine");
-
-                if (definition == null)
-                {
-                    continue;
-                }
-
-                var dates = definition.SubResults;
-                var text = definition.Text?.FirstOrDefault()?.Text;
-                var inclusive = text?.Contains("beginning on") == true
-                                || text?.Contains("ending on") == true;
-
-                return new TimePeriod
-                {
-                    PeriodType = AbstractionPeriodType.SetPeriod,
-                    Inclusive = inclusive,
-                    StartDate = dates.FirstOrDefault()?.Text?.FirstOrDefault()?.Text,
-                    EndDate = dates.LastOrDefault()?.Text?.FirstOrDefault()?.Text
-                };
-            }
-        }
-
-        return null;
-    }
-
-    private static PeriodOfAbstraction[] GetPeriods(
-        List<LabelGroupResult> matches,
-        NaldAbstractionData? naldDataLine,
-        ref Dictionary<string, object?> noneSchemaData)
-    {
-        noneSchemaData.Add("NaldPeriodsData", naldDataLine?.Periods ?? []);
-
-        var periodResults = matches.FirstOrDefault(result => result.LabelGroupName == "PeriodsOfAbstraction");
-        var returnList = new List<PeriodOfAbstraction>();
-
-        if (periodResults == null)
-        {
-            return returnList.ToArray();
-        }
-
-        if (periodResults.MatchedLabelName == "DuringTheMonthsXToYOnlyText")
-        {
-            if (periodResults.SubResults.Count != 2)
-            {
-                return returnList.ToArray();
-            }
-
-            returnList.Add(new PeriodOfAbstraction
-            {
-                PeriodType = AbstractionPeriodType.SetPeriod,
-                Description = periodResults.Text?.FirstOrDefault()?.Text,
-                Inclusive = true,
-                StartDate = periodResults.SubResults[0].Text?.FirstOrDefault()?.Text,
-                EndDate = periodResults.SubResults[1].Text?.FirstOrDefault()?.Text,
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
-            });
-        }
-
-        foreach (var pointResult in periodResults.SubResults)
-        {
-            var periodPeriodNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabelName == "PeriodPeriodNumber");
-
-            var textWithoutNumber = pointResult.SubResults
-                .FirstOrDefault(x => x.MatchedLabelName == "PeriodTextWithoutPurposeAndPoint")?
-                .Text?
-                .Select(t => t.Text)
-                .ToList();
-
-            if (textWithoutNumber == null && periodPeriodNumber == null)
-            {
-                continue;
-            }
-
-            var tKey = "Up to and Including ";
-
-            var allTextWithoutNumber = textWithoutNumber?
-                .Where(t => !t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            if (allTextWithoutNumber == null)
-            {
-                continue;
-            }
-
-            var upToAndIncludeLine = textWithoutNumber?
-                .FirstOrDefault(t => t.StartsWith(tKey, StringComparison.OrdinalIgnoreCase));
-            TimeCutoff? timeCutoff = null;
-
-            if (upToAndIncludeLine != null)
-            {
-                var date = upToAndIncludeLine.Replace(tKey, string.Empty);
-
-                timeCutoff = new TimeCutoff
-                {
-                    CutoffType = CutoffType.Upto,
-                    Date = date
-                };
-            }
-
-            var text = textWithoutNumber != null
-                ? string.Join('\n', textWithoutNumber)
-                : null;
-
-            var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
-            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
-
-            var inclusive = text?.Contains("inclusive",
-                StringComparison.OrdinalIgnoreCase) ?? false;
-
-            var allYear = text == "All year";
-
-            // TODO next bit should be done in config
-            var dateParts = text?
-                .Replace("From", string.Empty)
-                .Replace("inclusive", string.Empty)
-                .Split(" to ");
-
-            var startDate = dateParts?[0].Trim();
-            var endDate = dateParts?.Length >= 2 ? dateParts[1].Trim() : null;
-
-            returnList.Add(new PeriodOfAbstraction
-            {
-                Id = number,
-                PeriodType = allYear ? AbstractionPeriodType.PerYear : AbstractionPeriodType.SetPeriod,
-                Description = text,
-                Inclusive = inclusive,
-                StartDate = startDate,
-                EndDate = endDate,
-                TimeCutoff = timeCutoff,
-                PointIds = null, // TODO set purpose ids and point ids
-                PurposeIds = null, // TODO set purpose ids and point ids
-                NaldPeriodStart = GetNaldPeriodStartDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text),
-                NaldPeriodEnd = GetNaldPeriodEndDate(naldDataLine,
-                    periodResults.Text?.FirstOrDefault()?.Text)
-            });
-        }
-
-        return returnList.ToArray();
-    }
 
     private static MeanOfAbstraction[] GetMeansOfAbstraction(
         List<LabelGroupResult> matches,
@@ -6400,39 +4724,7 @@ public static class AbstractionLicenceSchemaConverter
     }
 
 
-    private static string? GetNaldPeriodStartDate(NaldAbstractionData? naldDataLine, string? description)
-    {
-        if (naldDataLine == null)
-        {
-        }
 
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodStartDay != null);
-
-        return $"{period.PeriodStartDay}/{period.PeriodStartMonth}";
-    }
-
-    private static string? GetNaldPeriodEndDate(NaldAbstractionData? naldDataLine, string? description)
-    {
-        if (naldDataLine?.Periods.Count is null or 0)
-        {
-            return null;
-        }
-
-        var periods = naldDataLine.Periods;
-        var period = periods.Count == 1
-            ? periods[0]
-            : periods.First(p => p.PeriodEndDay != null);
-
-        return $"{period.PeriodEndDay}/{period.PeriodEndMonth}";
-    }
 
     private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
         string licenceNumber,
@@ -6929,27 +5221,6 @@ public static class AbstractionLicenceSchemaConverter
         return x.Split('$');
     }
 
-    private static LimitPeriodType ToLimitPeriodType(string? text)
-    {
-        return text?.ToLower() switch
-        {
-            "per second" => LimitPeriodType.PerSecond,
-            "per minute" => LimitPeriodType.PerMinute,
-            "per hour" => LimitPeriodType.PerHour,
-            "per day" => LimitPeriodType.PerDay,
-            "per week" => LimitPeriodType.PerWeek,
-            "per month" => LimitPeriodType.PerMonth,
-            "per annum" => LimitPeriodType.PerYear,
-            "per year" => LimitPeriodType.PerYear,
-            "aggregate annual abstraction" => LimitPeriodType.PerYear,
-            "in total" => LimitPeriodType.InTotal,
-            "total annual quantity" => LimitPeriodType.InTotal,
-            "consecutive five year" => LimitPeriodType.Per5Years,
-            "five consecutive years" => LimitPeriodType.Per5Years,
-            "over any 5-year period" => LimitPeriodType.Per5Years,
-            _ => throw new NotSupportedException($"Unknown limit period type '{text}'")
-        };
-    }
 
     private static string? GetNaldType(NaldAbstractionData? naldDataLine)
     {
@@ -6971,8 +5242,8 @@ public static class AbstractionLicenceSchemaConverter
             .SelectMany(lsg => lsg.Licences)
             .ToList();
 
-        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
-        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
         distinctLicenceSets.AddRange(
             await AddIncomingLinksAndLicenceSetReferencesAsync(
@@ -6980,11 +5251,11 @@ public static class AbstractionLicenceSchemaConverter
                 lookupConfiguration,
                 naldDataLookupService));
 
-        FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
-        AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+        LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
+        LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
-        RemoveDuplicateVariations(allLicences);
-        AssertNoDuplicateVariations(allLicences);
+        AggregateVariationHelper.RemoveDuplicateVariations(allLicences);
+        AggregateAssertions.AssertNoDuplicateVariations(allLicences);
         
         distinctLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
             distinctLicenceSets,
@@ -7022,67 +5293,7 @@ public static class AbstractionLicenceSchemaConverter
         }
     }
 
-    private static void AssertNoDuplicateVariations(IEnumerable<Licence> licences)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
 
-        foreach (var licence in okayLicences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                var groupedVariations = aggregate.Variations
-                    .GroupBy(v => v.Id)
-                    .Where(v => v.Count() > 1)
-                    .ToList();
-
-                if (groupedVariations.Any())
-                {
-                    throw new Exception($"Grouped variations found in {aggregate.Id}");
-                }
-            }
-        }
-    }
-
-    private static void RemoveDuplicateVariations(IEnumerable<Licence> licences)
-    {
-        var okayLicences = licences
-            .Where(l => l.Status == ScrapeStatus.Ok)
-            .ToList();
-
-        foreach (var licence in okayLicences)
-        {
-            if (licence.AbstractionLimits.Aggregates == null)
-            {
-                continue;
-            }
-
-            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
-            {
-                if (aggregate.Variations == null)
-                {
-                    continue;
-                }
-
-                aggregate.Variations = aggregate.Variations
-                    .GroupBy(v => v.Id)
-                    .Select(g => g.First())
-                    .ToArray();
-                ;
-            }
-        }
-    }
 
     private static List<LicenceSet> AsDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
     {

@@ -11,12 +11,12 @@ public static class CopyS3Files
     public static async Task RunAsync()
     {
         var sourceHttpClient = HttpHelper.GetResilientHttpClient(
-            KeyConfig.ApiBaseUrl,
+            "https://wli-api-dev.aws-int.defra.cloud",
             300,
             KeyConfig.ApiRequestsPerSecond);
         
         var destinationHttpClient = HttpHelper.GetResilientHttpClient(
-            "https://wli-api-tst.aws-int.defra.cloud",
+            KeyConfig.ApiBaseUrl,
             300,
             KeyConfig.ApiRequestsPerSecond);
 

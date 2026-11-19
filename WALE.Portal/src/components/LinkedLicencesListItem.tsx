@@ -8,6 +8,10 @@ import {useFileIdMap} from "../utils/useFileIdMap.tsx";
 import {AggregateTag} from "./AggregateTag.tsx";
 import NaldOnlyTag from "./NaldOnlyTag.tsx";
 import ImpoundmentTag from "./ImpoundmentTag.tsx";
+import {ReferencedAlongsideTag} from "./ReferencedAlongsideTag.tsx";
+import {IncomingTag} from "./IncomingTag.tsx";
+import {OutgoingTag} from "./OutgoingTag.tsx";
+import {HistoryTag} from "./HistoryTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
@@ -18,13 +22,17 @@ interface LinkedLicencesListItemProps {
 export function LinkedLicencesListItem({linkedLicence, linkToEstate, onOpenReport}: LinkedLicencesListItemProps) {
     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
-    let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
+    let backLink = linkedLicence.containedIn?.length! > 0
+        && linkedLicence.containedIn?.every(section =>
+            section.direction === NullableOfInformationDirection.Incoming
+                || section.direction === NullableOfInformationDirection.ReferencedAlongside);
+    
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
 
     let text = backLink
-        ? 'Implicit back link'
+        ? 'Incoming/refenced alongside link'
         : linkedLicence.containedIn!.length ?
             linkedLicence.containedIn![0].sectionName
             : "?";
@@ -51,7 +59,11 @@ export function LinkedLicencesListItem({linkedLicence, linkToEstate, onOpenRepor
                 </a>
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                <ReferencedAlongsideTag containedIn={linkedLicence.containedIn}/>
+                <IncomingTag containedIn={linkedLicence.containedIn}/>
+                <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <HistoryTag containedIn={linkedLicence.containedIn}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );
@@ -77,7 +89,11 @@ export function LinkedLicencesListItem({linkedLicence, linkToEstate, onOpenRepor
                 {styledLicenceNumber}
                 <NaldStatusTag status={linkedLicence.naldStatus}/>
                 <NaldOnlyTag containedIn={linkedLicence.containedIn}/>
+                <ReferencedAlongsideTag containedIn={linkedLicence.containedIn}/>
+                <IncomingTag containedIn={linkedLicence.containedIn}/>
+                <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
+                <HistoryTag containedIn={linkedLicence.containedIn}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );

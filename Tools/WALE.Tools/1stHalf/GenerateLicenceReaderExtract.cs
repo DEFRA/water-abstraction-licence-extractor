@@ -99,7 +99,7 @@ public static class GenerateLicenceReaderExtract
         
         var httpClient = HttpHelper.GetResilientHttpClient(
             KeyConfig.ApiBaseUrl,
-            300,
+            1000,
             KeyConfig.ApiRequestsPerSecond);
 
         // Task.WhenAny below holds work at maxConcurrentScrapers and the rate limiter paces the
@@ -324,7 +324,7 @@ public static class GenerateLicenceReaderExtract
         return dmsExtractInfo;
     }
 
-    private static async Task<MatchesResult> GetMatchesAsync(
+    private static async Task<MatchesResult?> GetMatchesAsync(
         TemplateFinderInput fileMetadata,
         IPdfDataExtractorService pdfDataExtractor,
         LookupConfiguration configuration)
@@ -336,7 +336,7 @@ public static class GenerateLicenceReaderExtract
             [fileMetadata.FileName!],
             0);
 
-        return data.Item!;
+        return data.Item;
     }
 
     private static async Task<List<DmsFileReaderResult>> GetAndSaveLicenceReaderDataAsync(
@@ -673,7 +673,7 @@ public static class GenerateLicenceReaderExtract
                 pdfDataExtractor.InUse = true;
             }
             
-            MatchesResult internalJson;
+            MatchesResult? internalJson;
 
             try
             {
@@ -682,8 +682,13 @@ public static class GenerateLicenceReaderExtract
                     pdfDataExtractor,
                     configuration);
 
+                if (internalJson == null)
+                {
+                    throw new Exception("Unable to find matches for file ID: " + fileMetadata.FileId);
+                }
+                
                 await pdfDataExtractor.SaveMatchResultAsync(
-                    internalJson,
+                    internalJson!,
                     fileMetadata.FileId,
                     0,
                     configuration.UseLockExclusivity);

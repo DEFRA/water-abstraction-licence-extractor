@@ -183,7 +183,7 @@ public class ProcessRunsController(
                 }
                 catch
                 {
-                    // intentionally swallowed
+                    // intentionally swallowed as it's part of a fire and forget
                 }
             }));
         }
@@ -433,9 +433,6 @@ public class ProcessRunsController(
                            Skip = 0,
                            Take = int.MaxValue
                        };
-
-                       var completeNumber = 1;
-                       var fileNumber = 1;
                        
                        var licencesAll = await abstractionLicenceOutputService.GetLicencesSearchAsync(processRunId, processRunQuery);
                        var licenceSetsAll = await abstractionLicenceOutputService.GetLicenceSetsAsync(processRunId, licencesAll); 
@@ -444,9 +441,6 @@ public class ProcessRunsController(
                            .Where(licence => licence.Status == ScrapeStatus.Ok)
                            .Select(licence => JsOutputHelper.ToOutputLine(
                                licence,
-                               DateTime.Now,
-                               completeNumber++,
-                               fileNumber++,
                                licenceSetsAll))
                            .ToList();
                        var setIds = new List<string>();

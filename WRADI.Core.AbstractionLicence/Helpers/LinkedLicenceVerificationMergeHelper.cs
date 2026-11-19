@@ -19,6 +19,7 @@ public static class LinkedLicenceVerificationMergeHelper
         int? processRunId)
     {
         var sectionSummaries = new List<LicenceSectionItemSummary>();
+        var deadStateFlags = new Dictionary<string, string>();
 
         var orderedVerifications = verifications
             .Where(v => v.LicenceSectionItemId is not null)
@@ -119,23 +120,24 @@ public static class LinkedLicenceVerificationMergeHelper
                     }
                     else if (scrapedLinkedLicence != null)
                     {
-                        var changes = new List<string>();
+                        var deadStateChanges = new List<string>();
 
                         if (IsDeadNaldStatus(scrapedLinkedLicence.NaldStatus)
                             && !IsDeadNaldStatus(verificationLicence.NaldStatus))
                         {
-                            changes.Add(scrapedLinkedLicence.NaldStatus.ToString());
+                            deadStateChanges.Add(scrapedLinkedLicence.NaldStatus.ToString());
                         }
 
                         if (IsSuperseded(scrapedLinkedLicence)
                             && !IsSuperseded(verificationLicence))
                         {
-                            changes.Add("Superseded");
+                            deadStateChanges.Add("Superseded");
                         }
 
-                        if (changes.Count > 0)
+                        if (deadStateChanges.Count > 0)
                         {
-                            flagReason = $"Linked Licence {string.Join(" & ", changes)}";
+                            flagReason = $"Linked Licence {string.Join(" & ", deadStateChanges)}";
+                            deadStateFlags[verification.LicenceSectionItemId!] = flagReason;
                         }
                     }
 
@@ -192,6 +194,8 @@ public static class LinkedLicenceVerificationMergeHelper
                 ConsoleHelper.WriteLine($"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - {ex}");
             }
         }
+
+        ClearDeadStateFlagsForRemovedLinkedLicences(sectionSummaries, deadStateFlags, linkedLicences);
 
         return sectionSummaries;
     }
@@ -306,6 +310,36 @@ public static class LinkedLicenceVerificationMergeHelper
             {
                 ConsoleHelper.WriteLine($"ERROR - {nameof(LinkedLicenceVerificationMergeHelper)} - {ex}");
             }
+        }
+    }
+
+    private static void ClearDeadStateFlagsForRemovedLinkedLicences(
+        List<LicenceSectionItemSummary> sectionSummaries,
+        Dictionary<string, string> deadStateFlags,
+        List<LinkedLicence> linkedLicences)
+    {
+        var outgoingLicenceNumbers = linkedLicences
+            .Where(l => l.ContainedIn?.Any(c => c.Direction == InformationDirection.Outgoing) == true)
+            .Select(l => l.LicenceNumber)
+            .ToHashSet();
+
+        foreach (var (itemId, flagReason) in deadStateFlags)
+        {
+            if (outgoingLicenceNumbers.Contains(itemId))
+            {
+                continue;
+            }
+
+            var summary = sectionSummaries.FirstOrDefault(s => s.LicenceSectionItemId == itemId);
+
+            // Only clear the flag if it's still the dead state one, not one a later verification replaced
+            if (summary is not { IsFlagged: true } || summary.FlagReason != flagReason)
+            {
+                continue;
+            }
+            
+            summary.IsFlagged = false;
+            summary.FlagReason = null;
         }
     }
 

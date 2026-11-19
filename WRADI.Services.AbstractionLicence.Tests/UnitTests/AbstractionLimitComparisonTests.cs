@@ -62,12 +62,10 @@ public class AbstractionLimitComparisonTests
             AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build()));
     }
 
-    // Line grouping can weld a unit to the next word, and the conversion refuses it rather than
-    // returning no answer, so the comparison throws instead of reporting not-equal.
     [Fact]
-    public void WhenAUnitCannotBeConverted_ThenComparingThrows()
+    public void WhenAUnitCannotBeConverted_ThenTheLimitsAreNotEqual()
     {
-        Assert.ThrowsAny<Exception>(() => AbstractionLimitHelper.AreLimitsEqual(
+        Assert.False(AbstractionLimitHelper.AreLimitsEqual(
             AbstractionLimitBuilder.A().Of(100, "acre feet").Per(LimitPeriodType.PerDay).Build(),
             AbstractionLimitBuilder.A().Of(100, "litres").Per(LimitPeriodType.PerDay).Build()));
     }

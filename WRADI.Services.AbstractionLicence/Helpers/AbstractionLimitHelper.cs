@@ -269,9 +269,25 @@ public static class AbstractionLimitHelper
     {
         const string baseUnit = "litres";
 
-        return string.IsNullOrEmpty(units)
-            ? value
-            : UnitHelper.Convert(value!.Value, units, baseUnit);
+        if (string.IsNullOrEmpty(units))
+        {
+            return value;
+        }
+
+        try
+        {
+            return UnitHelper.Convert(value!.Value, units, baseUnit);
+        }
+        catch (Exception ex)
+        {
+            // AreValuesEqual treats null as "not equal", so an unconvertible limit stops matching
+            // rather than matching wrongly.
+            ConsoleHelper.WriteLine(
+                $"WARNING - {nameof(AbstractionLimitHelper)} - cannot convert "
+                + $"'{units}' to {baseUnit}, limit left unconverted - {ex.Message}");
+
+            return null;
+        }
     }
 
     public static void AddLicencesReferencedInLimitsToLicenceSets(

@@ -137,7 +137,7 @@ public class DatabaseOutputService(
         return await databaseReadService.GetSimpleMatchResults(processRunId);
     }
 
-    public Task FilletDocumentAsync(
+    public async Task FilletDocumentAsync(
         string? pdfFileName,
         Guid fileId,
         int processRunId,
@@ -146,7 +146,16 @@ public class DatabaseOutputService(
         INoOcrPdfDocumentService noOcrPdfDocumentService,
         INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
     {
-        throw new NotImplementedException();
+        await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFileName!,
+            fileId,
+            lookupConfiguration.OutputService,
+            lookupConfiguration.CacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            lookupConfiguration,
+            processRunId,
+            false);
     }
 
     public async Task<int> SavePageScreenshotAsync(

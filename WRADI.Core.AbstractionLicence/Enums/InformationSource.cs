@@ -6,5 +6,10 @@ public enum InformationSource
     Nald,
     Document,
     OtherDocument,
-    MixedSourcesOrMixedReasons
+    MixedSourcesOrMixedReasons,
+    NaldFollowOn,
+    DocumentFollowOn,
+    OtherDocumentFollowOn,
+    MixedFollowOn,
+    UnknownFollowOn
 }

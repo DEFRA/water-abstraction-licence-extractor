@@ -25,6 +25,8 @@ public sealed class UpsertLicenceListItem
     public int AggregatesCount { get; init; }
 
     public string[] AggregateIds { get; init; } = [];
+    
+    public string[] Aggregates { get; init; } = [];
 
     public bool HasInLicenceAggregate { get; init; }
 

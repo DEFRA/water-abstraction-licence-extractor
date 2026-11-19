@@ -511,10 +511,7 @@ public static class AbstractionLicenceSchemaConverter
                 // Add to an existing ones history
                 if (existing != null)
                 {
-                    var newContainedIn = existing.ContainedIn?.ToList() ?? [];
-                    newContainedIn.AddRange(linkedLicence.ContainedIn!);
-
-                    existing.ContainedIn = newContainedIn.ToArray();
+                    AddFollowOnContainedIns(linkedLicence, existing);
                     continue;
                 }
 
@@ -642,6 +639,45 @@ public static class AbstractionLicenceSchemaConverter
             LicenceType = licenceType,
             RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode,
             ProcessRunId = processRunId
+        };
+    }
+
+    private static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
+    {
+        var currentContainedIn = new List<ContainedInInformation>();
+        foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
+        {
+            if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
+            {
+                currentContainedIn.Add(new ContainedInInformation
+                {
+                    Source = GetFollowOnSource(currentContained.Source),
+                    Direction = currentContained.Direction,
+                    SectionName =  currentContained.SectionName,
+                    LinkReason =  currentContained.LinkReason,
+                    LineNumber =  currentContained.LineNumber,
+                    PageNumber = currentContained.PageNumber
+                }); 
+            }
+            else
+            {
+                currentContainedIn.Add(currentContained);
+            }
+        }
+
+        existing.ContainedIn = currentContainedIn.ToArray();
+    }
+
+    private static InformationSource GetFollowOnSource(InformationSource currentContainedSource)
+    {
+        return currentContainedSource switch
+        {
+            InformationSource.Unknown => InformationSource.UnknownFollowOn,
+            InformationSource.Nald => InformationSource.NaldFollowOn,
+            InformationSource.Document => InformationSource.DocumentFollowOn,
+            InformationSource.OtherDocument => InformationSource.OtherDocumentFollowOn,
+            InformationSource.MixedSourcesOrMixedReasons => InformationSource.MixedFollowOn,
+            _ => throw new ArgumentOutOfRangeException(nameof(currentContainedSource), currentContainedSource, null)
         };
     }
 
@@ -3871,7 +3907,7 @@ public static class AbstractionLicenceSchemaConverter
             .ToArray();
 
         var newAggregateLinkedLicences = new List<string>();
-            
+
         foreach (var aggregateLinkedLicence in aggregateLinkedLicences)
         {
             newAggregateLinkedLicences.Add(aggregateLinkedLicence);

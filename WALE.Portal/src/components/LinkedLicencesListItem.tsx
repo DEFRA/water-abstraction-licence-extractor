@@ -20,13 +20,17 @@ interface LinkedLicencesListItemProps {
 export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
-    let backLink = linkedLicence.containedIn?.length! > 0 && linkedLicence.containedIn?.every(section => section.direction === NullableOfInformationDirection.Incoming);
+    let backLink = linkedLicence.containedIn?.length! > 0
+        && linkedLicence.containedIn?.every(section =>
+            section.direction === NullableOfInformationDirection.Incoming
+                || section.direction === NullableOfInformationDirection.ReferencedAlongside);
+    
     let abstractionLimits = linkedLicence.containedIn?.some(section => section.sectionName?.includes("AbstractionLimits")) ?? false;
 
     let styledLicenceNumber = backLink && false ? ("(" + linkedLicence.licenceNumber + ")") : linkedLicence.licenceNumber;
 
     let text = backLink
-        ? 'Implicit back link'
+        ? 'Incoming/refenced alongside link'
         : linkedLicence.containedIn!.length ?
             linkedLicence.containedIn![0].sectionName
             : "?";

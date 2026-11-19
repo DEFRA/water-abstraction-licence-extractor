@@ -17,7 +17,8 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
         }
 
         var (aggregateIds, summaries) = AggregateVerificationMergeHelper.MergeAggregateIds(
-            listRow.aggregateIds, outgoingVerifications);
+            listRow.aggregateIds,
+            outgoingVerifications);
 
         listRow.aggregateIds = aggregateIds.ToArray(); // aggregatesCount recomputes automatically from this
         listRow.aggregates = AggregateVerificationMergeHelper

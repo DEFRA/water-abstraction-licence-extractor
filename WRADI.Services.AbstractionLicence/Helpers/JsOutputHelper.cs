@@ -14,9 +14,6 @@ public static class JsOutputHelper
 {
     public static IntermediateOutputLicence ToOutputLine(
         Licence licence,
-        DateTime dtStart,
-        int completeNumber,
-        int fileNumber,
         Dictionary<string, LicenceSet> licenceSetsFull)
     {
         var licenceHolder = GetValueOrDefault<string, string>(licence.NoneSchemaData, "issuedTo", null);
@@ -69,7 +66,6 @@ public static class JsOutputHelper
             LicenceNumber = licenceNumber?.Value,
             LicenceNumberOcrConfidence = licenceNumberOcrConfidence,
             LimitsCount = licence.AbstractionLimits.Individual?.Sum(x => x.Limits.Count) ?? 0,
-            AggregateIds = licence.AbstractionLimits.Aggregates?.Select(a => a.Id).ToArray() ?? [],
             Aggregates = licence.AbstractionLimits.Aggregates,
             NaldHasAggregateCondition = licence.NaldHasAggregateCondition,
             IssueDate = issueDate,
@@ -146,7 +142,7 @@ public static class JsOutputHelper
                 purposes = outputLine.Purposes,
                 points = outputLine.Points,
                 limitsCount = outputLine.LimitsCount,
-                aggregateIds = outputLine.AggregateIds,
+                aggregateIds = outputLine.Aggregates?.Select(agg => agg.Id).ToArray() ?? [],
                 aggregates = outputLine.Aggregates,
                 naldHasAggregateCondition = outputLine.NaldHasAggregateCondition,
                 ocr = outputLine.Ocr == "OCR",

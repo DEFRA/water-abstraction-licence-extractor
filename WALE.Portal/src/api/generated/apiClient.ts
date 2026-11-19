@@ -10073,6 +10073,8 @@ export enum LicenceSetType {
     FullyEncompassedIn = "FullyEncompassedIn",
     PartiallyEncompassedIn = "PartiallyEncompassedIn",
     LicencesGroupedByOtherThenLimitsAndLinegage = "LicencesGroupedByOtherThenLimitsAndLinegage",
+    Others = "Others",
+    Lineage = "Lineage",
 }
 
 export enum LicenceType {
@@ -10959,6 +10961,7 @@ export enum NullableOfInformationDirection {
     Incoming = "Incoming",
     Outgoing = "Outgoing",
     ReferencedAlongside = "ReferencedAlongside",
+    InSameGroup = "InSameGroup",
 }
 
 export enum NullableOfLabelPosition {
@@ -11062,6 +11065,7 @@ export class OutputListDataItem implements IOutputListDataItem {
     limitsCount?: number;
     aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
+    aggregates?: Aggregate[] | undefined;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
@@ -11119,6 +11123,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                     this.aggregateIds!.push(item);
             }
             this.aggregatesCount = _data["aggregatesCount"];
+            if (Array.isArray(_data["aggregates"])) {
+                this.aggregates = [] as any;
+                for (let item of _data["aggregates"])
+                    this.aggregates!.push(Aggregate.fromJS(item));
+            }
             this.naldHasAggregateCondition = _data["naldHasAggregateCondition"];
             this.ocr = _data["ocr"];
             this.issueDate = _data["issueDate"];
@@ -11186,6 +11195,11 @@ export class OutputListDataItem implements IOutputListDataItem {
                 data["aggregateIds"].push(item);
         }
         data["aggregatesCount"] = this.aggregatesCount;
+        if (Array.isArray(this.aggregates)) {
+            data["aggregates"] = [];
+            for (let item of this.aggregates)
+                data["aggregates"].push(item ? item.toJSON() : undefined as any);
+        }
         data["naldHasAggregateCondition"] = this.naldHasAggregateCondition;
         data["ocr"] = this.ocr;
         data["issueDate"] = this.issueDate;
@@ -11230,6 +11244,7 @@ export interface IOutputListDataItem {
     limitsCount?: number;
     aggregateIds?: string[] | undefined;
     aggregatesCount?: number;
+    aggregates?: Aggregate[] | undefined;
     naldHasAggregateCondition?: boolean | undefined;
     ocr?: boolean;
     issueDate?: string | undefined;
@@ -11253,7 +11268,7 @@ export class OutputListDataItemLicenceSet implements IOutputListDataItemLicenceS
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
     licenceSetType?: number;
-    aggregateSets?: Aggregate[] | undefined;
+    aggregateSets?: any[] | undefined;
 
     [key: string]: any;
 
@@ -11278,7 +11293,7 @@ export class OutputListDataItemLicenceSet implements IOutputListDataItemLicenceS
             if (Array.isArray(_data["aggregateSets"])) {
                 this.aggregateSets = [] as any;
                 for (let item of _data["aggregateSets"])
-                    this.aggregateSets!.push(Aggregate.fromJS(item));
+                    this.aggregateSets!.push(item);
             }
         }
     }
@@ -11302,7 +11317,7 @@ export class OutputListDataItemLicenceSet implements IOutputListDataItemLicenceS
         if (Array.isArray(this.aggregateSets)) {
             data["aggregateSets"] = [];
             for (let item of this.aggregateSets)
-                data["aggregateSets"].push(item ? item.toJSON() : undefined as any);
+                data["aggregateSets"].push(item);
         }
         return data;
     }
@@ -11312,7 +11327,7 @@ export interface IOutputListDataItemLicenceSet {
     licenceSetId?: string | undefined;
     shortLicenceSetId?: string | undefined;
     licenceSetType?: number;
-    aggregateSets?: Aggregate[] | undefined;
+    aggregateSets?: any[] | undefined;
 
     [key: string]: any;
 }

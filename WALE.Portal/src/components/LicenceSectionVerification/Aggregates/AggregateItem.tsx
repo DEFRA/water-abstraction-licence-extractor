@@ -47,6 +47,7 @@ interface AggregateItemProps {
 }
 
 const UNRECOGNISED_LINKED_LICENCE_MESSAGE = "This licence number is not in the document's current Linked Licences list";
+const NO_LINKED_LICENCE_OPTIONS_MESSAGE = 'A Linked Licence must be added in the Linked Licences section before it can be added to an Aggregate';
 
 const labelStyle: React.CSSProperties = {display: 'block', fontSize: '0.75rem', marginBottom: '4px', fontWeight: 600};
 const topLevelLabelStyle: React.CSSProperties = {display: 'block', fontSize: '0.9rem', marginBottom: '4px', fontWeight: 600};
@@ -57,6 +58,7 @@ const addButtonStyle: React.CSSProperties = {padding: '4px 12px', fontSize: '0.8
 const removeButtonStyle: React.CSSProperties = {height: '30px', padding: '4px 8px', fontSize: '0.75rem', backgroundColor: '#ff7875', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', boxSizing: 'border-box'};
 const lookupDescriptionStyle: React.CSSProperties = {margin: '6px 0 0 0', fontSize: '0.8rem', color: '#555'};
 const removeButtonDisabledStyle: React.CSSProperties = {...removeButtonStyle, backgroundColor: '#f5f5f5', color: 'rgba(0, 0, 0, 0.25)', border: '1px solid #d9d9d9', cursor: 'not-allowed'};
+const addButtonDisabledStyle: React.CSSProperties = {...addButtonStyle, backgroundColor: '#f5f5f5', color: 'rgba(0, 0, 0, 0.25)', border: '1px solid #d9d9d9', cursor: 'not-allowed'};
 
 const LIMIT_UNITS_OPTIONS = [
     'megalitres', 'litres', 'thousand cubic metres', 'cubic metres',
@@ -125,6 +127,7 @@ export const AggregateItem = ({
     const handleChange = (field: keyof Aggregate, value: any) => update({[field]: value} as Partial<Aggregate>);
 
     // --- Linked Licences (string[], affects Id) ---
+    const isLicenceToLicence = aggregate.primaryType === PrimaryType.LicenceToLicence;
     const handleAddLinkedLicence = () => update({linkedLicences: [...linkedLicences, '']});
     const handleLinkedLicenceChange = (index: number, value: string) => {
         const next = [...linkedLicences];
@@ -329,8 +332,12 @@ export const AggregateItem = ({
                 <div style={{marginTop: '16px'}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
                         <strong style={{fontSize: '0.9rem'}}>Linked Licences:</strong>
-                        <button onClick={handleAddLinkedLicence} style={addButtonStyle}>+ Add Linked Licence</button>
+                        <button onClick={handleAddLinkedLicence} disabled={!isLicenceToLicence}
+                                style={isLicenceToLicence ? addButtonStyle : addButtonDisabledStyle}>+ Add Linked Licence</button>
                     </div>
+                    {isLicenceToLicence && linkedLicenceOptionNumbers.length === 0 && (
+                        <ValidationError message={NO_LINKED_LICENCE_OPTIONS_MESSAGE} style={{color: '#faad14'}}/>
+                    )}
                     {linkedLicences.length === 0 && <p style={{fontSize: '0.8rem', color: '#888'}}>None</p>}
                     <ValidationError message={errors.linkedLicences}/>
                     {linkedLicences.map((ll, idx) => {

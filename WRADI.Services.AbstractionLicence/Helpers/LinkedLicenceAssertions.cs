@@ -234,4 +234,32 @@ public static class LinkedLicenceAssertions
             }
         }
     }
+
+    public static void AssertNoDuplicateLicences(IEnumerable<Licence> licences)
+    {
+        var grouped = licences
+            .GroupBy(l => l.LicenceNumber?.Value);
+
+        foreach (var group in grouped)
+        {
+            if (group.Count() >= 2)
+            {
+                throw new Exception("Duplicate licences detected");
+            }
+
+            foreach (var licence in group)
+            {
+                var groupedLinked = licence.LinkedLicences
+                    .GroupBy(l => l.LicenceNumber);
+
+                foreach (var linkedLicenceGroup in groupedLinked)
+                {
+                    if (linkedLicenceGroup.Count() >= 2)
+                    {
+                        throw new Exception("Duplicate linked licences detected");
+                    }
+                }
+            }
+        }
+    }
 }

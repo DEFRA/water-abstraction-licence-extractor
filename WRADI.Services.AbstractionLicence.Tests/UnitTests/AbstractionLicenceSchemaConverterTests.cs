@@ -1,4 +1,4 @@
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
 
@@ -17,7 +17,7 @@ public class AbstractionLicenceSchemaConverterTests
     [InlineData(1, 1.0076, false)]
     public void SomeConversions(double value1, double value2, bool expected)
     {
-        var result = AbstractionLicenceSchemaConverter.AreValuesEqual(value1, value2);
+        var result = AbstractionLimitHelper.AreValuesEqual(value1, value2);
         Assert.Equal(expected, result);
     }
 }

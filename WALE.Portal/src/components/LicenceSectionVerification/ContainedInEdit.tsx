@@ -64,7 +64,7 @@ export const ContainedInEdit = ({
                             <div style={{flex: 1, minWidth: 0}}>
                                 <label style={labelStyle}>Section Name:</label>
                                 <select
-                                    value={section.sectionName || ''}
+                                    value={section.sectionName || 'Unknown'}
                                     onChange={(e) => onChange(idx, 'sectionName', e.target.value)}
                                     style={{
                                         ...inputStyle,
@@ -73,8 +73,6 @@ export const ContainedInEdit = ({
                                             : '#d9d9d9'
                                     }}
                                 >
-                                    <option value="">Select section</option>
-
                                     {section.sectionName &&
                                         !documentSections.includes(section.sectionName) && (
                                             <option value={section.sectionName}>

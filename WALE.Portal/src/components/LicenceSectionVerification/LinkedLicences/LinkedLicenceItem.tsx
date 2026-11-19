@@ -87,7 +87,7 @@ export const LinkedLicenceItem = ({
             const newSection = new ContainedInInformation({
                 source: InformationSource.Document,
                 direction: NullableOfInformationDirection.Outgoing,
-                sectionName: '',
+                sectionName: 'Unkown',
                 linkReason: 'N/A',
             });
             const newSections = [...(linkedLicence.containedIn || []), newSection];
@@ -108,7 +108,8 @@ export const LinkedLicenceItem = ({
         const updatedSections = (linkedLicence.containedIn || []).map(section =>
             new ContainedInInformation({
                 ...section,
-                linkReason: section.linkReason?.trim() || 'N/A'
+                linkReason: section.linkReason?.trim() || 'N/A',
+                sectionName: section.sectionName?.trim() || 'N/A',
             })
         );
 

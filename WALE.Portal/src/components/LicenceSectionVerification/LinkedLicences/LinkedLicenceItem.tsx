@@ -109,7 +109,7 @@ export const LinkedLicenceItem = ({
             new ContainedInInformation({
                 ...section,
                 linkReason: section.linkReason?.trim() || 'N/A',
-                sectionName: section.sectionName?.trim() || 'N/A',
+                sectionName: section.sectionName?.trim() || 'Unknown',
             })
         );
 

@@ -35,6 +35,21 @@ public static class LinkReasonHelper
             return null;
         }
 
+        if (text.Contains("minor variation", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.MinorVariation;
+        }
+
+        if (text.Contains("licence has been split", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.LicenceHasBeenSplit;
+        }
+
+        if (text.Contains("issued separately", StringComparison.OrdinalIgnoreCase))
+        {
+            return LinkReason.IssuedSeparately;
+        }
+
         if (text.Contains("continuous release of water", StringComparison.OrdinalIgnoreCase))
         {
             return LinkReason.ReleaseOfWater;

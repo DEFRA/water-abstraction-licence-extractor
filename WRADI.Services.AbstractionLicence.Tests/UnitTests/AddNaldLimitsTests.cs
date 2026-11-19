@@ -109,15 +109,15 @@ public class AddNaldLimitsTests
         Assert.Empty(individuals);
     }
 
-    // A unit the conversion cannot read fails the whole merge, not just the limit carrying it.
     [Fact]
-    public void WhenAnExistingLimitHasAnUnreadableUnit_ThenTheMergeThrows()
+    public void WhenAnExistingLimitHasAnUnreadableUnit_ThenTheNaldLimitIsTreatedAsUnmatched()
     {
         var group = AbstractionLimitBuilder.GroupSeenIn(Document(), AbstractionLimitBuilder.A().Of(100, "acre feet").Build());
         var individuals = new List<AbstractionLimitGroup>();
 
-        Assert.ThrowsAny<Exception>(() =>
-            AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals));
+        AbstractionLimitHelper.AddNaldLimits([AbstractionLimitBuilder.A().Of(100, "litres").Build()], [group], ref individuals);
+
+        Assert.Equal(100, Assert.Single(Assert.Single(individuals).Limits).Value);
     }
 
 

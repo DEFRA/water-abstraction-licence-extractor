@@ -42,6 +42,8 @@ public static class UnitHelper
         {
             units = units[..^1];
         }
+
+        units = LongestKnownUnitPrefix(units);
         
         if (units == MillionGallons)
         {
@@ -65,6 +67,26 @@ public static class UnitHelper
         
         return units;
     }
+
+    private static readonly string[] KnownUnits =
+    [
+        MisspellingThousandCubicMetres, ThousandCubicMetres, MisspellingCubicMetres, CubicMetres,
+        MillionGallons, ThousandGallons, MegaGallons, MegaLitres, MisspellingLitres, Litres, Gallons
+    ];
+
+    // Spaces are already stripped, so a unit that captured the next word arrives welded to it -
+    // "gallons to" as "gallonsto". Text not starting with a unit is left alone and still throws.
+    private static string LongestKnownUnitPrefix(string units)
+    {
+        if (KnownUnits.Contains(units))
+        {
+            return units;
+        }
+
+        return KnownUnits
+            .OrderByDescending(known => known.Length)
+            .FirstOrDefault(units.StartsWith) ?? units;
+    }
     
     private static double ConvertToCubicMetres(double sourceValue, string sourceUnits)
     {
@@ -81,7 +103,7 @@ public static class UnitHelper
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToCubicMetres,            
             CubicMetres => sourceValue,
             ThousandCubicMetres => sourceValue * thousandCubicMetresToCubicMetres,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to cubic metres")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to cubic metres")
         };
     }
     
@@ -112,7 +134,7 @@ public static class UnitHelper
             MegaLitres => sourceValue * megaLitresToLitres,
             CubicMetres => sourceValue * cubicMetersToLitres,
             ThousandCubicMetres => ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetersToLitres,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to litres")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to litres")
         };
     }
 
@@ -138,7 +160,7 @@ public static class UnitHelper
             MegaLitres => ConvertToLitres(sourceValue, sourceUnits) * litresToGallons,
             CubicMetres => sourceValue * cubicMetresToGallons,
             ThousandCubicMetres => ConvertToCubicMetres(sourceValue, sourceUnits) * cubicMetresToGallons,
-            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits}s to gallons")
+            _ => throw new Exception($"Unit conversion not mapped - {sourceUnits} to gallons")
         };
     }
     

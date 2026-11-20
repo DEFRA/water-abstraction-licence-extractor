@@ -61,8 +61,7 @@ public class BaseCacheService
         {
             PagesMetadata = pagesTextMetadata,
             AllDocumentLines = allDocumentLines,
-            ImageMetadata = imagesMetaData,
-            SizeBytes = 0
+            ImageMetadata = imagesMetaData
         };
     }
 }

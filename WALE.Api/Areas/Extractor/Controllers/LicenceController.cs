@@ -180,7 +180,7 @@ public class LicenceController(
             AllDocumentLines = pdfDocument.AllDocumentLines!,
             ImageMetadata = pdfDocument.ImagesMetadata!,
             PagesMetadata = pdfDocument.PagesMetadata!,
-            SizeBytes = pdfDocument.SizeBytes!.Value,
+            SizeBytes = pdfDocument.SizeBytes,
         };
         
         const string alreadyCached = "ALREADY_CACHED";

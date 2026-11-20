@@ -516,14 +516,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
 
-        if (metadata?.PagesMetadata == null)
-        {
-            return null;
-        }
-
-        metadata.SizeBytes = content.Length;
-
-        return metadata;
+        return metadata?.PagesMetadata == null ? null : metadata;
     }
     
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()

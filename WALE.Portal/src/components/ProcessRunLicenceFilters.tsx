@@ -11,6 +11,7 @@ type ProcessRunLicenceFiltersProps = {
     setQuery: React.Dispatch<React.SetStateAction<ProcessRunQuery>>;
     setPageNumber: (pageNumber: number) => void;
     showSingles: boolean;
+    hideFilterRow?: boolean;
     onToggleSingles: (checked: boolean) => void;
 };
 
@@ -20,7 +21,8 @@ export function ProcessRunLicenceFilters({
                                              issuers,
                                              shortLicenceIds,
                                              issueDates,
-                                             setPageNumber
+                                             setPageNumber,
+                                             hideFilterRow,
                                          }: ProcessRunLicenceFiltersProps) {
     const [pendingQuery, setPendingQuery] = useState<ProcessRunQuery>(query);
 
@@ -92,15 +94,26 @@ export function ProcessRunLicenceFilters({
 
     return (
         <>
+        {!hideFilterRow &&
         <tr>
-            <td> 
-                <button
-                type="button"
-                className="clear-filters-button"
-                onClick={clearFilters}
-            >
-                Clear Filters
-            </button>
+            <td>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '4px', whiteSpace: 'nowrap'}}>
+                    <button
+                        type="button"
+                        className="clear-filters-button"
+                        onClick={clearFilters}
+                    >
+                        Clear Filters
+                    </button>
+
+                    <button
+                        type="button"
+                        className="apply-filters-button"
+                        onClick={applyFilters}
+                    >
+                        Apply Filters
+                    </button>
+                </div>
             </td>
 
             <td>
@@ -123,15 +136,6 @@ export function ProcessRunLicenceFilters({
                     <option value="">All</option>
                     <option value="true">Flagged</option>
                 </select>
-
-                <button
-                    type="button"
-                    className="apply-filters-button"
-                    onClick={applyFilters}
-                    style={{ marginLeft: "8px" }}
-                >
-                    Apply Filters
-                </button>
             </td>
 
             <td>
@@ -443,7 +447,7 @@ export function ProcessRunLicenceFilters({
                     <option value="NoVerifications">No Verifications</option>
                 </select>
             </td>
-        </tr>
+        </tr>}
     <tr>
         <td style={{width: '5%'}}>&nbsp;</td>
         <td style={{width: '7%'}}>

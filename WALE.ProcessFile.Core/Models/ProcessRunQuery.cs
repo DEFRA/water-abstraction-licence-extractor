@@ -47,31 +47,6 @@ public class ProcessRunQuery
 
     public string[]? VerificationSections { get; init; }
 
-    public ProcessRunQuery Clone()
-    {
-        return new ProcessRunQuery
-        {
-            SearchTerm = SearchTerm,
-            Skip = Skip,
-            Take = Take,
-            Issuer = Issuer,
-            LimitsEmpty = LimitsEmpty,
-            AggregatesFilter = AggregatesFilter,
-            AggregatePrimaryTypeFilter = AggregatePrimaryTypeFilter,
-            OcrScan = OcrScan,
-            PurposesEmpty = PurposesEmpty,
-            PointsEmpty = PointsEmpty,
-            IssueYear = IssueYear,
-            MeansFound = MeansFound,
-            IsLicenceNumberFlagged = IsLicenceNumberFlagged,
-            IsIssueDateFlagged = IsIssueDateFlagged,
-            ShortLicenceSetId = ShortLicenceSetId,
-            LinkedLicencesType = LinkedLicencesType,
-            VerificationType = VerificationType,
-            SortField = SortField,
-            SortAscending = SortAscending,
-            LicenceNumbers = LicenceNumbers,
-            VerificationSections = VerificationSections
-        };
-    }
+    /// Memberwise so a subclass survives the copy with its own fields - LicenceEstateQuery is one.
+    public ProcessRunQuery Clone() => (ProcessRunQuery)MemberwiseClone();
 }

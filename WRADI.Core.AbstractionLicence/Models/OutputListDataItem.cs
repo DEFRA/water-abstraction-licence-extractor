@@ -51,6 +51,12 @@ public class OutputListDataItem
     public string? licenceNumberFlagReason { get; set; }
     
     public string? thumbnailUrl { get; set; }
+
+    public int? queue { get; set; }
+
+    public int? documentCount { get; set; }
+
+    public int? runCount { get; set; }
     
     public LinkedLicence[]? linkedLicences { get; set; }
     

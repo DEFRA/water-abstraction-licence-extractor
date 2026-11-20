@@ -1,4 +1,5 @@
 using WALE.ProcessFile.Core.Models;
+using WRADI.Core.AbstractionLicence.Models;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay;
 using WRADI.Core.AbstractionLicence.Models.ProcessRunLicenceDisplay.DTOs;
 
@@ -22,9 +23,27 @@ public interface ILicenceListRepository
         int processRunId,
         ProcessRunQuery query);
 
-    Task<List<string>> GetLicenceListIssuersAsync(int processRunId);
+    Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(LicenceEstateQuery query);
+
+    Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query);
+
+    Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(LicenceEstateQuery query);
+
+    Task<List<LicenceRunHistoryItem>> GetLicenceRunHistoryAsync(string licenceNumber);
+
+    Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds);
+
+    Task<List<string>> GetLicenceListIssuersAsync(int? processRunId);
+
+    Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
+
+    Task<List<int>> GetLicenceListProcessRunIdsAsync();
+
+    Task<List<string>> GetLicenceEstateLicenceNumbersAsync();
     
-    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
+    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
+    Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId);
 }

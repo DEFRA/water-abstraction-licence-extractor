@@ -17,13 +17,18 @@ import DocumentTag from "./DocumentTag.tsx";
 interface OutputItemTableRowProps {
     item: OutputListDataItem;
     oddRow: boolean;
+    expanded?: boolean;
+    onToggleExpand?: () => void;
+    onLookUp?: () => void;
+    lookUpHref?: string;
+    linkToEstate?: boolean;
     onOpenReport: (fileId: string, licenceId: number, matchesResultId: number) => void;
     onOpenLicenceSetReport: (fileId: string, licenceId: number, matchesResultId: number, licenceSetId: string) => void;
     showSingles: boolean;
     verificationSections?: string[];
 }
 
-function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, showSingles, verificationSections}: OutputItemTableRowProps) {
+function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, lookUpHref, linkToEstate, onOpenReport, onOpenLicenceSetReport, showSingles, verificationSections}: OutputItemTableRowProps) {
     const sectionVerifications = item.licenceSectionVerifications ?? [];
     const sectionsToDisplay = getVerificationSectionsToDisplay(
         sectionVerifications.map(section => section.licenceSectionName),
@@ -64,10 +69,19 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
         
     return (
         <tr style={{backgroundColor: oddRow ? '#F6F6F6' : '#FAFAFA'}}>
-            <td style={{textAlign: 'center'}}>
+            <td style={{textAlign: 'center', position: 'relative'}}>
                 <img src={item.thumbnailUrl} width={80} />
+                {onToggleExpand && (
+                    <button
+                        onClick={onToggleExpand}
+                        title={expanded ? 'Hide earlier runs' : 'Show every run'}
+                        style={{position: 'absolute', bottom: '4px', left: '4px', cursor: 'pointer'}}>
+                        {expanded ? '\u25BE' : '\u25B8'}
+                        {(item.documentCount ?? 1) > 1 && ` ${item.documentCount} docs`}
+                    </button>
+                )}
             </td>
-            <td id={dashesIfNullOrEmpty(item.licenceNumber)}>
+            <td id={dashesIfNullOrEmpty(item.licenceNumber)} style={{position: 'relative'}}>
                 <a href="#"
                    onClick={(e) => {
                        e.preventDefault();
@@ -75,6 +89,19 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                    }}
                    dangerouslySetInnerHTML={{ __html: dashesIfNullOrEmpty(item.licenceNumber) }} />
                 {item.isLicenceNumberFlagged && <LicenceNumberFlagTag reason={item.licenceNumberFlagReason}/>}
+                {onLookUp && (
+                    <a href={lookUpHref ?? '#'}
+                       title="Everything held for this licence - open in a new tab to keep the list"
+                       style={{position: 'absolute', bottom: '4px', left: '4px'}}
+                       onClick={(e) => {
+                           if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+                               return;
+                           }
+
+                           e.preventDefault();
+                           onLookUp();
+                       }}>🗂 licence record</a>
+                )}
             </td>
             <td className='default-hidden'>{dashesIfNullOrEmpty(item.licenceHolder)}</td>
             <td>{((item.purposes?.length ?? 0) > 0 ? <UnorderedListOfStrings items={item.purposes!}/> : '--')}</td>
@@ -109,6 +136,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
             <td>
                 <LinkedLicencesList
                     item={item}
+                    linkToEstate={linkToEstate}
                     onOpenReport={onOpenReport}
                 />
             </td>

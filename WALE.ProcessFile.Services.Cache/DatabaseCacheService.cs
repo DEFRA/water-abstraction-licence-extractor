@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -183,7 +184,7 @@ public class DatabaseCacheService(
         return linesAndWords;
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -191,7 +192,7 @@ public class DatabaseCacheService(
 
         if (!string.IsNullOrEmpty(existing))
         {
-            return request;
+            throw new Exception($"There are {existing} ocr pages metadata");
         }
         
         var data = new Dictionary<string, object>
@@ -201,7 +202,9 @@ public class DatabaseCacheService(
         };
 
         var dataStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
-        return await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
+        await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
+
+        return data;
     }
 
     public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
@@ -217,13 +220,18 @@ public class DatabaseCacheService(
         await databaseWriteService.SaveNoOcrImagesMetadata(request, imagesMetadataStr, request.ProcessRunId);
     }
 
-    public async Task SaveNoOcrPagesTextLinesAsync(
+    public async Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
+        var returnDictionary = new Dictionary<int, string>();
+        
         foreach (var page in pages)
         {
             await SaveNoOcrPageTextLinesAsync(page.Request, page.PageLines);
+            returnDictionary.Add(page.Request.PageNumber, page.PageLines);
         }
+
+        return returnDictionary;
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
@@ -346,5 +354,28 @@ public class DatabaseCacheService(
     public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
         return databaseReadService.GetDmsFileDataAsync(licenceNumber);
+    }
+    
+    public async Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
+    {
+        await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFileName!,
+            fileId,
+            lookupConfiguration.OutputService,
+            lookupConfiguration.CacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            lookupConfiguration,
+            processRunId,
+            false);
+        
+        return await GetMetadataAsync(fileId, noOcrDataExtractorService.Name, processRunId);
     }
 }

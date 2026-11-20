@@ -8,5 +8,5 @@ public class MetadataCollection
     
     public ImageMetadata? ImageMetadata { get; init; }
     
-    public long SizeBytes { get; set; }
+    public long? SizeBytes { get; set; }
 }

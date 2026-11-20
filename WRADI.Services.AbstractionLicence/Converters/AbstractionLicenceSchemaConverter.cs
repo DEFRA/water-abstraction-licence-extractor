@@ -1374,8 +1374,12 @@ public static class AbstractionLicenceSchemaConverter
             cacheService,
             naldDataLookupService);
 
+        var isPlural = linkedLicences.Count != 1;
+        var licenceOrLicences = isPlural ? "licences" : "licence";
+        
         ConsoleHelper.WriteLine(
-            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Got {linkedLicences.Count} linked licences at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            $"INFO - {nameof(AbstractionLicenceSchemaConverter)} - Got {linkedLicences.Count} linked " +
+            $"{licenceOrLicences} at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var allLicences = new List<Licence>(linkedLicences);
         allLicences.Insert(0, primaryLicence);
@@ -1849,15 +1853,6 @@ public static class AbstractionLicenceSchemaConverter
 
         return allNoneSingleSets.Count >= 1 ? allNoneSingleSets : licenceSetsList;
     }
-
-
-
-
-
-
-
-
-
 
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(
         Licence primaryLicence,

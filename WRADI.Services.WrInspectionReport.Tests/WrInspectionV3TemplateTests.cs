@@ -516,7 +516,8 @@ public class WrInspectionV3TemplateTests(ITestOutputHelper testOutputHelper)
             DocumentService,
             DocnetAlternativeDocumentService,
             BuildLookupConfiguration(V3Folder),
-            -99);
+            -99,
+            false);
 
         Assert.NotNull(pdfDocument);
 

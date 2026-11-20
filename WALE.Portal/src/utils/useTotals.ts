@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { OutputListDataItem } from '../api/generated/apiClient';
 import type {OutputListDataItemKey} from "./types.ts";
-import {isVerificationSectionSelected} from "./verificationSections.ts";
+import {isVerificationSectionEmpty, isVerificationSectionSelected, VERIFICATION_SECTIONS} from "./verificationSections.ts";
 
 export interface Totals {
     filename: number;
@@ -131,7 +131,14 @@ function countNonEmptyVerificationTypes(data: OutputListDataItem[], verification
                 }
             });
         }
-       }
+
+        if (verificationType === "Flagged") {
+            count += VERIFICATION_SECTIONS.filter(sectionName =>
+                isVerificationSectionSelected(sectionName, verificationSections)
+                && isVerificationSectionEmpty(item, sectionName)
+            ).length;
+        }
+    }
 
     return count;
 }

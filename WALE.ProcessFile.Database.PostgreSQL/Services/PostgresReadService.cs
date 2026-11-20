@@ -672,6 +672,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         await using var connection = GetPostgresConnection();
         const string sql = """
                            SELECT
+                               status,
                                data 
                            FROM matches_result 
                            WHERE
@@ -681,7 +682,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<string>(
+        var result = await QuerySingleOrDefaultAsync<(string? Status, string? Data)>(
             connection,
             sql,
             0,
@@ -690,13 +691,14 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 MatchesResultId = matchesResultId
             });
 
-        var matchesResult = result == null
+        var matchesResult = result.Data == null
             ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+            : JsonSerializer.Deserialize<MatchesResult>(result.Data, GetSerializerOptions());
 
         if (matchesResult != null)
         {
             matchesResult.MatchesResultId = matchesResultId;
+            matchesResult.Status = result.Status ?? matchesResult.Status;
         }
 
         return matchesResult;
@@ -706,22 +708,32 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           SELECT data
+                           SELECT status, data
                            FROM matches_result
                            WHERE file_id = @FileId
                            ORDER BY process_run_id DESC
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<string>(
+        var result = await QuerySingleOrDefaultAsync<(string? Status, string? Data)>(
             connection,
             sql,
             0,
             new { FileId = fileId });
 
-        return result == null
-            ? null
-            : JsonSerializer.Deserialize<MatchesResult>(result, GetSerializerOptions());
+        if (result.Data == null)
+        {
+            return null;
+        }
+
+        var matchesResult = JsonSerializer.Deserialize<MatchesResult>(result.Data, GetSerializerOptions());
+
+        if (matchesResult != null)
+        {
+            matchesResult.Status = result.Status ?? matchesResult.Status;
+        }
+
+        return matchesResult;
     }
 
     public async Task<MatchesResult?> GetMatchesResult(Guid fileId, int processRunId)
@@ -730,6 +742,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         const string sql = """
                            SELECT
                                matches_result_id,
+                               status,
                                data 
                            FROM matches_result 
                            WHERE
@@ -739,7 +752,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            LIMIT 1;
                            """;
 
-        var result = await QuerySingleOrDefaultAsync<(int MatchesResultId, string? Data)>(
+        var result = await QuerySingleOrDefaultAsync<(int MatchesResultId, string? Status, string? Data)>(
             connection,
             sql,
             0,
@@ -756,6 +769,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
         if (matchesResult != null)
         {
             matchesResult.MatchesResultId = result.MatchesResultId;
+            matchesResult.Status = result.Status ?? matchesResult.Status;
         }
 
         return matchesResult;

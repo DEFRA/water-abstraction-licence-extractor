@@ -264,7 +264,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                UPDATE matches_result
                SET
                     date_time_utc = @DateTimeUtc,
-                    data = @Data,
+                    error = @Error,
                     status = @Status
                WHERE
                     file_id = @FileId
@@ -284,8 +284,8 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
         else
         {
             const string insertSql = """
-               INSERT INTO matches_result (file_id, status, data, process_run_id, date_time_utc)
-               VALUES (@FileId, @status, @Data, @ProcessRunId, @DateTimeUtc)
+               INSERT INTO matches_result (file_id, status, data, error, process_run_id, date_time_utc)
+               VALUES (@FileId, @status, @Data, @Error, @ProcessRunId, @DateTimeUtc)
                RETURNING matches_result_id
                """;
             
@@ -309,6 +309,7 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
                 FileId = fileId,
                 Status = statusName,
                 Data = data,
+                Error = error,
                 ProcessRunId = processRunId,
                 DateTimeUtc = DateTime.UtcNow
             });

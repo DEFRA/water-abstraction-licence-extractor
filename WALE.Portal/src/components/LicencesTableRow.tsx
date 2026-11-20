@@ -105,6 +105,7 @@ function LicencesTableRow({item, oddRow, onOpenReport, onOpenLicenceSetReport, s
                 <br /><strong>Nald OG:</strong><br /> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
             </td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
+            <td>{dashesIfNullOrEmpty(item.regionName)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
             <td>
                 <LinkedLicencesList

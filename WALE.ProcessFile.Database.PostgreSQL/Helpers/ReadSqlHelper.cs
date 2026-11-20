@@ -68,6 +68,26 @@ public static class ReadSqlHelper
             value.Value);
     }
     
+    public static void AddIntFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string columnName,
+        string parameterName,
+        int? value)
+    {
+        if (!value.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            $"  AND {columnName} = @{parameterName}");
+
+        parameters.Add(
+            parameterName,
+            value.Value);
+    }
+
     public static void AddCountEmptyFilter(
         StringBuilder sql,
         bool? empty,
@@ -567,6 +587,7 @@ public static class ReadSqlHelper
             "issuedate" => "issue_date",
             "issueyear" => "issue_year",
             "issuer" => "issuer",
+            "regionid" => "region_id",
             "meansfound" => "means_found",
             "status" => "status",
             "purposescount" => "purposes_count",

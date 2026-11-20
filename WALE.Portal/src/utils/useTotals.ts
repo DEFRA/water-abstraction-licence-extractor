@@ -14,6 +14,7 @@ export interface Totals {
     ocr: number;
     issueDate: number;
     issuer: number;
+    regionName: number;
     meansFound: number;
     linkedLicences: number;
     licenceSectionVerifications: number;
@@ -34,6 +35,7 @@ export function useTotals(filteredData: OutputListDataItem[], sectionVerificatio
             ocr: countNonEmpty(filteredData, 'ocr', false),
             issueDate: countNonEmpty(filteredData, 'issueDate', ''),
             issuer: countNonEmpty(filteredData, 'issuer', ''),
+            regionName: countNonEmpty(filteredData, 'regionName', ''),
             meansFound: countNonEmpty(filteredData, 'meansFound', false),
             linkedLicences: countNonEmpty(filteredData, 'linkedLicences', []),
             licenceSectionVerifications: countNonEmptyVerificationTypes(filteredData, sectionVerification, verificationSections),

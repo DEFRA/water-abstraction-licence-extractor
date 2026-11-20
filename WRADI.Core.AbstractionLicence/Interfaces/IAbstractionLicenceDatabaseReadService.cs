@@ -83,6 +83,8 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
     
+    Task<List<int>> GetDistinctRegionIdsAsync(int processRunId);
+    
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
     Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);
@@ -95,6 +97,8 @@ public interface IAbstractionLicenceDatabaseReadService
         CancellationToken cancellationToken = default);
     
     Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId);
+    
+    Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId);
     
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
     

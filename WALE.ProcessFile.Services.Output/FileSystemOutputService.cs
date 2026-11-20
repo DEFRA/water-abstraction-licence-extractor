@@ -283,25 +283,4 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
     {
         throw new NotImplementedException();
     }
-
-    public async Task FilletDocumentAsync(
-        string? pdfFileName,
-        Guid fileId,
-        int processRunId,
-        LookupConfiguration lookupConfiguration,
-        INoOcrDataExtractorService noOcrDataExtractorService,
-        INoOcrPdfDocumentService noOcrPdfDocumentService,
-        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
-    {
-        await noOcrDataExtractorService.GetPdfDocumentAsync(
-            pdfFileName!,
-            fileId,
-            lookupConfiguration.OutputService,
-            lookupConfiguration.CacheService,
-            noOcrPdfDocumentService,
-            noOcrAlternativePdfDocumentService,
-            lookupConfiguration,
-            processRunId,
-            false);
-    }
 }

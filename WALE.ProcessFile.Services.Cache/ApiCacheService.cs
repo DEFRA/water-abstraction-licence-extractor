@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -679,5 +681,50 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Finished getting {hashSet.Count} first names in {tsDuration} seconds");
         
         return hashSet;
+    }
+    
+    public async Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
+    {
+        const string path = "/Extractor/Licence/FilletDocument";
+        var dtStart = DateTime.UtcNow;
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                pdfFileName,
+                fileId,
+                lookupConfiguration.RegionId,
+                processRunId,
+                lookupConfiguration.SkipFileWhenMoreThenPages
+            },
+            JsonHelper.GetWireSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+        
+        var responseJson =  await response.Content.ReadAsStringAsync();
+        var responseDeserialised = JsonSerializer.Deserialize<FilletDocumentResponse>(
+            responseJson,
+            JsonHelper.GetSerializerOptions());
+
+        var tsDuration = DateTime.UtcNow - dtStart;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - {nameof(FilletDocumentAsync)} for {pdfFileName} responded '{responseJson}', took {tsDuration.TotalMilliseconds}ms");
+        
+        response.EnsureSuccessStatusCode();
+        return responseDeserialised!.Metadata;
     }
 }

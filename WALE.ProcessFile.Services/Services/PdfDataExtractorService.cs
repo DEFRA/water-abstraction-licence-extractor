@@ -523,8 +523,8 @@ public class PdfDataExtractorService(
 
                     if (image == null)
                     {
-                        ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not" +
-                            $" found, P{page} I{imageNumber} {fileId}");
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not " +
+                            $"found, P{page.Number} I{imageNumber} {fileId}");
                         
                         continue;
                     }

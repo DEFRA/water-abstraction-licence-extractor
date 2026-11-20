@@ -1,9 +1,11 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
 using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -173,10 +175,21 @@ public class LicenceController(
             return BadRequest("Pdf document is not cached and could not be loaded to be filleted");
         }
         
+        if (pdfDocument.RawMetadata == null)
+        {
+            return Problem("Metadata came back null - should not happen");
+        }
+        
         const string alreadyCached = "ALREADY_CACHED";
         const string filleted = "FILLETED";
         
-        return Ok(pdfDocument.FromCache ? alreadyCached : filleted);
+        var responseObject = new FilletDocumentResponse
+        {
+            Result = pdfDocument.FromCache ? alreadyCached : filleted,
+            Metadata = pdfDocument.RawMetadata
+        };
+        
+        return Ok(responseObject);
     }
 
     private LookupConfiguration GetMinimalLookupConfiguration(int skipFileWhenMoreThenPages, int regionId)

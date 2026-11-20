@@ -248,7 +248,8 @@ public static class WrInspectionReportExtractionOrchestrator
                 null!,
                 null!,
                 -1,
-                DateTime.UtcNow));
+                DateTime.UtcNow),
+            null!);
 
     // Failure reads as "found nothing", so a primary throwing on a malformed PDF still leaves the
     // fallback its chance. Tables come back with the matches to save a second, billable, fetch.

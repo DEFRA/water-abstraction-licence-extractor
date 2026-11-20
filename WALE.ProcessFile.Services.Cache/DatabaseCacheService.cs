@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Tesseract;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -346,5 +347,28 @@ public class DatabaseCacheService(
     public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
     {
         return databaseReadService.GetDmsFileDataAsync(licenceNumber);
+    }
+    
+    public async Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
+    {
+        await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFileName!,
+            fileId,
+            lookupConfiguration.OutputService,
+            lookupConfiguration.CacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            lookupConfiguration,
+            processRunId,
+            false);
+        
+        return await GetMetadataAsync(fileId, noOcrDataExtractorService.Name, processRunId);
     }
 }

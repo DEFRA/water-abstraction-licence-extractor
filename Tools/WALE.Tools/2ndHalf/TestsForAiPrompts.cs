@@ -577,7 +577,8 @@ public static class TestsForAiPrompts
             outputService,
             pdfPigDocumentService,
             docnetAlternativeDocumentService,
-            lookupConfiguration);
+            lookupConfiguration,
+            null!);
         
         var imagePrompts = new List<ChatMessageContentPart>();
                 

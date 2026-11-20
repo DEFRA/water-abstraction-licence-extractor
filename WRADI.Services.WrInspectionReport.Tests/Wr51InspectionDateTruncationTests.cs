@@ -113,7 +113,8 @@ public class Wr51InspectionDateTruncationTests(ITestOutputHelper testOutputHelpe
                 OutputService,
                 new PdfPigNoOcrPdfDocumentService(),
                 new DocnetNoOcrAlternativePdfDocumentService(),
-                configuration),
+                configuration,
+                null!),
             fileId,
             processRunId: -99);
 

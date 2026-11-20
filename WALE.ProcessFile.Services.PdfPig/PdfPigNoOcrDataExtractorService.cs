@@ -30,9 +30,11 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         int processRunId,
         bool shouldFilletExternally)
     {
+        MetadataCollection? metadata;
+        
         if (shouldFilletExternally)
         {
-            await outputService.FilletDocumentAsync(
+            metadata = await cacheService.FilletDocumentAsync(
                 pdfFileName,
                 fileId,
                 processRunId,
@@ -41,13 +43,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 noOcrPdfDocumentService,
                 noOcrAlternativePdfDocumentService);
         }
+        else
+        {
+            metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
+        }
 
         var dtStart = DateTime.Now;
-        var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
-        var debug = false;
+        var showDebugOutput = false;
 
-        if (debug)
+        if (showDebugOutput)
         {
             ConsoleHelper.WriteLine(
                 $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Attempting to get pdf document from cache (API)" +
@@ -66,8 +71,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             outputService,
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
-            configuration);
-        
+            configuration,
+            metadata);
+
         if (metadata is { PagesMetadata: { } pagesMetadata, AllDocumentLines: { } allDocumentLines })
         {
             pdfDocument.Pages = GetPages(

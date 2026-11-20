@@ -116,12 +116,12 @@ public static class SharedHelper
         ConsoleHelper.WriteLine($"INFO - {loggingPrefix} " +
             $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        var idx = 1;
+        var idx = 0;
         
         foreach (var licenceSetGroup in licenceSetGroups)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx++} " +
-                $"of {licenceSetGroups.Count} in progress....");
+            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {++idx} " +
+                $"of {licenceSetGroups.Count} in progress");
             
             if (licenceSetGroup.Count == 0)
             {
@@ -216,16 +216,16 @@ public static class SharedHelper
 
                     if (newLicenceSetsLoop.Count == 0)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)}  {idx} " +
-                            $"licence sets already have been saved");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx}," +
+                            $" licence set has already been saved ({licenceSetLoop.LicenceSetId} for {licenceLoop.LicenceNumber?.Value})");
                         
                         continue;
                     }
 
                     foreach (var licenceSet in newLicenceSetsLoop)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx} " +
-                            $"saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx}," +
+                            $" saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
                         
                         // Not batched as we get a 413 on the server
                         await outputService.SaveLicenceSetAsync(

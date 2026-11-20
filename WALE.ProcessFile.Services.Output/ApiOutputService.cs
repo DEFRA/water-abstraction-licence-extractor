@@ -289,45 +289,6 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             JsonHelper.GetWireSerializerOptions())!;
     }
 
-    public async Task FilletDocumentAsync(
-        string? pdfFileName,
-        Guid fileId,
-        int processRunId,
-        LookupConfiguration lookupConfiguration,
-        INoOcrDataExtractorService noOcrDataExtractorService,
-        INoOcrPdfDocumentService noOcrPdfDocumentService,
-        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
-    {
-        const string path = "/Extractor/Licence/FilletDocument";
-        var dtStart = DateTime.UtcNow;
-
-        var json = JsonSerializer.Serialize(
-            new
-            {
-                pdfFileName,
-                fileId,
-                lookupConfiguration.RegionId,
-                processRunId,
-                lookupConfiguration.SkipFileWhenMoreThenPages
-            },
-            JsonHelper.GetWireSerializerOptions());
-
-        using var httpContent = new StringContent(
-            json,
-            Encoding.UTF8,
-            "application/json");
-
-        using var response = await HttpHelper.RateLimiter.Enqueue(
-            () => httpClient.PostAsync(
-                new Uri(httpClient.BaseAddress!, path),
-                httpContent));
-
-        var tsDuration = DateTime.UtcNow - dtStart;
-        ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(FilletDocumentAsync)} for {pdfFileName} responded '{response}', took {tsDuration.TotalMilliseconds}ms");
-        
-        response.EnsureSuccessStatusCode();
-    }
-
     public async Task<int> SavePageScreenshotAsync(
         PdfDocument pdfDocument,
         int pageNumber,

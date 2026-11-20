@@ -169,6 +169,8 @@ public class PdfDocument(
     public List<DocumentLine>? DocumentLines { get; set; }
     
     public ImageMetadata? ImagesMetadata { get; set; }
+    
+    public Dictionary<int, string>? AllDocumentLines { get; set; }
 
     public void Dispose()
     {

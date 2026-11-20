@@ -413,13 +413,18 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task SaveNoOcrPagesTextLinesAsync(
+    public async Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
+        var returnDictionary = new Dictionary<int, string>();
+        
         foreach (var page in pages)
         {
             await SaveNoOcrPageTextLinesAsync(page.Request, page.PageLines);
+            returnDictionary.Add(page.Request.PageNumber, page.PageLines);
         }
+        
+        return returnDictionary;
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(

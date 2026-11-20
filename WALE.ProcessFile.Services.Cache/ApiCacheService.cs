@@ -285,14 +285,18 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     /// request size limit that GET 413s already show is real.
     private const int MaxBatchedPageLinesBytes = 4 * 1024 * 1024;
 
-    public async Task SaveNoOcrPagesTextLinesAsync(
+    public async Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
+        var returnDictionary = new Dictionary<int, string>();
+        
         var batch = new List<(NoOcrServicePageCacheRequest Request, string PageLines)>();
         var batchBytes = 0;
 
         foreach (var page in pages)
         {
+            returnDictionary.Add(page.Request.PageNumber, page.PageLines);
+            
             if (batch.Count > 0 && batchBytes + page.PageLines.Length > MaxBatchedPageLinesBytes)
             {
                 // Push what's already there (not including this page)
@@ -311,6 +315,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         {
             await PostPagesTextLinesAsync(batch);
         }
+
+        return returnDictionary;
     }
 
     private async Task PostPagesTextLinesAsync(

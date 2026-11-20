@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -124,6 +123,15 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             cacheService);
 
         await Task.WhenAll(saveAllPagesTextTask, saveImageMetadataTask);
+
+        pdfDocument.RawMetadata = new MetadataCollection
+        {
+            AllDocumentLines = pdfDocument.AllDocumentLines!,
+            ImageMetadata = pdfDocument.ImagesMetadata!,
+            PagesMetadata = pdfDocument.ImagesMetadata.Pages!,
+            SizeBytes = pdfDocument.SizeBytes!.Value,
+        };
+        
         return pdfDocument;
     }
 
@@ -215,7 +223,10 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             cacheService);
         
         pdfDocument.ImagesMetadata = await imagesMetadataTask;
-        pdfDocument.DocumentLines = await documentLinesTask;
+        
+        var (lines, linesByPage) = await documentLinesTask;
+        pdfDocument.DocumentLines = lines;
+        pdfDocument.AllDocumentLines = linesByPage;
     }
     
     private async Task SaveImageMetadataAsync(
@@ -299,7 +310,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return Task.FromResult(documentLines);
     }
 
-    public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
+    public async Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage)> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
         PdfDocument pdfDocument,
         LookupConfiguration configuration,
         ICacheService cacheService,
@@ -385,7 +396,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             },
             pagesMetadataList);
 
-        await cacheService.SaveNoOcrPagesTextLinesAsync(
+        var allDocumentLines = await cacheService.SaveNoOcrPagesTextLinesAsync(
             pagesTextLines
                 .OrderBy(page => page.Request.PageNumber)
                 .ToList());
@@ -403,7 +414,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             $"{getPagesDuration.TotalMilliseconds}ms was for getting pages in code, " +
             $"{processPagesDuration.TotalMilliseconds}ms was for processing pages)- {pdfDocument.PdfFilename}");
         
-        return documentLines;
+        return (documentLines, allDocumentLines);
     }
 
     private async Task SavePageScreenshotInternalAsync(

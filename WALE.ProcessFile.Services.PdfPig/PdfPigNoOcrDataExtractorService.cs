@@ -72,7 +72,8 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             noOcrAlternativePdfDocumentService,
             configuration);
 
-        if (metadata is { PagesMetadata: { } pagesMetadata, AllDocumentLines: { } allDocumentLines })
+        if (metadata is { PagesMetadata: { } pagesMetadata,
+            AllDocumentLines: { } allDocumentLines })
         {
             pdfDocument.Pages = GetPages(
                 pagesMetadata,

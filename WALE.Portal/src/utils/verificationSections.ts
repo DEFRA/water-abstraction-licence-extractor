@@ -1,6 +1,11 @@
 import {compareAlphanumeric} from "./formatting.ts";
+import type {OutputListDataItem} from "../api/generated/apiClient.ts";
 
 export const VERIFICATION_SECTIONS: readonly string[] = ['Linked Licences', 'Aggregates'];
+
+export const isVerificationSectionEmpty = (item: OutputListDataItem, sectionName: string): boolean =>
+    !(item.licenceSectionVerifications ?? [])
+        .some(section => section.licenceSectionName === sectionName && (section.licenceSectionItems?.length ?? 0) > 0);
 
 export const isVerificationSectionSelected = (
     sectionName: string | undefined,

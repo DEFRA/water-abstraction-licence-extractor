@@ -16,8 +16,7 @@ public class PdfDocument(
     IOutputService outputService,
     INoOcrPdfDocumentService noOcrPdfDocumentService,
     INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
-    LookupConfiguration configuration,
-    MetadataCollection? rawMetadata)
+    LookupConfiguration configuration)
 {
     public bool FromCache { get; } = fromCache;
     
@@ -40,8 +39,6 @@ public class PdfDocument(
     INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; } = noOcrPdfDocumentService;
 
     INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; } = noOcrAlternativePdfDocumentService;
-
-    public MetadataCollection? RawMetadata { get; set; } = rawMetadata;
     
     int SkipFileIfMoreThenPages { get; set; } = configuration.SkipFileWhenMoreThenPages;
 
@@ -171,6 +168,8 @@ public class PdfDocument(
     public ImageMetadata? ImagesMetadata { get; set; }
     
     public Dictionary<int, string>? AllDocumentLines { get; set; }
+    
+    public Dictionary<string, object>? PagesMetadata { get; set; }
 
     public void Dispose()
     {

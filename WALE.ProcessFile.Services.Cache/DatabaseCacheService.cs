@@ -184,7 +184,7 @@ public class DatabaseCacheService(
         return linesAndWords;
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -192,7 +192,7 @@ public class DatabaseCacheService(
 
         if (!string.IsNullOrEmpty(existing))
         {
-            return request;
+            throw new Exception($"There are {existing} ocr pages metadata");
         }
         
         var data = new Dictionary<string, object>
@@ -202,7 +202,9 @@ public class DatabaseCacheService(
         };
 
         var dataStr = JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions());
-        return await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
+        await databaseWriteService.SaveNoOcrPagesMetadata(request, dataStr, request.ProcessRunId);
+
+        return data;
     }
 
     public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)

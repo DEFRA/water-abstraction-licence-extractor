@@ -383,7 +383,7 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
         return bytes.Length;
     }
     
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -403,7 +403,7 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
             metadataFilename,
             JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions()));
 
-        return request;
+        return data;
     }
 
     public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)

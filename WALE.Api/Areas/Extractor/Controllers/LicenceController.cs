@@ -175,10 +175,13 @@ public class LicenceController(
             return BadRequest("Pdf document is not cached and could not be loaded to be filleted");
         }
         
-        if (pdfDocument.RawMetadata == null)
+        var rawMetadata = new MetadataCollection
         {
-            return Problem("Metadata came back null - should not happen");
-        }
+            AllDocumentLines = pdfDocument.AllDocumentLines!,
+            ImageMetadata = pdfDocument.ImagesMetadata!,
+            PagesMetadata = pdfDocument.PagesMetadata!,
+            SizeBytes = pdfDocument.SizeBytes!.Value,
+        };
         
         const string alreadyCached = "ALREADY_CACHED";
         const string filleted = "FILLETED";
@@ -186,7 +189,7 @@ public class LicenceController(
         var responseObject = new FilletDocumentResponse
         {
             Result = pdfDocument.FromCache ? alreadyCached : filleted,
-            Metadata = pdfDocument.RawMetadata
+            Metadata = rawMetadata
         };
         
         return Ok(responseObject);

@@ -70,8 +70,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             outputService,
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
-            configuration,
-            metadata);
+            configuration);
 
         if (metadata is { PagesMetadata: { } pagesMetadata, AllDocumentLines: { } allDocumentLines })
         {
@@ -81,14 +80,16 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 outputService,
                 configuration.SkipFileWhenMoreThenPages);
             
+            pdfDocument.PagesMetadata = metadata.PagesMetadata;
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
-        
+            
+            pdfDocument.AllDocumentLines = metadata.AllDocumentLines;
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
                 pdfDocument,
                 configuration,
                 pagesMetadata,
                 allDocumentLines);
-        
+            
             return pdfDocument;
         }
         
@@ -123,15 +124,6 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             cacheService);
 
         await Task.WhenAll(saveAllPagesTextTask, saveImageMetadataTask);
-
-        pdfDocument.RawMetadata = new MetadataCollection
-        {
-            AllDocumentLines = pdfDocument.AllDocumentLines!,
-            ImageMetadata = pdfDocument.ImagesMetadata!,
-            PagesMetadata = pdfDocument.ImagesMetadata.Pages!,
-            SizeBytes = pdfDocument.SizeBytes!.Value,
-        };
-        
         return pdfDocument;
     }
 
@@ -224,9 +216,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         
         pdfDocument.ImagesMetadata = await imagesMetadataTask;
         
-        var (lines, linesByPage) = await documentLinesTask;
+        var (lines, linesByPage, pagesMetadata) =
+            await documentLinesTask;
+
         pdfDocument.DocumentLines = lines;
         pdfDocument.AllDocumentLines = linesByPage;
+        pdfDocument.PagesMetadata = pagesMetadata;
     }
     
     private async Task SaveImageMetadataAsync(
@@ -310,12 +305,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return Task.FromResult(documentLines);
     }
 
-    public async Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage)> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
-        PdfDocument pdfDocument,
-        LookupConfiguration configuration,
-        ICacheService cacheService,
-        IOutputService outputService,
-        int processRunId)
+    public async Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage, Dictionary<string, object> PagesMetadata)>
+        GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
+            PdfDocument pdfDocument,
+            LookupConfiguration configuration,
+            ICacheService cacheService,
+            IOutputService outputService,
+            int processRunId)
     {
         var documentLines = new List<DocumentLine>();
         
@@ -401,7 +397,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 .OrderBy(page => page.Request.PageNumber)
                 .ToList());
 
-        await saveNoOcrPagesMetadataTask;
+        var returnPagesMetadata = await saveNoOcrPagesMetadataTask;
         
         documentLines = documentLines
             .OrderBy(documentLine => documentLine.PageNumber)
@@ -414,7 +410,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             $"{getPagesDuration.TotalMilliseconds}ms was for getting pages in code, " +
             $"{processPagesDuration.TotalMilliseconds}ms was for processing pages)- {pdfDocument.PdfFilename}");
         
-        return (documentLines, allDocumentLines);
+        return (documentLines, allDocumentLines, returnPagesMetadata);
     }
 
     private async Task SavePageScreenshotInternalAsync(

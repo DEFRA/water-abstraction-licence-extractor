@@ -98,7 +98,9 @@ public class TestCacheService : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, List<Dictionary<string, object>> pagesMetadata)
+    public Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
+        NoOcrServiceMetadataCacheRequest request,
+        List<Dictionary<string, object>> pagesMetadata)
     {
         throw new NotImplementedException();
     }

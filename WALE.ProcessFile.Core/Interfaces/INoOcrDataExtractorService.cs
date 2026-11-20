@@ -16,7 +16,7 @@ public interface INoOcrDataExtractorService
         int processRunId,
         bool shouldFilletExternally);
     
-    public Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage)> 
+    public Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage, Dictionary<string, object> PagesMetadata)> 
         GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             PdfDocument pdfDocument,
             LookupConfiguration configuration,

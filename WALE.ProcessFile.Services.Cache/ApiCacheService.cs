@@ -240,7 +240,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return int.Parse(content);
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -255,12 +255,17 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             pageLines = pagesMetadataJson
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
-        return request;
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseJson = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            responseContent,
+            JsonHelper.GetSerializerOptions());
+        
+        return responseJson!;
     }
 
     public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
@@ -728,7 +733,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             JsonHelper.GetSerializerOptions());
 
         var tsDuration = DateTime.UtcNow - dtStart;
-        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - {nameof(FilletDocumentAsync)} for {pdfFileName} responded '{responseJson}', took {tsDuration.TotalMilliseconds}ms");
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - {nameof(FilletDocumentAsync)} for " +
+            $"{pdfFileName} responded '{responseDeserialised?.Result}', took {tsDuration.TotalMilliseconds}ms");
         
         response.EnsureSuccessStatusCode();
         return responseDeserialised!.Metadata;

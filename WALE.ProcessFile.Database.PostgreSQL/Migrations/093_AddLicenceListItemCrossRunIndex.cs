@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(92)]
+[Migration(93)]
 public sealed class AddLicenceListItemCrossRunIndex : Migration
 {
     public override void Up()
@@ -10,7 +10,7 @@ public sealed class AddLicenceListItemCrossRunIndex : Migration
         // Must match AddLicenceNumbersFilter's lower(licence_number) - an index on the bare
         // column does not serve it.
         Execute.Sql("""
-                        CREATE INDEX ix_lic_list_number_run
+                        CREATE INDEX IF NOT EXISTS ix_lic_list_number_run
                         ON licence_list_item (
                             lower(licence_number),
                             process_run_id DESC

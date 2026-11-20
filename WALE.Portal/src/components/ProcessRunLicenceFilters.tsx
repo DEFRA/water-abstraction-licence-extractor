@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import type { ProcessRunQuery } from "../class/ProcessRunQuery.tsx";
 import type { OutputListDataItemKey} from "../utils/types.ts";
+import type { RegionOption } from "../api/generated/apiClient.ts";
 import { VERIFICATION_SECTIONS } from "../utils/verificationSections.ts";
 
 type ProcessRunLicenceFiltersProps = {
     issuers?: string[];
+    regions?: RegionOption[];
     shortLicenceIds?: string[];
     issueDates?: string[];
     query: ProcessRunQuery;
@@ -18,6 +20,7 @@ export function ProcessRunLicenceFilters({
                                              query,
                                              setQuery,
                                              issuers,
+                                             regions,
                                              shortLicenceIds,
                                              issueDates,
                                              setPageNumber
@@ -62,6 +65,7 @@ export function ProcessRunLicenceFilters({
             ocrScan: undefined,
             issueYear: undefined,
             issuer: undefined,
+            regionId: undefined,
             meansFound: undefined,
             isLicenceNumberFlagged: undefined,
             isIssueDateFlagged: undefined,
@@ -323,6 +327,27 @@ export function ProcessRunLicenceFilters({
 
             <td>
                 <select
+                    className={pendingQuery.regionId === undefined ? "" : "filter-active"}
+                    value={pendingQuery.regionId ?? ""}
+                    onChange={e =>
+                        updatePendingQuery(
+                            "regionId",
+                            e.target.value === "" ? undefined : Number(e.target.value)
+                        )
+                    }
+                >
+                    <option value="">All regions</option>
+
+                    {regions?.map(region => (
+                        <option key={region.regionId} value={region.regionId}>
+                            {region.regionName}
+                        </option>
+                    ))}
+                </select>
+            </td>
+
+            <td>
+                <select
                     className={pendingQuery.meansFound === undefined ? "" : "filter-active"}
                     value={
                         pendingQuery.meansFound === undefined
@@ -472,6 +497,9 @@ export function ProcessRunLicenceFilters({
         </td>
         <td style={{width: '6%'}}>
             Issuer <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issuer'); }}>&#8693;</a>
+        </td>
+        <td style={{width: '5%'}}>
+            Region <a href="#" onClick={(e) => { e.preventDefault(); handleSort('regionId'); }}>&#8693;</a>
         </td>
         <td style={{width: '7%'}}>
             Means of abs. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>

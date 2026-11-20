@@ -18,6 +18,8 @@ public class CumulativeFilterCounts
 
     public int? Issuers { get; init; }
 
+    public int? Regions { get; init; }
+
     public int? MeansOfAbs { get; init; }
 
     public int? LinkedLicences { get; init; }

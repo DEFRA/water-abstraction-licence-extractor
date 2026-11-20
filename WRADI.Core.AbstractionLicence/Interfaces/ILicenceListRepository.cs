@@ -24,6 +24,8 @@ public interface ILicenceListRepository
 
     Task<List<string>> GetLicenceListIssuersAsync(int processRunId);
     
+    Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId);
+    
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
     
     Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);

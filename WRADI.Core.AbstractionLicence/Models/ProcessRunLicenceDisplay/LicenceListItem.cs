@@ -42,6 +42,8 @@ public sealed class LicenceListItem
 
     public string? Issuer { get; set; }
 
+    public int? RegionId { get; set; }
+
     public bool MeansFound { get; set; }
 
     public string? Status { get; set; }

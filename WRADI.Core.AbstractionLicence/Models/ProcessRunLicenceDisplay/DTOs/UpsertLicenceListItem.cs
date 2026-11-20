@@ -46,6 +46,8 @@ public sealed class UpsertLicenceListItem
 
     public string? Issuer { get; init; }
 
+    public int? RegionId { get; init; }
+
     public bool MeansFound { get; init; }
 
     public string? Status { get; init; }

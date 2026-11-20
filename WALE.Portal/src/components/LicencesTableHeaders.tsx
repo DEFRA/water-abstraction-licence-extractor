@@ -25,7 +25,7 @@ export function LicencesTableHeaders({
     return (
         <>
             <tr>
-                <td colSpan={11}></td>
+                <td colSpan={12}></td>
                 <td>
                     <input
                         type="checkbox"
@@ -64,6 +64,9 @@ export function LicencesTableHeaders({
                 </td>
                 <td style={{width: '6%'}}>
                     Issuer <a href="#" onClick={(e) => { e.preventDefault(); handleSort('issuer'); }}>&#8693;</a>
+                </td>
+                <td style={{width: '5%'}}>
+                    Region <a href="#" onClick={(e) => { e.preventDefault(); handleSort('regionId'); }}>&#8693;</a>
                 </td>
                 <td style={{width: '7%'}}>
                     Means of abs. <a href="#" onClick={(e) => { e.preventDefault(); handleSort('meansFound'); }}>&#8693;</a>

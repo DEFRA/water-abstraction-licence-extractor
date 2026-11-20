@@ -3,6 +3,7 @@ export type ProcessRunQuery = {
     skip: number;
     take: number;
     issuer?: string;
+    regionId?: number;
     limitsEmpty?: boolean;
     aggregatesFilter?: string;
     aggregatePrimaryTypeFilter?: string;

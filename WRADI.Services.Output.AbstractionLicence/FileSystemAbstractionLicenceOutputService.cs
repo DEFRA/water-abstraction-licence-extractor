@@ -222,6 +222,11 @@ public class FileSystemAbstractionLicenceOutputService(string outputFolder) : IA
         throw new NotImplementedException();
     }
 
+    public Task<List<int>> GetDistinctRegionIdsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
     {
         throw new NotImplementedException();

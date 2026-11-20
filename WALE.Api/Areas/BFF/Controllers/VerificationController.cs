@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using WALE.Api.Areas.BFF.Models;
 using WALE.Api.Interfaces;
 using WALE.Api.Services;
+using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.Tools.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -233,8 +234,13 @@ public async Task<IActionResult> ImportCsvChunk(
     {
         var processRuns = await outputService.GetAllProcessRunsAsync();
 
-        var processRunId = processRuns.OrderByDescending(x => x.ProcessRunId).FirstOrDefault()?.ProcessRunId ?? 0;
-
+        var processRunId = processRuns
+            .Where(x =>
+                x is { DocumentType: DocumentTypes.AbstractionLicence, EndDateTimeUtc: not null })
+            .Select(x => x.ProcessRunId)
+            .DefaultIfEmpty(0)
+            .Max();
+        
         if (processRunId != 0)
         {
             _ = Task.Run((Func<Task?>)(async () =>

@@ -48,7 +48,8 @@ public static class DmsHelper
             string dmsReportPath,
             bool getFromFile,
             IAbstractionLicenceCacheService cacheService,
-            bool checkWeHaveFile = true)
+            bool checkWeHaveFile = true,
+            bool includeNonLiveLicences = false)
     {
         var dtStartGetDms = DateTime.Now;
         
@@ -66,7 +67,8 @@ public static class DmsHelper
             filesAndMapping = await GetFilesAndMappingFromLicenceFinderResultsAsync(
                 fileService,
                 cacheService,
-                checkWeHaveFile);
+                checkWeHaveFile,
+                includeNonLiveLicences);
         }
 
         filesAndMapping.FilenamesWithLicenceNumbers = filesAndMapping.FilenamesWithLicenceNumbers
@@ -213,7 +215,8 @@ public static class DmsHelper
     GetFilesAndMappingFromLicenceFinderResultsAsync(
         IFileService fileService,
         IAbstractionLicenceCacheService cacheService,
-        bool checkWeHaveFile)
+        bool checkWeHaveFile,
+        bool includeNonLiveLicences)
     {
         var filenamesWithLicenceNumbers = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
         var licenceNumbersWithFilenames = new Dictionary<string, (DmsFileData, NaldLicenceSimple)>();
@@ -239,7 +242,7 @@ public static class DmsHelper
                 continue;
             }
 
-            if (licenceFinderResult.LiveLicenceFound != true)
+            if (!includeNonLiveLicences && licenceFinderResult.LiveLicenceFound != true)
             {
                 continue;
             }

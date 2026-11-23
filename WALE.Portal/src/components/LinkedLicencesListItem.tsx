@@ -11,13 +11,16 @@ import {ReferencedAlongsideTag} from "./ReferencedAlongsideTag.tsx";
 import {IncomingTag} from "./IncomingTag.tsx";
 import {OutgoingTag} from "./OutgoingTag.tsx";
 import {HistoryTag} from "./HistoryTag.tsx";
+import {SupersededTag} from "./SupersededTag.tsx";
 
 interface LinkedLicencesListItemProps {
     linkedLicence: LinkedLicence;
+    superseded?: LinkedLicence[];
     onOpenReport: (filename: string, licenceId: number, matchesResultId: number) => void;
 }
 
-export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLicencesListItemProps) {
+export function LinkedLicencesListItem(
+    {linkedLicence, superseded = [], onOpenReport}: LinkedLicencesListItemProps) {
     const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
     let licenceNumber = linkedLicence.licenceNumber;
     let backLink = linkedLicence.containedIn?.length! > 0
@@ -62,6 +65,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
                 <HistoryTag containedIn={linkedLicence.containedIn}/>
+                <SupersededTag superseded={superseded}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );
@@ -76,6 +80,7 @@ export function LinkedLicencesListItem({linkedLicence, onOpenReport}: LinkedLice
                 <OutgoingTag containedIn={linkedLicence.containedIn}/>
                 <AggregateTag isBecauseOfAggregate={linkedLicence.isBecauseOfAggregate}/>
                 <HistoryTag containedIn={linkedLicence.containedIn}/>
+                <SupersededTag superseded={superseded}/>
                 <ImpoundmentTag licenceType={linkedLicence.licenceType}/>
             </li>
         );

@@ -63,7 +63,7 @@ public class InternalTesseractOcrDataExtractorService(
             {
                 // One entry per screenshot provider, and a provider with no stored render comes
                 // back null - skipping it leaves the other provider's page to be read.
-                if (bytes is null || bytes.Length == 0)
+                if (bytes.Length == 0)
                 {
                     ConsoleHelper.WriteLine($"WARNING - TesseractInternal - Couldn't process as bytes length was zero - {fileId}");
                     continue;
@@ -87,9 +87,9 @@ public class InternalTesseractOcrDataExtractorService(
                 ConsoleHelper.WriteLine($"ERROR - TesseractInternal - Timeout {tex}");
                 canSave = true;
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - {e} - {fileId}");
+                ConsoleHelper.WriteLine($"ERROR - TesseractInternal - {ex} - {fileId}");
                 // TODO log
             }
         }
@@ -138,20 +138,19 @@ public class InternalTesseractOcrDataExtractorService(
         var cts = new CancellationTokenSource();
         cts.CancelAfter(timeout);
         
-        var token = cts.Token;
+        var cancellationToken = cts.Token;
         
         var processTask = Task.Run(() =>
         {
             try
             {
                 var tesseractEngine = GetEngine();
-                token.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
                 
                 var page = tesseractEngine.Process(ocrImage, ConvertPageSegMode(pageSegMode));
-            
-                token.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
                 
-                var textLines = GetTextLinesFromPageAsync(page, token);
+                var textLines = GetTextLinesFromPageAsync(page, cancellationToken);
                 return textLines;
             }
             catch (Exception e)
@@ -159,12 +158,12 @@ public class InternalTesseractOcrDataExtractorService(
                 ConsoleHelper.WriteLine($"ERROR - TesseractInternal - (Inside task run) {e}");
                 return null;
             }
-        }, token);
+        }, cancellationToken);
         
-        const int maxExecutionTimeMs2 = 31_000;
-        var timeout2 = TimeSpan.FromMilliseconds(maxExecutionTimeMs2);
+        const int altMaxExecutionTimeMs = 31_000;
+        var altTimeout = TimeSpan.FromMilliseconds(altMaxExecutionTimeMs);
         
-        var delay = Task.Delay(timeout2);
+        var delay = Task.Delay(altTimeout, cancellationToken);
         var raceResult = await Task.WhenAny(processTask, delay);
 
         if (raceResult == delay)
@@ -217,21 +216,13 @@ public class InternalTesseractOcrDataExtractorService(
                 continue;
             }
 
-            //var dtLineStart = DateTime.Now;
-            var line = new string(lineText
-                .Where(ch => ch != '\n')
-                .ToArray());
-            //var tsLine = (DateTime.Now - dtLineStart).TotalMilliseconds;
-
             var words = new List<DocumentLineWord?>();
 
             do
             {
                 token.ThrowIfCancellationRequested();
                 
-                //var dtWordStart = DateTime.Now;
                 var wordText = iterator.GetText(PageIteratorLevel.Word);
-                //var tsWord = (DateTime.Now - dtWordStart).TotalMilliseconds;
                 
                 var wordConfidence = iterator.GetConfidence(PageIteratorLevel.Word);
                 iterator.TryGetBoundingBox(PageIteratorLevel.Word, out var coordinates);

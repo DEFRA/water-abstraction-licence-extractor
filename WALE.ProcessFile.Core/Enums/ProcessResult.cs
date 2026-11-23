@@ -4,5 +4,6 @@ public enum ProcessResult
 {
     Ok = 1,
     RepeatableError = 2,
-    UnknownOrTransientError = 3
+    UnknownOrTransientError = 3,
+    StartUpFailed = 4
 }

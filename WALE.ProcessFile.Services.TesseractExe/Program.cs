@@ -1,5 +1,9 @@
 ﻿using System.Globalization;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using NetMQ;
+using NetMQ.Sockets;
+using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Services.Cache;
@@ -7,55 +11,26 @@ using WALE.ProcessFile.Services.Output;
 using WALE.ProcessFile.Services.Tesseract;
 
 string? imageReference = null;
+RequestSocket? client = null;
 
 try
 {
-    var configuration = GetConfiguration();
-
-    var writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
-    var writeToFile = configuration.GetValue<bool>("writeDebugLogs");
-    
-    var argsStringForLogging = string.Join(' ', args);
-
-    await WriteLogFileIfDebugModeAsync(
-        "Started.txt",
-        $"{typeof(Program).Assembly.GetName().Name} started - " + argsStringForLogging,
+    var (pageNumber,
+        imageNumber,
+        imageReferenceTemp,
+        fileId,
+        isPageScreenshot,
+        processRunId,
         writeToConsole,
-        writeToFile);
+        writeToFile,
+        tesseractService,
+        listenPortNumber) = await SetupAsync(args); // TODO get the port and image reference straight away outside of this
 
-    if (args.Length < 11)
-    {
-        await WriteLogFileIfDebugModeAsync(
-            "Error.txt",
-            "Not enough arguments provided",
-            true,
-            true,
-            true);
-
-        Environment.ExitCode = 1;
-        return;
-    }
-
-    var pageSegMode = Enum.Parse<WALE.ProcessFile.Core.Enums.PageSegMode>(args[0]);
-    var bytesMode = args[1];
-    var pageNumber = int.Parse(args[2]);
-    var imageNumber = int.Parse(args[3]);
-    imageReference = args[4];
-    var fileId = Guid.Parse(args[5]);
-    var isPageScreenshot = bool.Parse(args[6]);
-    var processRunId = int.Parse(args[7]);
-    var cacheFolderOrApiUrl = args[8];
-    var outputFolder = args[9];
-    var tessDataPath = args[10];
-
-    var isFileMode = bytesMode.Equals("file", StringComparison.OrdinalIgnoreCase);
+    client = new RequestSocket($">tcp://localhost:{listenPortNumber}");
+    client.SendFrame(TesseractOcrDataExtractorService.StartedOkay);
+    var serverAcknowledgement = client.ReceiveFrameString();
     
-    var tesseractService = GetTesseractService(
-        isFileMode,
-        pageSegMode,
-        cacheFolderOrApiUrl,
-        outputFolder,
-        tessDataPath);
+    imageReference = imageReferenceTemp;
 
     var textLines = await tesseractService.ProcessAsync(
         "PdfPig",
@@ -66,27 +41,102 @@ try
         fileId,
         processRunId);
     
-    await WriteLogFileIfDebugModeAsync(
+    await WriteResponseAsync(
         "Finished.txt",
-        $"{typeof(Program).Assembly.GetName().Name} finished with {textLines.Count} rows",
+        $"{typeof(Program).Assembly.GetName().Name} finished with {textLines.Count} rows - {serverAcknowledgement}",
         writeToConsole,
         writeToFile);
+
+    var dataStr = JsonSerializer.Serialize(textLines);
+    client.SendFrame($"{TesseractOcrDataExtractorService.FinishedPrefix}{dataStr}");
 }
 catch (Exception ex)
 {
-    await WriteLogFileIfDebugModeAsync(
+    await WriteResponseAsync(
         "Error.txt",
          $"{ex} - {imageReference}",
         true,
         true,
         true);
-
-    // The caller has only the exit code to go on, so exiting zero here is indistinguishable
-    // from OCR that ran and found no text.
+    
+    client?.SendFrame($"{TesseractOcrDataExtractorService.ErroredPrefix}: {ex}");
     Environment.ExitCode = 1;
 }
 
 return;
+
+static async Task<(
+    int pageNumber,
+    int imageNumber,
+    string imageReference,
+    Guid fileId,
+    bool isPageScreenshot,
+    int processRunId,
+    bool writeToConsole,
+    bool writeToFile,
+    InternalTesseractOcrDataExtractorService tesseractService,
+    int listenPortNumber)> SetupAsync(string[] args)
+{
+    var configuration = GetConfiguration();
+
+    var writeToConsole = configuration.GetValue<bool?>("writeToConsole") ?? true;
+    var writeToFile = configuration.GetValue<bool?>("writeDebugLogs") ?? false;
+    
+    var argsStringForLogging = string.Join(' ', args);
+
+    await WriteResponseAsync(
+        "Started.txt",
+        $"{typeof(Program).Assembly.GetName().Name} started - " + argsStringForLogging,
+        writeToConsole,
+        writeToFile);
+
+    if (args.Length != 1)
+    {
+        await WriteResponseAsync(
+            "Error.txt",
+            "Not enough / too many arguments provided",
+            true,
+            true,
+            true);
+
+        Environment.ExitCode = 1;
+        throw new Exception("Not enough / too many arguments provided");
+    }
+    
+    var pageSegMode = Enum.Parse<PageSegMode>(args[0]);
+    var bytesMode = args[1];
+    var pageNumber = int.Parse(args[2]);
+    var imageNumber = int.Parse(args[3]);
+    var imageReference = args[4];
+    var fileId = Guid.Parse(args[5]);
+    var isPageScreenshot = bool.Parse(args[6]);
+    var processRunId = int.Parse(args[7]);
+    var cacheFolderOrApiUrl = args[8];
+    var outputFolder = args[9];
+    var tessDataPath = args[10];
+    var listenPortNumber = int.Parse(args[11]);
+
+    var isFileMode = bytesMode.Equals("file", StringComparison.OrdinalIgnoreCase);
+    
+    var tesseractService = GetTesseractService(
+        isFileMode,
+        pageSegMode,
+        cacheFolderOrApiUrl,
+        outputFolder,
+        tessDataPath);
+    
+    return (
+        pageNumber,
+        imageNumber,
+        imageReference,
+        fileId,
+        isPageScreenshot,
+        processRunId,
+        writeToConsole,
+        writeToFile,
+        tesseractService,
+        listenPortNumber);
+}
 
 static IConfiguration GetConfiguration()
 {
@@ -100,7 +150,7 @@ static IConfiguration GetConfiguration()
 
 static InternalTesseractOcrDataExtractorService GetTesseractService(
     bool isFileMode,
-    WALE.ProcessFile.Core.Enums.PageSegMode pageSegMode,
+    PageSegMode pageSegMode,
     string cacheFolderOrApiUrl,
     string outputFolder,
     string tessDataPath)
@@ -139,7 +189,7 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
         pageSegMode);
 }
 
-static async Task WriteLogFileIfDebugModeAsync(
+static async Task WriteResponseAsync(
     string filename,
     string content,
     bool shouldConsoleWrite,

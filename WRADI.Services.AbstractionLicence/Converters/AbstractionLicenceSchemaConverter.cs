@@ -1712,7 +1712,11 @@ public static class AbstractionLicenceSchemaConverter
         AggregateHelper.DeDuplicateAggregates(allLicences);
         AggregateAssertions.AssertNoDuplicateAggregates(allLicences);
 
-        returnLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(returnLicenceSets, true, true);
+        returnLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
+            returnLicenceSets,
+            true,
+            true,
+            primaryLicence.LicenceNumber?.Value);
 
         return returnLicenceSets;
     }
@@ -1820,7 +1824,8 @@ public static class AbstractionLicenceSchemaConverter
     private static List<LicenceSet> RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
         IEnumerable<LicenceSet> licenceSets,
         bool applyToLicences,
-        bool applyToLicenceSets)
+        bool applyToLicenceSets,
+        string? keepSingleSetForLicenceNumber = null)
     {
         var licenceSetsList = licenceSets.ToList();
 
@@ -1847,11 +1852,9 @@ public static class AbstractionLicenceSchemaConverter
             return licenceSetsList;
         }
 
-        var allNoneSingleSets = licenceSetsList
-            .Where(ls => ls.LicenceSetType != LicenceSetType.SingleLicenceOnly)
-            .ToList();
-
-        return allNoneSingleSets.Count >= 1 ? allNoneSingleSets : licenceSetsList;
+        return LicenceSetHelper.WithRedundantSingleSetsRemoved(
+            licenceSetsList,
+            keepSingleSetForLicenceNumber);
     }
 
     private static async Task<List<Licence>> GetLicenceLinkedFromLinkedLicenceAsync(

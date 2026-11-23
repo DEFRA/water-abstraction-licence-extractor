@@ -117,11 +117,21 @@ public static class SharedHelper
             $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
         var idx = 1;
-        
+        var progressStart = DateTime.Now;
+
         foreach (var licenceSetGroup in licenceSetGroups)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} {idx++} " +
-                $"of {licenceSetGroups.Count} in progress....");
+            if (idx % 250 == 0)
+            {
+                var elapsed = DateTime.Now - progressStart;
+                var perGroup = idx > 1 ? elapsed.TotalSeconds / (idx - 1) : 0;
+
+                ConsoleHelper.WriteLine($"INFO - {loggingPrefix} {idx} of {licenceSetGroups.Count} "
+                    + $"({100.0 * idx / licenceSetGroups.Count:F1}%), {elapsed.TotalMinutes:F1} min elapsed, "
+                    + $"{perGroup * (licenceSetGroups.Count - idx) / 60:F1} min remaining");
+            }
+
+            idx++;
             
             if (licenceSetGroup.Count == 0)
             {
@@ -216,17 +226,11 @@ public static class SharedHelper
 
                     if (newLicenceSetsLoop.Count == 0)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)}  {idx} " +
-                            $"licence sets already have been saved");
-                        
                         continue;
                     }
 
                     foreach (var licenceSet in newLicenceSetsLoop)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} {idx} " +
-                            $"saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
-                        
                         // Not batched as we get a 413 on the server
                         await outputService.SaveLicenceSetAsync(
                             licenceSet.Value,

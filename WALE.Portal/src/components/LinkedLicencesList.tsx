@@ -1,7 +1,6 @@
 import type {OutputListDataItem} from "../api/generated/apiClient.ts";
 import LinkedLicencesListItem from "./LinkedLicencesListItem";
 import {compareAlphanumeric} from "../utils/formatting.ts";
-import {groupBySuccession} from "../utils/linkedLicenceSuccession.ts";
 
 interface LinkedLicencesListProps {
     item: OutputListDataItem;
@@ -13,15 +12,13 @@ export function LinkedLicencesList({item, onOpenReport}: LinkedLicencesListProps
         return 'No Linked Licences';
     }
 
-    const grouped = groupBySuccession(item.linkedLicences)
-        .sort((a, b) => compareAlphanumeric(a.current.licenceNumber, b.current.licenceNumber));
+    const sorted = [...item.linkedLicences].sort((a, b) => compareAlphanumeric(a.licenceNumber, b.licenceNumber));
 
     return (<ul>
-        {grouped.map((group, index) => (
+        {sorted.map((ll, index) => (
             <LinkedLicencesListItem
                 key={index}
-                linkedLicence={group.current}
-                superseded={group.superseded}
+                linkedLicence={ll}
                 onOpenReport={onOpenReport}
             />
         ))}

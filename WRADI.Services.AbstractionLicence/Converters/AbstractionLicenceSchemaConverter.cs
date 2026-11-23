@@ -477,7 +477,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
 
-        // Swap out linked licence numbers to the newest ones where needed
+        // The superseded numbers are kept deliberately: lineage licence sets group on them.
         foreach (var linkedLicence in linkedLicences)
         {
             var (hasSuccessor, history) =
@@ -642,30 +642,43 @@ public static class AbstractionLicenceSchemaConverter
         };
     }
 
-    private static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
+    internal static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
     {
-        var currentContainedIn = new List<ContainedInInformation>();
+        var currentContainedIn = (existing.ContainedIn ?? []).ToList();
+
         foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
         {
-            if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
+            var toAdd =
+                currentContained.History?.Any(item =>
+                    item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true
+                    ? AsFollowOn(currentContained)
+                    // A copy: sharing the instance lets a later History assignment on one
+                    // licence stamp its chain onto the other.
+                    : currentContained.Clone();
+
+            if (currentContainedIn.Any(containedIn =>
+                AreContainedInFundamentallyEqual(containedIn, toAdd)))
             {
-                currentContainedIn.Add(new ContainedInInformation
-                {
-                    Source = GetFollowOnSource(currentContained.Source),
-                    Direction = currentContained.Direction,
-                    SectionName =  currentContained.SectionName,
-                    LinkReason =  currentContained.LinkReason,
-                    LineNumber =  currentContained.LineNumber,
-                    PageNumber = currentContained.PageNumber
-                }); 
+                continue;
             }
-            else
-            {
-                currentContainedIn.Add(currentContained);
-            }
+
+            currentContainedIn.Add(toAdd);
         }
 
         existing.ContainedIn = currentContainedIn.ToArray();
+    }
+
+    private static ContainedInInformation AsFollowOn(ContainedInInformation containedIn)
+    {
+        return new ContainedInInformation
+        {
+            Source = GetFollowOnSource(containedIn.Source),
+            Direction = containedIn.Direction,
+            SectionName = containedIn.SectionName,
+            LinkReason = containedIn.LinkReason,
+            LineNumber = containedIn.LineNumber,
+            PageNumber = containedIn.PageNumber
+        };
     }
 
     private static InformationSource GetFollowOnSource(InformationSource currentContainedSource)

@@ -99,10 +99,10 @@ public class FileTypeIdentifierServiceTests
             new LocalFileService(""),
             new FileSystemCacheService(""),
             new FileSystemOutputService(""),
-            null,
-            null,
-            null,
-            null,
+            null!,
+            null!,
+            null!,
+            null!,
             1,
             DateTime.Now);
     }

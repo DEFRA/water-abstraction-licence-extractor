@@ -61,7 +61,7 @@ public class FileDataController(
             dateSource = summary.DateSource.ToString(),
             dateWarning = summary.DateWarning.ToString(),
             permitNumber = summary.PermitNumber,
-            originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
+            originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString())?.FileName,
             template = summary.Template,
             completeness = summary.Completeness,
             isScan = summary.IsScan
@@ -135,7 +135,7 @@ public class FileDataController(
             .Select(summary => (object)new
             {
                 fileId = summary.FileId,
-                originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString()).FileName,
+                originalFileName = discovery.GetValueOrDefault(summary.FileId.ToString())?.FileName,
                 template = summary.Template,
                 date = summary.SortDate?.ToString("yyyy-MM-dd"),
                 dateSource = summary.DateSource.ToString(),
@@ -154,7 +154,7 @@ public class FileDataController(
             .Select(result => (object)new
             {
                 fileId = result.FileId,
-                originalFileName = discovery.GetValueOrDefault(result.FileId.ToString()).FileName,
+                originalFileName = discovery.GetValueOrDefault(result.FileId.ToString())?.FileName,
                 template = (string?)null,
                 date = (string?)null,
                 dateSource = "None",

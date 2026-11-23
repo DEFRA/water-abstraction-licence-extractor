@@ -12,7 +12,7 @@ using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Services;
 
-public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, JsonSerializerOptions? jsonSerializerOptions = null)
+public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider)
     : IDatabaseWriteService
 {
     public async Task<ProcessRun> AddProcessRunAsync(ProcessRun processRun)

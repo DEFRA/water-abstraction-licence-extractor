@@ -36,7 +36,8 @@ public class TesseractOcrDataExtractorService(
     public const string SharedArgsPrefix = "SHARED_ARGS:";
     public const string PerFileArgsPrefix = "PER_FILE_ARGS:";
     
-    private List<LineAndWords>? _response;
+    private List<LineAndWords>? _responseData;
+    private ProcessResult _processResult;
     
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -138,7 +139,7 @@ public class TesseractOcrDataExtractorService(
                         new Exception("Tesseract external process returned a non-zero exit code"));
                 }
 
-                returnLines = externalProcessRanOk == ProcessResult.RepeatableError ? [] : _response;
+                returnLines = externalProcessRanOk == ProcessResult.RepeatableError ? [] : _responseData;
             }
 
             if (returnLines != null)
@@ -230,27 +231,35 @@ public class TesseractOcrDataExtractorService(
             });
 
             using var messageSyncContext = new NetMQRuntime();
-            messageSyncContext.Run(CommunicateAsync(
+            messageSyncContext.Run(CommunicateWithExeAsync(
                 listenPortNumber,
                 startupArgs,
                 sharedExeLifecycleArgs,
                 perFileArgs,
-                imageReference));
+                imageReference,
+                showDebugMessages,
+                pageNumber,
+                imageNumber,
+                fileId));
         }
         catch (Exception ex)
         {
             // TODO
         }
         
-        return Task.FromResult(ProcessResult.Ok);
+        return Task.FromResult(_processResult);
     }
 
-    private async Task CommunicateAsync(
+    private async Task CommunicateWithExeAsync(
         int listenPortNumber,
         string startupArgs,
         string sharedExeLifecycleArgs,
         string perFileArgs,
-        string imageReference)
+        string imageReference,
+        bool showDebugMessages,
+        int pageNumber,
+        int imageNumber,
+        Guid fileId)
     {
         using var server = new ResponseSocket($"@tcp://localhost:{listenPortNumber}");
             
@@ -261,7 +270,8 @@ public class TesseractOcrDataExtractorService(
                 Arguments = startupArgs,
                 FileName = dotnetPath,
                 UseShellExecute = false,
-                CreateNoWindow = true
+                CreateNoWindow = true,
+                RedirectStandardError = true
             });
 
         var timedOut = false;
@@ -309,6 +319,9 @@ public class TesseractOcrDataExtractorService(
                 $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
+            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);            
+            
+            _processResult = ProcessResult.StartUpFailed;
             return;
         }
 
@@ -320,7 +333,10 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            ConsoleHelper.WriteLine($"INFO - {Name} - External process returned {exeStartupResponse}");
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External process returned {exeStartupResponse}");
+            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            
+            _processResult = ProcessResult.StartUpFailed;
             return;
         }
         
@@ -344,6 +360,9 @@ public class TesseractOcrDataExtractorService(
                 $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
+            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            _processResult = ProcessResult.StartUpFailed;
+
             return;
         }
         
@@ -356,6 +375,10 @@ public class TesseractOcrDataExtractorService(
         else
         {
             ConsoleHelper.WriteLine($"INFO - {Name} - External process starting Tesseract failed with {tesseractSetupResponse}");
+            
+            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            _processResult = ProcessResult.StartUpFailed;
+
             return;
         }
         
@@ -367,6 +390,7 @@ public class TesseractOcrDataExtractorService(
         if (firstToFinish == processEndedTask)
         {
             var serverResponseMessage = "[NO MESSAGE RETURNED]";
+            ProcessResult processResult;
             
             if (server.HasIn)
             {
@@ -375,6 +399,9 @@ public class TesseractOcrDataExtractorService(
                     : server.ReceiveFrameString();
                 
                 HandlePerFileResponse(serverResponseMessage, imageReference);
+                (_, processResult) = await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+
+                _processResult = processResult;
                 return;
             }
             
@@ -382,12 +409,17 @@ public class TesseractOcrDataExtractorService(
                 $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
+            HandlePerFileResponse(serverResponseMessage, imageReference);
+            (_, processResult) = await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            
+            _processResult = processResult;
             return;
         }
         
         var perFileResponse = (await perFileResponseTask).Item1;
         HandlePerFileResponse(perFileResponse, imageReference);
 
+        await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
         await processEndedTask;
     }
 
@@ -399,7 +431,48 @@ public class TesseractOcrDataExtractorService(
             ? $"INFO - {Name} - Tesseract external completed successfully for {imageReference}"
             : $"ERROR - {Name} - Unexpectedly received error {perFileResponse} - {imageReference}");
 
-        _response = JsonSerializer.Deserialize<List<LineAndWords>>(perFileResponse[FinishedPrefix.Length..]);
+        _responseData = JsonSerializer.Deserialize<List<LineAndWords>>(perFileResponse[FinishedPrefix.Length..]);
+        _processResult = isFinishedOkay ? ProcessResult.Ok : ProcessResult.UnknownOrTransientError;
+    }
+
+    private async Task<(bool ShouldExit, ProcessResult ProcessResult)> GetConsoleErrorsAsync(
+        Process proc,
+        CancellationToken cancellationToken,
+        bool showDebugMessages,
+        int pageNumber,
+        int imageNumber,
+        Guid fileId)
+    {
+        while (await proc.StandardError.ReadLineAsync(cancellationToken) is { } line)
+        {
+            const string coreTesseractErrorPrefix = "\"Error: ";
+
+            if (line.StartsWith(coreTesseractErrorPrefix, StringComparison.Ordinal))
+            {
+                var repeatableErrors = new List<string>
+                {
+                    "Assert failed"
+                };
+
+                if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
+                {
+                    ConsoleHelper.WriteLine($"WARNING - {Name} - Failed with error: {line}");
+                    return (true, ProcessResult.RepeatableError);
+                }
+                
+                var exceptionMessage = line[line.IndexOf(coreTesseractErrorPrefix, StringComparison.Ordinal)..];
+                ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
+
+                return (true, ProcessResult.UnknownOrTransientError);;
+            }
+
+            if (showDebugMessages)
+            {
+                ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - {line}");
+            }
+        }
+
+        return (false, ProcessResult.Ok);
     }
     
     public void Dispose()

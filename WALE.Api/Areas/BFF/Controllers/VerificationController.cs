@@ -200,7 +200,7 @@ public async Task<IActionResult> ImportCsvChunk(
             completed = true
         });
     }
-    catch (HeaderValidationException exception)
+    catch (HeaderValidationException)
     {
         return BadRequest("Invalid file format, please check file columns.");
     }

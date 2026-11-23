@@ -14,7 +14,8 @@ public class DocumentLineWrapped
 
     public IReadOnlyList<DocumentLine> NextLines(IReadOnlyList<DocumentLineWrapped> lines, LabelToMatch label)
     {
-        return GetNextLines(lines, Index, label.NextLinesToFetch);
+        var nextLines = GetNextLines(lines, Index, label.NextLinesToFetch);
+        return nextLines ?? throw new ArgumentNullException(nameof(nextLines));
     }
     
     private static IReadOnlyList<DocumentLine> GetPreviousLines(IReadOnlyList<DocumentLineWrapped> lines, int startIndex, int numberToTake)

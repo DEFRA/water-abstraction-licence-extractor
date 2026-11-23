@@ -148,7 +148,7 @@ static async Task<(int PortNumber, bool WriteToConsole, bool WriteToFile)> Setup
         Environment.ExitCode = 1;
         throw new Exception("Not enough / too many arguments provided");
     }
-
+    
     return (int.Parse(args[0]), writeToConsole, writeToFile);
 }
 
@@ -225,38 +225,3 @@ static async Task WriteResponseAsync(
         filename,
         content + "\n" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
 }
-
-/*
-// ReSharper disable once MoveVariableDeclarationInsideLoopCondition
-string? line;
-
-while ((line = await proc.StandardError.ReadLineAsync(cancellationToken)) is not null)
-{
-    const string coreTesseractErrorPrefix = "\"Error: ";
-
-    if (line.StartsWith(coreTesseractErrorPrefix, StringComparison.Ordinal))
-    {
-        var repeatableErrors = new List<string>
-        {
-            "Assert failed"
-        };
-
-        if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
-        {
-            ConsoleHelper.WriteLine($"WARNING - {Name} - Failed with error: {line}");
-            return;
-        }
-
-        proc.Kill();
-
-        var exceptionMessage = line[line.IndexOf(coreTesseractErrorPrefix, StringComparison.Ordinal)..];
-        ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
-
-        return;
-    }
-
-    if (showDebugMessages)
-    {
-        ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - {line}");
-    }
-}*/

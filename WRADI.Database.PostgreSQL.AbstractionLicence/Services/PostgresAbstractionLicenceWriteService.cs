@@ -705,8 +705,7 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
 
                     break;
                 }
-                catch (HttpRequestException ex)
-                    when (attempt < maxRetries)
+                catch (HttpRequestException) when (attempt < maxRetries)
                 {
                     attempt++;
 

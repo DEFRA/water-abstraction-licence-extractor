@@ -5440,7 +5440,6 @@ public static class AbstractionLicenceSchemaConverter
             if (!licenceSetContainsType)
             {
                 throw new Exception("Doing some strange resetting here");
-                distinctLicenceSet.LicenceSetType = licencesLicenceSetType;
             }
         }
 

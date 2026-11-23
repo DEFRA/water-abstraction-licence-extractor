@@ -5234,14 +5234,29 @@ public static class AbstractionLicenceSchemaConverter
         LookupConfiguration lookupConfiguration,
         INaldDataLookupService naldDataLookupService)
     {
+        var stepStart = DateTime.Now;
+
+        void LogStep(string step)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - "
+                + $"{nameof(AddAdditionalLicenceSetsAsync)} - {step} in "
+                + $"{(DateTime.Now - stepStart).TotalSeconds:F1}s");
+
+            stepStart = DateTime.Now;
+        }
+
         var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
 
         var allLicences = distinctLicenceSets
             .SelectMany(lsg => lsg.Licences)
             .ToList();
 
+        LogStep($"{distinctLicenceSets.Count} distinct sets over {allLicences.Count} licences");
+
         LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+
+        LogStep("linked licence assertions");
 
         distinctLicenceSets.AddRange(
             await AddIncomingLinksAndLicenceSetReferencesAsync(
@@ -5249,23 +5264,33 @@ public static class AbstractionLicenceSchemaConverter
                 lookupConfiguration,
                 naldDataLookupService));
 
+        LogStep("incoming links and set references");
+
         LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
         AggregateVariationHelper.RemoveDuplicateVariations(allLicences);
         AggregateAssertions.AssertNoDuplicateVariations(allLicences);
+
+        LogStep("duplicate variations");
         
         distinctLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
             distinctLicenceSets,
             true,
             false);
         
+        LogStep("redundant single sets");
+
         /*distinctLicenceSets =*/ AssertMissingLicenceSetsReferencedInLicence(allLicences, distinctLicenceSets);
+
+        LogStep("missing set assertions");
 
         distinctLicenceSets = PreferLargerLicenceSets(
             distinctLicenceSets,
             LicenceSetType.LicencesGroupedByLineage);
         
+        LogStep($"prefer larger sets, {distinctLicenceSets.Count} sets out");
+
         return distinctLicenceSets;
     }
 

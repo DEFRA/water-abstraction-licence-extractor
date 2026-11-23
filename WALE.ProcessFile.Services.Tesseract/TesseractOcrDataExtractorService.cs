@@ -29,12 +29,14 @@ public class TesseractOcrDataExtractorService(
     public string Name => $"TesseractOcr-{pageSegMode}";
     public int Id { get; set; } = id;
 
-    public const string StartedOkay = "STARTED:OK";
+    public const string ExeStartedOkay = "EXE_STARTED:OK";
+    public const string TesseractSetupOkay = "TESSERACT_SETUP:OK";
     public const string FinishedPrefix = "FINISHED:";
     public const string ErroredPrefix = "ERROR:";
-    public const string Acknowledged = "ACKKNOWLEDGED:OK";
-
-    private List<LineAndWords>? _response = null;
+    public const string SharedArgsPrefix = "SHARED_ARGS:";
+    public const string PerFileArgsPrefix = "PER_FILE_ARGS:";
+    
+    private List<LineAndWords>? _response;
     
     public async Task<IReadOnlyList<DocumentLine>>
         GetTextLinesFromImageAsync(
@@ -73,8 +75,6 @@ public class TesseractOcrDataExtractorService(
         }
         else
         {
-            var canSave = true;
-            
             // NOTE - Following is intended for debugging - shouldn't be set for long, as some files
             // crash Tesseract and take our process down with it
             var runTesseractInsideThisProcess = false; 
@@ -137,22 +137,11 @@ public class TesseractOcrDataExtractorService(
                         $"{pdfDocument.FileId} - {imageReference}",
                         new Exception("Tesseract external process returned a non-zero exit code"));
                 }
-                
-                if (externalProcessRanOk == ProcessResult.RepeatableError)
-                {
-                    // Never going to get a result back
 
-                    await cacheService.SaveOcrScreenshotTextAsync(request, returnLines);
-                    await cacheService.SaveOcrImageTextAsync(request, returnLines);
-                }
-                else
-                {
-                    returnLines = _response;
-                    canSave = false;
-                }
+                returnLines = externalProcessRanOk == ProcessResult.RepeatableError ? [] : _response;
             }
 
-            if (canSave && returnLines != null)
+            if (returnLines != null)
             {
                 if (isPageScreenshot)
                 {
@@ -187,7 +176,7 @@ public class TesseractOcrDataExtractorService(
             maxPositiveDiffBetweenWordTop);
     }
     
-    private async Task<ProcessResult> RunSeparateTesseractProcessAsync(
+    private Task<ProcessResult> RunSeparateTesseractProcessAsync(
         int pageNumber,
         int imageNumber,
         string imageReference,
@@ -215,49 +204,53 @@ public class TesseractOcrDataExtractorService(
 
             const int listenPortNumber = 5556;
 
-            var argumentsList = string.Join(" ", new List<string>
+            var startupArgs = string.Join(" ", new List<string>
             {
                 tesseractExeName,
-                pageSegMode.ToString(),
-                fileMode,
-                pageNumber.ToString(),
-                imageNumber.ToString(),
-                $"\"{imageReference}\"",
-                $"\"{fileId}\"",
-                isPageScreenshot.ToString(),
-                processRunId.ToString(),
-                $"\"{cacheService.CacheFolderOrUrl}\"",
-                $"\"{outputService.OutputFolder}\"",
-                $"\"{tessDataPath}\"",
                 listenPortNumber.ToString()
             });
 
-            using var runtime = new NetMQRuntime();
-            runtime.Run(CommunicateAsync(
-                listenPortNumber,
-                argumentsList,
+            var sharedExeLifecycleArgs = string.Join(" ", new List<string>
+            {
+                pageSegMode.ToString(),
+                fileMode,
+                $"\"{cacheService.CacheFolderOrUrl}\"",
+                $"\"{outputService.OutputFolder}\"",
+                $"\"{tessDataPath}\""
+            });
+            
+            var perFileArgs = string.Join(" ", new List<string>
+            {
+                pageNumber.ToString(),
+                imageNumber.ToString(),
                 imageReference,
-                showDebugMessages,
-                pageNumber,
-                imageNumber,
-                fileId));
+                fileId.ToString(),
+                isPageScreenshot.ToString(),
+                processRunId.ToString(),
+            });
+
+            using var messageSyncContext = new NetMQRuntime();
+            messageSyncContext.Run(CommunicateAsync(
+                listenPortNumber,
+                startupArgs,
+                sharedExeLifecycleArgs,
+                perFileArgs,
+                imageReference));
         }
         catch (Exception ex)
         {
             // TODO
         }
         
-        return ProcessResult.Ok;
+        return Task.FromResult(ProcessResult.Ok);
     }
 
     private async Task CommunicateAsync(
         int listenPortNumber,
-        string argumentsList,
-        string imageReference,
-        bool showDebugMessages,
-        int pageNumber,
-        int imageNumber,
-        Guid fileId)
+        string startupArgs,
+        string sharedExeLifecycleArgs,
+        string perFileArgs,
+        string imageReference)
     {
         using var server = new ResponseSocket($"@tcp://localhost:{listenPortNumber}");
             
@@ -265,12 +258,10 @@ public class TesseractOcrDataExtractorService(
             new ProcessStartInfo
             {
                 WorkingDirectory = tesseractExeDirectory,
-                Arguments = argumentsList,
+                Arguments = startupArgs,
                 FileName = dotnetPath,
                 UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true
+                CreateNoWindow = true
             });
 
         var timedOut = false;
@@ -299,107 +290,116 @@ public class TesseractOcrDataExtractorService(
             ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process timed out- {imageReference}");
         }
 
-        var externalResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
-        var exitTask = proc!.WaitForExitAsync(cancellationToken);
+        var startupResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
+        var processEndedTask = proc!.WaitForExitAsync(cancellationToken);
         
-        var firstAction = await Task.WhenAny(externalResponseTask, exitTask);
-        if (firstAction == exitTask)
+        var firstToFinish = await Task.WhenAny(startupResponseTask, processEndedTask);
+        if (firstToFinish == processEndedTask)
         {
             var serverResponseMessage = "[NO MESSAGE RETURNED]";
             
             if (server.HasIn)
             {
-                serverResponseMessage = externalResponseTask.IsCompleted
-                    ? (await externalResponseTask).Item1
+                serverResponseMessage = startupResponseTask.IsCompleted
+                    ? (await startupResponseTask).Item1
                     : server.ReceiveFrameString();
             }
             
-            ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly before handshake " +
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly during startup " +
                 $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
             return;
         }
 
-        var handshakeResponse = (await externalResponseTask).Item1;
+        var exeStartupResponse = (await startupResponseTask).Item1;
 
-        if (handshakeResponse == StartedOkay)
+        if (exeStartupResponse == ExeStartedOkay)
         {
             ConsoleHelper.WriteLine($"INFO - {Name} - External process started okay");
         }
         else
         {
-            ConsoleHelper.WriteLine($"INFO - {Name} - External process returned {handshakeResponse}");
+            ConsoleHelper.WriteLine($"INFO - {Name} - External process returned {exeStartupResponse}");
             return;
         }
         
-        server.SendFrame(Acknowledged);
+        server.SendFrame($"{SharedArgsPrefix}{sharedExeLifecycleArgs}");
         
-        externalResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
-        var finishAction = await Task.WhenAny(externalResponseTask, exitTask);
+        var tesseractSetupOkayTask = server.ReceiveFrameStringAsync(cancellationToken);
+        firstToFinish = await Task.WhenAny(tesseractSetupOkayTask, processEndedTask);
         
-        if (finishAction == exitTask)
+        if (firstToFinish == processEndedTask)
         {
             var serverResponseMessage = "[NO MESSAGE RETURNED]";
             
             if (server.HasIn)
             {
-                serverResponseMessage = externalResponseTask.IsCompleted
-                    ? (await externalResponseTask).Item1
+                serverResponseMessage = tesseractSetupOkayTask.IsCompleted
+                    ? (await tesseractSetupOkayTask).Item1
                     : server.ReceiveFrameString();
             }
             
-            ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly " +
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly when setting up Tesseract " +
                 $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
             return;
         }
         
-        var responseString = (await externalResponseTask).Item1;
-        var isFinishedOkay = responseString.StartsWith(FinishedPrefix);
+        var tesseractSetupResponse = (await tesseractSetupOkayTask).Item1;
+        
+        if (tesseractSetupResponse == TesseractSetupOkay)
+        {
+            ConsoleHelper.WriteLine($"INFO - {Name} - External process started Tesseract okay");
+        }
+        else
+        {
+            ConsoleHelper.WriteLine($"INFO - {Name} - External process starting Tesseract failed with {tesseractSetupResponse}");
+            return;
+        }
+        
+        server.SendFrame($"{PerFileArgsPrefix}{perFileArgs}");
+        
+        var perFileResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
+        firstToFinish = await Task.WhenAny(perFileResponseTask, processEndedTask);
+        
+        if (firstToFinish == processEndedTask)
+        {
+            var serverResponseMessage = "[NO MESSAGE RETURNED]";
+            
+            if (server.HasIn)
+            {
+                serverResponseMessage = perFileResponseTask.IsCompleted
+                    ? (await perFileResponseTask).Item1
+                    : server.ReceiveFrameString();
+                
+                HandlePerFileResponse(serverResponseMessage, imageReference);
+                return;
+            }
+            
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly when processing file " +
+                $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
+            // TODO - Log error
+
+            return;
+        }
+        
+        var perFileResponse = (await perFileResponseTask).Item1;
+        HandlePerFileResponse(perFileResponse, imageReference);
+
+        await processEndedTask;
+    }
+
+    private void HandlePerFileResponse(string perFileResponse, string imageReference)
+    {
+        var isFinishedOkay = perFileResponse.StartsWith(FinishedPrefix);
 
         ConsoleHelper.WriteLine(isFinishedOkay
             ? $"INFO - {Name} - Tesseract external completed successfully for {imageReference}"
-            : $"ERROR - {Name} - Unexpectedly received error {responseString} - {imageReference}");
+            : $"ERROR - {Name} - Unexpectedly received error {perFileResponse} - {imageReference}");
 
-        _response = JsonSerializer.Deserialize<List<LineAndWords>>(responseString[FinishedPrefix.Length..]);
-        await exitTask;
-        
-        /*
-        // ReSharper disable once MoveVariableDeclarationInsideLoopCondition
-        string? line;
-
-        while ((line = await proc.StandardError.ReadLineAsync(cancellationToken)) is not null)
-        {
-            const string coreTesseractErrorPrefix = "\"Error: ";
-
-            if (line.StartsWith(coreTesseractErrorPrefix, StringComparison.Ordinal))
-            {
-                var repeatableErrors = new List<string>
-                {
-                    "Assert failed"
-                };
-
-                if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
-                {
-                    ConsoleHelper.WriteLine($"WARNING - {Name} - Failed with error: {line}");
-                    return;
-                }
-
-                proc.Kill();
-
-                var exceptionMessage = line[line.IndexOf(coreTesseractErrorPrefix, StringComparison.Ordinal)..];
-                ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
-
-                return;
-            }
-
-            if (showDebugMessages)
-            {
-                ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - {line}");
-            }
-        }*/
+        _response = JsonSerializer.Deserialize<List<LineAndWords>>(perFileResponse[FinishedPrefix.Length..]);
     }
     
     public void Dispose()

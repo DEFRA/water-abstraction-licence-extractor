@@ -15,20 +15,31 @@ RequestSocket? client = null;
 
 try
 {
+    var (portNumber, writeToConsole, writeToFile) = await SetupAsync(args);
+
+    client = new RequestSocket($">tcp://localhost:{portNumber}");
+    client.SendFrame(TesseractOcrDataExtractorService.ExeStartedOkay);
+    
+    var exeSharedLifecycleArgs = client.ReceiveFrameString();
+
+    if (!exeSharedLifecycleArgs.StartsWith(TesseractOcrDataExtractorService.SharedArgsPrefix))
+    {
+        throw new Exception($"Tesseract server sent {exeSharedLifecycleArgs} when client expecting shared args");
+    }
+
+    var tesseractService = SplitExeSharedLifecycleArgs(
+        exeSharedLifecycleArgs[TesseractOcrDataExtractorService.SharedArgsPrefix.Length..]);
+    
+    client.SendFrame(TesseractOcrDataExtractorService.TesseractSetupOkay);
+    
+    var perFileArgs = client.ReceiveFrameString();
+    
     var (pageNumber,
         imageNumber,
         imageReferenceTemp,
         fileId,
         isPageScreenshot,
-        processRunId,
-        writeToConsole,
-        writeToFile,
-        tesseractService,
-        listenPortNumber) = await SetupAsync(args); // TODO get the port and image reference straight away outside of this
-
-    client = new RequestSocket($">tcp://localhost:{listenPortNumber}");
-    client.SendFrame(TesseractOcrDataExtractorService.StartedOkay);
-    var serverAcknowledgement = client.ReceiveFrameString();
+        processRunId) = SplitPerFileArgs(perFileArgs[TesseractOcrDataExtractorService.PerFileArgsPrefix.Length..]);
     
     imageReference = imageReferenceTemp;
 
@@ -43,7 +54,7 @@ try
     
     await WriteResponseAsync(
         "Finished.txt",
-        $"{typeof(Program).Assembly.GetName().Name} finished with {textLines.Count} rows - {serverAcknowledgement}",
+        $"{typeof(Program).Assembly.GetName().Name} finished with {textLines.Count} rows - {exeSharedLifecycleArgs}",
         writeToConsole,
         writeToFile);
 
@@ -65,17 +76,52 @@ catch (Exception ex)
 
 return;
 
-static async Task<(
-    int pageNumber,
+static InternalTesseractOcrDataExtractorService SplitExeSharedLifecycleArgs(string argsStr)
+{
+    var args = argsStr.Split(' ');
+    
+    var pageSegMode = Enum.Parse<PageSegMode>(args[0]);
+    var bytesMode = args[1];
+    var cacheFolderOrApiUrl = args[2].Replace("\"", string.Empty);
+    var outputFolder = args[3].Replace("\"", string.Empty);
+    var tessDataPath = args[4].Replace("\"", string.Empty);
+
+    var isFileMode = bytesMode.Equals("file", StringComparison.OrdinalIgnoreCase);
+    
+    return GetTesseractService(
+        isFileMode,
+        pageSegMode,
+        cacheFolderOrApiUrl,
+        outputFolder,
+        tessDataPath);
+}
+
+static (int pageNumber,
     int imageNumber,
     string imageReference,
     Guid fileId,
     bool isPageScreenshot,
-    int processRunId,
-    bool writeToConsole,
-    bool writeToFile,
-    InternalTesseractOcrDataExtractorService tesseractService,
-    int listenPortNumber)> SetupAsync(string[] args)
+    int processRunId) SplitPerFileArgs(string argsStr)
+{
+    var args = argsStr.Split(' ');
+    
+    var pageNumber = int.Parse(args[0]);
+    var imageNumber = int.Parse(args[1]);
+    var imageReference = args[2];
+    var fileId = Guid.Parse(args[3]);
+    var isPageScreenshot = bool.Parse(args[4]);
+    var processRunId = int.Parse(args[5]);
+
+    return (
+        pageNumber,
+        imageNumber,
+        imageReference,
+        fileId,
+        isPageScreenshot,
+        processRunId);
+}
+
+static async Task<(int PortNumber, bool WriteToConsole, bool WriteToFile)> SetupAsync(string[] args)
 {
     var configuration = GetConfiguration();
 
@@ -102,40 +148,8 @@ static async Task<(
         Environment.ExitCode = 1;
         throw new Exception("Not enough / too many arguments provided");
     }
-    
-    var pageSegMode = Enum.Parse<PageSegMode>(args[0]);
-    var bytesMode = args[1];
-    var pageNumber = int.Parse(args[2]);
-    var imageNumber = int.Parse(args[3]);
-    var imageReference = args[4];
-    var fileId = Guid.Parse(args[5]);
-    var isPageScreenshot = bool.Parse(args[6]);
-    var processRunId = int.Parse(args[7]);
-    var cacheFolderOrApiUrl = args[8];
-    var outputFolder = args[9];
-    var tessDataPath = args[10];
-    var listenPortNumber = int.Parse(args[11]);
 
-    var isFileMode = bytesMode.Equals("file", StringComparison.OrdinalIgnoreCase);
-    
-    var tesseractService = GetTesseractService(
-        isFileMode,
-        pageSegMode,
-        cacheFolderOrApiUrl,
-        outputFolder,
-        tessDataPath);
-    
-    return (
-        pageNumber,
-        imageNumber,
-        imageReference,
-        fileId,
-        isPageScreenshot,
-        processRunId,
-        writeToConsole,
-        writeToFile,
-        tesseractService,
-        listenPortNumber);
+    return (int.Parse(args[0]), writeToConsole, writeToFile);
 }
 
 static IConfiguration GetConfiguration()
@@ -211,3 +225,38 @@ static async Task WriteResponseAsync(
         filename,
         content + "\n" + DateTime.Now.ToString(CultureInfo.InvariantCulture));
 }
+
+/*
+// ReSharper disable once MoveVariableDeclarationInsideLoopCondition
+string? line;
+
+while ((line = await proc.StandardError.ReadLineAsync(cancellationToken)) is not null)
+{
+    const string coreTesseractErrorPrefix = "\"Error: ";
+
+    if (line.StartsWith(coreTesseractErrorPrefix, StringComparison.Ordinal))
+    {
+        var repeatableErrors = new List<string>
+        {
+            "Assert failed"
+        };
+
+        if (repeatableErrors.Any(repeatableError => line.Contains(repeatableError, StringComparison.Ordinal)))
+        {
+            ConsoleHelper.WriteLine($"WARNING - {Name} - Failed with error: {line}");
+            return;
+        }
+
+        proc.Kill();
+
+        var exceptionMessage = line[line.IndexOf(coreTesseractErrorPrefix, StringComparison.Ordinal)..];
+        ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process gave error: {exceptionMessage}");
+
+        return;
+    }
+
+    if (showDebugMessages)
+    {
+        ConsoleHelper.WriteLine($"DEBUG - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - {line}");
+    }
+}*/

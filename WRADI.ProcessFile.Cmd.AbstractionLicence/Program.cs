@@ -53,7 +53,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     var pdfDataExtractors = services.PdfDataExtractorServices!;
     var maxConcurrentScrapers = services.MaxConcurrentScrapers;
-    var regionCode = configuration.GetValue<int?>("RegionCode");
+    var regionCodes = (configuration.GetValue<string?>("RegionCode") ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Select(value => int.TryParse(value, out var code)
+            ? code
+            : throw new ArgumentException($"RegionCode '{value}' is not a region number (1-8)"))
+        .ToHashSet();
     var includeNonLiveLicences = configuration.GetValue<bool>("IncludeNonLiveLicences");
     var fileFilter = configuration.GetValue<string?>("FileFilter");
     var maxFiles = configuration.GetValue<int?>("MaxFiles");
@@ -87,7 +92,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
-        .Where(x => regionCode == null || x.Value.Item2.RegionCode == regionCode)
+        .Where(x => regionCodes.Count == 0 || regionCodes.Contains(x.Value.Item2.RegionCode))
         .Where(x => string.IsNullOrWhiteSpace(fileFilter)
             || x.Key.StartsWith(fileFilter, StringComparison.OrdinalIgnoreCase))
         .Take(maxFiles ?? int.MaxValue)
@@ -101,9 +106,9 @@ async Task ProgramAsync(IConfiguration configurationItem)
             Description = (services.FileService!.IngressFolderPath == "N/A"
                     ? string.Empty
                     : $"Run using {services.FileService.IngressFolderPath}, ")
-                + (regionCode == null
+                + (regionCodes.Count == 0
                     ? "all regions"
-                    : RegionHelper.GetRegionName(regionCode.Value))
+                    : string.Join(" + ", regionCodes.Order().Select(RegionHelper.GetRegionName)))
                 + (includeNonLiveLicences ? ", including non-live licences" : string.Empty)
                 + (string.IsNullOrWhiteSpace(fileFilter) ? string.Empty : $", files matching '{fileFilter}'")
                 + (maxFiles == null ? string.Empty : $", capped at {maxFiles} files"),

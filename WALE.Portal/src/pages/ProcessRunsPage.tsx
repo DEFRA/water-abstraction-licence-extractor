@@ -2,11 +2,7 @@ import {ProcessRun} from "../api/generated/apiClient.ts";
 import {useState, useEffect, useMemo} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import ProcessRunListItem from '../components/ProcessRunListItem.tsx';
-
-const DOCUMENT_TYPES: { key: string; label: string }[] = [
-    {key: 'AbstractionLicence', label: 'Abstraction Licence'},
-    {key: 'WrInspectionReport', label: 'Inspection Report'},
-];
+import {DOCUMENT_TYPES, processRunDocumentType} from '../utils/processRunUtils.ts';
 
 function ProcessRunsPage() {
     const [processRuns, setProcessRuns] = useState<ProcessRun[]>([]);
@@ -33,7 +29,7 @@ function ProcessRunsPage() {
     const countByType = useMemo(() => {
         const counts: Record<string, number> = {};
         for (const run of processRuns) {
-            const documentType = (run as unknown as { documentType?: string }).documentType ?? 'AbstractionLicence';
+            const documentType = processRunDocumentType(run);
             counts[documentType] = (counts[documentType] ?? 0) + 1;
         }
         return counts;
@@ -41,7 +37,7 @@ function ProcessRunsPage() {
 
     const visibleRuns = useMemo(
         () => processRuns.filter(run =>
-            ((run as unknown as { documentType?: string }).documentType ?? 'AbstractionLicence') === activeTab
+            processRunDocumentType(run) === activeTab
         ),
         [processRuns, activeTab]
     );

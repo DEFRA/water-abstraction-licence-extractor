@@ -111,22 +111,22 @@ public static class SharedHelper
         // NOTE - This function takes > 7 mins at 2000 files as of 2026-Aug-12
         
         var savedLicenceSetIds = new HashSet<string>();
-        var loggingPrefix = $"{nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)}";
+        var loggingPrefix = $"{nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)}";
 
         ConsoleHelper.WriteLine($"INFO - {loggingPrefix} " +
             $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-        var idx = 1;
+        var idx = 0;
         
         foreach (var licenceSetGroup in licenceSetGroups)
         {
-            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} {idx++} " +
-                $"of {licenceSetGroups.Count} in progress....");
+            ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {++idx} " +
+                $"of {licenceSetGroups.Count} in progress");
             
             if (licenceSetGroup.Count == 0)
             {
                 // This should be impossible
-                ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - Empty licence set group found");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - Empty licence set group found");
                 continue;
             }
 
@@ -154,7 +154,7 @@ public static class SharedHelper
                     
                     if (existingLicence != null && !previouslySavedForLicenceNumber)
                     {
-                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - Licence exists (by filename) but doesnt have the none schema data set");
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - Licence exists (by filename) but doesnt have the none schema data set");
                     }
 
                     var hasFileId = licenceLoop.DmsFileId.HasValue;
@@ -162,7 +162,7 @@ public static class SharedHelper
                     
                     if (existingLicence == null && !hasLicenceNumber && hasFileId)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - No licence number, looking up by fileid ({licenceLoop.DmsFileId})");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - No licence number, looking up by fileid ({licenceLoop.DmsFileId})");
                         
                         existingLicence = await outputService.GetLicenceAsync(
                             licenceLoop.DmsFileId!.Value,
@@ -176,7 +176,7 @@ public static class SharedHelper
                         
                         if (existingLicence != null && !previouslySavedForFileIdOnly)
                         {
-                            ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - - ${nameof(UpdateAndSaveLicenceSetsAsync)} Licence exists (by file id) but doesnt have the none schema data set");
+                            ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} Licence exists (by file id) but doesnt have the none schema data set");
                         }
                     }
                     
@@ -216,16 +216,16 @@ public static class SharedHelper
 
                     if (newLicenceSetsLoop.Count == 0)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)}  {idx} " +
-                            $"licence sets already have been saved");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx}," +
+                            $" licence set has already been saved ({licenceSetLoop.LicenceSetId} for {licenceLoop.LicenceNumber?.Value})");
                         
                         continue;
                     }
 
                     foreach (var licenceSet in newLicenceSetsLoop)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} {idx} " +
-                            $"saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} {idx}," +
+                            $" saving {licenceSet.Value.LicenceSetId} for {licenceLoop.LicenceNumber?.Value}");
                         
                         // Not batched as we get a 413 on the server
                         await outputService.SaveLicenceSetAsync(

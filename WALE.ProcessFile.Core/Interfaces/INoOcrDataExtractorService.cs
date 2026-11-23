@@ -13,9 +13,10 @@ public interface INoOcrDataExtractorService
         INoOcrPdfDocumentService noOcrPdfDocumentService,
         INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration,
-        int processRunId);
+        int processRunId,
+        bool shouldFilletExternally);
     
-    public Task<List<DocumentLine>>
+    public Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage, Dictionary<string, object> PagesMetadata)> 
         GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
             PdfDocument pdfDocument,
             LookupConfiguration configuration,

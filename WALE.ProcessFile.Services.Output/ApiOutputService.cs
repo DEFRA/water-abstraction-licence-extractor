@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using SkiaSharp;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -344,7 +345,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         if (_showAllLogs)
         {
-            ConsoleHelper.WriteLine($"SavePageScreenshot API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
+            ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(SavePageScreenshotTaskAsync)} API call (P{pageNumber}, {providerName}) took {tsDuration}ms");
         }
 
         return bytes.Length;
@@ -523,7 +524,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
         if (_showAllLogs)
         {
-            ConsoleHelper.WriteLine($"SavePageScreenshotThumbnailAsync API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
+            ConsoleHelper.WriteLine($"INFO - {nameof(ApiOutputService)} - ${nameof(SavePageScreenshotThumbnailAsync)} API call (P{pageNumber}, {serviceName}) took {tsDuration}ms");
         }
     }
     

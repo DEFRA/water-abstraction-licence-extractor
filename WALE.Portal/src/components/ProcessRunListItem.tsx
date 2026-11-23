@@ -5,9 +5,29 @@ interface ProcessRunListItemProps {
     run: ProcessRun;
 }
 
+function figures(run: ProcessRun) {
+    const count = (n?: number) => (n ?? 0).toLocaleString();
+    const parts = [`${count(run.filesProcessed)} files`];
+
+    if ((run.filesErrored ?? 0) > 0) {
+        parts.push(`${count(run.filesErrored)} errors`);
+    }
+
+    if ((run.licenceCount ?? 0) > 0) {
+        parts.push(run.liveLicenceCount === run.licenceCount
+            ? `${count(run.licenceCount)} licences`
+            : `${count(run.licenceCount)} licences, ${count(run.liveLicenceCount)} live`);
+    }
+
+    if (run.status && run.status !== 'Completed') {
+        parts.push(run.status);
+    }
+
+    return parts.join(' · ');
+}
+
 function ProcessRunListItem({run}: ProcessRunListItemProps) {
-    const documentType = (run as unknown as { documentType?: string }).documentType;
-    const linkTo = documentType === 'WrInspectionReport'
+    const linkTo = run.documentType === 'WrInspectionReport'
         ? {pathname: '/inspectionReport', search: `?processRunId=${run.processRunId}`}
         : {pathname: '/listSearch', search: `?processRunId=${run.processRunId}`};
 
@@ -16,7 +36,7 @@ function ProcessRunListItem({run}: ProcessRunListItemProps) {
             <Link to={linkTo}>
                 {run.processRunId} - {run.startDateTimeUtc?.toLocaleString()}
             </Link>
-             &nbsp;- {run.description} ({run.successCount} files found |  {run.numberOfFilesNotFound} files not found | Total {run.numberOfFiles} files)
+            &nbsp;- {run.description} ({figures(run)})
         </li>
     );
 }

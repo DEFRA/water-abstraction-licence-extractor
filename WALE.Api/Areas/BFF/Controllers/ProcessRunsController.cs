@@ -87,6 +87,7 @@ public class ProcessRunsController(
             query);
 
         var issuersTask = GetIssuers(processRunId);
+        var regionsTask = GetRegions(processRunId);
         var licenceSetIdsTask = GetLicenceSetIds(processRunId);
         var issueDatesTask = GetIssueDates(processRunId);
 
@@ -95,6 +96,7 @@ public class ProcessRunsController(
             TotalRecords = await getTotalsTask,
             Records = (await paginationDataTask).ToList(),
             Issuers = await issuersTask,
+            Regions = await regionsTask,
             LicenceSetIds = await licenceSetIdsTask,
             IssueDates = await issueDatesTask
         };
@@ -123,6 +125,7 @@ public class ProcessRunsController(
             query);
 
         var issuersTask = GetDistinctListIssuers(processRunId);
+        var regionsTask = GetDistinctListRegions(processRunId);
         var licenceSetIdsTask = GetDistinctListLicenceSetIds(processRunId);
         var issueDatesTask = GetDistinctListDates(processRunId);
         
@@ -134,6 +137,7 @@ public class ProcessRunsController(
             TotalRecords = await countTask,
             Records = outputList.Skip(querySkip).Take(queryTake).ToList(),
             Issuers = await issuersTask,
+            Regions = await regionsTask,
             LicenceSetIds = await licenceSetIdsTask,
             IssueDates = await issueDatesTask,
             CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType, query.VerificationSections)
@@ -284,6 +288,9 @@ public class ProcessRunsController(
 
             Issuers = data.Count(x =>
                 !string.IsNullOrEmpty(x.issuer)),
+
+            Regions = data.Count(x =>
+                x.regionName != null),
 
             MeansOfAbs = data.Count(x =>
                 x.meansFound),
@@ -493,6 +500,51 @@ public class ProcessRunsController(
                ?? [];
     }
     
+    private async Task<RegionOption[]> GetRegions(int processRunId)
+    {
+        var cacheKey = $"licence-regions:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromMinutes(10);
+
+                       var regionIds = await abstractionLicenceOutputService.GetDistinctRegionIdsAsync(processRunId);
+
+                       return ToRegionOptions(regionIds);
+                   })
+               ?? [];
+    }
+
+    private async Task<RegionOption[]> GetDistinctListRegions(int processRunId)
+    {
+        var cacheKey = $"licence-list-regions:{processRunId}";
+
+        return await memoryCache.GetOrCreateAsync(
+                   cacheKey,
+                   async cacheEntry =>
+                   {
+                       cacheEntry.AbsoluteExpirationRelativeToNow =
+                           TimeSpan.FromMinutes(10);
+
+                       var regionIds = await licenceListRepository.GetLicenceListRegionIdsAsync(processRunId);
+
+                       return ToRegionOptions(regionIds);
+                   })
+               ?? [];
+    }
+
+    private static RegionOption[] ToRegionOptions(IEnumerable<int> regionIds)
+    {
+        return regionIds
+            .Select(id => (Id: id, Name: RegionHelper.GetRegionNameOrNull(id)))
+            .Where(region => region.Name != null)
+            .Select(region => new RegionOption(region.Id, region.Name!))
+            .ToArray();
+    }
+
     private async Task<string[]> GetIssuers(int processRunId)
     {
         var cacheKey = $"licence-issuers:{processRunId}";

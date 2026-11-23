@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
@@ -382,7 +383,7 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
         return bytes.Length;
     }
     
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -402,7 +403,7 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
             metadataFilename,
             JsonSerializer.Serialize(data, JsonHelper.GetSerializerOptions()));
 
-        return request;
+        return data;
     }
 
     public Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
@@ -412,13 +413,18 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
             JsonSerializer.Serialize(imagesMetadata, JsonHelper.GetSerializerOptions()));
     }
 
-    public async Task SaveNoOcrPagesTextLinesAsync(
+    public async Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
+        var returnDictionary = new Dictionary<int, string>();
+        
         foreach (var page in pages)
         {
             await SaveNoOcrPageTextLinesAsync(page.Request, page.PageLines);
+            returnDictionary.Add(page.Request.PageNumber, page.PageLines);
         }
+        
+        return returnDictionary;
     }
 
     public async Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
@@ -587,5 +593,28 @@ public partial class FileSystemCacheService(string cacheFolder) : ICacheService
         Directory.CreateDirectory(imagesMetadataFolder); // This checks if exists, and creates the whole path too
         
         return $"{imagesMetadataFolder}/{PositionConstants.CacheMetadataFilename}";
+    }
+    
+    public async Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
+    {
+        await noOcrDataExtractorService.GetPdfDocumentAsync(
+            pdfFileName!,
+            fileId,
+            lookupConfiguration.OutputService,
+            lookupConfiguration.CacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            lookupConfiguration,
+            processRunId,
+            false);
+        
+        return await GetMetadataAsync(fileId, noOcrDataExtractorService.Name, processRunId);
     }
 }

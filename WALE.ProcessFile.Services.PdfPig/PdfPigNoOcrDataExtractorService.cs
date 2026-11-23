@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Net.Http.Headers;
 using System.Text.Json;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.PageSegmenter;
@@ -27,20 +26,38 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         INoOcrPdfDocumentService noOcrPdfDocumentService,
         INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService,
         LookupConfiguration configuration,
-        int processRunId)
+        int processRunId,
+        bool shouldFilletExternally)
     {
-        var dtStart = DateTime.Now;
-        var metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
-        var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
-        var debug = false;
+        MetadataCollection? metadata;
+        
+        if (shouldFilletExternally)
+        {
+            metadata = await cacheService.FilletDocumentAsync(
+                pdfFileName,
+                fileId,
+                processRunId,
+                configuration,
+                this,
+                noOcrPdfDocumentService,
+                noOcrAlternativePdfDocumentService);
+        }
+        else
+        {
+            metadata = await cacheService.GetMetadataAsync(fileId, Name, processRunId);
+        }
 
-        if (debug)
+        var dtStart = DateTime.Now;
+        var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
+        var showDebugOutput = false;
+
+        if (showDebugOutput)
         {
             ConsoleHelper.WriteLine(
                 $"DEBUG - {nameof(PdfPigNoOcrDataExtractorService)} - Attempting to get pdf document from cache (API)" +
                 $" took {durationMs}ms - {pdfFileName}");
         }
-        
+
         var pdfDocument = new PdfDocument(
             pdfFileName,
             fileId,
@@ -54,8 +71,9 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
             configuration);
-        
-        if (metadata is { PagesMetadata: { } pagesMetadata, AllDocumentLines: { } allDocumentLines })
+
+        if (metadata is { PagesMetadata: { } pagesMetadata,
+            AllDocumentLines: { } allDocumentLines })
         {
             pdfDocument.Pages = GetPages(
                 pagesMetadata,
@@ -63,15 +81,22 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
                 outputService,
                 configuration.SkipFileWhenMoreThenPages);
             
+            pdfDocument.PagesMetadata = metadata.PagesMetadata;
             pdfDocument.ImagesMetadata = metadata.ImageMetadata;
-        
+            
+            pdfDocument.AllDocumentLines = metadata.AllDocumentLines;
             pdfDocument.DocumentLines = await GetCachedTextLinesAsync(
                 pdfDocument,
                 configuration,
                 pagesMetadata,
                 allDocumentLines);
-        
+            
             return pdfDocument;
+        }
+        
+        if (shouldFilletExternally)
+        {
+            throw new Exception("External filleting should have meant we don't get a none-cached entry back");
         }
 
         if (await pdfDocument.OpenInternalDocumentAsync() == null)
@@ -191,7 +216,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             cacheService);
         
         pdfDocument.ImagesMetadata = await imagesMetadataTask;
-        pdfDocument.DocumentLines = await documentLinesTask;
+        
+        var (lines, linesByPage, pagesMetadata) =
+            await documentLinesTask;
+
+        pdfDocument.DocumentLines = lines;
+        pdfDocument.AllDocumentLines = linesByPage;
+        pdfDocument.PagesMetadata = pagesMetadata;
     }
     
     private async Task SaveImageMetadataAsync(
@@ -275,12 +306,13 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
         return Task.FromResult(documentLines);
     }
 
-    public async Task<List<DocumentLine>> GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
-        PdfDocument pdfDocument,
-        LookupConfiguration configuration,
-        ICacheService cacheService,
-        IOutputService outputService,
-        int processRunId)
+    public async Task<(List<DocumentLine> Lines, Dictionary<int, string> LinesByPage, Dictionary<string, object> PagesMetadata)>
+        GetTextLinesFromPdfAndSaveScreenshotsPageTextLinesAndMetadataAsync(
+            PdfDocument pdfDocument,
+            LookupConfiguration configuration,
+            ICacheService cacheService,
+            IOutputService outputService,
+            int processRunId)
     {
         var documentLines = new List<DocumentLine>();
         
@@ -361,12 +393,12 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             },
             pagesMetadataList);
 
-        await cacheService.SaveNoOcrPagesTextLinesAsync(
+        var allDocumentLines = await cacheService.SaveNoOcrPagesTextLinesAsync(
             pagesTextLines
                 .OrderBy(page => page.Request.PageNumber)
                 .ToList());
 
-        await saveNoOcrPagesMetadataTask;
+        var returnPagesMetadata = await saveNoOcrPagesMetadataTask;
         
         documentLines = documentLines
             .OrderBy(documentLine => documentLine.PageNumber)
@@ -379,7 +411,7 @@ public class PdfPigNoOcrDataExtractorService : INoOcrDataExtractorService
             $"{getPagesDuration.TotalMilliseconds}ms was for getting pages in code, " +
             $"{processPagesDuration.TotalMilliseconds}ms was for processing pages)- {pdfDocument.PdfFilename}");
         
-        return documentLines;
+        return (documentLines, allDocumentLines, returnPagesMetadata);
     }
 
     private async Task SavePageScreenshotInternalAsync(

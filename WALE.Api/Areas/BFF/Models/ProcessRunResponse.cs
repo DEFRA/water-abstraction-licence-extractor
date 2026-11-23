@@ -8,6 +8,8 @@ public record ProcessRunResponse
     public required IReadOnlyList<OutputListDataItem> Records { get; init; }
 
     public string[]? Issuers { get; init; }
+
+    public IReadOnlyList<RegionOption>? Regions { get; init; }
     
     public string[]? IssueDates { get; init; }
 

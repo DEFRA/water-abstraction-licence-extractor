@@ -14,7 +14,7 @@ export class Client {
 
     constructor(baseUrl?: string, http?: { fetch(url: RequestInfo, init?: RequestInit): Promise<Response> }) {
         this.http = http ? http : window as any;
-        this.baseUrl = baseUrl ?? "http://localhost:8080/";
+        this.baseUrl = baseUrl ?? "http://localhost:8090/";
     }
 
     /**
@@ -1721,6 +1721,43 @@ export class Client {
     }
 
     protected processSaveLicenceSets(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    filletDocument(body: FilletDocumentRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/Licence/FilletDocument";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processFilletDocument(_response);
+        });
+    }
+
+    protected processFilletDocument(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -6361,6 +6398,7 @@ export class Client {
      * @param skip (optional) 
      * @param take (optional) 
      * @param issuer (optional) 
+     * @param regionId (optional) 
      * @param limitsEmpty (optional) 
      * @param aggregatesFilter (optional) 
      * @param aggregatePrimaryTypeFilter (optional) 
@@ -6380,7 +6418,7 @@ export class Client {
      * @param verificationSections (optional) 
      * @return OK
      */
-    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRun(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, regionId: number | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRun/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -6405,6 +6443,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'issuer' cannot be null.");
         else if (issuer !== undefined)
             url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (regionId === null)
+            throw new globalThis.Error("The parameter 'regionId' cannot be null.");
+        else if (regionId !== undefined)
+            url_ += "RegionId=" + encodeURIComponent("" + regionId) + "&";
         if (limitsEmpty === null)
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
@@ -6511,6 +6553,7 @@ export class Client {
      * @param skip (optional) 
      * @param take (optional) 
      * @param issuer (optional) 
+     * @param regionId (optional) 
      * @param limitsEmpty (optional) 
      * @param aggregatesFilter (optional) 
      * @param aggregatePrimaryTypeFilter (optional) 
@@ -6530,7 +6573,7 @@ export class Client {
      * @param verificationSections (optional) 
      * @return OK
      */
-    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
+    getProcessRunList(processRunId: number, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, regionId: number | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined, verificationSections: string[] | undefined): Promise<ProcessRunResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunList/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -6555,6 +6598,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'issuer' cannot be null.");
         else if (issuer !== undefined)
             url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (regionId === null)
+            throw new globalThis.Error("The parameter 'regionId' cannot be null.");
+        else if (regionId !== undefined)
+            url_ += "RegionId=" + encodeURIComponent("" + regionId) + "&";
         if (limitsEmpty === null)
             throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
         else if (limitsEmpty !== undefined)
@@ -8015,6 +8062,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
     scans?: number | undefined;
     issueDates?: number | undefined;
     issuers?: number | undefined;
+    regions?: number | undefined;
     meansOfAbs?: number | undefined;
     linkedLicences?: number | undefined;
     licenceSets?: number | undefined;
@@ -8047,6 +8095,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
             this.scans = _data["scans"];
             this.issueDates = _data["issueDates"];
             this.issuers = _data["issuers"];
+            this.regions = _data["regions"];
             this.meansOfAbs = _data["meansOfAbs"];
             this.linkedLicences = _data["linkedLicences"];
             this.licenceSets = _data["licenceSets"];
@@ -8077,6 +8126,7 @@ export class CumulativeFilterCounts implements ICumulativeFilterCounts {
         data["scans"] = this.scans;
         data["issueDates"] = this.issueDates;
         data["issuers"] = this.issuers;
+        data["regions"] = this.regions;
         data["meansOfAbs"] = this.meansOfAbs;
         data["linkedLicences"] = this.linkedLicences;
         data["licenceSets"] = this.licenceSets;
@@ -8096,6 +8146,7 @@ export interface ICumulativeFilterCounts {
     scans?: number | undefined;
     issueDates?: number | undefined;
     issuers?: number | undefined;
+    regions?: number | undefined;
     meansOfAbs?: number | undefined;
     linkedLicences?: number | undefined;
     licenceSets?: number | undefined;
@@ -8694,6 +8745,70 @@ export interface IFileProcessSingleRequest {
     [key: string]: any;
 }
 
+export class FilletDocumentRequest implements IFilletDocumentRequest {
+    pdfFileName?: string | undefined;
+    fileId?: string;
+    regionId?: number;
+    processRunId?: number;
+    skipFileWhenMoreThenPages?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IFilletDocumentRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.pdfFileName = _data["pdfFileName"];
+            this.fileId = _data["fileId"];
+            this.regionId = _data["regionId"];
+            this.processRunId = _data["processRunId"];
+            this.skipFileWhenMoreThenPages = _data["skipFileWhenMoreThenPages"];
+        }
+    }
+
+    static fromJS(data: any): FilletDocumentRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new FilletDocumentRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["pdfFileName"] = this.pdfFileName;
+        data["fileId"] = this.fileId;
+        data["regionId"] = this.regionId;
+        data["processRunId"] = this.processRunId;
+        data["skipFileWhenMoreThenPages"] = this.skipFileWhenMoreThenPages;
+        return data;
+    }
+}
+
+export interface IFilletDocumentRequest {
+    pdfFileName?: string | undefined;
+    fileId?: string;
+    regionId?: number;
+    processRunId?: number;
+    skipFileWhenMoreThenPages?: number;
+
+    [key: string]: any;
+}
+
 export class GeneratePresignedUrlsRequest implements IGeneratePresignedUrlsRequest {
     fileIds?: string[] | undefined;
     templateUrl?: string | undefined;
@@ -8760,6 +8875,11 @@ export enum InformationSource {
     Document = "Document",
     OtherDocument = "OtherDocument",
     MixedSourcesOrMixedReasons = "MixedSourcesOrMixedReasons",
+    NaldFollowOn = "NaldFollowOn",
+    DocumentFollowOn = "DocumentFollowOn",
+    OtherDocumentFollowOn = "OtherDocumentFollowOn",
+    MixedFollowOn = "MixedFollowOn",
+    UnknownFollowOn = "UnknownFollowOn",
 }
 
 export class InspectionReportFinderResult implements IInspectionReportFinderResult {
@@ -11073,6 +11193,8 @@ export class OutputListDataItem implements IOutputListDataItem {
     naldSignatureDate?: string | undefined;
     isIssueDateFlagged?: boolean;
     issuer?: string | undefined;
+    regionId?: number | undefined;
+    regionName?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
     isLicenceNumberFlagged?: boolean;
@@ -11135,6 +11257,8 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.naldSignatureDate = _data["naldSignatureDate"];
             this.isIssueDateFlagged = _data["isIssueDateFlagged"];
             this.issuer = _data["issuer"];
+            this.regionId = _data["regionId"];
+            this.regionName = _data["regionName"];
             this.meansFound = _data["meansFound"];
             this.status = _data["status"];
             this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
@@ -11207,6 +11331,8 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["naldSignatureDate"] = this.naldSignatureDate;
         data["isIssueDateFlagged"] = this.isIssueDateFlagged;
         data["issuer"] = this.issuer;
+        data["regionId"] = this.regionId;
+        data["regionName"] = this.regionName;
         data["meansFound"] = this.meansFound;
         data["status"] = this.status;
         data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
@@ -11252,6 +11378,8 @@ export interface IOutputListDataItem {
     naldSignatureDate?: string | undefined;
     isIssueDateFlagged?: boolean;
     issuer?: string | undefined;
+    regionId?: number | undefined;
+    regionName?: string | undefined;
     meansFound?: boolean;
     status?: string | undefined;
     isLicenceNumberFlagged?: boolean;
@@ -11866,8 +11994,11 @@ export class ProcessRun implements IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    numberOfFilesNotFound?: number;
     documentType?: string;
+    filesProcessed?: number;
+    filesErrored?: number;
+    licenceCount?: number;
+    liveLicenceCount?: number;
 
     [key: string]: any;
 
@@ -11893,8 +12024,11 @@ export class ProcessRun implements IProcessRun {
             this.numberOfFiles = _data["numberOfFiles"];
             this.successCount = _data["successCount"];
             this.status = _data["status"];
-            this.numberOfFilesNotFound = _data["numberOfFilesNotFound"];
             this.documentType = _data["documentType"];
+            this.filesProcessed = _data["filesProcessed"];
+            this.filesErrored = _data["filesErrored"];
+            this.licenceCount = _data["licenceCount"];
+            this.liveLicenceCount = _data["liveLicenceCount"];
         }
     }
 
@@ -11918,8 +12052,11 @@ export class ProcessRun implements IProcessRun {
         data["numberOfFiles"] = this.numberOfFiles;
         data["successCount"] = this.successCount;
         data["status"] = this.status;
-        data["numberOfFilesNotFound"] = this.numberOfFilesNotFound;
         data["documentType"] = this.documentType;
+        data["filesProcessed"] = this.filesProcessed;
+        data["filesErrored"] = this.filesErrored;
+        data["licenceCount"] = this.licenceCount;
+        data["liveLicenceCount"] = this.liveLicenceCount;
         return data;
     }
 }
@@ -11932,8 +12069,11 @@ export interface IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    numberOfFilesNotFound?: number;
     documentType?: string;
+    filesProcessed?: number;
+    filesErrored?: number;
+    licenceCount?: number;
+    liveLicenceCount?: number;
 
     [key: string]: any;
 }
@@ -12110,6 +12250,7 @@ export class ProcessRunResponse implements IProcessRunResponse {
     totalRecords!: number;
     records!: OutputListDataItem[];
     issuers?: string[] | undefined;
+    regions?: RegionOption[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
@@ -12144,6 +12285,11 @@ export class ProcessRunResponse implements IProcessRunResponse {
                 this.issuers = [] as any;
                 for (let item of _data["issuers"])
                     this.issuers!.push(item);
+            }
+            if (Array.isArray(_data["regions"])) {
+                this.regions = [] as any;
+                for (let item of _data["regions"])
+                    this.regions!.push(RegionOption.fromJS(item));
             }
             if (Array.isArray(_data["issueDates"])) {
                 this.issueDates = [] as any;
@@ -12183,6 +12329,11 @@ export class ProcessRunResponse implements IProcessRunResponse {
             for (let item of this.issuers)
                 data["issuers"].push(item);
         }
+        if (Array.isArray(this.regions)) {
+            data["regions"] = [];
+            for (let item of this.regions)
+                data["regions"].push(item ? item.toJSON() : undefined as any);
+        }
         if (Array.isArray(this.issueDates)) {
             data["issueDates"] = [];
             for (let item of this.issueDates)
@@ -12202,6 +12353,7 @@ export interface IProcessRunResponse {
     totalRecords: number;
     records: OutputListDataItem[];
     issuers?: string[] | undefined;
+    regions?: RegionOption[] | undefined;
     issueDates?: string[] | undefined;
     licenceSetIds?: string[] | undefined;
     cumulativeFilterCounts?: CumulativeFilterCounts | undefined;
@@ -12393,6 +12545,58 @@ export interface IPurposeOfAbstraction {
     naldLevel2Description?: string | undefined;
     naldLevel3Description?: string | undefined;
     isImplicit?: boolean | undefined;
+
+    [key: string]: any;
+}
+
+export class RegionOption implements IRegionOption {
+    regionId!: number;
+    regionName!: string;
+
+    [key: string]: any;
+
+    constructor(data?: IRegionOption) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.regionId = _data["regionId"];
+            this.regionName = _data["regionName"];
+        }
+    }
+
+    static fromJS(data: any): RegionOption {
+        data = typeof data === 'object' ? data : {};
+        let result = new RegionOption();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["regionId"] = this.regionId;
+        data["regionName"] = this.regionName;
+        return data;
+    }
+}
+
+export interface IRegionOption {
+    regionId: number;
+    regionName: string;
 
     [key: string]: any;
 }

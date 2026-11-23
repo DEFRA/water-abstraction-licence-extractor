@@ -11994,8 +11994,11 @@ export class ProcessRun implements IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    numberOfFilesNotFound?: number;
     documentType?: string;
+    filesProcessed?: number;
+    filesErrored?: number;
+    licenceCount?: number;
+    liveLicenceCount?: number;
 
     [key: string]: any;
 
@@ -12021,8 +12024,11 @@ export class ProcessRun implements IProcessRun {
             this.numberOfFiles = _data["numberOfFiles"];
             this.successCount = _data["successCount"];
             this.status = _data["status"];
-            this.numberOfFilesNotFound = _data["numberOfFilesNotFound"];
             this.documentType = _data["documentType"];
+            this.filesProcessed = _data["filesProcessed"];
+            this.filesErrored = _data["filesErrored"];
+            this.licenceCount = _data["licenceCount"];
+            this.liveLicenceCount = _data["liveLicenceCount"];
         }
     }
 
@@ -12046,8 +12052,11 @@ export class ProcessRun implements IProcessRun {
         data["numberOfFiles"] = this.numberOfFiles;
         data["successCount"] = this.successCount;
         data["status"] = this.status;
-        data["numberOfFilesNotFound"] = this.numberOfFilesNotFound;
         data["documentType"] = this.documentType;
+        data["filesProcessed"] = this.filesProcessed;
+        data["filesErrored"] = this.filesErrored;
+        data["licenceCount"] = this.licenceCount;
+        data["liveLicenceCount"] = this.liveLicenceCount;
         return data;
     }
 }
@@ -12060,8 +12069,11 @@ export interface IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    numberOfFilesNotFound?: number;
     documentType?: string;
+    filesProcessed?: number;
+    filesErrored?: number;
+    licenceCount?: number;
+    liveLicenceCount?: number;
 
     [key: string]: any;
 }

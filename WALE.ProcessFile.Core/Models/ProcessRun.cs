@@ -16,7 +16,13 @@ public class ProcessRun
 
     public string? Status { get; set; }
 
-    public int NumberOfFilesNotFound =>  NumberOfFiles - SuccessCount;
+    public int FilesProcessed { get; set; }
+
+    public int FilesErrored { get; set; }
+
+    public int LicenceCount { get; set; }
+
+    public int LiveLicenceCount { get; set; }
     
     public string DocumentType { get; set; } = "AbstractionLicence";
 }

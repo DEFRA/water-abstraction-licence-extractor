@@ -76,6 +76,7 @@ public class MessageReceivedFunction
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Exception while processing message {record.MessageId}: {ex}");
                 context.Logger.LogError($"Exception while processing message {record.MessageId}: {ex}");
 
                 failures.Add(new SQSBatchResponse.BatchItemFailure

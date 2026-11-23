@@ -7,6 +7,16 @@ import {
 import {
     getVerificationDataStatus
 } from '.././utils/verificationsDataUtils.tsx';
+import {
+    DOCUMENT_TYPES,
+    processRunDocumentType,
+    processRunFigures
+} from '.././utils/processRunUtils.ts';
+
+function processRunOptionLabel(processRun: ProcessRun) {
+    return `${processRun.processRunId} - ${processRun.startDateTimeUtc?.toLocaleString()}`
+        + ` - ${processRun.description} (${processRunFigures(processRun)})`;
+}
 
 export function ExportImportVerifications() {
 
@@ -18,6 +28,7 @@ export function ExportImportVerifications() {
     const [targetProcessRunId, setTargetProcessRunId] = useState<number | undefined>();
     const canUpload = targetProcessRunId !== undefined;
     const [processRuns, setProcessRuns] = useState<ProcessRun[]>([]);
+    const targetProcessRun = processRuns.find(processRun => processRun.processRunId === targetProcessRunId);
     const [currentBackupVersion, setCurrentBackupVersion] = useState<number | undefined>();
     const [currentBackupVerificationsCount, setCurrentBackupVerificationsCount] = useState<number | undefined>();
     const [currentVerificationsCount, setCurrentVerificationsCount] = useState<number | undefined>();
@@ -399,8 +410,10 @@ export function ExportImportVerifications() {
                         Target Process Run
                     </label>
 
+                    {/* #dragDropArea is 500px content-box plus a 2px border each side; selects are border-box */}
                     <select style={{
-                        width: '200px'
+                        width: '504px',
+                        maxWidth: '100%'
                     }}
                         id="targetProcessRunId"
                         value={targetProcessRunId ?? ""}
@@ -414,15 +427,34 @@ export function ExportImportVerifications() {
                     >
                         <option value="">Select target process run</option>
 
-                        {processRuns?.map(processRun => (
-                            <option
-                                key={processRun.processRunId}
-                                value={processRun.processRunId}
-                            >
-                                {processRun.processRunId}
-                            </option>
-                        ))}
+                        {DOCUMENT_TYPES.map(documentType => {
+                            const runsOfType = processRuns.filter(processRun =>
+                                processRunDocumentType(processRun) === documentType.key);
+
+                            return runsOfType.length > 0 && (
+                                <optgroup key={documentType.key} label={documentType.label}>
+                                    {runsOfType.map(processRun => (
+                                        <option
+                                            key={processRun.processRunId}
+                                            value={processRun.processRunId}
+                                        >
+                                            {processRunOptionLabel(processRun)}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            );
+                        })}
                     </select>
+
+                    {targetProcessRun && (
+                        <p style={{margin: '4px 0 0'}}>
+                            {DOCUMENT_TYPES.find(documentType =>
+                                documentType.key === processRunDocumentType(targetProcessRun))?.label
+                                ?? processRunDocumentType(targetProcessRun)}
+                            {' · '}{targetProcessRun.description}
+                            {' · '}{processRunFigures(targetProcessRun)}
+                        </p>
+                    )}
                 </div>
 
                 <div

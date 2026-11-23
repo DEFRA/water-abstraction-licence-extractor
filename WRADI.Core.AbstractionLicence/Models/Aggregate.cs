@@ -96,6 +96,9 @@ public class Aggregate : AbstractionLimitGroup
     
     public AggregateVariation[]? Variations { get; set; }
 
+    // Placeholder for user-entered aggregate description - not populated in scrape output.
+    public string? Description { get; set; }
+
     public Aggregate Clone()
     {
         var returnItem = new Aggregate();
@@ -117,6 +120,7 @@ public class Aggregate : AbstractionLimitGroup
         destinationAggregate.NaldType = sourceAggregate.NaldType;
         destinationAggregate.LinkedLicences = sourceAggregate.LinkedLicences?.ToArray();
         destinationAggregate.Variations = sourceAggregate.Variations?.ToArray();
+        destinationAggregate.Description = sourceAggregate.Description;
         
         AbstractionLimitGroup.CloneProperties(
             sourceAggregate,

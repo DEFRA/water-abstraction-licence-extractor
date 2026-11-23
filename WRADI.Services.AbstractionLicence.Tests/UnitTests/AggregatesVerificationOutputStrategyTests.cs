@@ -90,6 +90,24 @@ public class AggregatesVerificationOutputStrategyTests
         Assert.Equal([PrimaryType.LicenceToLicence], GetPrimaryTypes(listRow));
     }
 
+    [Fact]
+    public void WhenEditAddsADescription_ThenTheMergedAggregateCarriesIt()
+    {
+        // Arrange
+        var scraped = CreateAggregate(PrimaryType.InLicence);
+        var edited = CreateAggregate(PrimaryType.InLicence);
+        edited.Description = "Hello, world!";
+        var listRow = CreateListRow(scraped);
+
+        // Act
+        HandleVerifications(listRow, CreateVerification("Edited", scraped.Id, edited, scraped));
+
+        // Assert
+        var merged = Assert.Single(listRow.aggregates!);
+        Assert.Equal("Hello, world!", merged.Description);
+        Assert.Equal([scraped.Id], listRow.aggregateIds);
+    }
+
     private static Aggregate CreateAggregate(PrimaryType primaryType)
     {
         return new Aggregate

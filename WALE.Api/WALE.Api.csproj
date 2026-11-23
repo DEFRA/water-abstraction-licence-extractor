@@ -33,4 +33,9 @@
       <ProjectReference Include="..\WRADI.Services.Cache.WrInspectionReport\WRADI.Services.Cache.WrInspectionReport.csproj" />
       <ProjectReference Include="..\WRADI.Database.PostgreSQL.WrInspectionReport\WRADI.Database.PostgreSQL.WrInspectionReport.csproj" />
     </ItemGroup>
+
+    <Target Name="link_deps" AfterTargets="AfterBuild" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' ">
+        <Exec Command="ln -sf /opt/homebrew/lib/libleptonica.dylib $(OutDir)x64/libleptonica-1.82.0.dylib" />
+        <Exec Command="ln -sf /opt/homebrew/lib/libtesseract.dylib $(OutDir)x64/libtesseract50.dylib" />
+    </Target>
 </Project>

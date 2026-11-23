@@ -1,6 +1,5 @@
 using WALE.ProcessFile.Services.Services;
 using System.IO.Compression;
-using Amazon.SQS;
 using Microsoft.AspNetCore.ResponseCompression;
 using Scalar.AspNetCore;
 using WALE.Api.Areas.BFF.Models;
@@ -12,7 +11,9 @@ using WALE.ProcessFile.Database.PostgreSQL;
 using WALE.ProcessFile.Services.AwsS3;
 using WALE.ProcessFile.Services.AwsSqs;
 using WALE.ProcessFile.Services.Cache;
+using WALE.ProcessFile.Services.Docnet;
 using WALE.ProcessFile.Services.Output;
+using WALE.ProcessFile.Services.PdfPig;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Database.PostgreSQL.AbstractionLicence;
 using WRADI.Database.PostgreSQL.WrInspectionReport;
@@ -163,6 +164,9 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IThumbnailUrlService, ThumbnailUrlService>()
         .AddTransient<ILicenceRunComparisonService, LicenceRunComparisonService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
+        .AddTransient<INoOcrDataExtractorService, PdfPigNoOcrDataExtractorService>()
+        .AddTransient<INoOcrPdfDocumentService, PdfPigNoOcrPdfDocumentService>()
+        .AddTransient<INoOcrAlternativePdfDocumentService, DocnetNoOcrAlternativePdfDocumentService>()
         .Configure<VerificationConfig>(options =>
         {
             options.PostgresqlHost = dbHost;

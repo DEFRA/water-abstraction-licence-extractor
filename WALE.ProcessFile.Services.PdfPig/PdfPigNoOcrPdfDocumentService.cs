@@ -10,7 +10,7 @@ public class PdfPigNoOcrPdfDocumentService : INoOcrPdfDocumentService
 {
     public async Task<IInternalPdfDocument?> GetPdfDocumentAsync(IFileService fileService, string filename)
     {
-        var fileStream = await fileService.GetFileAsStreamAsync(filename);
+        var fileStream = await fileService.GetFileAsStreamAsync(filename, true);
 
         if (fileStream == null)
         {

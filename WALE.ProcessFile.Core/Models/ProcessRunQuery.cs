@@ -15,6 +15,8 @@ public class ProcessRunQuery
 
     public string? Issuer { get; init; }
 
+    public int? RegionId { get; init; }
+
     public bool? LimitsEmpty { get; init; }
 
     public string? AggregatesFilter { get; init; }

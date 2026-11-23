@@ -51,7 +51,7 @@ public class LocalFileService(string folderPath) : IFileService
                 .ToList());
     }
 
-    public Task<Stream?> GetFileAsStreamAsync(string filename)
+    public Task<Stream?> GetFileAsStreamAsync(string filename, bool readIntoMemory)
     {
         var path = $"{IngressFolderPath}{filename}";
         

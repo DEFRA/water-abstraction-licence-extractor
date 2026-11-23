@@ -570,33 +570,32 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                description,
                                start_date_time_utc,
                                end_date_time_utc,
-                               CASE document_type
-                                   WHEN 'AbstractionLicence' THEN (
-                                       SELECT COUNT(*)
-                                           FROM licence
-                                           WHERE process_run_id = process_run.process_run_id
-                                   )
-                                   ELSE (
-                                       SELECT COUNT(*)
-                                           FROM matches_result
-                                           WHERE process_run_id = process_run.process_run_id
-                                   )
-                               END AS number_of_files,
+                               status,
                                document_type,
-                               CASE document_type
-                                   WHEN 'AbstractionLicence' THEN (
-                                       SELECT COUNT(*)
-                                           FROM licence_list_item
-                                           WHERE process_run_id = process_run.process_run_id
-                                             AND status = 'Live'
-                                   )
-                                   ELSE (
-                                       SELECT COUNT(*)
-                                           FROM matches_result
-                                           WHERE process_run_id = process_run.process_run_id
-                                             AND status = 'Ok'
-                                   )
-                               END AS SuccessCount
+                               number_of_files,
+                               success_count,
+                               (
+                                   SELECT COUNT(*)
+                                       FROM matches_result
+                                       WHERE process_run_id = process_run.process_run_id
+                               ) AS FilesProcessed,
+                               (
+                                   SELECT COUNT(*)
+                                       FROM matches_result
+                                       WHERE process_run_id = process_run.process_run_id
+                                         AND status = 'Error'
+                               ) AS FilesErrored,
+                               (
+                                   SELECT COUNT(*)
+                                       FROM licence_list_item
+                                       WHERE process_run_id = process_run.process_run_id
+                               ) AS LicenceCount,
+                               (
+                                   SELECT COUNT(*)
+                                       FROM licence_list_item
+                                       WHERE process_run_id = process_run.process_run_id
+                                         AND status = 'Live'
+                               ) AS LiveLicenceCount
                            FROM process_run
                            WHERE end_date_time_utc IS NOT NULL;
                            """;

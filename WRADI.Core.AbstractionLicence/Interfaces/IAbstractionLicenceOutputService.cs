@@ -62,6 +62,8 @@ public interface IAbstractionLicenceOutputService
 
     Task<List<string>> GetDistinctIssuersAsync(int processRunId);
 
+    Task<List<int>> GetDistinctRegionIdsAsync(int processRunId);
+
     Task<List<string>> GetDistinctIssueDatesAsync(int processRunId);
 
     Task<Dictionary<Guid, List<LicenceFileMapEntry>>> GetLicenceFileIdsAsync(int processRunId);

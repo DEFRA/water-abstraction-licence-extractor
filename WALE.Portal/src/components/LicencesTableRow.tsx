@@ -132,6 +132,7 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, loo
                 <br /><strong>Nald OG:</strong><br /> {dashesIfNullOrEmpty(item.naldOrigSignatureDate)}
             </td>
             <td>{dashesIfNullOrEmpty(item.issuer)}</td>
+            <td>{dashesIfNullOrEmpty(item.regionName)}</td>
             <td>{(item.meansFound ? "True" : "False")}</td>
             <td>
                 <LinkedLicencesList
@@ -156,7 +157,7 @@ function LicencesTableRow({item, oddRow, expanded, onToggleExpand, onLookUp, loo
                     return (
                             <div key={sectionName} style={{ marginBottom: '10px' }}>
                                 <strong>{sectionName}</strong>
-                                {sectionItems.length === 0 ? <div>No verifications</div> : <UnorderedListOfStrings items={
+                                {sectionItems.length === 0 ? <div>No verifications <span title={`No ${sectionName} and no verifications`}>🚩</span></div> : <UnorderedListOfStrings items={
                                     [...sectionItems]
                                         .sort((a, b) => compareAlphanumeric(a.licenceSectionItemId, b.licenceSectionItemId))
                                         .map((v) => {

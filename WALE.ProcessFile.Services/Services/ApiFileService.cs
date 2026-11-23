@@ -6,7 +6,6 @@ using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
-using WALE.ProcessFile.Services.Types;
 
 namespace WALE.ProcessFile.Services.Services;
 
@@ -66,7 +65,7 @@ public class ApiFileService(HttpClient httpClient) : IFileService
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task<Stream?> GetFileAsStreamAsync(string filename)
+    public async Task<Stream?> GetFileAsStreamAsync(string filename, bool readIntoMemory)
     {
         try
         {

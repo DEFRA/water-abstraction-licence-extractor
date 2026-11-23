@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
 using WALE.ProcessFile.Core.Models.NoOcrService;
@@ -61,7 +62,7 @@ public interface ICacheService
         string extension,
         int processRunId);
     
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata);
     
@@ -69,7 +70,7 @@ public interface ICacheService
         NoOcrServiceMetadataCacheRequest request,
         ImageMetadata imagesMetadata);
     
-    public Task SaveNoOcrPagesTextLinesAsync(
+    public Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages);
 
     public Task<NoOcrServicePageCacheRequest> SaveNoOcrPageTextLinesAsync(
@@ -126,4 +127,13 @@ public interface ICacheService
     Task<HashSet<string>> GetFirstNamesAsync();
     
     Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber);
+    
+    Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService);
 }

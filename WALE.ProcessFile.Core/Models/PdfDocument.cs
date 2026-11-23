@@ -39,7 +39,7 @@ public class PdfDocument(
     INoOcrPdfDocumentService NoOcrPdfDocumentService { get; set; } = noOcrPdfDocumentService;
 
     INoOcrAlternativePdfDocumentService NoOcrAlternativePdfDocumentService { get; set; } = noOcrAlternativePdfDocumentService;
-
+    
     int SkipFileIfMoreThenPages { get; set; } = configuration.SkipFileWhenMoreThenPages;
 
     public static int SkipFileIfMoreThenImages { get; set; } = 50;
@@ -166,6 +166,10 @@ public class PdfDocument(
     public List<DocumentLine>? DocumentLines { get; set; }
     
     public ImageMetadata? ImagesMetadata { get; set; }
+    
+    public Dictionary<int, string>? AllDocumentLines { get; set; }
+    
+    public Dictionary<string, object>? PagesMetadata { get; set; }
 
     public void Dispose()
     {
@@ -184,12 +188,13 @@ public class PdfDocument(
             return memoryStream.ToArray();                
         }
         
-        // Jon Skeet's accepted answer 
         return ReadStreamFully(stream);
     }
     
     private static byte[] ReadStreamFully(Stream input)
     {
+        // Jon Skeet's accepted answer on StackOverflow
+        
         input.Position = 0;
         
         var buffer = new byte[16*1024];

@@ -43,6 +43,8 @@ public interface ILicenceListRepository
 
     Task<List<string>> GetLicenceEstateLicenceNumbersAsync();
     
+    Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId);
+    
     Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     
     Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId);

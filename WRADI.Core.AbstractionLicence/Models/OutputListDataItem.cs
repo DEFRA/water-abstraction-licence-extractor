@@ -1,3 +1,5 @@
+using WALE.ProcessFile.Core.Helpers;
+
 namespace WRADI.Core.AbstractionLicence.Models;
 
 public class OutputListDataItem
@@ -41,6 +43,10 @@ public class OutputListDataItem
     public bool isIssueDateFlagged { get; set; }
     
     public string? issuer { get; set; }
+    
+    public int? regionId { get; set; }
+
+    public string? regionName => RegionHelper.GetRegionNameOrNull(regionId);
     
     public bool meansFound { get; set; }
     

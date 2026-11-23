@@ -358,6 +358,11 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetDistinctIssuersAsync(processRunId);
     }
 
+    public async Task<List<int>> GetDistinctRegionIdsAsync(int processRunId)
+    {
+        return await databaseReadService.GetDistinctRegionIdsAsync(processRunId);
+    }
+
     public async Task<List<string>> GetDistinctIssueDatesAsync(int processRunId)
     {
         return await databaseReadService.GetDistinctIssueDatesAsync(processRunId);
@@ -605,6 +610,11 @@ public class DatabaseAbstractionLicenceOutputService(
     public async Task<List<string>> GetLicenceListIssuersAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);
+    }
+
+    public async Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId)
+    {
+        return await databaseReadService.GetLicenceListRegionIdsAsync(processRunId);
     }
 
     public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId)

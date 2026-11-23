@@ -40,6 +40,8 @@ public class IntermediateOutputLicence
     
     public string? Issuer;
     
+    public int? RegionId;
+    
     public bool MeansFound;
     
     public string? Status;

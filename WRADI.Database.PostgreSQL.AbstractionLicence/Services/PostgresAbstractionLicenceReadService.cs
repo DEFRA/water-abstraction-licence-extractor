@@ -184,6 +184,33 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
+    public async Task<List<int>> GetDistinctRegionIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT
+                   (data::jsonb ->> 'regionId')::int AS region_id
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND status = 'Ok'
+              AND (data::jsonb ->> 'regionId') ~ '^[0-9]+$'
+            ORDER BY region_id;
+            """;
+
+        var regionIds = await QueryAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+
+        return regionIds.ToList();
+    }
+
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
         bool slashesRemoved,
@@ -708,6 +735,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
         AddLicenceNumbersFilter(sql, parameters, query.LicenceNumbers);
         AddIssuerFilter(sql, parameters, query.Issuer);
+        AddRegionFilter(sql, parameters, query.RegionId);
         AddOcrScanFilter(sql, parameters, query.OcrScan);
         AddMeansFoundFilter(sql, parameters, query.MeansFound);
 
@@ -3166,6 +3194,24 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         parameters.Add("Issuer", issuer);
     }
+
+    private static void AddRegionFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        int? regionId)
+    {
+        if (!regionId.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND data::jsonb ->> 'regionId' = 
+            """);
+
+        parameters.Add("RegionId", regionId.Value.ToString());
+    }
     
     private static void AddOcrScanFilter(
         StringBuilder sql,
@@ -3651,6 +3697,32 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             """;
 
         var results = await QueryAsync<string>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+
+        return results.ToList();
+    }
+
+    public async Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT region_id
+            FROM licence_list_item
+            WHERE process_run_id = @ProcessRunId
+              AND status = 'Live'
+              AND region_id IS NOT NULL
+            ORDER BY region_id;
+            """;
+
+        var results = await QueryAsync<int>(
             connection,
             sql,
             0,
@@ -4152,6 +4224,7 @@ private async Task<
             nald_signature_date AS NaldSignatureDate,
             is_issue_date_flagged AS IsIssueDateFlagged,
             issuer AS Issuer,
+            region_id AS RegionId,
             means_found AS MeansFound,
             status AS Status,
             purposes_count AS PurposesCount,
@@ -4449,84 +4522,92 @@ private async Task<
             "Issuer",
             query.Issuer);
 
-        ReadSqlHelper.AddBooleanFilter(
-            sql,
-            parameters,
-            "ocr",
-            "OcrScan",
-            query.OcrScan);
 
-        ReadSqlHelper.AddBooleanFilter(
-            sql,
-            parameters,
-            "means_found",
-            "MeansFound",
-            query.MeansFound);
+    ReadSqlHelper.AddIntFilter(
+        sql,
+        parameters,
+        "region_id",
+        "RegionId",
+        query.RegionId);
 
-        ReadSqlHelper.AddBooleanFilter(
-            sql,
-            parameters,
-            "is_licence_number_flagged",
-            "IsLicenceNumberFlagged",
-            query.IsLicenceNumberFlagged);
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "ocr",
+        "OcrScan",
+        query.OcrScan);
 
-        ReadSqlHelper.AddBooleanFilter(
-            sql,
-            parameters,
-            "is_issue_date_flagged",
-            "IsIssueDateFlagged",
-            query.IsIssueDateFlagged);
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "means_found",
+        "MeansFound",
+        query.MeansFound);
 
-        ReadSqlHelper.AddCountEmptyFilter(
-            sql,
-            query.PointsEmpty,
-            "points_count");
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "is_licence_number_flagged",
+        "IsLicenceNumberFlagged",
+        query.IsLicenceNumberFlagged);
 
-        ReadSqlHelper.AddCountEmptyFilter(
-            sql,
-            query.PurposesEmpty,
-            "purposes_count");
+    ReadSqlHelper.AddBooleanFilter(
+        sql,
+        parameters,
+        "is_issue_date_flagged",
+        "IsIssueDateFlagged",
+        query.IsIssueDateFlagged);
 
-        ReadSqlHelper.AddCountEmptyFilter(
-            sql,
-            query.LimitsEmpty,
-            "limits_count");
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.PointsEmpty,
+        "points_count");
 
-        ReadSqlHelper.AddAggregatesFilter(
-            sql,
-            parameters,
-            query.AggregatesFilter);
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.PurposesEmpty,
+        "purposes_count");
 
-        ReadSqlHelper.AddAggregatePrimaryTypeFilter(
-            sql,
-            query.AggregatePrimaryTypeFilter);
+    ReadSqlHelper.AddCountEmptyFilter(
+        sql,
+        query.LimitsEmpty,
+        "limits_count");
 
-        ReadSqlHelper.AddIssueYearFilter(
-            sql,
-            parameters,
-            query.IssueYear?.ToString());
+    ReadSqlHelper.AddAggregatesFilter(
+        sql,
+        parameters,
+        query.AggregatesFilter);
 
-        ReadSqlHelper.AddLinkedLicencesTypeFilter(
-            sql,
-            parameters,
-            query.LinkedLicencesType);
+    ReadSqlHelper.AddAggregatePrimaryTypeFilter(
+        sql,
+        query.AggregatePrimaryTypeFilter);
 
-        ReadSqlHelper.AddLicenceSetFilter(
-            sql,
-            parameters,
-            query.ShortLicenceSetId);
+    ReadSqlHelper.AddIssueYearFilter(
+        sql,
+        parameters,
+        query.IssueYear?.ToString());
 
-        ReadSqlHelper.AddVerificationTypeFilter(
-            sql,
-            parameters,
-            query.VerificationType,
-            query.VerificationSections);
+    ReadSqlHelper.AddLinkedLicencesTypeFilter(
+        sql,
+        parameters,
+        query.LinkedLicencesType);
 
-        ReadSqlHelper.AddLicenceNumbersFilter(
-            sql,
-            parameters,
-            query.LicenceNumbers);
-    }
+    ReadSqlHelper.AddLicenceSetFilter(
+        sql,
+        parameters,
+        query.ShortLicenceSetId);
+
+    ReadSqlHelper.AddVerificationTypeFilter(
+        sql,
+        parameters,
+        query.VerificationType,
+        query.VerificationSections);
+
+    ReadSqlHelper.AddLicenceNumbersFilter(
+        sql,
+        parameters,
+        query.LicenceNumbers);
+}
 
     // TODO move to a 'Core' layer
     private static JsonSerializerOptions GetSerializerOptions() =>

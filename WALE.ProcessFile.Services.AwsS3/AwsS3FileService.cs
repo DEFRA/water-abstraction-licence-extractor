@@ -174,7 +174,7 @@ public class AwsS3FileService(
         }
     }
     
-    public async Task<Stream?> GetFileAsStreamAsync(string filename)
+    public async Task<Stream?> GetFileAsStreamAsync(string filename, bool readIntoMemory)
     {
         var client = GetS3Client();
 
@@ -187,10 +187,19 @@ public class AwsS3FileService(
                     Key = filename
                 });
 
-            return file.ResponseStream;
+            if (!readIntoMemory)
+            {
+                return file.ResponseStream;                
+            }
+
+            var memoryStream = new MemoryStream();
+            await file.ResponseStream.CopyToAsync(memoryStream);
+            
+            memoryStream.Position = 0;
+            return memoryStream;
         }
         catch (AmazonS3Exception exception)
-            when (exception.StatusCode == System.Net.HttpStatusCode.NotFound
+            when (exception.StatusCode == HttpStatusCode.NotFound
                 || exception.ErrorCode == "NoSuchKey")
         {
             // The work list is built from licence_finder_result without checking the bucket, so a

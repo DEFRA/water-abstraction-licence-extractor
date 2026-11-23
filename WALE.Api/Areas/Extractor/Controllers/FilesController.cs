@@ -31,7 +31,7 @@ public class FilesController(IFileService fileService) : Controller
             return File(bytes, "application/octet-stream");
         }
         
-        var data = await fileService.GetFileAsStreamAsync(filename);
+        var data = await fileService.GetFileAsStreamAsync(filename, false);
 
         if (data == null)
         {

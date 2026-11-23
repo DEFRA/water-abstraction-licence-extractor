@@ -15,6 +15,8 @@ public class ProcessRunQuery
 
     public string? Issuer { get; init; }
 
+    public int? RegionId { get; init; }
+
     public bool? LimitsEmpty { get; init; }
 
     public string? AggregatesFilter { get; init; }
@@ -55,6 +57,7 @@ public class ProcessRunQuery
             Skip = Skip,
             Take = Take,
             Issuer = Issuer,
+            RegionId = RegionId,
             LimitsEmpty = LimitsEmpty,
             AggregatesFilter = AggregatesFilter,
             AggregatePrimaryTypeFilter = AggregatePrimaryTypeFilter,

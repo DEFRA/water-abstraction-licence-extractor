@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
@@ -238,7 +240,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         return int.Parse(content);
     }
 
-    public async Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(
+    public async Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
         NoOcrServiceMetadataCacheRequest request,
         List<Dictionary<string, object>> pagesMetadata)
     {
@@ -253,12 +255,17 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             pageLines = pagesMetadataJson
         }, JsonHelper.GetSerializerOptions());
         
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
         response.EnsureSuccessStatusCode();
 
-        return request;
+        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseJson = JsonSerializer.Deserialize<Dictionary<string, object>>(
+            responseContent,
+            JsonHelper.GetSerializerOptions());
+        
+        return responseJson!;
     }
 
     public async Task SaveNoOcrImagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, ImageMetadata imagesMetadata)
@@ -283,14 +290,18 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
     /// request size limit that GET 413s already show is real.
     private const int MaxBatchedPageLinesBytes = 4 * 1024 * 1024;
 
-    public async Task SaveNoOcrPagesTextLinesAsync(
+    public async Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
+        var returnDictionary = new Dictionary<int, string>();
+        
         var batch = new List<(NoOcrServicePageCacheRequest Request, string PageLines)>();
         var batchBytes = 0;
 
         foreach (var page in pages)
         {
+            returnDictionary.Add(page.Request.PageNumber, page.PageLines);
+            
             if (batch.Count > 0 && batchBytes + page.PageLines.Length > MaxBatchedPageLinesBytes)
             {
                 // Push what's already there (not including this page)
@@ -309,6 +320,8 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         {
             await PostPagesTextLinesAsync(batch);
         }
+
+        return returnDictionary;
     }
 
     private async Task PostPagesTextLinesAsync(
@@ -503,14 +516,7 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
             ? JsonSerializer.Deserialize<MetadataCollection?>(content, JsonHelper.GetSerializerOptions())
             : null;
 
-        if (metadata?.PagesMetadata == null)
-        {
-            return null;
-        }
-
-        metadata.SizeBytes = content.Length;
-
-        return metadata;
+        return metadata?.PagesMetadata == null ? null : metadata;
     }
     
     public async Task<List<DmsFileIdInformation>> GetDmsFileIdInformationAsync()
@@ -679,5 +685,51 @@ public class ApiCacheService(HttpClient httpClient) : ICacheService
         ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - Finished getting {hashSet.Count} first names in {tsDuration} seconds");
         
         return hashSet;
+    }
+    
+    public async Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
+    {
+        const string path = "/Extractor/Licence/FilletDocument";
+        var dtStart = DateTime.UtcNow;
+
+        var json = JsonSerializer.Serialize(
+            new
+            {
+                pdfFileName,
+                fileId,
+                lookupConfiguration.RegionId,
+                processRunId,
+                lookupConfiguration.SkipFileWhenMoreThenPages
+            },
+            JsonHelper.GetWireSerializerOptions());
+
+        using var httpContent = new StringContent(
+            json,
+            Encoding.UTF8,
+            "application/json");
+
+        using var response = await HttpHelper.RateLimiter.Enqueue(
+            () => httpClient.PostAsync(
+                new Uri(httpClient.BaseAddress!, path),
+                httpContent));
+        
+        var responseJson =  await response.Content.ReadAsStringAsync();
+        var responseDeserialised = JsonSerializer.Deserialize<FilletDocumentResponse>(
+            responseJson,
+            JsonHelper.GetSerializerOptions());
+
+        var tsDuration = DateTime.UtcNow - dtStart;
+        ConsoleHelper.WriteLine($"INFO - {nameof(ApiCacheService)} - {nameof(FilletDocumentAsync)} for " +
+            $"{pdfFileName} responded '{responseDeserialised?.Result}', took {tsDuration.TotalMilliseconds}ms");
+        
+        response.EnsureSuccessStatusCode();
+        return responseDeserialised!.Metadata;
     }
 }

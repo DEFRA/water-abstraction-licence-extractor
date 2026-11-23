@@ -20,6 +20,7 @@ export function LicencesTableFooters({ totals, cumulativeTotals }: LicencesTable
                 <td>{totals.ocr}</td>
                 <td>{totals.issueDate}</td>
                 <td>{totals.issuer}</td>
+                <td>{totals.regionName}</td>
                 <td>{totals.meansFound}</td>
                 <td>{totals.linkedLicences}</td>
                 <td>{totals.licenceSets}</td>
@@ -36,17 +37,18 @@ export function LicencesTableFooters({ totals, cumulativeTotals }: LicencesTable
                 <td>{cumulativeTotals?.ocr}</td>
                 <td>{cumulativeTotals?.issueDates}</td>
                 <td>{cumulativeTotals?.issuers}</td>
+                <td>{cumulativeTotals?.regions}</td>
                 <td>{cumulativeTotals?.meansOfAbs}</td>
                 <td>{cumulativeTotals?.linkedLicences}</td>
                 <td>{totals.licenceSets}</td>
                 <td>{cumulativeTotals?.licenceSectionVerifications}</td>
             </tr>
             <tr>
-                <td colSpan={15}></td>
+                <td colSpan={16}></td>
                 <td></td>
             </tr>
             <tr>
-                <td colSpan={10}></td>
+                <td colSpan={11}></td>
                 <td style={{
                     fontWeight: 'normal', verticalAlign: 'top', fontSize: '10pt'
                 }}>

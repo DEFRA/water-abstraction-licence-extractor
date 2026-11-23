@@ -1,7 +1,11 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using WALE.Api.Areas.Extractor.Controllers.Models;
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
+using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -11,7 +15,13 @@ namespace WALE.Api.Areas.Extractor.Controllers;
 [Area("Extractor")]
 [Route("/[area]/[controller]/[action]")]
 public class LicenceController(
-    IAbstractionLicenceOutputService abstractionLicenceOutputService) : Controller
+    ICacheService cacheService,
+    IOutputService outputService,
+    IFileService fileService,
+    IAbstractionLicenceOutputService abstractionLicenceOutputService,
+    INoOcrDataExtractorService noOcrDataExtractorService,
+    INoOcrPdfDocumentService noOcrPdfDocumentService,
+    INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> GetAllAsync(
@@ -132,5 +142,73 @@ public class LicenceController(
             request.processRunId);
 
         return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> FilletDocumentAsync([FromBody] FilletDocumentRequest request)
+    {
+        if (request.pdfFileName == null)
+        {
+            return BadRequest($"{nameof(request.pdfFileName)} is null");
+        }
+        
+        if (request.fileId == Guid.Empty)
+        {
+            return BadRequest($"{nameof(request.fileId)} is not set");
+        }
+        
+        var pdfDocument = await noOcrDataExtractorService.GetPdfDocumentAsync(
+            request.pdfFileName!,
+            request.fileId,
+            outputService,
+            cacheService,
+            noOcrPdfDocumentService,
+            noOcrAlternativePdfDocumentService,
+            GetMinimalLookupConfiguration(
+                request.skipFileWhenMoreThenPages,
+                request.regionId),
+            request.processRunId,
+            false);
+
+        if (pdfDocument == null)
+        {
+            return BadRequest("Pdf document is not cached and could not be loaded to be filleted");
+        }
+        
+        var rawMetadata = new MetadataCollection
+        {
+            AllDocumentLines = pdfDocument.AllDocumentLines!,
+            ImageMetadata = pdfDocument.ImagesMetadata!,
+            PagesMetadata = pdfDocument.PagesMetadata!,
+            SizeBytes = pdfDocument.SizeBytes,
+        };
+        
+        const string alreadyCached = "ALREADY_CACHED";
+        const string filleted = "FILLETED";
+        
+        var responseObject = new FilletDocumentResponse
+        {
+            Result = pdfDocument.FromCache ? alreadyCached : filleted,
+            Metadata = rawMetadata
+        };
+        
+        return Ok(responseObject);
+    }
+
+    private LookupConfiguration GetMinimalLookupConfiguration(int skipFileWhenMoreThenPages, int regionId)
+    {
+        return new LookupConfiguration(
+            [],
+            [],
+            fileService,
+            cacheService,
+            outputService,
+            null!,
+            null!,
+            null!,
+            null!,
+            regionId,
+            DateTime.Now,
+            skipFileIfMoreThenPages: skipFileWhenMoreThenPages);
     }
 }

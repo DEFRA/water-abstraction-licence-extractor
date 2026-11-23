@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { OutputListDataItem } from '../api/generated/apiClient';
 import type {OutputListDataItemKey} from "./types.ts";
-import {isVerificationSectionSelected} from "./verificationSections.ts";
+import {isVerificationSectionEmpty, isVerificationSectionSelected, VERIFICATION_SECTIONS} from "./verificationSections.ts";
 
 export interface Totals {
     filename: number;
@@ -14,6 +14,7 @@ export interface Totals {
     ocr: number;
     issueDate: number;
     issuer: number;
+    regionName: number;
     meansFound: number;
     linkedLicences: number;
     licenceSectionVerifications: number;
@@ -34,6 +35,7 @@ export function useTotals(filteredData: OutputListDataItem[], sectionVerificatio
             ocr: countNonEmpty(filteredData, 'ocr', false),
             issueDate: countNonEmpty(filteredData, 'issueDate', ''),
             issuer: countNonEmpty(filteredData, 'issuer', ''),
+            regionName: countNonEmpty(filteredData, 'regionName', ''),
             meansFound: countNonEmpty(filteredData, 'meansFound', false),
             linkedLicences: countNonEmpty(filteredData, 'linkedLicences', []),
             licenceSectionVerifications: countNonEmptyVerificationTypes(filteredData, sectionVerification, verificationSections),
@@ -131,7 +133,14 @@ function countNonEmptyVerificationTypes(data: OutputListDataItem[], verification
                 }
             });
         }
-       }
+
+        if (verificationType === "Flagged") {
+            count += VERIFICATION_SECTIONS.filter(sectionName =>
+                isVerificationSectionSelected(sectionName, verificationSections)
+                && isVerificationSectionEmpty(item, sectionName)
+            ).length;
+        }
+    }
 
     return count;
 }

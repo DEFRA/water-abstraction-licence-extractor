@@ -184,6 +184,33 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return issuers.ToList();
     }
 
+    public async Task<List<int>> GetDistinctRegionIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT
+                   (data::jsonb ->> 'regionId')::int AS region_id
+            FROM licence
+            WHERE process_run_id = @ProcessRunId
+              AND status = 'Ok'
+              AND (data::jsonb ->> 'regionId') ~ '^[0-9]+$'
+            ORDER BY region_id;
+            """;
+
+        var regionIds = await QueryAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+
+        return regionIds.ToList();
+    }
+
     public async Task<NaldAbstractionData?> GetNaldAbstractionLicenceAsync(
         string licenceNumber,
         bool slashesRemoved,
@@ -708,6 +735,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         AddLicenceSearchTermFilter(sql, parameters, query.SearchTermClean);
         AddLicenceNumbersFilter(sql, parameters, query.LicenceNumbers);
         AddIssuerFilter(sql, parameters, query.Issuer);
+        AddRegionFilter(sql, parameters, query.RegionId);
         AddOcrScanFilter(sql, parameters, query.OcrScan);
         AddMeansFoundFilter(sql, parameters, query.MeansFound);
 
@@ -2988,6 +3016,24 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
 
         parameters.Add("Issuer", issuer);
     }
+
+    private static void AddRegionFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        int? regionId)
+    {
+        if (!regionId.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            """
+              AND data::jsonb ->> 'regionId' = 
+            """);
+
+        parameters.Add("RegionId", regionId.Value.ToString());
+    }
     
     private static void AddOcrScanFilter(
         StringBuilder sql,
@@ -3393,6 +3439,32 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                 @ProcessRunId =  processRunId
             });
         
+        return results.ToList();
+    }
+
+    public async Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+
+        const string sql =
+            """
+            SELECT DISTINCT region_id
+            FROM licence_list_item
+            WHERE process_run_id = @ProcessRunId
+              AND status = 'Live'
+              AND region_id IS NOT NULL
+            ORDER BY region_id;
+            """;
+
+        var results = await QueryAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId
+            });
+
         return results.ToList();
     }
 
@@ -3833,6 +3905,7 @@ private async Task<
             nald_signature_date AS NaldSignatureDate,
             is_issue_date_flagged AS IsIssueDateFlagged,
             issuer AS Issuer,
+            region_id AS RegionId,
             means_found AS MeansFound,
             status AS Status,
             purposes_count AS PurposesCount,
@@ -3947,6 +4020,13 @@ private static void AddLicenceListItemFilters(
         "issuer",
         "Issuer",
         query.Issuer);
+
+    ReadSqlHelper.AddIntFilter(
+        sql,
+        parameters,
+        "region_id",
+        "RegionId",
+        query.RegionId);
 
     ReadSqlHelper.AddBooleanFilter(
         sql,

@@ -39,7 +39,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 ConsoleHelper.TryRemoveLastLine();
                 ConsoleHelper.WriteLine(
                     $"WARNING - {nameof(PdfPigNoOcrImageService)} - could not read image dimensions, " +
-                    $"saving without them - P{pageNumber} I{imageNumber} {fileId} - {ex.Message}");
+                    $"saving without them - P{pageNumber} I{imageNumber} {fileId} - {ex}");
 
                 return null;
             }

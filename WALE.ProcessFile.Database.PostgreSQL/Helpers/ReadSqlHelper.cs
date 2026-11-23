@@ -6,6 +6,8 @@ namespace WALE.ProcessFile.Database.PostgreSQL.Helpers;
 
 public static class ReadSqlHelper
 {
+    private static readonly string[] VerificationSections = ["Linked Licences", "Aggregates"];
+
     public static void AddSearchTermFilter(
         StringBuilder sql,
         DynamicParameters parameters,
@@ -66,6 +68,26 @@ public static class ReadSqlHelper
             value.Value);
     }
     
+    public static void AddIntFilter(
+        StringBuilder sql,
+        DynamicParameters parameters,
+        string columnName,
+        string parameterName,
+        int? value)
+    {
+        if (!value.HasValue)
+        {
+            return;
+        }
+
+        sql.AppendLine(
+            $"  AND {columnName} = @{parameterName}");
+
+        parameters.Add(
+            parameterName,
+            value.Value);
+    }
+
     public static void AddCountEmptyFilter(
         StringBuilder sql,
         bool? empty,
@@ -403,18 +425,54 @@ public static class ReadSqlHelper
                 "Flagged",
                 StringComparison.OrdinalIgnoreCase))
         {
+            var emptyFlagSections = VerificationSections
+                .Where(x => filteredVerificationSections is not { Length: > 0 }
+                            || filteredVerificationSections.Contains(x, StringComparer.OrdinalIgnoreCase))
+                .ToArray();
+
+            var emptySectionClause = string.Empty;
+
+            if (emptyFlagSections.Length > 0)
+            {
+                emptySectionClause =
+                    """
+                    OR EXISTS (
+                        SELECT 1
+                        FROM unnest(@EmptyFlagSections) AS known_section(section_name)
+                        WHERE NOT EXISTS (
+                            SELECT 1
+                            FROM licence_list_item_verification_section section
+                            INNER JOIN licence_list_item_verification_item item
+                                ON item.verification_section_id =
+                                   section.verification_section_id
+                            WHERE section.licence_list_item_id =
+                                  licence_list_item.licence_list_item_id
+                              AND section.licence_section_name =
+                                  known_section.section_name
+                        )
+                    )
+                    """;
+
+                parameters.Add(
+                    "EmptyFlagSections",
+                    emptyFlagSections);
+            }
+
             sql.AppendLine(
                 $"""
-                  AND EXISTS (
-                      SELECT 1
-                      FROM licence_list_item_verification_section section
-                      INNER JOIN licence_list_item_verification_item item
-                          ON item.verification_section_id =
-                             section.verification_section_id
-                      WHERE section.licence_list_item_id =
-                            licence_list_item.licence_list_item_id
-                        AND item.is_flagged = true
-                        {sectionClause}
+                  AND (
+                      EXISTS (
+                          SELECT 1
+                          FROM licence_list_item_verification_section section
+                          INNER JOIN licence_list_item_verification_item item
+                              ON item.verification_section_id =
+                                 section.verification_section_id
+                          WHERE section.licence_list_item_id =
+                                licence_list_item.licence_list_item_id
+                            AND item.is_flagged = true
+                            {sectionClause}
+                      )
+                      {emptySectionClause}
                   )
                 """);
 
@@ -529,6 +587,7 @@ public static class ReadSqlHelper
             "issuedate" => "issue_date",
             "issueyear" => "issue_year",
             "issuer" => "issuer",
+            "regionid" => "region_id",
             "meansfound" => "means_found",
             "status" => "status",
             "purposescount" => "purposes_count",

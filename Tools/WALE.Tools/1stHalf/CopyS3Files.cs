@@ -105,7 +105,7 @@ public static class CopyS3Files
         {
             var dtStart = DateTime.UtcNow;
             
-            var sourceFileStream = await sourceFileService.GetFileAsStreamAsync(filename);
+            var sourceFileStream = await sourceFileService.GetFileAsStreamAsync(filename, false);
 
             if (sourceFileStream == null)
             {

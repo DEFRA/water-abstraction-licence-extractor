@@ -111,7 +111,7 @@ public static class SharedHelper
         // NOTE - This function takes > 7 mins at 2000 files as of 2026-Aug-12
         
         var savedLicenceSetIds = new HashSet<string>();
-        var loggingPrefix = $"{nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)}";
+        var loggingPrefix = $"{nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)}";
 
         ConsoleHelper.WriteLine($"INFO - {loggingPrefix} " +
             $"started for {licenceSetGroups.Count} licence set groups at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
@@ -136,7 +136,7 @@ public static class SharedHelper
             if (licenceSetGroup.Count == 0)
             {
                 // This should be impossible
-                ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - Empty licence set group found");
+                ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - Empty licence set group found");
                 continue;
             }
 
@@ -164,7 +164,7 @@ public static class SharedHelper
                     
                     if (existingLicence != null && !previouslySavedForLicenceNumber)
                     {
-                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - Licence exists (by filename) but doesnt have the none schema data set");
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - Licence exists (by filename) but doesnt have the none schema data set");
                     }
 
                     var hasFileId = licenceLoop.DmsFileId.HasValue;
@@ -172,7 +172,7 @@ public static class SharedHelper
                     
                     if (existingLicence == null && !hasLicenceNumber && hasFileId)
                     {
-                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - ${nameof(UpdateAndSaveLicenceSetsAsync)} - No licence number, looking up by fileid ({licenceLoop.DmsFileId})");
+                        ConsoleHelper.WriteLine($"INFO - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} - No licence number, looking up by fileid ({licenceLoop.DmsFileId})");
                         
                         existingLicence = await outputService.GetLicenceAsync(
                             licenceLoop.DmsFileId!.Value,
@@ -186,7 +186,7 @@ public static class SharedHelper
                         
                         if (existingLicence != null && !previouslySavedForFileIdOnly)
                         {
-                            ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - - ${nameof(UpdateAndSaveLicenceSetsAsync)} Licence exists (by file id) but doesnt have the none schema data set");
+                            ConsoleHelper.WriteLine($"WARNING - {nameof(SharedHelper)} - {nameof(UpdateAndSaveLicenceSetsAsync)} Licence exists (by file id) but doesnt have the none schema data set");
                         }
                     }
                     

@@ -304,7 +304,8 @@ public class PdfDataExtractorService(
             noOcrPdfDocumentService,
             noOcrAlternativePdfDocumentService,
             configuration,
-            processRunId);
+            processRunId,
+            true);
 
         if (pdfDocument == null)
         {
@@ -314,18 +315,18 @@ public class PdfDataExtractorService(
             return returnResult;
         }
         
-        var sizeKb = ((pdfDocument.SizeBytes ?? -1) / 1024.0).ToString("0.0");
         var durationMs = (DateTime.Now - dtStart).TotalMilliseconds;
         
         if (pdfDocument.FromCache)
         {
             ConsoleHelper.WriteLine(
                 $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document from cache. " +
-                $"Cache size = {sizeKb}kb." +
                 $"Took {durationMs}ms - {pdfDocument.PdfFilename}");
         }
         else
         {
+            var sizeKb = ((pdfDocument.SizeBytes ?? -1) / 1024.0).ToString("0.0");
+            
             ConsoleHelper.WriteLine(
                 $"DEBUG - {nameof(PdfDataExtractorService)} - Getting pdf document from s3. " +
                 $"Size = {sizeKb}kb." +
@@ -522,8 +523,8 @@ public class PdfDataExtractorService(
 
                     if (image == null)
                     {
-                        ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not" +
-                            $" found, P{page} I{imageNumber} {fileId}");
+                        ConsoleHelper.WriteLine($"WARNING - {nameof(PdfDataExtractorService)} - image not " +
+                            $"found, P{page.Number} I{imageNumber} {fileId}");
                         
                         continue;
                     }

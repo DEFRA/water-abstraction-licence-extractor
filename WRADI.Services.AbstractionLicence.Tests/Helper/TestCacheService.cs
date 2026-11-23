@@ -1,3 +1,4 @@
+using WALE.ProcessFile.Core.Configuration;
 using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Dms;
@@ -97,7 +98,9 @@ public class TestCacheService : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task<NoOcrServiceMetadataCacheRequest> SaveNoOcrPagesMetadataAsync(NoOcrServiceMetadataCacheRequest request, List<Dictionary<string, object>> pagesMetadata)
+    public Task<Dictionary<string, object>?> SaveNoOcrPagesMetadataAsync(
+        NoOcrServiceMetadataCacheRequest request,
+        List<Dictionary<string, object>> pagesMetadata)
     {
         throw new NotImplementedException();
     }
@@ -107,7 +110,7 @@ public class TestCacheService : ICacheService
         throw new NotImplementedException();
     }
 
-    public Task SaveNoOcrPagesTextLinesAsync(
+    public Task<Dictionary<int, string>> SaveNoOcrPagesTextLinesAsync(
         List<(NoOcrServicePageCacheRequest Request, string PageLines)> pages)
     {
         throw new NotImplementedException();
@@ -209,6 +212,18 @@ public class TestCacheService : ICacheService
     }
 
     public Task<DmsFileData?> GetDmsFileDataAsync(string? licenceNumber)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<MetadataCollection?> FilletDocumentAsync(
+        string? pdfFileName,
+        Guid fileId,
+        int processRunId,
+        LookupConfiguration lookupConfiguration,
+        INoOcrDataExtractorService noOcrDataExtractorService,
+        INoOcrPdfDocumentService noOcrPdfDocumentService,
+        INoOcrAlternativePdfDocumentService noOcrAlternativePdfDocumentService)
     {
         throw new NotImplementedException();
     }

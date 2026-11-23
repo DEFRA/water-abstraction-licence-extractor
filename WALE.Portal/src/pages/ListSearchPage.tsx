@@ -1,6 +1,6 @@
 import {useSearchParams} from 'react-router-dom';
-import {OutputListDataItem, CumulativeFilterCounts } from "../api/generated/apiClient.ts";
-import {useState, useEffect, useCallback} from 'react'
+import {OutputListDataItem, CumulativeFilterCounts, RegionOption } from "../api/generated/apiClient.ts";
+import {useState, useEffect, useCallback, useRef} from 'react'
 import {waleApiClient} from '../api/apiClient';
 import LicencesTableRow from "../components/LicencesTableRow";
 import LicencesTableFooters from "../components/LicencesTableFooters";
@@ -10,6 +10,7 @@ import LicenceSetsTableBody, {type LicenceSetsTotals} from "../components/Licenc
 import FilesList from "../components/FilesList";
 import '../assets/liststyles.css'
 import {useTotals} from "../utils/useTotals.ts";
+import {useListPageTitle} from "../utils/useListPageTitle.ts";
 import {useReportModals} from "../utils/useReportModals.ts";
 import {ReportModalContainer} from "../components/ReportModalContainer";
 import Paging from "../components/Paging.tsx";
@@ -49,6 +50,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
         skip: 0,
         take: 1000,
         issuer: '',
+        regionId: undefined,
         limitsEmpty: undefined,
         aggregatesFilter: undefined,
         aggregatePrimaryTypeFilter: undefined,
@@ -84,6 +86,9 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
     const [totalPages, setTotalPages] = useState(1);
     const [totalLicences, setTotalLicences] = useState(0);
     const [issuers, setIssuers] = useState<string[]>([]);
+    const [regions, setRegions] = useState<RegionOption[]>([]);
+    const regionDefaultedForRunRef = useRef<number | undefined>(undefined);
+    useListPageTitle(processRunId, query.regionId, regions);
     const [issueDates, setIssueDates] = useState<string[]>([]);
     const [shortLicenceIds, setShortLicenceIds] = useState<string[]>([]);
     const fetchOutputList = useCallback(async (force: boolean = false) => {
@@ -101,6 +106,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.skip +
                 currentQuery.take +
                 currentQuery.issuer +
+                currentQuery.regionId +
                 currentQuery.limitsEmpty +
                 currentQuery.aggregatesFilter +
                 currentQuery.aggregatePrimaryTypeFilter +
@@ -135,6 +141,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                 currentQuery.skip,
                 currentQuery.take,
                 currentQuery.issuer,
+                currentQuery.regionId,
                 currentQuery.limitsEmpty,
                 currentQuery.aggregatesFilter,
                 currentQuery.aggregatePrimaryTypeFilter,
@@ -160,6 +167,14 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
             setVerifySections(currentQuery.verificationSections);
             setShortLicenceIds(listDataItems.licenceSetIds ?? []);
             setIssuers(listDataItems.issuers ?? []);
+            const fetchedRegions = listDataItems.regions ?? [];
+            setRegions(fetchedRegions);
+            if (regionDefaultedForRunRef.current !== processRunId) {
+                regionDefaultedForRunRef.current = processRunId;
+                if (fetchedRegions.length === 1 && currentQuery.regionId === undefined) {
+                    setQuery(previous => ({...previous, regionId: fetchedRegions[0].regionId}));
+                }
+            }
             setIssueDates(listDataItems.issueDates ?? []);
             const totalRecords = listDataItems.totalRecords;
             setTotalLicences(totalRecords);
@@ -223,6 +238,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                     undefined,
                     undefined,
                     undefined,
+                    undefined,
                     [licenceNumber],
                     undefined
                 ).then(result => {
@@ -269,6 +285,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                             'N/A',
                             '',
                             0,
+                            undefined,
                             undefined,
                             undefined,
                             undefined,
@@ -388,6 +405,7 @@ function ListSearchPageContent({processRunId}: {processRunId: number}) {
                                 query={query}
                                 setQuery={setQuery}
                                 issuers={issuers}
+                                regions={regions}
                                 shortLicenceIds={shortLicenceIds}
                                 issueDates={issueDates}
                                 setPageNumber={setPageNumber}

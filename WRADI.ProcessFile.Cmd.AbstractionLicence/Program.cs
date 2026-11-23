@@ -84,7 +84,7 @@ async Task ProgramAsync(IConfiguration configurationItem)
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => x.Value.Item2.RegionCode == 3) // North east
         //.Skip(10)
-        .Take(50)
+        //.Take(1)
         .ToDictionary(
             filePath => filePath.Key,
             filePath => filePath.Value);
@@ -470,6 +470,8 @@ ConfiguredServices ConfigureServices(
             "ApiRequestsPerSecond")
         ?? 50;
 
+    apiRequestsPerSecond = 100;
+    
     // One process, so it takes the whole budget; the Lambda path divides it across instances.
     var reservedConcurrency =
         configurationForServices.GetValue<int?>(

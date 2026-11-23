@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
 using NetMQ;
@@ -176,8 +177,112 @@ public class TesseractOcrDataExtractorService(
             maxNegativeDiffBetweenWordTop,
             maxPositiveDiffBetweenWordTop);
     }
+
+    private enum SocketStatus
+    {
+        NotYetSetup = 0,
+        Errored = 1,
+        InUse = 2,
+        FreeToUse = 3
+    }
     
-    private Task<ProcessResult> RunSeparateTesseractProcessAsync(
+    private static readonly List<int> AllowedPortNumbers =
+    [
+        5550,
+        /*5551,
+        5552,
+        5553,
+        5554,
+        5555,
+        5556,
+        5557,
+        5558,
+        5559*/
+    ];
+    
+    private static readonly ConcurrentDictionary<int,
+        (SocketStatus Status, Process? Process, ResponseSocket? Socket)> SocketStates = new();
+    private static readonly Lock SocketStatesLock = new();
+
+    private static (int PortNumber, Process? Process, ResponseSocket? Socket) GetAndUpdateProcess()
+    {
+        foreach (var socketStateKvp in SocketStates)
+        {
+            var status = socketStateKvp.Value.Status;
+
+            if (status != SocketStatus.FreeToUse)
+            {
+                continue;
+            }
+
+            var process = socketStateKvp.Value.Process;
+
+            if (process == null)
+            {
+                continue;
+            }
+            
+            return (socketStateKvp.Key, socketStateKvp.Value.Process!, socketStateKvp.Value.Socket!);
+        }
+
+        return (0 , null, null);
+    }
+    
+    private void SetupExternalProcesses()
+    {
+        if (!SocketStates.IsEmpty)
+        {
+            return;
+        }
+        
+        lock (SocketStatesLock)
+        {
+            if (!SocketStates.IsEmpty)
+            {
+                return;
+            }
+            
+            foreach (var allowedPortNumber in AllowedPortNumbers)
+            {
+                SocketStates.TryAdd(allowedPortNumber, (SocketStatus.NotYetSetup, null, null));
+                StartSeparateTesseractProcess(allowedPortNumber);
+            }
+        }
+    }
+    
+    private void StartSeparateTesseractProcess(int listenPortNumber)
+    {
+        var fileMode = cacheService is ApiCacheService or DatabaseCacheService ? "Database" : "File";
+
+        if (string.IsNullOrWhiteSpace(cacheService.CacheFolderOrUrl))
+        {
+            ConsoleHelper.WriteLine($"ERROR - {Name} - Tesseract Exe cannot be used when using DB cache locally");
+            throw new Exception("Tesseract Exe cannot be used when using DB cache locally");
+        }
+
+        var startupArgs = string.Join(" ", new List<string>
+        {
+            tesseractExeName,
+            listenPortNumber.ToString()
+        });
+
+        var sharedExeLifecycleArgs = string.Join(" ", new List<string>
+        {
+            pageSegMode.ToString(),
+            fileMode,
+            $"\"{cacheService.CacheFolderOrUrl}\"",
+            $"\"{outputService.OutputFolder}\"",
+            $"\"{tessDataPath}\""
+        });
+
+        using var messageSyncContext = new NetMQRuntime();
+        messageSyncContext.Run(SetupSharedExeAsync(
+            listenPortNumber,
+            startupArgs,
+            sharedExeLifecycleArgs));
+    }
+    
+    private async Task<ProcessResult> RunSeparateTesseractProcessAsync(
         int pageNumber,
         int imageNumber,
         string imageReference,
@@ -185,6 +290,15 @@ public class TesseractOcrDataExtractorService(
         bool isPageScreenshot,
         int processRunId)
     {
+        SetupExternalProcesses();
+
+        var (portNumber, process, socket) = GetAndUpdateProcess();
+
+        if (process == null)
+        {
+            throw new Exception("Could not find process");
+        }
+        
         try
         {
             var showDebugMessages = false;
@@ -194,31 +308,6 @@ public class TesseractOcrDataExtractorService(
                 ConsoleHelper.WriteLine(
                     $"INFO - {Name} (P{pageNumber}, I{imageNumber}, {fileId}) - External process called");
             }
-
-            var fileMode = cacheService is ApiCacheService or DatabaseCacheService ? "Database" : "File";
-
-            if (string.IsNullOrWhiteSpace(cacheService.CacheFolderOrUrl))
-            {
-                ConsoleHelper.WriteLine($"ERROR - {Name} - Tesseract Exe cannot be used when using DB cache locally");
-                throw new Exception("Tesseract Exe cannot be used when using DB cache locally");
-            }
-
-            const int listenPortNumber = 5556;
-
-            var startupArgs = string.Join(" ", new List<string>
-            {
-                tesseractExeName,
-                listenPortNumber.ToString()
-            });
-
-            var sharedExeLifecycleArgs = string.Join(" ", new List<string>
-            {
-                pageSegMode.ToString(),
-                fileMode,
-                $"\"{cacheService.CacheFolderOrUrl}\"",
-                $"\"{outputService.OutputFolder}\"",
-                $"\"{tessDataPath}\""
-            });
             
             var perFileArgs = string.Join(" ", new List<string>
             {
@@ -232,9 +321,8 @@ public class TesseractOcrDataExtractorService(
 
             using var messageSyncContext = new NetMQRuntime();
             messageSyncContext.Run(CommunicateWithExeAsync(
-                listenPortNumber,
-                startupArgs,
-                sharedExeLifecycleArgs,
+                process,
+                socket!,
                 perFileArgs,
                 imageReference,
                 showDebugMessages,
@@ -247,21 +335,15 @@ public class TesseractOcrDataExtractorService(
             // TODO
         }
         
-        return Task.FromResult(_processResult);
+        return _processResult;
     }
-
-    private async Task CommunicateWithExeAsync(
+    
+    private async Task SetupSharedExeAsync(
         int listenPortNumber,
         string startupArgs,
-        string sharedExeLifecycleArgs,
-        string perFileArgs,
-        string imageReference,
-        bool showDebugMessages,
-        int pageNumber,
-        int imageNumber,
-        Guid fileId)
+        string sharedExeLifecycleArgs)
     {
-        using var server = new ResponseSocket($"@tcp://localhost:{listenPortNumber}");
+        var socket = new ResponseSocket($"@tcp://localhost:{listenPortNumber}");
             
         var proc = Process.Start(
             new ProcessStartInfo
@@ -297,10 +379,10 @@ public class TesseractOcrDataExtractorService(
         
         if (timedOut)
         {
-            ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process timed out- {imageReference}");
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process timed out");
         }
 
-        var startupResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
+        var startupResponseTask = socket.ReceiveFrameStringAsync(cancellationToken);
         var processEndedTask = proc!.WaitForExitAsync(cancellationToken);
         
         var firstToFinish = await Task.WhenAny(startupResponseTask, processEndedTask);
@@ -308,20 +390,22 @@ public class TesseractOcrDataExtractorService(
         {
             var serverResponseMessage = "[NO MESSAGE RETURNED]";
             
-            if (server.HasIn)
+            if (socket.HasIn)
             {
                 serverResponseMessage = startupResponseTask.IsCompleted
                     ? (await startupResponseTask).Item1
-                    : server.ReceiveFrameString();
+                    : socket.ReceiveFrameString();
             }
             
             ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly during startup " +
-                $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
+                $"with exit code {proc.ExitCode} / {serverResponseMessage}");
             // TODO - Log error
 
-            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);            
+            await GetConsoleErrorsAsync(proc, cancellationToken);            
             
             _processResult = ProcessResult.StartUpFailed;
+            SocketStates[listenPortNumber] = (Status: SocketStatus.Errored, null, null);
+            
             return;
         }
 
@@ -334,35 +418,38 @@ public class TesseractOcrDataExtractorService(
         else
         {
             ConsoleHelper.WriteLine($"ERROR - {Name} - External process returned {exeStartupResponse}");
-            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            await GetConsoleErrorsAsync(proc, cancellationToken);
             
             _processResult = ProcessResult.StartUpFailed;
+            SocketStates[listenPortNumber] = (Status: SocketStatus.Errored, null, null);
+            
             return;
         }
         
-        server.SendFrame($"{SharedArgsPrefix}{sharedExeLifecycleArgs}");
+        socket.SendFrame($"{SharedArgsPrefix}{sharedExeLifecycleArgs}");
         
-        var tesseractSetupOkayTask = server.ReceiveFrameStringAsync(cancellationToken);
+        var tesseractSetupOkayTask = socket.ReceiveFrameStringAsync(cancellationToken);
         firstToFinish = await Task.WhenAny(tesseractSetupOkayTask, processEndedTask);
         
         if (firstToFinish == processEndedTask)
         {
             var serverResponseMessage = "[NO MESSAGE RETURNED]";
             
-            if (server.HasIn)
+            if (socket.HasIn)
             {
                 serverResponseMessage = tesseractSetupOkayTask.IsCompleted
                     ? (await tesseractSetupOkayTask).Item1
-                    : server.ReceiveFrameString();
+                    : socket.ReceiveFrameString();
             }
             
             ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly when setting up Tesseract " +
-                $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
+                $"with exit code {proc.ExitCode} / {serverResponseMessage}");
             // TODO - Log error
 
-            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            await GetConsoleErrorsAsync(proc, cancellationToken);
             _processResult = ProcessResult.StartUpFailed;
 
+            SocketStates[listenPortNumber] = (Status: SocketStatus.Errored, null, null);
             return;
         }
         
@@ -376,16 +463,58 @@ public class TesseractOcrDataExtractorService(
         {
             ConsoleHelper.WriteLine($"INFO - {Name} - External process starting Tesseract failed with {tesseractSetupResponse}");
             
-            await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            await GetConsoleErrorsAsync(proc, cancellationToken);
             _processResult = ProcessResult.StartUpFailed;
-
+            
+            SocketStates[listenPortNumber] = (Status: SocketStatus.Errored, null, null);
             return;
         }
+
+        SocketStates[listenPortNumber] = (SocketStatus.FreeToUse, proc, socket);
+    }
+
+    private async Task CommunicateWithExeAsync(
+        Process process,
+        ResponseSocket server,
+        string perFileArgs,
+        string imageReference,
+        bool showDebugMessages,
+        int pageNumber,
+        int imageNumber,
+        Guid fileId)
+    {
+        var timedOut = false;
+        const int timeoutMsFull = 35_000;
+        
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(timeoutMsFull));
+        
+        var cancellationToken = cts.Token;
+        cancellationToken.Register(() =>
+        {
+            timedOut = true;
+            
+            try
+            {
+                process!.Kill();
+            }
+            catch
+            {
+                // ignored
+            }
+        });
+        
+        if (timedOut)
+        {
+            ConsoleHelper.WriteLine($"ERROR - {Name} - External Tesseract process timed out- {imageReference}");
+        }
+
+        var processEndedTask = process.WaitForExitAsync(cancellationToken);
         
         server.SendFrame($"{PerFileArgsPrefix}{perFileArgs}");
         
         var perFileResponseTask = server.ReceiveFrameStringAsync(cancellationToken);
-        firstToFinish = await Task.WhenAny(perFileResponseTask, processEndedTask);
+        var firstToFinish = await Task.WhenAny(perFileResponseTask, processEndedTask);
         
         if (firstToFinish == processEndedTask)
         {
@@ -399,18 +528,18 @@ public class TesseractOcrDataExtractorService(
                     : server.ReceiveFrameString();
                 
                 HandlePerFileResponse(serverResponseMessage, imageReference);
-                (_, processResult) = await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+                (_, processResult) = await GetConsoleErrorsAsync(process, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
 
                 _processResult = processResult;
                 return;
             }
             
             ConsoleHelper.WriteLine($"ERROR - {Name} - External process closed unexpectedly when processing file " +
-                $"with exit code {proc.ExitCode} / {serverResponseMessage} - {imageReference}");
+                $"with exit code {process.ExitCode} / {serverResponseMessage} - {imageReference}");
             // TODO - Log error
 
             HandlePerFileResponse(serverResponseMessage, imageReference);
-            (_, processResult) = await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+            (_, processResult) = await GetConsoleErrorsAsync(process, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
             
             _processResult = processResult;
             return;
@@ -419,7 +548,7 @@ public class TesseractOcrDataExtractorService(
         var perFileResponse = (await perFileResponseTask).Item1;
         HandlePerFileResponse(perFileResponse, imageReference);
 
-        await GetConsoleErrorsAsync(proc, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
+        await GetConsoleErrorsAsync(process, cancellationToken, showDebugMessages, pageNumber, imageNumber, fileId);
         await processEndedTask;
     }
 
@@ -438,10 +567,10 @@ public class TesseractOcrDataExtractorService(
     private async Task<(bool ShouldExit, ProcessResult ProcessResult)> GetConsoleErrorsAsync(
         Process proc,
         CancellationToken cancellationToken,
-        bool showDebugMessages,
-        int pageNumber,
-        int imageNumber,
-        Guid fileId)
+        bool showDebugMessages = false,
+        int? pageNumber = null,
+        int? imageNumber = null,
+        Guid? fileId = null)
     {
         while (await proc.StandardError.ReadLineAsync(cancellationToken) is { } line)
         {

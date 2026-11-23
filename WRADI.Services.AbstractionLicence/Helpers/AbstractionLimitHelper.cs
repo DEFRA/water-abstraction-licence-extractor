@@ -340,4 +340,53 @@ public static class AbstractionLimitHelper
         firstLicenceSetInLimits.Licences = newLicences.ToArray();
         LinkedLicenceAssertions.AssertNoDuplicateLicences(firstLicenceSetInLimits.Licences);
     }
+
+    public static void HoistContainedInSections(
+        AbstractionLimitGroup[] individuals,
+        Aggregate[] aggregates)
+    {
+        var allLimitGroups = individuals.ToList();
+        allLimitGroups.AddRange(aggregates);
+
+        foreach (var limitGroup in allLimitGroups)
+        {
+            var allSame = true;
+
+            var firstLimit = limitGroup.Limits.First();
+            var firstLimitProviders = string.Join('_',
+                firstLimit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
+
+            foreach (var limit in limitGroup.Limits.Skip(1))
+            {
+                var limitProviders = string.Join('_',
+                    limit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
+
+                if (limitProviders != firstLimitProviders)
+                {
+                    allSame = false;
+                    break;
+                }
+            }
+
+            if (!allSame)
+            {
+                limitGroup.ContainedIn =
+                [
+                    new()
+                    {
+                        Source = InformationSource.MixedSourcesOrMixedReasons
+                    }
+                ];
+
+                continue;
+            }
+
+            limitGroup.ContainedIn = firstLimit.ContainedIn;
+
+            foreach (var limit in limitGroup.Limits)
+            {
+                limit.ContainedIn = null;
+            }
+        }
+    }
 }

@@ -17,6 +17,10 @@ export function processRunFigures(run: ProcessRun) {
         parts.push(`${count(run.filesErrored)} errors`);
     }
 
+    if ((run.filesTransientErrored ?? 0) > 0) {
+        parts.push(`${count(run.filesTransientErrored)} transient`);
+    }
+
     if ((run.licenceCount ?? 0) > 0) {
         parts.push(run.liveLicenceCount === run.licenceCount
             ? `${count(run.licenceCount)} licences`

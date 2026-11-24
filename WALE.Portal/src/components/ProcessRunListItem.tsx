@@ -96,6 +96,14 @@ function ProcessRunListItem({run}: ProcessRunListItemProps) {
                 </>
             )}
             &nbsp;({processRunFigures(run)})
+            {((run.filesErrored ?? 0) + (run.filesTransientErrored ?? 0)) > 0 && (
+                <>
+                    &nbsp;
+                    <Link to={{pathname: '/errors', search: `?processRunId=${run.processRunId}`}}>
+                        failed files
+                    </Link>
+                </>
+            )}
         </li>
     );
 }

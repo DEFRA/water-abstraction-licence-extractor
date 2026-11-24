@@ -7,5 +7,7 @@ public interface IUiProcessRunService
 {
     Task<string> UpdateLicenceListProcessRunAsync(int processRunId);
     Task<string> UpdateProcessRunByLicenceNumbersAsync(int processRunId, string[] licenceNumbers);
+    
+    Task UpdateProcessRunNameAsync(int processRunId, string? name);
     Task<IReadOnlyList<OutputListDataItem>> GetProcessRunRawDataList(int processRunId, ProcessRunQuery query);
 } 

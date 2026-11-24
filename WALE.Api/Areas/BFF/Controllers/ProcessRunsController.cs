@@ -165,6 +165,18 @@ public class ProcessRunsController(
     }
     
     [HttpPost("{processRunId:int}")]
+    public async Task<ActionResult> UpdateProcessRunNameAsync(
+        [FromRoute] int processRunId,
+        [FromBody] ProcessRunNameRequest request)
+    {
+        await uiProcessRunService.UpdateProcessRunNameAsync(
+            processRunId,
+            request.Name);
+
+        return Ok();
+    }
+
+    [HttpPost("{processRunId:int}")]
     public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
         [FromRoute] int processRunId,
         [FromBody] string[] licenceNumbers)

@@ -69,6 +69,8 @@ public interface IDatabaseWriteService
     
     Task UpdateProcessRunAsync(ProcessRun processRun);
     
+    Task UpdateProcessRunNameAsync(int processRunId, string? name);
+    
     Task AddDmsFileIdInformationAsync(DmsFileIdInformation newDmsFileIdInformation);
 
     Task SaveDmsFileReaderResultAsync(DmsFileReaderResult dmsFileReaderResult);

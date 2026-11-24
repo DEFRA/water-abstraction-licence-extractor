@@ -69,6 +69,11 @@ public class DatabaseOutputService(
         return databaseWriteService.MarkProcessRunCompleteIfCompleteAsync(processRun);
     }
 
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        return databaseWriteService.UpdateProcessRunNameAsync(processRunId, name);
+    }
+
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         return databaseWriteService.AddProcessRunFileAsync(processRunFile);

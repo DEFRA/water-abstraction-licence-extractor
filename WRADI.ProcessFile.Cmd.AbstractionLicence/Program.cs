@@ -88,11 +88,12 @@ async Task ProgramAsync(IConfiguration configurationItem)
 
     // For debugging uncheck sections of the following
     filesToProcess = filesToProcess
-        //.Where(x => x.Key.Contains("12504008", StringComparison.OrdinalIgnoreCase))
+        //.Where(x => x.Key.Contains("141", StringComparison.OrdinalIgnoreCase))
        //     || x.Key.Contains("12203007__8a2eb5b8-4455-4acf-bae7-e9431522e92b.pdf", StringComparison.OrdinalIgnoreCase)
        //     || x.Key.Contains("12100052__3ac7b78d-5f02-136b-a52a-15b8148f1c12.pdf", StringComparison.OrdinalIgnoreCase))
         //.Where(x => x.Key.Contains("12301001", StringComparison.OrdinalIgnoreCase))
         .Where(x => regionCodes.Count == 0 || regionCodes.Contains(x.Value.Item2.RegionCode))
+        //.Where(x => x.Value.Item2.RegionCode == 4)
         .Where(x => string.IsNullOrWhiteSpace(fileFilter)
             || x.Key.StartsWith(fileFilter, StringComparison.OrdinalIgnoreCase))
         .Take(maxFiles ?? int.MaxValue)
@@ -274,6 +275,8 @@ async Task ProgramAsync(IConfiguration configurationItem)
     ConsoleHelper.WriteLine($"INFO - WALE.Cmd - Finished processing at {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
     ConsoleHelper.WriteLine(
         $"INFO - WALE.Cmd - Finished all in {(processRun.EndDateTimeUtc!.Value - processRun.StartDateTimeUtc!.Value).TotalSeconds} seconds - process run id {processRun.ProcessRunId}");
+    
+    ConsoleHelper.Flush();
 }
 
 void FireAndForgetDataRefresh(IAbstractionLicenceOutputService abstractionLicenceOutputService, ProcessRun processRun)

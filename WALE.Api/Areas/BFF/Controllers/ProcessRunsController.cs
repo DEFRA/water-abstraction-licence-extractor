@@ -168,15 +168,17 @@ public class ProcessRunsController(
     public async Task<ActionResult<ProcessRunNonOkFilesResponse>> GetProcessRunNonOkFilesAsync(
         [FromRoute] int processRunId,
         [FromQuery] string? status,
+        [FromQuery] string? exception,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 50)
     {
         var countsTask = outputService.GetProcessRunFileCountsAsync(processRunId);
-        var countTask = outputService.GetProcessRunNonOkFilesCountAsync(processRunId, status);
+        var groupsTask = outputService.GetProcessRunFailureGroupsAsync(processRunId);
+        var countTask = outputService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
 
         var items = take <= 0
             ? []
-            : await outputService.GetProcessRunNonOkFilesAsync(processRunId, status, skip, take);
+            : await outputService.GetProcessRunNonOkFilesAsync(processRunId, status, exception, skip, take);
 
         var counts = await countsTask;
 
@@ -185,7 +187,8 @@ public class ProcessRunsController(
             Items = items,
             TotalCount = await countTask,
             DeclaredFileCount = counts.Declared,
-            ProcessedFileCount = counts.Processed
+            ProcessedFileCount = counts.Processed,
+            FailureGroups = await groupsTask
         });
     }
 

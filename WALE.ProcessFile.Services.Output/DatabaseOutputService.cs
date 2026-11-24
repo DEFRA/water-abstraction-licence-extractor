@@ -140,15 +140,22 @@ public class DatabaseOutputService(
     public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
         int processRunId,
         string? status,
+        string? exception,
         int skip,
         int take)
     {
-        return databaseReadService.GetProcessRunNonOkFilesAsync(processRunId, status, skip, take);
+        return databaseReadService.GetProcessRunNonOkFilesAsync(
+            processRunId, status, exception, skip, take);
     }
 
-    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
     {
-        return databaseReadService.GetProcessRunNonOkFilesCountAsync(processRunId, status);
+        return databaseReadService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
+    }
+
+    public Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFailureGroupsAsync(processRunId);
     }
 
     public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)

@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ProcessRun, ProcessRunNameRequest} from '../api/generated/apiClient';
-import {processRunFigures} from '../utils/processRunUtils.ts';
+import {processRunFigures, unaccountedFiles} from '../utils/processRunUtils.ts';
 import waleApiClient from '../api/apiClient.ts';
 
 interface ProcessRunListItemProps {
@@ -96,7 +96,7 @@ function ProcessRunListItem({run}: ProcessRunListItemProps) {
                 </>
             )}
             &nbsp;({processRunFigures(run)})
-            {((run.filesErrored ?? 0) + (run.filesTransientErrored ?? 0)) > 0 && (
+            {((run.filesErrored ?? 0) + (run.filesTransientErrored ?? 0) + unaccountedFiles(run)) > 0 && (
                 <>
                     &nbsp;
                     <Link to={{pathname: '/errors', search: `?processRunId=${run.processRunId}`}}>

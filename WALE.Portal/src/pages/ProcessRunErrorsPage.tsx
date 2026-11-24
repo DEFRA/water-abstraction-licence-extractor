@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {Link, useSearchParams} from 'react-router-dom';
-import {MatchResultError} from '../api/generated/apiClient';
+import {MatchResultError, ProcessRunFailureGroup} from '../api/generated/apiClient';
 import {waleApiClient} from '../api/apiClient';
 
 const STATUS_FILTERS = [
@@ -21,6 +21,7 @@ function ProcessRunErrorsPage() {
     const processRunId = Number(searchParams.get('processRunId'));
 
     const [status, setStatus] = useState(searchParams.get('status') ?? '');
+    const [exception, setException] = useState(searchParams.get('exception') ?? '');
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [pageNumber, setPageNumber] = useState(1);
 
@@ -28,6 +29,7 @@ function ProcessRunErrorsPage() {
     const [totalCount, setTotalCount] = useState(0);
     const [declared, setDeclared] = useState(0);
     const [processed, setProcessed] = useState(0);
+    const [groups, setGroups] = useState<ProcessRunFailureGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expanded, setExpanded] = useState<number[]>([]);
@@ -43,6 +45,7 @@ function ProcessRunErrorsPage() {
                 const response = await waleApiClient.getProcessRunNonOkFiles(
                     processRunId,
                     status === '' ? undefined : status,
+                    exception === '' ? undefined : exception,
                     (pageNumber - 1) * pageSize,
                     pageSize);
 
@@ -54,6 +57,7 @@ function ProcessRunErrorsPage() {
                 setTotalCount(response.totalCount ?? 0);
                 setDeclared(response.declaredFileCount ?? 0);
                 setProcessed(response.processedFileCount ?? 0);
+                setGroups(response.failureGroups ?? []);
             } catch (err) {
                 if (!cancelled) {
                     setError(err instanceof Error ? err.message : 'Failed to fetch failed files');
@@ -75,7 +79,7 @@ function ProcessRunErrorsPage() {
         return () => {
             cancelled = true;
         };
-    }, [processRunId, status, pageNumber, pageSize]);
+    }, [processRunId, status, exception, pageNumber, pageSize]);
 
     const totalPages = useMemo(
         () => (totalCount > 0 ? Math.ceil(totalCount / pageSize) : 0),
@@ -134,6 +138,47 @@ function ProcessRunErrorsPage() {
                     {declared.toLocaleString()} files in this run's work list produced no result
                     row of any kind, so they are not listed below - the run never took a lock on
                     them.
+                </p>
+            )}
+
+            {groups.length > 0 && (
+                <table style={{marginBottom: '12px'}}>
+                    <thead>
+                    <tr>
+                        <th>Failures by type</th>
+                        <th>Files</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {groups.map(group => (
+                        <tr key={group.exception ?? '(none)'}>
+                            <td>
+                                <a
+                                    href="#"
+                                    style={{fontWeight: exception === group.exception ? 'bold' : 'normal'}}
+                                    onClick={event => {
+                                        event.preventDefault();
+                                        setException(exception === group.exception ? '' : (group.exception ?? ''));
+                                        setPageNumber(1);
+                                    }}>
+                                    {(group.exception ?? '(not recorded)').split('.').pop()}
+                                </a>
+                            </td>
+                            <td>{group.files?.toLocaleString()}</td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            )}
+
+            {exception !== '' && (
+                <p>
+                    Showing {exception.split('.').pop()} only.{' '}
+                    <a href="#" onClick={event => {
+                        event.preventDefault();
+                        setException('');
+                        setPageNumber(1);
+                    }}>Show all</a>
                 </p>
             )}
 

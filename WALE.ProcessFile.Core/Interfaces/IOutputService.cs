@@ -105,10 +105,13 @@ public interface IOutputService
     Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
         int processRunId,
         string? status,
+        string? exception,
         int skip,
         int take);
 
-    Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status);
+    Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception);
+
+    Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId);
 
     Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId);
 }

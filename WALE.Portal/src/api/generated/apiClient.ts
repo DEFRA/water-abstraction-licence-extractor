@@ -6741,11 +6741,12 @@ export class Client {
 
     /**
      * @param status (optional) 
+     * @param exception (optional) 
      * @param skip (optional) 
      * @param take (optional) 
      * @return OK
      */
-    getProcessRunNonOkFiles(processRunId: number, status: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunNonOkFilesResponse> {
+    getProcessRunNonOkFiles(processRunId: number, status: string | undefined, exception: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunNonOkFilesResponse> {
         let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?";
         if (processRunId === undefined || processRunId === null)
             throw new globalThis.Error("The parameter 'processRunId' must be defined.");
@@ -6754,6 +6755,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'status' cannot be null.");
         else if (status !== undefined)
             url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (exception === null)
+            throw new globalThis.Error("The parameter 'exception' cannot be null.");
+        else if (exception !== undefined)
+            url_ += "exception=" + encodeURIComponent("" + exception) + "&";
         if (skip === null)
             throw new globalThis.Error("The parameter 'skip' cannot be null.");
         else if (skip !== undefined)
@@ -12402,6 +12407,58 @@ export interface IProcessRunEndRequest {
     [key: string]: any;
 }
 
+export class ProcessRunFailureGroup implements IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunFailureGroup) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.exception = _data["exception"];
+            this.files = _data["files"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunFailureGroup {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunFailureGroup();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["exception"] = this.exception;
+        data["files"] = this.files;
+        return data;
+    }
+}
+
+export interface IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+}
+
 export class ProcessRunFileRequest implements IProcessRunFileRequest {
     fileName?: string | undefined;
     processRunId?: number;
@@ -12515,6 +12572,7 @@ export class ProcessRunNonOkFilesResponse implements IProcessRunNonOkFilesRespon
     totalCount?: number;
     declaredFileCount?: number;
     processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
 
     [key: string]: any;
 
@@ -12541,6 +12599,11 @@ export class ProcessRunNonOkFilesResponse implements IProcessRunNonOkFilesRespon
             this.totalCount = _data["totalCount"];
             this.declaredFileCount = _data["declaredFileCount"];
             this.processedFileCount = _data["processedFileCount"];
+            if (Array.isArray(_data["failureGroups"])) {
+                this.failureGroups = [] as any;
+                for (let item of _data["failureGroups"])
+                    this.failureGroups!.push(ProcessRunFailureGroup.fromJS(item));
+            }
         }
     }
 
@@ -12565,6 +12628,11 @@ export class ProcessRunNonOkFilesResponse implements IProcessRunNonOkFilesRespon
         data["totalCount"] = this.totalCount;
         data["declaredFileCount"] = this.declaredFileCount;
         data["processedFileCount"] = this.processedFileCount;
+        if (Array.isArray(this.failureGroups)) {
+            data["failureGroups"] = [];
+            for (let item of this.failureGroups)
+                data["failureGroups"].push(item ? item.toJSON() : undefined as any);
+        }
         return data;
     }
 }
@@ -12574,6 +12642,7 @@ export interface IProcessRunNonOkFilesResponse {
     totalCount?: number;
     declaredFileCount?: number;
     processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
 
     [key: string]: any;
 }

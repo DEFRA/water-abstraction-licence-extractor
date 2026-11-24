@@ -585,7 +585,10 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            -- per figure costs 3.5s over 85 runs, these two laterals 1.1s.
                            CROSS JOIN LATERAL (
                                SELECT
-                                   COUNT(*) AS files_processed,
+                                   -- Distinct, not COUNT(*): the duplicate-processing race puts
+                                   -- two rows on one file, and this figure is subtracted from the
+                                   -- declared work list in the portal.
+                                   COUNT(DISTINCT file_id) AS files_processed,
                                    COUNT(*) FILTER (WHERE status = 'Error') AS files_errored,
                                    COUNT(*) FILTER (WHERE status = 'TransientError')
                                        AS files_transient_errored
@@ -957,11 +960,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                                process_run_id = @ProcessRunId
                                                AND status IS DISTINCT FROM 'Ok'
                                                AND (@Status::text IS NULL OR status = @Status::text)
+                                               AND (@Exception::text IS NULL
+                                                    OR split_part(coalesce(
+                                                           error,
+                                                           CASE
+                                                               WHEN btrim(coalesce(data, '')) LIKE '{%'
+                                                               THEN data::json->>'error'
+                                                           END), ':', 1) = @Exception::text)
                                            """;
 
     public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
         int processRunId,
         string? status,
+        string? exception,
         int skip,
         int take)
     {
@@ -994,12 +1005,16 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             {
                 ProcessRunId = processRunId,
                 Status = status,
+                Exception = exception,
                 Skip = skip,
                 Take = take
             })).ToList();
     }
 
-    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    public async Task<int> GetProcessRunNonOkFilesCountAsync(
+        int processRunId,
+        string? status,
+        string? exception)
     {
         await using var connection = GetPostgresConnection();
         const string sql = $"""
@@ -1015,8 +1030,35 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             new
             {
                 ProcessRunId = processRunId,
-                Status = status
+                Status = status,
+                Exception = exception
             });
+    }
+
+    // 537 failures over 9 exception types on one run, so a flat list is mostly repetition.
+    public async Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = @"
+            SELECT
+                split_part(COALESCE(
+                    error,
+                    CASE
+                        WHEN btrim(COALESCE(data, '')) LIKE '{%'
+                        THEN data::json->>'error'
+                    END), ':', 1) AS Exception,
+                COUNT(*) AS Files
+            FROM public.matches_result
+            WHERE process_run_id = @ProcessRunId
+              AND status IS DISTINCT FROM 'Ok'
+            GROUP BY 1
+            ORDER BY COUNT(*) DESC;";
+
+        return (await QueryAsync<ProcessRunFailureGroup>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId })).ToList();
     }
 
     // A run can be capped or filtered to a subset, and that is recorded only in its description,

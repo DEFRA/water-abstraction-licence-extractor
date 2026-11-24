@@ -9,4 +9,6 @@ public class ProcessRunNonOkFilesResponse
     public int DeclaredFileCount { get; set; }
 
     public int ProcessedFileCount { get; set; }
+
+    public List<ProcessRunFailureGroup> FailureGroups { get; set; } = [];
 }

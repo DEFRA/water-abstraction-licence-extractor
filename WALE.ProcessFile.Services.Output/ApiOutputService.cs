@@ -295,6 +295,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
     public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
         int processRunId,
         string? status,
+        string? exception,
         int skip,
         int take)
     {
@@ -330,7 +331,20 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         };
     }
 
-    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    public async Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.FailureGroups;
+    }
+
+    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
     {
         var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0"
                    + (string.IsNullOrEmpty(status) ? string.Empty : $"&status={Uri.EscapeDataString(status)}");

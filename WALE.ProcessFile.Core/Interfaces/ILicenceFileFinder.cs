@@ -29,6 +29,22 @@ public interface ILicenceFileFinder
         string overridesImportDate,
         string naldDate,
         string dmsDate);
+
+    public Task<bool> FindLicenceFilesWithoutFileGenerationAsync(
+        Dictionary<string, List<WALE.ProcessFile.Core.Models.Dms.DmsExtract>> dmsRecords,
+        Dictionary<string, DmsManualFixExtract> dmsManualFixes,
+        List<Override> dmsChangeAuditOverrides,
+        ConcurrentDictionary<Guid, List<DmsFileIdInformation>> dmsFileIdInformation,
+        IGeneralApiClient generalApiClient,
+        List<NaldSimpleRecord> naldRecordsToProcess,
+        Dictionary<string, List<NaldLicenceVersion>> naldData,
+        List<DmsFileReaderResult> wradiToolScrapeResults,
+        List<LicenceMatchResult> licenceFinderPreviousIterationMatches,
+        Dictionary<string, FileInventory> wradiLocalFilesInventory,
+        string? regionName,
+        string overridesImportDate,
+        string naldDate,
+        string dmsDate);
     
     /// <summary>
     /// Finds all potential duplicates in DMS extract

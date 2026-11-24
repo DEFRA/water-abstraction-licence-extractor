@@ -72,7 +72,7 @@ public sealed class LicenceFinderService(
                 var (overrides, overridesImportDate) = await overridesTask;
                 var (naldRecordsToProcess, naldAbsLicencesAndVersions, naldImportDate) = await naldDataTask;
 
-                var licenceMatchResultsFilePath = await licenceFileFinder.FindLicenceFilesAsync(
+                var result = await licenceFileFinder.FindLicenceFilesWithoutFileGenerationAsync(
                     dmsRecordsData,
                     dmsManualFixes,
                     overrides,
@@ -88,9 +88,9 @@ public sealed class LicenceFinderService(
                     naldImportDate,
                     dmsRecords.ImportDate);
                 
-                Console.WriteLine($"Completed FindLicenceFilesAsync with {licenceMatchResultsFilePath}");
+                Console.WriteLine($"Completed FindLicenceFilesAsync with result :  {result}");
 
-                return licenceMatchResultsFilePath;
+                return result.ToString();
             }
             case "FindAllFilesToDownload":
             {

@@ -263,6 +263,62 @@ public class LicenceFileFinder : ILicenceFileFinder
             throw new InvalidOperationException($"Error occurred while finding licence files: {ex.Message}", ex);
         }
     }
+    
+        public async Task<bool> FindLicenceFilesWithoutFileGenerationAsync(
+        Dictionary<string, List<WALE.ProcessFile.Core.Models.Dms.DmsExtract>> dmsRecords,
+        Dictionary<string, DmsManualFixExtract> dmsManualFixes,
+        List<Override> dmsChangeAuditOverrides,
+        ConcurrentDictionary<Guid, List<DmsFileIdInformation>> dmsFileIdInformation,
+        IGeneralApiClient generalApiClient,
+        List<NaldSimpleRecord> naldRecordsToProcess,
+        Dictionary<string, List<NaldLicenceVersion>> naldData,
+        List<DmsFileReaderResult> wradiToolScrapeResults,
+        List<LicenceMatchResult> licenceFinderPreviousIterationMatches,
+        Dictionary<string, FileInventory> wradiLocalFilesInventory,
+        string? regionName,
+        string overridesImportDate,
+        string naldDate,
+        string dmsDate)
+    {
+        try
+        {
+            // Process each NALD record and find matches using rules
+            var (
+                    licenceMatchResults,
+                    unmatchedLicenceMatchResults,
+                    deltaResults)
+                = await ProcessLicenceMatchingAsync(
+                    dmsRecords,
+                    dmsManualFixes,
+                    dmsChangeAuditOverrides,
+                    dmsFileIdInformation,
+                    generalApiClient,
+                    naldRecordsToProcess,
+                    naldData,
+                    wradiToolScrapeResults,
+                    licenceFinderPreviousIterationMatches,
+                    wradiLocalFilesInventory);
+
+            // Save to DB
+            await generalApiClient.ClearLicenceFinderResultsAsync();
+            const int chunkSize = 1_000;
+            
+            var chunks = licenceMatchResults.Chunk(chunkSize);
+
+            foreach (var chunk in chunks)
+            {
+                await generalApiClient.SaveLicenceFinderResultsAsync(chunk.ToList());
+            }
+            
+            Console.WriteLine($"Completed FindLicenceFilesWithoutFileGenerationAsync with licence matches results count - {licenceMatchResults.Count} saved to DB.");
+           
+            return true;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Error occurred while finding licence files: {ex.Message}", ex);
+        }
+    }
 
     public string FindLicenceFilesToDownload_SpreadsheetCompareOnly(
         List<WALE.ProcessFile.Core.Models.Dms.DmsExtract> dmsRecords,

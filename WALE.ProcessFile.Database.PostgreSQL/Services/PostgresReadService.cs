@@ -951,23 +951,28 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             })).ToList();
     }
 
-    // InProgress and null rows come back too: a file still holding a run lock is as absent from
-    // the portal as a failed one, and the status is what tells them apart.
     // SaveErrorMatchesResultAsync writes the reason into data, never into the error column, which
     // is empty on all but 2 of 18,079 error rows.
-    private const string NonOkFilesWhere = """
-                                           WHERE
-                                               process_run_id = @ProcessRunId
-                                               AND status IS DISTINCT FROM 'Ok'
-                                               AND (@Status::text IS NULL OR status = @Status::text)
-                                               AND (@Exception::text IS NULL
-                                                    OR split_part(coalesce(
-                                                           error,
-                                                           CASE
-                                                               WHEN btrim(coalesce(data, '')) LIKE '{%'
-                                                               THEN data::json->>'error'
-                                                           END), ':', 1) = @Exception::text)
-                                           """;
+    private const string FailureReason = """
+                                         COALESCE(
+                                             error,
+                                             CASE
+                                                 WHEN btrim(COALESCE(data, '')) LIKE '{%'
+                                                 THEN data::json->>'error'
+                                             END)
+                                         """;
+
+    // InProgress and null rows come back too: a file still holding a run lock is as absent from
+    // the portal as a failed one, and the status is what tells them apart.
+    private const string NonOkFilesWhere = $$"""
+                                            WHERE
+                                                process_run_id = @ProcessRunId
+                                                AND status IS DISTINCT FROM 'Ok'
+                                                AND (@Status::text IS NULL OR status = @Status::text)
+                                                AND (@Exception::text IS NULL
+                                                     OR split_part({{FailureReason}}, ':', 1)
+                                                        = @Exception::text)
+                                            """;
 
     public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
         int processRunId,
@@ -983,12 +988,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                 file_id,
                                 filename,
                                 status,
-                                COALESCE(
-                                    error,
-                                    CASE
-                                        WHEN btrim(COALESCE(data, '')) LIKE '{%'
-                                        THEN data::json->>'error'
-                                    END) AS error,
+                                {{FailureReason}} AS error,
                                 date_time_utc
                             FROM public.matches_result
                             {{NonOkFilesWhere}}
@@ -1035,24 +1035,19 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
             });
     }
 
-    // 537 failures over 9 exception types on one run, so a flat list is mostly repetition.
     public async Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = @"
-            SELECT
-                split_part(COALESCE(
-                    error,
-                    CASE
-                        WHEN btrim(COALESCE(data, '')) LIKE '{%'
-                        THEN data::json->>'error'
-                    END), ':', 1) AS Exception,
-                COUNT(*) AS Files
-            FROM public.matches_result
-            WHERE process_run_id = @ProcessRunId
-              AND status IS DISTINCT FROM 'Ok'
-            GROUP BY 1
-            ORDER BY COUNT(*) DESC;";
+        const string sql = $$"""
+                            SELECT
+                                split_part({{FailureReason}}, ':', 1) AS Exception,
+                                COUNT(*) AS Files
+                            FROM public.matches_result
+                            WHERE process_run_id = @ProcessRunId
+                              AND status IS DISTINCT FROM 'Ok'
+                            GROUP BY 1
+                            ORDER BY COUNT(*) DESC;
+                            """;
 
         return (await QueryAsync<ProcessRunFailureGroup>(
             connection,

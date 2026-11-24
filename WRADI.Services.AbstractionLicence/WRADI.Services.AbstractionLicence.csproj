@@ -17,10 +17,4 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.11" />
     </ItemGroup>
 
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>WRADI.Services.AbstractionLicence.Tests</_Parameter1>
-    </AssemblyAttribute>
-  </ItemGroup>
-
 </Project>

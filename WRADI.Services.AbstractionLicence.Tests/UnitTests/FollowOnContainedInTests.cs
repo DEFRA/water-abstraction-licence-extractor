@@ -1,7 +1,7 @@
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
-using WRADI.DocumentType.AbstractionLicence.Converters;
+using WRADI.DocumentType.AbstractionLicence.Helpers;
 using WRADI.Services.AbstractionLicence.Tests.Helper;
 
 namespace WRADI.Services.AbstractionLicence.Tests.UnitTests;
@@ -14,7 +14,7 @@ public class FollowOnContainedInTests
         var predecessor = Predecessor(SeenIn(InformationSource.Document, "Quantity"), successor: "2/27/18/123/R01");
         var successor = LicenceBuilder.LinkTo("2/27/18/123/R01", []);
 
-        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+        ContainedInHelper.AddFollowOnContainedIns(predecessor, successor);
 
         var carried = Assert.Single(successor.ContainedIn!);
         Assert.Equal(InformationSource.DocumentFollowOn, carried.Source);
@@ -27,7 +27,7 @@ public class FollowOnContainedInTests
         var predecessor = Predecessor(SeenIn(InformationSource.Document, "Quantity"), successor: "9/9/9");
         var successor = LicenceBuilder.LinkTo("2/27/18/123/R01", []);
 
-        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+        ContainedInHelper.AddFollowOnContainedIns(predecessor, successor);
 
         Assert.Equal(InformationSource.Document, Assert.Single(successor.ContainedIn!).Source);
     }
@@ -38,7 +38,7 @@ public class FollowOnContainedInTests
         var predecessor = Predecessor(SeenIn(InformationSource.Document, "Quantity"), successor: "2/27/18/123/R01");
         var successor = LicenceBuilder.LinkTo("2/27/18/123/R01", [SeenIn(InformationSource.Nald, "Succession")]);
 
-        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+        ContainedInHelper.AddFollowOnContainedIns(predecessor, successor);
 
         Assert.Equal(2, successor.ContainedIn!.Length);
         Assert.Contains(successor.ContainedIn!, ci => ci.Source == InformationSource.Nald);
@@ -52,7 +52,7 @@ public class FollowOnContainedInTests
 
         foreach (var sectionName in new[] { "Quantity", "Quantity" })
         {
-            AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(
+            ContainedInHelper.AddFollowOnContainedIns(
                 Predecessor(SeenIn(InformationSource.Document, sectionName), successor: "2/27/18/123/R01"),
                 successor);
         }
@@ -67,7 +67,7 @@ public class FollowOnContainedInTests
 
         foreach (var sectionName in new[] { "Quantity", "Conditions" })
         {
-            AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(
+            ContainedInHelper.AddFollowOnContainedIns(
                 Predecessor(SeenIn(InformationSource.Document, sectionName), successor: "2/27/18/123/R01"),
                 successor);
         }
@@ -81,7 +81,7 @@ public class FollowOnContainedInTests
         var predecessor = LicenceBuilder.LinkTo("2/27/18/123", []);
         var successor = LicenceBuilder.LinkTo("2/27/18/123/R01", [SeenIn(InformationSource.Nald, "Succession")]);
 
-        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+        ContainedInHelper.AddFollowOnContainedIns(predecessor, successor);
 
         Assert.Equal(InformationSource.Nald, Assert.Single(successor.ContainedIn!).Source);
     }
@@ -119,7 +119,7 @@ public class FollowOnContainedInTests
 
         var predecessor = LicenceBuilder.LinkTo("2/27/18/097", [predecessorsOwn]);
 
-        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+        ContainedInHelper.AddFollowOnContainedIns(predecessor, successor);
 
         var own = Assert.Single(
             successor.ContainedIn!.Where(containedIn => containedIn.Source == InformationSource.Document));

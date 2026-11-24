@@ -41,7 +41,7 @@ public class ProcessRunController(
     }
     
     [HttpPost]
-    public async Task<IActionResult> UpdateProcessRunNameAsync([FromBody] ProcessRunNameRequest request)
+    public async Task<IActionResult> SetProcessRunNameAsync([FromBody] SetProcessRunNameRequest request)
     {
         await outputService.UpdateProcessRunNameAsync(request.processRunId, request.name);
 

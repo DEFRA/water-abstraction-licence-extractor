@@ -575,29 +575,30 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                                document_type,
                                number_of_files,
                                success_count,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM matches_result
-                                       WHERE process_run_id = process_run.process_run_id
-                               ) AS FilesProcessed,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM matches_result
-                                       WHERE process_run_id = process_run.process_run_id
-                                         AND status = 'Error'
-                               ) AS FilesErrored,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM licence_list_item
-                                       WHERE process_run_id = process_run.process_run_id
-                               ) AS LicenceCount,
-                               (
-                                   SELECT COUNT(*)
-                                       FROM licence_list_item
-                                       WHERE process_run_id = process_run.process_run_id
-                                         AND status = 'Live'
-                               ) AS LiveLicenceCount
+                               files.files_processed AS FilesProcessed,
+                               files.files_errored AS FilesErrored,
+                               files.files_transient_errored AS FilesTransientErrored,
+                               licences.licence_count AS LicenceCount,
+                               licences.live_licence_count AS LiveLicenceCount
                            FROM process_run
+                           -- One scan per table rather than one per figure: a correlated subquery
+                           -- per figure costs 3.5s over 85 runs, these two laterals 1.1s.
+                           CROSS JOIN LATERAL (
+                               SELECT
+                                   COUNT(*) AS files_processed,
+                                   COUNT(*) FILTER (WHERE status = 'Error') AS files_errored,
+                                   COUNT(*) FILTER (WHERE status = 'TransientError')
+                                       AS files_transient_errored
+                               FROM matches_result
+                               WHERE process_run_id = process_run.process_run_id
+                           ) files
+                           CROSS JOIN LATERAL (
+                               SELECT
+                                   COUNT(*) AS licence_count,
+                                   COUNT(*) FILTER (WHERE status = 'Live') AS live_licence_count
+                               FROM licence_list_item
+                               WHERE process_run_id = process_run.process_run_id
+                           ) licences
                            WHERE end_date_time_utc IS NOT NULL;
                            """;
 
@@ -946,7 +947,102 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                 ProcessRunId = processRunId
             })).ToList();
     }
-    
+
+    // InProgress and null rows come back too: a file still holding a run lock is as absent from
+    // the portal as a failed one, and the status is what tells them apart.
+    // SaveErrorMatchesResultAsync writes the reason into data, never into the error column, which
+    // is empty on all but 2 of 18,079 error rows.
+    private const string NonOkFilesWhere = """
+                                           WHERE
+                                               process_run_id = @ProcessRunId
+                                               AND status IS DISTINCT FROM 'Ok'
+                                               AND (@Status::text IS NULL OR status = @Status::text)
+                                           """;
+
+    public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        int skip,
+        int take)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = $$"""
+                            SELECT
+                                matches_result_id,
+                                file_id,
+                                filename,
+                                status,
+                                COALESCE(
+                                    error,
+                                    CASE
+                                        WHEN btrim(COALESCE(data, '')) LIKE '{%'
+                                        THEN data::json->>'error'
+                                    END) AS error,
+                                date_time_utc
+                            FROM public.matches_result
+                            {{NonOkFilesWhere}}
+                            ORDER BY filename, matches_result_id
+                            OFFSET @Skip
+                            LIMIT @Take;
+                            """;
+
+        return (await QueryAsync<MatchResultError>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Status = status,
+                Skip = skip,
+                Take = take
+            })).ToList();
+    }
+
+    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = $"""
+                            SELECT COUNT(*)
+                            FROM public.matches_result
+                            {NonOkFilesWhere};
+                            """;
+
+        return await QuerySingleOrDefaultAsync<int>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Status = status
+            });
+    }
+
+    // A run can be capped or filtered to a subset, and that is recorded only in its description,
+    // so its own declared work list is the denominator rather than any external expectation.
+    public async Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           SELECT
+                               pr.number_of_files AS Declared,
+                               (
+                                   SELECT COUNT(DISTINCT file_id)
+                                       FROM matches_result
+                                       WHERE process_run_id = pr.process_run_id
+                               ) AS Processed
+                           FROM process_run pr
+                           WHERE pr.process_run_id = @ProcessRunId;
+                           """;
+
+        return await QuerySingleOrDefaultAsync<ProcessRunFileCounts>(
+            connection,
+            sql,
+            0,
+            new { ProcessRunId = processRunId }) ?? new ProcessRunFileCounts();
+    }
+
     private async Task<T?> QuerySingleOrDefaultAsync<T>(
         NpgsqlConnection connection,
         string sql,

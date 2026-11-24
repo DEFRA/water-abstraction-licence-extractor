@@ -284,6 +284,25 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
     
+    public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        int skip,
+        int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         throw new NotImplementedException();

@@ -164,6 +164,31 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
     
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult<ProcessRunNonOkFilesResponse>> GetProcessRunNonOkFilesAsync(
+        [FromRoute] int processRunId,
+        [FromQuery] string? status,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var countsTask = outputService.GetProcessRunFileCountsAsync(processRunId);
+        var countTask = outputService.GetProcessRunNonOkFilesCountAsync(processRunId, status);
+
+        var items = take <= 0
+            ? []
+            : await outputService.GetProcessRunNonOkFilesAsync(processRunId, status, skip, take);
+
+        var counts = await countsTask;
+
+        return Ok(new ProcessRunNonOkFilesResponse
+        {
+            Items = items,
+            TotalCount = await countTask,
+            DeclaredFileCount = counts.Declared,
+            ProcessedFileCount = counts.Processed
+        });
+    }
+
     [HttpPost("{processRunId:int}")]
     public async Task<ActionResult> UpdateProcessRunNameAsync(
         [FromRoute] int processRunId,

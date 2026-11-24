@@ -101,4 +101,14 @@ public interface IOutputService
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
+
+    Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        int skip,
+        int take);
+
+    Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status);
+
+    Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId);
 }

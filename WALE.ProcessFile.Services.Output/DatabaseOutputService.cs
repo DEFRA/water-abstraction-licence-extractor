@@ -137,6 +137,25 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId, isUpdate);
     }
     
+    public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        int skip,
+        int take)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesAsync(processRunId, status, skip, take);
+    }
+
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesCountAsync(processRunId, status);
+    }
+
+    public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFileCountsAsync(processRunId);
+    }
+
     public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         return await databaseReadService.GetSimpleMatchResults(processRunId);

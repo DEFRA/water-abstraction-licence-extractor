@@ -7516,6 +7516,7 @@ export class Aggregate implements IAggregate {
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
     variations?: AggregateVariation[] | undefined;
+    description?: string | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -7560,6 +7561,7 @@ export class Aggregate implements IAggregate {
                 for (let item of _data["variations"])
                     this.variations!.push(AggregateVariation.fromJS(item));
             }
+            this.description = _data["description"];
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
@@ -7618,6 +7620,7 @@ export class Aggregate implements IAggregate {
             for (let item of this.variations)
                 data["variations"].push(item ? item.toJSON() : undefined as any);
         }
+        data["description"] = this.description;
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
@@ -7657,6 +7660,7 @@ export interface IAggregate {
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
     variations?: AggregateVariation[] | undefined;
+    description?: string | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -7681,6 +7685,7 @@ export class AggregateVariation implements IAggregateVariation {
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
     variations?: any[] | undefined;
+    description?: string | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -7726,6 +7731,7 @@ export class AggregateVariation implements IAggregateVariation {
                 for (let item of _data["variations"])
                     this.variations!.push(item);
             }
+            this.description = _data["description"];
             this.documentIdentifier = _data["documentIdentifier"];
             this.timePeriod = _data["timePeriod"] ? TimePeriod.fromJS(_data["timePeriod"]) : undefined as any;
             this.timeCutoff = _data["timeCutoff"] ? TimeCutoff.fromJS(_data["timeCutoff"]) : undefined as any;
@@ -7785,6 +7791,7 @@ export class AggregateVariation implements IAggregateVariation {
             for (let item of this.variations)
                 data["variations"].push(item);
         }
+        data["description"] = this.description;
         data["documentIdentifier"] = this.documentIdentifier;
         data["timePeriod"] = this.timePeriod ? this.timePeriod.toJSON() : undefined as any;
         data["timeCutoff"] = this.timeCutoff ? this.timeCutoff.toJSON() : undefined as any;
@@ -7825,6 +7832,7 @@ export interface IAggregateVariation {
     naldType?: string | undefined;
     linkedLicences?: string[] | undefined;
     variations?: any[] | undefined;
+    description?: string | undefined;
     documentIdentifier?: string | undefined;
     timePeriod?: TimePeriod | undefined;
     timeCutoff?: TimeCutoff | undefined;
@@ -11994,11 +12002,11 @@ export class ProcessRun implements IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    documentType?: string;
     filesProcessed?: number;
     filesErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
+    documentType?: string;
 
     [key: string]: any;
 
@@ -12024,11 +12032,11 @@ export class ProcessRun implements IProcessRun {
             this.numberOfFiles = _data["numberOfFiles"];
             this.successCount = _data["successCount"];
             this.status = _data["status"];
-            this.documentType = _data["documentType"];
             this.filesProcessed = _data["filesProcessed"];
             this.filesErrored = _data["filesErrored"];
             this.licenceCount = _data["licenceCount"];
             this.liveLicenceCount = _data["liveLicenceCount"];
+            this.documentType = _data["documentType"];
         }
     }
 
@@ -12052,11 +12060,11 @@ export class ProcessRun implements IProcessRun {
         data["numberOfFiles"] = this.numberOfFiles;
         data["successCount"] = this.successCount;
         data["status"] = this.status;
-        data["documentType"] = this.documentType;
         data["filesProcessed"] = this.filesProcessed;
         data["filesErrored"] = this.filesErrored;
         data["licenceCount"] = this.licenceCount;
         data["liveLicenceCount"] = this.liveLicenceCount;
+        data["documentType"] = this.documentType;
         return data;
     }
 }
@@ -12069,11 +12077,11 @@ export interface IProcessRun {
     numberOfFiles?: number;
     successCount?: number;
     status?: string | undefined;
-    documentType?: string;
     filesProcessed?: number;
     filesErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
+    documentType?: string;
 
     [key: string]: any;
 }

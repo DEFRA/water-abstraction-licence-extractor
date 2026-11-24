@@ -15,6 +15,15 @@ public class AggregateIdTests
             AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Limited(100).Build().Id,
             AggregateBuilder.An().For("1/2/3").LinkedTo("4/5/6").Limited(100).Build().Id);
     }
+    
+    [Fact]
+    public void WhenAnAggregateIsCloned_ThenTheDescriptionIsKept()
+    {
+        var aggregate = AggregateBuilder.An().For("1/2/3").Limited(100).Build();
+        aggregate.Description = "Some notes";
+
+        Assert.Equal("Some notes", aggregate.Clone().Description);
+    }
 
     // Separators are stripped, so the same licence written either way is one aggregate.
     [Fact]

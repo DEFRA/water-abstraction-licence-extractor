@@ -86,6 +86,47 @@ public class FollowOnContainedInTests
         Assert.Equal(InformationSource.Nald, Assert.Single(successor.ContainedIn!).Source);
     }
 
+    // The successor's own entry must stay first: ConsolidateLinkedLicencesAsync keeps only the first
+    // per section and direction when none carries history, so that is the one the portal shows.
+    [Fact]
+    public void WhenTheSuccessorIsAlsoNamedInTheDocument_ThenItKeepsItsOwnLine()
+    {
+        var successorsOwn = new ContainedInInformation
+        {
+            Source = InformationSource.Document,
+            SectionName = "LicenceHistory",
+            PageNumber = 7,
+            LineNumber = 7
+        };
+
+        var successor = LicenceBuilder.LinkTo("2/27/18/123/R01", [successorsOwn]);
+
+        var predecessorsOwn = new ContainedInInformation
+        {
+            Source = InformationSource.Document,
+            SectionName = "LicenceHistory",
+            PageNumber = 7,
+            LineNumber = 6,
+            History =
+            [
+                new NaldLicenceNumberHistoryOutput
+                {
+                    LicenceNumber = "2/27/18/097",
+                    FollowOnLicenceNumbers = ["2/27/18/123/R01"]
+                }
+            ]
+        };
+
+        var predecessor = LicenceBuilder.LinkTo("2/27/18/097", [predecessorsOwn]);
+
+        AbstractionLicenceSchemaConverter.AddFollowOnContainedIns(predecessor, successor);
+
+        var own = Assert.Single(
+            successor.ContainedIn!.Where(containedIn => containedIn.Source == InformationSource.Document));
+
+        Assert.Equal(7, own.LineNumber);
+    }
+
     private static ContainedInInformation SeenIn(InformationSource source, string sectionName)
     {
         return new ContainedInInformation { Source = source, SectionName = sectionName };

@@ -1,6 +1,6 @@
 namespace WALE.Api.Areas.Extractor.Controllers.Models;
 
-public class ProcessRunNameRequest
+public class SetProcessRunNameRequest
 {
     public int processRunId { get; set; }
 

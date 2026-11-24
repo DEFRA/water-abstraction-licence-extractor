@@ -107,7 +107,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task UpdateProcessRunNameAsync(int processRunId, string? name)
     {
-        var path = "/Extractor/ProcessRun/UpdateProcessRunName";
+        var path = "/Extractor/ProcessRun/SetProcessRunName";
 
         var json = JsonSerializer.Serialize(new
         {

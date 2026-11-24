@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Scalar.AspNetCore;
 using WALE.ProcessFile.Core.Constants;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
@@ -10,31 +11,38 @@ using WALE.ProcessFile.Services.TesseractExe;
 using WALE.ProcessFile.Services.TesseractExe.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+//if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
 var (portNumber, writeToConsole, writeToFile) = await SetupAsync(args);
+var tesseractSetupLock = new Lock();
 
 app.MapPost("/setup", (SetupTesseractRequest request) =>
     {
-        TesseractService.Instance = GetTesseractService(
-            request.BytesMode!.Equals("file", StringComparison.OrdinalIgnoreCase),
-            request.PageSegMode,
-            request.CacheFolderOrApiUrl!,
-            request.OutputFolder!,
-            request.TessDataPath!);
+        if (TesseractService.Instance != null)
+        {
+            return Results.Ok();
+        }
         
+        lock (tesseractSetupLock)
+        {
+            TesseractService.Instance ??= 
+                GetTesseractService(
+                    request.BytesMode?.Equals("file", StringComparison.OrdinalIgnoreCase) == true,
+                    request.PageSegMode,
+                    request.CacheFolderOrApiUrl!,
+                    request.OutputFolder!,
+                    request.TessDataPath!);
+        }
+
         return Results.Ok();
     })
 .WithName("SetupTesseractAsync");
@@ -73,7 +81,12 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
 {
     if (string.IsNullOrEmpty(tessDataPath))
     {
-        throw new NullReferenceException(tessDataPath);
+        throw new Exception($"{nameof(tessDataPath)} is null or empty");
+    }
+    
+    if (string.IsNullOrEmpty(cacheFolderOrApiUrl))
+    {
+        throw new Exception($"{nameof(cacheFolderOrApiUrl)} is null or empty");
     }
 
     ICacheService cacheService;
@@ -81,6 +94,11 @@ static InternalTesseractOcrDataExtractorService GetTesseractService(
     
     if (isFileMode)
     {
+        if (string.IsNullOrEmpty(outputFolder))
+        {
+            throw new Exception($"{nameof(outputFolder)} is null or empty");
+        }
+        
         outputService = new FileSystemOutputService(outputFolder);
         cacheService = new FileSystemCacheService(cacheFolderOrApiUrl);
     }
@@ -116,6 +134,9 @@ static async Task<(int PortNumber, bool WriteToConsole, bool WriteToFile)> Setup
 
     if (args.Length != 1)
     {
+        // Next line for debugging
+        return (1234, writeToConsole, writeToFile);
+        
         await LogAsync(
             "Not enough / too many arguments provided",
             true,

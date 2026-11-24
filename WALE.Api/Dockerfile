@@ -14,6 +14,11 @@ COPY ./WALE.Api/nginx.conf /etc/nginx/conf.d/default.conf
 WORKDIR /app
 COPY --from=build /app/publish .
 
+RUN apt-get update \
+    && apt-get install -y --allow-unauthenticated \
+        libleptonica-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "WALE.Api.dll"]

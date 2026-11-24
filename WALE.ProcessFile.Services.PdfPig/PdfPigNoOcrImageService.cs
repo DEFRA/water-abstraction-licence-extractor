@@ -53,7 +53,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                 try
                 {
-                    ConsoleHelper.WriteToBuffer = true;
+                    ConsoleHelper.WriteToConsoleBuffer = true;
                     pix = TryLoadPix(bytes!);
                 }
                 catch (Exception ex)
@@ -73,7 +73,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;
+                    ConsoleHelper.WriteToConsoleBuffer = false;
                 }
             }
             else if (imageData.TryGetBytesAsMemory(out var bytesMemory))
@@ -83,7 +83,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                 try
                 {
-                    ConsoleHelper.WriteToBuffer = true;
+                    ConsoleHelper.WriteToConsoleBuffer = true;
                     pix = TryLoadPix(bytes);
                 }
                 catch (Exception ex)
@@ -103,7 +103,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;
+                    ConsoleHelper.WriteToConsoleBuffer = false;
                 }
             }
             else
@@ -119,7 +119,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
 
                 try
                 {
-                    ConsoleHelper.WriteToBuffer = true;
+                    ConsoleHelper.WriteToConsoleBuffer = true;
                     pix = TryLoadPix(bytes);
                 }
                 catch (Exception ex)
@@ -138,7 +138,7 @@ public class PdfPigNoOcrImageService(IInternalPdfImage imageData) : INoOcrPdfIma
                 }
                 finally
                 {
-                    ConsoleHelper.WriteToBuffer = false;
+                    ConsoleHelper.WriteToConsoleBuffer = false;
                 }
             }
         }

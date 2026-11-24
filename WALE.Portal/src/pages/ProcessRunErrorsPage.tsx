@@ -92,7 +92,7 @@ function ProcessRunErrorsPage() {
 
     return (
         <div className="list-page-container">
-            <h1>
+            <h1 style={{marginBottom: '10px'}}>
                 <Link to="/">Process runs</Link>
                 {` / run ${searchParams.get('processRunId') ?? '?'} / failed files`}
             </h1>
@@ -101,6 +101,7 @@ function ProcessRunErrorsPage() {
                 <label>
                     Status:{' '}
                     <select
+                        style={{width: 'auto'}}
                         value={status}
                         onChange={event => {
                             setStatus(event.target.value);
@@ -115,6 +116,7 @@ function ProcessRunErrorsPage() {
                 <label>
                     Page size:{' '}
                     <select
+                        style={{width: 'auto'}}
                         value={pageSize}
                         onChange={event => {
                             setPageSize(Number(event.target.value));

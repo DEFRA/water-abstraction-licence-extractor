@@ -105,6 +105,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return result!;
     }
 
+    public async Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        var path = "/Extractor/ProcessRun/UpdateProcessRunName";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunId,
+            name
+        }, JsonHelper.GetWireSerializerOptions());
+
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         var path = "/Extractor/ProcessRun/AddProcessRunFile";

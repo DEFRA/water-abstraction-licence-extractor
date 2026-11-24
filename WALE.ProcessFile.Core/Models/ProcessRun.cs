@@ -5,6 +5,8 @@ public class ProcessRun
     public int ProcessRunId { get; set; }
     
     public string? Description { get; set; }
+
+    public string? Name { get; set; }
     
     public DateTime? StartDateTimeUtc { get; set; }
     

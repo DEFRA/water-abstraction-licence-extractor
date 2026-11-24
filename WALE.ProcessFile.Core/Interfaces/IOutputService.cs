@@ -28,6 +28,8 @@ public interface IOutputService
 
     public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
 
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name);
+
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile);

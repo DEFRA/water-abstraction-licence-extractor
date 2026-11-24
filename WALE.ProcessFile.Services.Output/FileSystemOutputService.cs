@@ -65,6 +65,11 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
 
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         throw new NotImplementedException();

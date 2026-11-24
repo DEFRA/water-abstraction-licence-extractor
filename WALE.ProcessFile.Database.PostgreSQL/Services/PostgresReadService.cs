@@ -568,6 +568,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT
                                process_run_id,
                                description,
+                               name,
                                start_date_time_utc,
                                end_date_time_utc,
                                status,
@@ -907,6 +908,7 @@ public class PostgresReadService(INpgsqlDataSourceProvider dataSourceProvider)
                            SELECT
                                process_run_id,
                                description,
+                               name,
                                start_date_time_utc,
                                end_date_time_utc,
                                number_of_files,

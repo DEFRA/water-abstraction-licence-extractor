@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(94)]
+[Migration(96)]
 public class AddErrorColumnToMatchesResult : Migration
 {
     public override void Up()

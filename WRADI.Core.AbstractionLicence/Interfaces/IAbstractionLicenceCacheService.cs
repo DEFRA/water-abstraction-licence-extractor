@@ -16,6 +16,12 @@ public interface IAbstractionLicenceCacheService
         int skip,
         int take);
     
+    Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take);
+    
     Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
     Task<(
             HashSet<(string, int)> Live,

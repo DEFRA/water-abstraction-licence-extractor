@@ -29,6 +29,22 @@ public class NaldDataController(
         
         return Ok(naldData);
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAllImpoundmentAsync(
+        [FromQuery] short? regionCode = null,
+        [FromQuery] bool? allVersions = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
+    {
+        var naldData = await abstractionLicenceCacheService.GetImpoundmentNaldDataAsync(
+            regionCode,
+            allVersions ?? false,
+            skip,
+            take);
+        
+        return Ok(naldData);
+    }    
 
     [OutputCache(Duration=60)] // Doesn't change often at all
     [HttpGet]
@@ -37,6 +53,12 @@ public class NaldDataController(
         var naldLicences =
             await abstractionLicenceCacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
         return Ok(naldLicences);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetImpoundmentLicenceStatusDataAsync([FromQuery] short? regionCode = null)
+    {
+        return Ok(new NaldImpoundmentLicenceStatusData()); // TODO more
     }
 
     [HttpGet]

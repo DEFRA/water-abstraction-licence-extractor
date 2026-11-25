@@ -48,6 +48,8 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
+    Task<List<NaldLicence>> GetNaldImpoundmentLicencesAsync(int skip, int take);
+    
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
 
     Task<(

@@ -1885,6 +1885,33 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return result.ToList();
     }
 
+    public async Task<List<NaldLicence>> GetNaldImpoundmentLicencesAsync(int skip, int take)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           
+                           SELECT 
+                               "LIC_NO" AS LicenceNumber,
+                               "FGAC_REGION_CODE" AS RegionCode,
+                               "ID" AS Id,
+                               4 AS Type
+                           FROM nald."NALD_IMP_LICENCES"
+                           ORDER BY
+                                "LIC_NO",
+                                "FGAC_REGION_CODE"
+                           LIMIT @take
+                           OFFSET @skip;
+                           """;
+
+        var result = await QueryAsync<NaldLicence>(
+            connection,
+            sql,
+            0,
+            new { Skip = skip, Take = take });
+
+        return result.ToList();
+    }
+
     public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();

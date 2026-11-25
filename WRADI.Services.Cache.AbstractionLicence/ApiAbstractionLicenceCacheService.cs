@@ -76,6 +76,34 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        var path = $"/Extractor/NaldData/GetAllImpoundment?skip={skip}&take={take}";
+
+        if (regionCode != null)
+        {
+            path += $"&regionCode={regionCode}";
+        }
+        
+        if (allVersions)
+        {
+            path += "&allVersions=true";
+        }
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<NaldImpoundmentDataCollection>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         var path = "/Extractor/NaldData/GetLicenceStatusData";

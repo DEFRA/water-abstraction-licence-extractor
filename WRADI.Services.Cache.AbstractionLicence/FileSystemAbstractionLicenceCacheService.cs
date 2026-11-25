@@ -23,6 +23,15 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
+    public Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();

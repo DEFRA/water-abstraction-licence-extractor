@@ -1,5 +1,6 @@
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
+using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -37,6 +38,20 @@ public class DatabaseAbstractionLicenceCacheService(
             AbstractionLicencePurposes = await purposesTask,
             AbstractionLicencePoints = await pointsTask,
             AbstractionLicenceQuantities = await quantitiesTask
+        };
+    }
+
+    public async Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        var impoundmentLicencesTask = databaseReadService.GetNaldImpoundmentLicencesAsync(skip, take);
+        
+        return new NaldImpoundmentDataCollection
+        {
+            ImpoundmentLicences = await impoundmentLicencesTask
         };
     }
 

@@ -3452,6 +3452,43 @@ export class Client {
     /**
      * @return OK
      */
+    setProcessRunName(body: SetProcessRunNameRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/SetProcessRunName";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetProcessRunName(_response);
+        });
+    }
+
+    protected processSetProcessRunName(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     addProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/AddProcessRunFile";
         url_ = url_.replace(/[?&]$/, "");
@@ -6700,6 +6737,66 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @param status (optional) 
+     * @param exception (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getProcessRunNonOkFiles(processRunId: number, status: string | undefined, exception: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunNonOkFilesResponse> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (exception === null)
+            throw new globalThis.Error("The parameter 'exception' cannot be null.");
+        else if (exception !== undefined)
+            url_ += "exception=" + encodeURIComponent("" + exception) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProcessRunNonOkFiles(_response);
+        });
+    }
+
+    protected processGetProcessRunNonOkFiles(response: Response): Promise<ProcessRunNonOkFilesResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProcessRunNonOkFilesResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProcessRunNonOkFilesResponse>(null as any);
     }
 
     /**
@@ -10772,6 +10869,74 @@ export interface IMatchesResult2 {
     [key: string]: any;
 }
 
+export class MatchResultError implements IMatchResultError {
+    matchesResultId?: number;
+    fileId?: string;
+    filename?: string | undefined;
+    status?: string | undefined;
+    error?: string | undefined;
+    dateTimeUtc?: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMatchResultError) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.matchesResultId = _data["matchesResultId"];
+            this.fileId = _data["fileId"];
+            this.filename = _data["filename"];
+            this.status = _data["status"];
+            this.error = _data["error"];
+            this.dateTimeUtc = _data["dateTimeUtc"] ? new Date(_data["dateTimeUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): MatchResultError {
+        data = typeof data === 'object' ? data : {};
+        let result = new MatchResultError();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["matchesResultId"] = this.matchesResultId;
+        data["fileId"] = this.fileId;
+        data["filename"] = this.filename;
+        data["status"] = this.status;
+        data["error"] = this.error;
+        data["dateTimeUtc"] = this.dateTimeUtc ? this.dateTimeUtc.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IMatchResultError {
+    matchesResultId?: number;
+    fileId?: string;
+    filename?: string | undefined;
+    status?: string | undefined;
+    error?: string | undefined;
+    dateTimeUtc?: Date | undefined;
+
+    [key: string]: any;
+}
+
 export class MatchToSave implements IMatchToSave {
     matchesResultId?: number;
     labelName?: string | undefined;
@@ -12045,6 +12210,7 @@ export class ProcessRun implements IProcessRun {
     status?: string | undefined;
     filesProcessed?: number;
     filesErrored?: number;
+    filesTransientErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
     documentType?: string;
@@ -12076,6 +12242,7 @@ export class ProcessRun implements IProcessRun {
             this.status = _data["status"];
             this.filesProcessed = _data["filesProcessed"];
             this.filesErrored = _data["filesErrored"];
+            this.filesTransientErrored = _data["filesTransientErrored"];
             this.licenceCount = _data["licenceCount"];
             this.liveLicenceCount = _data["liveLicenceCount"];
             this.documentType = _data["documentType"];
@@ -12105,6 +12272,7 @@ export class ProcessRun implements IProcessRun {
         data["status"] = this.status;
         data["filesProcessed"] = this.filesProcessed;
         data["filesErrored"] = this.filesErrored;
+        data["filesTransientErrored"] = this.filesTransientErrored;
         data["licenceCount"] = this.licenceCount;
         data["liveLicenceCount"] = this.liveLicenceCount;
         data["documentType"] = this.documentType;
@@ -12123,6 +12291,7 @@ export interface IProcessRun {
     status?: string | undefined;
     filesProcessed?: number;
     filesErrored?: number;
+    filesTransientErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
     documentType?: string;
@@ -12238,6 +12407,58 @@ export interface IProcessRunEndRequest {
     [key: string]: any;
 }
 
+export class ProcessRunFailureGroup implements IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunFailureGroup) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.exception = _data["exception"];
+            this.files = _data["files"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunFailureGroup {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunFailureGroup();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["exception"] = this.exception;
+        data["files"] = this.files;
+        return data;
+    }
+}
+
+export interface IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+}
+
 export class ProcessRunFileRequest implements IProcessRunFileRequest {
     fileName?: string | undefined;
     processRunId?: number;
@@ -12342,6 +12563,86 @@ export class ProcessRunNameRequest implements IProcessRunNameRequest {
 
 export interface IProcessRunNameRequest {
     name?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class ProcessRunNonOkFilesResponse implements IProcessRunNonOkFilesResponse {
+    items?: MatchResultError[];
+    totalCount?: number;
+    declaredFileCount?: number;
+    processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunNonOkFilesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(MatchResultError.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.declaredFileCount = _data["declaredFileCount"];
+            this.processedFileCount = _data["processedFileCount"];
+            if (Array.isArray(_data["failureGroups"])) {
+                this.failureGroups = [] as any;
+                for (let item of _data["failureGroups"])
+                    this.failureGroups!.push(ProcessRunFailureGroup.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ProcessRunNonOkFilesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunNonOkFilesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["declaredFileCount"] = this.declaredFileCount;
+        data["processedFileCount"] = this.processedFileCount;
+        if (Array.isArray(this.failureGroups)) {
+            data["failureGroups"] = [];
+            for (let item of this.failureGroups)
+                data["failureGroups"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IProcessRunNonOkFilesResponse {
+    items?: MatchResultError[];
+    totalCount?: number;
+    declaredFileCount?: number;
+    processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
 
     [key: string]: any;
 }
@@ -13716,6 +14017,58 @@ export interface ISendFileProcessSingleMessagesResponse {
     requested?: number;
     enqueued?: number;
     failedFileIds?: string[];
+
+    [key: string]: any;
+}
+
+export class SetProcessRunNameRequest implements ISetProcessRunNameRequest {
+    processRunId?: number;
+    name?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISetProcessRunNameRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.processRunId = _data["processRunId"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): SetProcessRunNameRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetProcessRunNameRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["processRunId"] = this.processRunId;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface ISetProcessRunNameRequest {
+    processRunId?: number;
+    name?: string | undefined;
 
     [key: string]: any;
 }

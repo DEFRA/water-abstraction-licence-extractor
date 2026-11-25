@@ -76,8 +76,8 @@ public static class LinkedLicenceVerificationMergeHelper
             try
             {
                 var json = verification.LicenceSectionOverrideValue
-                           ?? verification.LicenceSectionScrapedValue
-                           ?? verification.LicenceSectionSnapshotValue;
+                           ?? verification.LicenceSectionSnapshotValue
+                           ?? verification.LicenceSectionScrapedValue;
 
                 if (string.IsNullOrEmpty(json))
                 {

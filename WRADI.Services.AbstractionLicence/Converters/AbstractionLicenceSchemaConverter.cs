@@ -3216,8 +3216,13 @@ public static class AbstractionLicenceSchemaConverter
             .Where(sibling => sibling.MatchedLabelName == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
 
-        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(
-            siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
+        var dateOnly = siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly");
+        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(dateOnly);
+
+        // A DateOnly naming both ends is a range, which GetTimeCutoff declines. Periods otherwise
+        // come only from DatePurposeRough (month names), so without this the phrase reaches
+        // neither field: NE/023/0001/019 condition 9.2 is "Between 01 June and 31 July inclusive".
+        var dateOnlyPeriod = LimitPeriodHelper.GetTimePeriod(dateOnly);
 
         var valueResults = siblings
             .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabelRelatedName))
@@ -3390,7 +3395,6 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
-        // If points is null, then get all the points from the document implicitly
         if (limitPoints == null || limitPoints.Count == 0)
         {
             limitPoints = allPoints
@@ -3403,7 +3407,6 @@ public static class AbstractionLicenceSchemaConverter
                 .ToList();
         }
 
-        // If purposes is null, then get all the purposes from the document implicitly
         if (limitPurposes == null || limitPurposes.Count == 0)
         {
             limitPurposes = allPurposes
@@ -3421,6 +3424,18 @@ public static class AbstractionLicenceSchemaConverter
             individualGroups.Add(new AbstractionLimitGroup
             {
                 TimeCutoff = timeCutoff,
+                DocumentIdentifier = documentIdentifier,
+                Limits = [],
+                Points = limitPoints.ToArray(),
+                Purposes = limitPurposes.ToArray(),
+                ContainsLegalText = containsLegalText
+            });
+        }
+        else if (dateOnlyPeriod != null && !isAggregate)
+        {
+            individualGroups.Add(new AbstractionLimitGroup
+            {
+                TimePeriod = dateOnlyPeriod,
                 DocumentIdentifier = documentIdentifier,
                 Limits = [],
                 Points = limitPoints.ToArray(),

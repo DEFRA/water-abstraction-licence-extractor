@@ -189,7 +189,7 @@ public class AwsTextractOcrDataExtractorService
         }
         else
         {
-            List<byte[]> bytesList;
+            List<byte[]?> bytesList;
             
             if (isPageScreenshot)
             {
@@ -226,6 +226,11 @@ public class AwsTextractOcrDataExtractorService
                 
                 foreach (var (bytes, candidate) in bytesList.Select((b, i) => (b, i)))
                 {
+                    if (bytes is null || bytes.Length == 0)
+                    {
+                        continue;
+                    }
+
                     var returnList = await GetDataFromTextractAsync(
                         bytes,
                         $"{pdfDocument.FileId:N}-{processRunId}-{pageNumber}-{imageNumber}-{candidate}");

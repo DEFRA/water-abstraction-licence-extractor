@@ -21,7 +21,7 @@ public class InternalTesseractOcrDataExtractorService(
         Guid fileId,
         int processRunId)
     {
-        List<byte[]> bytesList;
+        List<byte[]?> bytesList;
 
         if (isPageScreenshot)
         {

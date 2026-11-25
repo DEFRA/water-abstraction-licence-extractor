@@ -222,14 +222,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
         var pageScreenshotPaths = GetPageScreenshotPaths(
             pageNumber,
             pdfServiceName,
             fileId);
 
-        var returnList = new List<byte[]>();
+        var returnList = new List<byte[]?>();
         
         foreach (var pageScreenshotPath in pageScreenshotPaths)
         {

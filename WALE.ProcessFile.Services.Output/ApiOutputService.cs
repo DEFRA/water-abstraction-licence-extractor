@@ -105,6 +105,22 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return result!;
     }
 
+    public async Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        var path = "/Extractor/ProcessRun/SetProcessRunName";
+
+        var json = JsonSerializer.Serialize(new
+        {
+            processRunId,
+            name
+        }, JsonHelper.GetWireSerializerOptions());
+
+        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         var path = "/Extractor/ProcessRun/AddProcessRunFile";
@@ -276,6 +292,72 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
     
+    public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}"
+                   + $"?skip={skip}&take={take}"
+                   + (string.IsNullOrEmpty(status) ? string.Empty : $"&status={Uri.EscapeDataString(status)}");
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.Items;
+    }
+
+    public async Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        var result = JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!;
+
+        return new ProcessRunFileCounts
+        {
+            Declared = result.DeclaredFileCount,
+            Processed = result.ProcessedFileCount
+        };
+    }
+
+    public async Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.FailureGroups;
+    }
+
+    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0"
+                   + (string.IsNullOrEmpty(status) ? string.Empty : $"&status={Uri.EscapeDataString(status)}");
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.TotalCount;
+    }
+
     public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         var path = $"/BFF/FileData/GetSimpleMatchResults?processRunId={processRunId}";

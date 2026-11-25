@@ -69,6 +69,11 @@ public class DatabaseOutputService(
         return databaseWriteService.MarkProcessRunCompleteIfCompleteAsync(processRun);
     }
 
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        return databaseWriteService.UpdateProcessRunNameAsync(processRunId, name);
+    }
+
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile)
     {
         return databaseWriteService.AddProcessRunFileAsync(processRunFile);
@@ -132,6 +137,32 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId, isUpdate);
     }
     
+    public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesAsync(
+            processRunId, status, exception, skip, take);
+    }
+
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
+    }
+
+    public Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFailureGroupsAsync(processRunId);
+    }
+
+    public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFileCountsAsync(processRunId);
+    }
+
     public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         return await databaseReadService.GetSimpleMatchResults(processRunId);

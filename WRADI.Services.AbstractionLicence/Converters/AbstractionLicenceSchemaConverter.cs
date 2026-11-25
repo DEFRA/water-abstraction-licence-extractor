@@ -431,7 +431,7 @@ public static class AbstractionLicenceSchemaConverter
                     }
 
                     if (l.ContainedIn?.Any(ci =>
-                            AreContainedInFundamentallyEqual(ci, licenceHistoryLicence.ContainedIn![0])) == true)
+                            ContainedInHelper.AreContainedInFundamentallyEqual(ci, licenceHistoryLicence.ContainedIn![0])) == true)
                     {
                         continue;
                     }
@@ -477,7 +477,7 @@ public static class AbstractionLicenceSchemaConverter
 
         var linkedLicencesWithAddedFollowOns = new List<LinkedLicence>();
 
-        // Swap out linked licence numbers to the newest ones where needed
+        // The superseded numbers are kept deliberately: lineage licence sets group on them.
         foreach (var linkedLicence in linkedLicences)
         {
             var (hasSuccessor, history) =
@@ -511,7 +511,7 @@ public static class AbstractionLicenceSchemaConverter
                 // Add to an existing ones history
                 if (existing != null)
                 {
-                    AddFollowOnContainedIns(linkedLicence, existing);
+                    ContainedInHelper.AddFollowOnContainedIns(linkedLicence, existing);
                     continue;
                 }
 
@@ -579,7 +579,7 @@ public static class AbstractionLicenceSchemaConverter
             licenceVersion.LicenceVersionId,
             naldAbstractionDataLine);
 
-        HoistContainedInSections(individual, aggregates);
+        AbstractionLimitHelper.HoistContainedInSections(individual, aggregates);
 
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(individual);
         AbstractionLimitHelper.RemoveDuplicateLimitsPerGroup(aggregates
@@ -640,56 +640,6 @@ public static class AbstractionLicenceSchemaConverter
             RegionId = naldAbstractionDataLine?.FgacRegionCode ?? regionCode,
             ProcessRunId = processRunId
         };
-    }
-
-    private static void AddFollowOnContainedIns(LinkedLicence linkedLicence, LinkedLicence existing)
-    {
-        var currentContainedIn = new List<ContainedInInformation>();
-        foreach (var currentContained in linkedLicence.ContainedIn?.ToList() ?? [])
-        {
-            if(currentContained.History?.Any(item => item.FollowOnLicenceNumbers.Contains(existing.LicenceNumber!)) == true)
-            {
-                currentContainedIn.Add(new ContainedInInformation
-                {
-                    Source = GetFollowOnSource(currentContained.Source),
-                    Direction = currentContained.Direction,
-                    SectionName =  currentContained.SectionName,
-                    LinkReason =  currentContained.LinkReason,
-                    LineNumber =  currentContained.LineNumber,
-                    PageNumber = currentContained.PageNumber
-                }); 
-            }
-            else
-            {
-                currentContainedIn.Add(currentContained);
-            }
-        }
-
-        existing.ContainedIn = currentContainedIn.ToArray();
-    }
-
-    private static InformationSource GetFollowOnSource(InformationSource currentContainedSource)
-    {
-        return currentContainedSource switch
-        {
-            InformationSource.Unknown => InformationSource.UnknownFollowOn,
-            InformationSource.Nald => InformationSource.NaldFollowOn,
-            InformationSource.Document => InformationSource.DocumentFollowOn,
-            InformationSource.OtherDocument => InformationSource.OtherDocumentFollowOn,
-            InformationSource.MixedSourcesOrMixedReasons => InformationSource.MixedFollowOn,
-            _ => throw new ArgumentOutOfRangeException(nameof(currentContainedSource), currentContainedSource, null)
-        };
-    }
-
-    private static bool AreContainedInFundamentallyEqual(
-        ContainedInInformation containedIn1,
-        ContainedInInformation containedIn2)
-    {
-        return containedIn1.SectionName == containedIn2.SectionName
-               && containedIn1.LinkReason == containedIn2.LinkReason
-               && containedIn1.LineNumber == containedIn2.LineNumber
-               && containedIn1.PageNumber == containedIn2.PageNumber
-               && containedIn1.Source == containedIn2.Source;
     }
 
     private static List<NaldLicenceNumberHistoryOutput> ExtendedHistory(
@@ -764,62 +714,6 @@ public static class AbstractionLicenceSchemaConverter
         }
 
         return false;
-    }
-
-
-
-
-
-
-
-
-    private static void HoistContainedInSections(
-        AbstractionLimitGroup[] individuals,
-        Aggregate[] aggregates)
-    {
-        var allLimitGroups = individuals.ToList();
-        allLimitGroups.AddRange(aggregates);
-
-        foreach (var limitGroup in allLimitGroups)
-        {
-            var allSame = true;
-
-            var firstLimit = limitGroup.Limits.First();
-            var firstLimitProviders = string.Join('_',
-                firstLimit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
-
-            foreach (var limit in limitGroup.Limits.Skip(1))
-            {
-                var limitProviders = string.Join('_',
-                    limit.ContainedIn!.Select(ci => $"{ci.Source}-{ci.SectionName}-{ci.LinkReason}"));
-
-                if (limitProviders != firstLimitProviders)
-                {
-                    allSame = false;
-                    break;
-                }
-            }
-
-            if (!allSame)
-            {
-                limitGroup.ContainedIn =
-                [
-                    new()
-                    {
-                        Source = InformationSource.MixedSourcesOrMixedReasons
-                    }
-                ];
-
-                continue;
-            }
-
-            limitGroup.ContainedIn = firstLimit.ContainedIn;
-
-            foreach (var limit in limitGroup.Limits)
-            {
-                limit.ContainedIn = null;
-            }
-        }
     }
 
     private static (AbstractionLimitGroup[] individuals, Aggregate[] aggregates)
@@ -1721,105 +1615,8 @@ public static class AbstractionLicenceSchemaConverter
         return returnLicenceSets;
     }
 
-    private static List<LicenceSet> PreferLargerLicenceSets(
-        List<LicenceSet> licenceSets,
-        LicenceSetType licenceSetType)
-    {
-        var returnLicenceSets = new List<LicenceSet>();
-        returnLicenceSets.AddRange(licenceSets
-            .Where(ls => ls.LicenceSetType != licenceSetType));
-        
-        var lineageLicenceSets = licenceSets
-            .Where(ls => ls.LicenceSetType == licenceSetType)
-            .ToList();
-        
-        foreach (var licenceSet in lineageLicenceSets)
-        {
-            var (hasLargerEncompassingSet, _) = EncompassingLicenceSetExists(
-                lineageLicenceSets,
-                licenceSet.Licences.Select(l => l.LicenceNumber?.Value).ToArray()!);
-
-            var encompassesOtherSet = EncompassesAnotherLicenceSet(
-                lineageLicenceSets,
-                licenceSet);
-
-            if (encompassesOtherSet)
-            {
-                foreach (var licence in licenceSet.Licences)
-                {
-                    licence.LicenceSets = licence.LicenceSets
-                        .Where(ls => ls.LicenceSetId == licenceSet.LicenceSetId
-                            || ls.LicenceSetType != LicenceSetType.LicencesGroupedByLineage)
-                        .ToArray();
-                }
-            }
-            
-            if (hasLargerEncompassingSet)
-            {
-                foreach (var licence in licenceSet.Licences)
-                {
-                    licence.LicenceSets = licence.LicenceSets
-                        .Where(ls => ls.LicenceSetId != licenceSet.LicenceSetId)
-                        .ToArray();
-                }
-            }
-            
-            if (hasLargerEncompassingSet)
-            {
-                continue;
-            }
-            
-            returnLicenceSets.Add(licenceSet);
-        }
-        
-        return returnLicenceSets;
-    }
-
-    private static (bool Exists, string? SetId) EncompassingLicenceSetExists(
-        List<LicenceSet> lineageLicenceSets,
-        string[] mustContainLicenceNumbers)
-    {
-        string? matchId = null;
-        
-        var exists = lineageLicenceSets.Any(ls =>
-        {
-            var biggerGroup = ls.Licences.Length > mustContainLicenceNumbers.Length;
-
-            if (!biggerGroup)
-            {
-                return false;
-            }
-
-            foreach (var mustContainLicenceNumber in mustContainLicenceNumbers)
-            {
-                if (ls.Licences.All(l => l.LicenceNumber?.Value != mustContainLicenceNumber))
-                {
-                    return false;
-                }
-            }
-
-            matchId = ls.LicenceSetId;
-            return true;
-        });
-
-        return (exists, matchId);
-    }
     
-    private static bool EncompassesAnotherLicenceSet(
-        List<LicenceSet> lineageLicenceSets,
-        LicenceSet licenceSet)
-    {
-        var encompassesAny = lineageLicenceSets.Any(ls =>
-        {
-            var (exists, setId) = EncompassingLicenceSetExists(
-                lineageLicenceSets,
-                ls.Licences.Select(l => l.LicenceNumber?.Value).ToArray()!);
 
-            return exists && setId == licenceSet.LicenceSetId;
-        });
-
-        return encompassesAny;
-    }
 
     private static List<LicenceSet> RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
         IEnumerable<LicenceSet> licenceSets,
@@ -2460,8 +2257,6 @@ public static class AbstractionLicenceSchemaConverter
 
         return licence;
     }
-
-
 
     private static async Task<(
         List<LinkedLicence> LinkedLicences,
@@ -3421,8 +3216,13 @@ public static class AbstractionLicenceSchemaConverter
             .Where(sibling => sibling.MatchedLabelName == "DatePurposeRough")
             .ToList(); // E.g. Jan, Feb etc..
 
-        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(
-            siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly"));
+        var dateOnly = siblings.FirstOrDefault(s => s.MatchedLabelName == "DateOnly");
+        var timeCutoff = LimitPeriodHelper.GetTimeCutoff(dateOnly);
+
+        // A DateOnly naming both ends is a range, which GetTimeCutoff declines. Periods otherwise
+        // come only from DatePurposeRough (month names), so without this the phrase reaches
+        // neither field: NE/023/0001/019 condition 9.2 is "Between 01 June and 31 July inclusive".
+        var dateOnlyPeriod = LimitPeriodHelper.GetTimePeriod(dateOnly);
 
         var valueResults = siblings
             .Where(sibling => !string.IsNullOrEmpty(sibling.MatchedLabelRelatedName))
@@ -3595,7 +3395,6 @@ public static class AbstractionLicenceSchemaConverter
             }
         }
 
-        // If points is null, then get all the points from the document implicitly
         if (limitPoints == null || limitPoints.Count == 0)
         {
             limitPoints = allPoints
@@ -3608,7 +3407,6 @@ public static class AbstractionLicenceSchemaConverter
                 .ToList();
         }
 
-        // If purposes is null, then get all the purposes from the document implicitly
         if (limitPurposes == null || limitPurposes.Count == 0)
         {
             limitPurposes = allPurposes
@@ -3626,6 +3424,18 @@ public static class AbstractionLicenceSchemaConverter
             individualGroups.Add(new AbstractionLimitGroup
             {
                 TimeCutoff = timeCutoff,
+                DocumentIdentifier = documentIdentifier,
+                Limits = [],
+                Points = limitPoints.ToArray(),
+                Purposes = limitPurposes.ToArray(),
+                ContainsLegalText = containsLegalText
+            });
+        }
+        else if (dateOnlyPeriod != null && !isAggregate)
+        {
+            individualGroups.Add(new AbstractionLimitGroup
+            {
+                TimePeriod = dateOnlyPeriod,
                 DocumentIdentifier = documentIdentifier,
                 Limits = [],
                 Points = limitPoints.ToArray(),
@@ -3987,8 +3797,6 @@ public static class AbstractionLicenceSchemaConverter
 
         sectionLinkedLicences.AddRange(linkedLicenceNumbers);
     }
-
-
 
     private static int GetPositionRelativeToDateLines(
         List<LabelGroupResult>? dateLines,
@@ -4721,9 +4529,6 @@ public static class AbstractionLicenceSchemaConverter
         return null;
     }
 
-
-
-
     private static async Task<PurposeOfAbstraction[]> GetPurposesAsync(
         string licenceNumber,
         LookupConfiguration config,
@@ -5234,14 +5039,29 @@ public static class AbstractionLicenceSchemaConverter
         LookupConfiguration lookupConfiguration,
         INaldDataLookupService naldDataLookupService)
     {
-        var distinctLicenceSets = AsDistinctLicenceSets(licenceSetGroups);
+        var stepStart = DateTime.Now;
+
+        void LogStep(string step)
+        {
+            ConsoleHelper.WriteLine($"INFO - {nameof(AbstractionLicenceSchemaConverter)} - "
+                + $"{nameof(AddAdditionalLicenceSetsAsync)} - {step} in "
+                + $"{(DateTime.Now - stepStart).TotalSeconds:F1}s");
+
+            stepStart = DateTime.Now;
+        }
+
+        var distinctLicenceSets = LicenceSetHelper.AsDistinctLicenceSets(licenceSetGroups);
 
         var allLicences = distinctLicenceSets
             .SelectMany(lsg => lsg.Licences)
             .ToList();
 
+        LogStep($"{distinctLicenceSets.Count} distinct sets over {allLicences.Count} licences");
+
         LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
+
+        LogStep("linked licence assertions");
 
         distinctLicenceSets.AddRange(
             await AddIncomingLinksAndLicenceSetReferencesAsync(
@@ -5249,23 +5069,33 @@ public static class AbstractionLicenceSchemaConverter
                 lookupConfiguration,
                 naldDataLookupService));
 
+        LogStep("incoming links and set references");
+
         LinkedLicenceAssertions.FixNoLicenceSetWithoutLicenceHavingLinkedLicence(allLicences);
         LinkedLicenceAssertions.AssertNoLicenceSetWithoutLinkedLicence(allLicences);
 
         AggregateVariationHelper.RemoveDuplicateVariations(allLicences);
         AggregateAssertions.AssertNoDuplicateVariations(allLicences);
+
+        LogStep("duplicate variations");
         
         distinctLicenceSets = RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
             distinctLicenceSets,
             true,
             false);
         
+        LogStep("redundant single sets");
+
         /*distinctLicenceSets =*/ AssertMissingLicenceSetsReferencedInLicence(allLicences, distinctLicenceSets);
 
-        distinctLicenceSets = PreferLargerLicenceSets(
+        LogStep("missing set assertions");
+
+        distinctLicenceSets = LicenceSetHelper.PreferLargerLicenceSets(
             distinctLicenceSets,
             LicenceSetType.LicencesGroupedByLineage);
         
+        LogStep($"prefer larger sets, {distinctLicenceSets.Count} sets out");
+
         return distinctLicenceSets;
     }
 
@@ -5289,28 +5119,6 @@ public static class AbstractionLicenceSchemaConverter
                 }
             }
         }
-    }
-
-
-
-    private static List<LicenceSet> AsDistinctLicenceSets(List<IReadOnlyList<LicenceSet>> licenceSetGroups)
-    {
-        var returnList = new List<LicenceSet>();
-
-        foreach (var licenceSetGroup in licenceSetGroups)
-        {
-            foreach (var licenceSet in licenceSetGroup)
-            {
-                if (returnList.Any(dls => dls.LicenceSetId == licenceSet.LicenceSetId))
-                {
-                    continue;
-                }
-
-                returnList.Add(licenceSet);
-            }
-        }
-
-        return returnList;
     }
 
     private static (

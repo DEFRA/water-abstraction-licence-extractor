@@ -28,6 +28,8 @@ public interface IOutputService
 
     public Task<ProcessRun> MarkProcessRunCompleteIfCompleteAsync(ProcessRun processRun);
 
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name);
+
     public Task<ProcessRunFile> AddProcessRunFileAsync(ProcessRunFile processRunFile);
 
     public Task<ProcessRunFile> MarkProcessRunFileCompleteAsync(ProcessRunFile processRunFile);
@@ -99,4 +101,17 @@ public interface IOutputService
         int processRunId);
     
     Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId);
+
+    Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take);
+
+    Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception);
+
+    Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId);
+
+    Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId);
 }

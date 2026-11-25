@@ -329,6 +329,14 @@ export const AggregateItem = ({
                     </div>
                 </div>
 
+                <div style={{marginTop: '12px'}}>
+                    <label style={topLevelLabelStyle}>Description:</label>
+                    <textarea value={aggregate.description || ''}
+                              onChange={(e) => handleChange('description', e.target.value)}
+                              rows={3}
+                              style={{...inputStyle, width: '100%', boxSizing: 'border-box', resize: 'vertical'}}/>
+                </div>
+
                 <div style={{marginTop: '16px'}}>
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px'}}>
                         <strong style={{fontSize: '0.9rem'}}>Linked Licences:</strong>
@@ -639,7 +647,8 @@ export const AggregateItem = ({
                     <span><strong>Primary Type:</strong> {aggregate.primaryType || 'N/A'}</span>
                     <span><strong>Sub Type:</strong> {aggregate.subType || 'N/A'}</span>
                 </p>
-                <p style={{margin: 0, fontSize: '0.9rem'}}><strong>Document Identifier:</strong> {aggregate.documentIdentifier || 'N/A'}</p>
+                <p style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}><strong>Document Identifier:</strong> {aggregate.documentIdentifier || 'N/A'}</p>
+                <p style={{margin: 0, fontSize: '0.9rem', whiteSpace: 'pre-wrap'}}><strong>Description:</strong> {aggregate.description || 'N/A'}</p>
             </div>
             {linkedLicences.length > 0 && (
                 <div style={{margin: '0 0 8px 0', fontSize: '0.9rem'}}>

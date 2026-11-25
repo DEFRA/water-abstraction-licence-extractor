@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using WALE.ProcessFile.Core.Models;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Models;
@@ -90,8 +91,7 @@ public static class LimitPeriodHelper
                 : null;
 
             var number = periodPeriodNumber?.Text?.FirstOrDefault()?.Text;
-            //var id = double.TryParse(number, out var numberResult) ? numberResult : (double?)null;
-
+            
             var inclusive = text?.Contains("inclusive",
                 StringComparison.OrdinalIgnoreCase) ?? false;
 
@@ -126,95 +126,163 @@ public static class LimitPeriodHelper
 
         return returnList.ToArray();
     }
+    // One phrase, one reading. These two used to match the same text independently, so
+    // "Up to and including 31 March" satisfied both: a period running from "Up" to
+    // "and including 31 March", and a correct Upto cutoff.
+    private enum PeriodShape
+    {
+        None,
+        Range,
+        UpperBound,
+        LowerBound
+    }
+
+    private readonly record struct PeriodPhrase(PeriodShape Shape, string? Start, string? End);
+
+    // Licences appear in mixed case and in full caps, and String.Split takes no comparison.
+    private static string[] SplitOn(string text, string separator)
+    {
+        return Regex.Split(text, Regex.Escape(separator), RegexOptions.IgnoreCase)
+            .Select(part => part.Trim())
+            .ToArray();
+    }
+
+    private static string? AfterFirst(string text, string marker)
+    {
+        var at = text.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+
+        return at < 0 ? null : OnlyTheDate(text[(at + marker.Length)..]);
+    }
+
+    // The date ends where the clause does, or the value runs on into the rest of the
+    // sentence: "31 July, abstraction shall not exceed 60,000".
+    private static string OnlyTheDate(string text)
+    {
+        var comma = text.IndexOf(',');
+
+        return (comma < 0 ? text : text[..comma]).Trim(' ', ',', '.', ':', ';');
+    }
+
+    private static readonly string[] MonthNames =
+    [
+        "january", "february", "march", "april", "may", "june",
+        "july", "august", "september", "october", "november", "december"
+    ];
+
+    // "as varied from time to time" splits on " to " into a perfectly well-formed range of
+    // "time" and "time)". A date carries a day number, or is a bare month name.
+    // Searching for a month anywhere instead reads "such date as the Agency may specify" as May.
+    private static bool LooksLikeADate(string? text)
+    {
+        return !string.IsNullOrWhiteSpace(text)
+               && (text.Any(char.IsDigit)
+                   || MonthNames.Contains(text.Trim(), StringComparer.OrdinalIgnoreCase));
+    }
+
+    // One end of a range is often left open - "to the end of the season", "and such date as the
+    // Agency may specify". The bound that does read is still worth keeping, as the boundary it is.
+    private static PeriodPhrase Range(string? start, string? end)
+    {
+        if (LooksLikeADate(start) && LooksLikeADate(end))
+        {
+            return new PeriodPhrase(PeriodShape.Range, start, end);
+        }
+
+        if (LooksLikeADate(start))
+        {
+            return new PeriodPhrase(PeriodShape.LowerBound, start, null);
+        }
+
+        return LooksLikeADate(end)
+            ? new PeriodPhrase(PeriodShape.UpperBound, null, end)
+            : new PeriodPhrase(PeriodShape.None, null, null);
+    }
+
+    private static PeriodPhrase Classify(LabelGroupResult? match)
+    {
+        var value = match?.Text?.FirstOrDefault()?.Text;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return new PeriodPhrase(PeriodShape.None, null, null);
+        }
+
+        var work = value
+            .Replace("inclusive", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim(' ', ',', '.', ':', ';');
+
+        // Tested before the range split, which would otherwise read this as a range starting at "Up".
+        if (AfterFirst(work, "Up to and including") is { Length: > 0 } upTo)
+        {
+            return new PeriodPhrase(PeriodShape.UpperBound, null, upTo);
+        }
+
+        if (AfterFirst(work, "Until ") is { Length: > 0 } until)
+        {
+            return new PeriodPhrase(PeriodShape.UpperBound, null, until);
+        }
+
+        // "Up to 31 March" without the "and including", a smaller share of the same fault.
+        if (work.StartsWith("Up to ", StringComparison.OrdinalIgnoreCase)
+            && AfterFirst(work, "Up to ") is { Length: > 0 } upToOnly)
+        {
+            return new PeriodPhrase(PeriodShape.UpperBound, null, upToOnly);
+        }
+
+        // The one range wording joined by "and" rather than "to".
+        if (AfterFirst(work, "Between ") is { Length: > 0 } between)
+        {
+            var ends = SplitOn(between, " and ");
+
+            if (ends.Length == 2)
+            {
+                return Range(OnlyTheDate(ends[0]), OnlyTheDate(ends[1]));
+            }
+        }
+
+        var normalised = work
+            .Replace(" and ending on ", " to ", StringComparison.OrdinalIgnoreCase)
+            .Replace("beginning on ", string.Empty, StringComparison.OrdinalIgnoreCase);
+
+        var parts = SplitOn(normalised, " to ");
+
+        if (parts.Length >= 2)
+        {
+            return Range(AfterFirst(parts[0], "From ") ?? OnlyTheDate(parts[0]), OnlyTheDate(parts[1]));
+        }
+
+        return AfterFirst(work, "From ") is { Length: > 0 } onlyStart
+            ? new PeriodPhrase(PeriodShape.LowerBound, onlyStart, null)
+            : new PeriodPhrase(PeriodShape.None, null, null);
+    }
+
     public static TimePeriod? GetTimePeriod(LabelGroupResult? match)
     {
-        if (match == null)
-        {
-            return null;
-        }
+        var phrase = Classify(match);
 
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        value = value.Replace(" and ending on ", " to ");
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase);
-
-        if (isFrom || isUntil)
-        {
-            return null;
-        }
-
-        var hasTo = value.Contains(" to ", StringComparison.OrdinalIgnoreCase);
-        var hasBeginningOn = value.Contains("beginning on ", StringComparison.OrdinalIgnoreCase);
-
-        if (!hasTo && !hasBeginningOn)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("beginning on ", string.Empty)
-            .Split(" to ");
-
-        if (parts.Length == 1)
-        {
-            return null;
-        }
-
-        return new TimePeriod
-        {
-            StartDate = parts[0],
-            EndDate = parts.Length > 1 ? parts[1] : null,
-            PeriodType = AbstractionPeriodType.SetPeriod,
-            Inclusive = true
-        };
+        return phrase.Shape != PeriodShape.Range
+            ? null
+            : new TimePeriod
+            {
+                StartDate = phrase.Start,
+                EndDate = phrase.End,
+                PeriodType = AbstractionPeriodType.SetPeriod,
+                Inclusive = true
+            };
     }
+
     public static TimeCutoff? GetTimeCutoff(LabelGroupResult? match)
     {
-        if (match == null)
+        var phrase = Classify(match);
+
+        return phrase.Shape switch
         {
-            return null;
-        }
-
-        var value = match.Text?.FirstOrDefault()?.Text;
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        var isFrom = value.Contains("From ", StringComparison.OrdinalIgnoreCase);
-        var isUntil = value.Contains("Until ", StringComparison.OrdinalIgnoreCase)
-                      || value.Contains("Up to and including", StringComparison.OrdinalIgnoreCase);
-
-        if (!isFrom && !isUntil)
-        {
-            return null;
-        }
-
-        var parts = value
-            .Replace("From", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Until", "~", StringComparison.OrdinalIgnoreCase)
-            .Replace("Up to and including", "~", StringComparison.OrdinalIgnoreCase)
-            .Split('~');
-
-        var datePart = parts.Length >= 2 ? parts[1] : null;
-
-        if (datePart == null)
-        {
-            return null;
-        }
-
-        return new TimeCutoff
-        {
-            CutoffType = isFrom ? CutoffType.From : CutoffType.Upto,
-            Date = datePart.Trim()
+            PeriodShape.UpperBound => new TimeCutoff { CutoffType = CutoffType.Upto, Date = phrase.End },
+            PeriodShape.LowerBound => new TimeCutoff { CutoffType = CutoffType.From, Date = phrase.Start },
+            _ => null
         };
     }
+
     public static TimePeriod? GetDefinitionOfYear(List<LabelGroupResult> matches)
     {
         var abstractionLimitsSection = matches

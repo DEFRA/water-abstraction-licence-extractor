@@ -161,6 +161,46 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
     
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult<ProcessRunNonOkFilesResponse>> GetProcessRunNonOkFilesAsync(
+        [FromRoute] int processRunId,
+        [FromQuery] string? status,
+        [FromQuery] string? exception,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var countsTask = outputService.GetProcessRunFileCountsAsync(processRunId);
+        var groupsTask = outputService.GetProcessRunFailureGroupsAsync(processRunId);
+        var countTask = outputService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
+
+        var items = take <= 0
+            ? []
+            : await outputService.GetProcessRunNonOkFilesAsync(processRunId, status, exception, skip, take);
+
+        var counts = await countsTask;
+
+        return Ok(new ProcessRunNonOkFilesResponse
+        {
+            Items = items,
+            TotalCount = await countTask,
+            DeclaredFileCount = counts.Declared,
+            ProcessedFileCount = counts.Processed,
+            FailureGroups = await groupsTask
+        });
+    }
+
+    [HttpPost("{processRunId:int}")]
+    public async Task<ActionResult> UpdateProcessRunNameAsync(
+        [FromRoute] int processRunId,
+        [FromBody] ProcessRunNameRequest request)
+    {
+        await uiProcessRunService.UpdateProcessRunNameAsync(
+            processRunId,
+            request.Name);
+
+        return Ok();
+    }
+
     [HttpPost("{processRunId:int}")]
     public async Task<ActionResult> UpdateProcessRunByLicenceNumbersAsync(
         [FromRoute] int processRunId,

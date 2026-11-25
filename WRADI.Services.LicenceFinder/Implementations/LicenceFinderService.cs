@@ -42,6 +42,7 @@ public sealed class LicenceFinderService(
         {
             case "FindLicenceFilesAsync":
             {
+                Console.WriteLine("Starting FindLicenceFilesAsync ...");
                 // FLOW - Licence file finder (produces LicenceMatchResults_DATE.xlsx)
                 Console.WriteLine("Starting licence file processing...");
 
@@ -71,7 +72,7 @@ public sealed class LicenceFinderService(
                 var (overrides, overridesImportDate) = await overridesTask;
                 var (naldRecordsToProcess, naldAbsLicencesAndVersions, naldImportDate) = await naldDataTask;
 
-                var licenceMatchResultsFilePath = await licenceFileFinder.FindLicenceFilesAsync(
+                var result = await licenceFileFinder.FindLicenceFilesWithoutFileGenerationAsync(
                     dmsRecordsData,
                     dmsManualFixes,
                     overrides,
@@ -86,14 +87,16 @@ public sealed class LicenceFinderService(
                     overridesImportDate,
                     naldImportDate,
                     dmsRecords.ImportDate);
+                
+                Console.WriteLine($"Completed FindLicenceFilesAsync with result :  {result}");
 
-                return licenceMatchResultsFilePath;
+                return result.ToString();
             }
             case "FindAllFilesToDownload":
             {
                  // FLOW - Find all files to download (i.e. all files, not just licences)
                  // NOTE - previously referred to as 'Build Version Download Info Excel'
-                Console.WriteLine("Started finding all files to download...");
+                Console.WriteLine("FindAllFilesToDownload Started finding all files to download...");
 
                 // API - Licence finder previous iteration run matches
                 var licenceFinderLastIterationMatchesTask = GetLicenceFinderResultsAsync(generalApiClient);
@@ -106,7 +109,9 @@ public sealed class LicenceFinderService(
                     await licenceFinderLastIterationMatchesTask,
                     await wradiAllLocalFilesInventoryTask,
                     generalApiClient);
-
+                
+                Console.WriteLine($"Completed FindAllFilesToDownload with {result}");
+                
                 return result;
             }
 
@@ -123,6 +128,8 @@ public sealed class LicenceFinderService(
                     DmsDictionaryToList(dmsRecordsData),
                     generalApiClient,
                     await wradiAllLocalFilesInventoryTask);
+                
+                Console.WriteLine($"Completed FindInspectionReportFiles with {inspectionReportFilePath}");
 
                 return inspectionReportFilePath;
             }
@@ -147,7 +154,9 @@ public sealed class LicenceFinderService(
                     await licenceFinderLastIterationMatchesTask,
                     overrides,
                     jpFileVersionResults);
-
+                
+                Console.WriteLine($"Completed BuildFileTemplateIdentificationExtract with {resultFilePath}");
+                
                 return resultFilePath;
             }
             case "FindLicenceFilesToDownload":
@@ -167,7 +176,9 @@ public sealed class LicenceFinderService(
                     await licenceFinderLastIterationMatchesTask,
                     await wradiAllLocalFilesInventoryTask,
                     messageRequest.RestrictToRegionName);
-
+                
+                Console.WriteLine($"Completed FindLicenceFilesToDownload with {path}");
+                
                 return path;
             }
             case "FindLicenceFilesToDownload_SpreadsheetCompareOnly":
@@ -183,7 +194,8 @@ public sealed class LicenceFinderService(
                     licenceFinderLastIterationMatches,
                     licenceFinderLastIterationMatches,
                     messageRequest.RestrictToRegionName);
-
+                
+                Console.WriteLine($"Completed FindLicenceFilesToDownload_SpreadsheetCompareOnly with {fileName}");
                 return fileName;
             }
             case "FindDuplicateLicenceFiles":
@@ -194,6 +206,8 @@ public sealed class LicenceFinderService(
                 var duplicateFilePath = licenceFileFinder.FindDuplicateLicenceFiles(
                     DmsDictionaryToList(dmsRecordsData),
                     naldRecordsToProcess);
+                
+                Console.WriteLine($"Completed FindDuplicateLicenceFiles with {duplicateFilePath}");
 
                 return duplicateFilePath;
             }

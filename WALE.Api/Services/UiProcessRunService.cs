@@ -4,6 +4,7 @@ using WALE.Api.Areas.BFF.SignalR;
 using WALE.Api.Interfaces;
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
+using WALE.ProcessFile.Core.Interfaces;
 using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Services.Formats;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -16,9 +17,18 @@ public class UiProcessRunService(
     IAbstractionLicenceOutputService abstractionLicenceOutputService,
     ILicenceListItemModelService licenceListItemModelService,
     ILicenceListRepository licenceListRepository,
+    IOutputService outputService,
     IHubContext<ProcessHub> hubContext) 
     : IUiProcessRunService
 {
+    // An empty name clears back to the generated description rather than storing a blank.
+    public Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        return outputService.UpdateProcessRunNameAsync(
+            processRunId,
+            string.IsNullOrWhiteSpace(name) ? null : name.Trim());
+    }
+
     public async Task<string> UpdateLicenceListProcessRunAsync(int processRunId)
     {
         try

@@ -5,6 +5,8 @@ public class ProcessRun
     public int ProcessRunId { get; set; }
     
     public string? Description { get; set; }
+
+    public string? Name { get; set; }
     
     public DateTime? StartDateTimeUtc { get; set; }
     
@@ -19,6 +21,8 @@ public class ProcessRun
     public int FilesProcessed { get; set; }
 
     public int FilesErrored { get; set; }
+
+    public int FilesTransientErrored { get; set; }
 
     public int LicenceCount { get; set; }
 

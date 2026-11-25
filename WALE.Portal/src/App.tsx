@@ -3,6 +3,7 @@ import ProcessRunsPage from "./pages/ProcessRunsPage";
 import ListPage from "./pages/ListPage";
 import ListSearchPage from "./pages/ListSearchPage";
 import LicencesPage from './pages/LicencesPage';
+import ProcessRunErrorsPage from './pages/ProcessRunErrorsPage.tsx';
 import InspectionReportPage from "./pages/InspectionReportPage";
 import InspectionReportVerificationPage from "./pages/InspectionReportVerificationPage";
 
@@ -14,6 +15,7 @@ function App() {
                 <Route path="/list" element={<ListPage />} />
                 <Route path="/listSearch" element={<ListSearchPage />} />
                 <Route path="/licences" element={<LicencesPage />} />
+                <Route path="/errors" element={<ProcessRunErrorsPage />} />
                 <Route path="/inspectionReport" element={<InspectionReportPage />} />
                 <Route path="/inspectionReportVerification" element={<InspectionReportVerificationPage />} />
             </Routes>

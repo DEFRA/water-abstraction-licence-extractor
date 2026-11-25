@@ -41,6 +41,14 @@ public class ProcessRunController(
     }
     
     [HttpPost]
+    public async Task<IActionResult> SetProcessRunNameAsync([FromBody] SetProcessRunNameRequest request)
+    {
+        await outputService.UpdateProcessRunNameAsync(request.processRunId, request.name);
+
+        return Ok();
+    }
+
+    [HttpPost]
     public async Task<IActionResult> AddProcessRunFileAsync([FromBody] ProcessRunFileRequest request)
     {
         // process_run_file has no foreign key on process_run_id, so nothing else catches an

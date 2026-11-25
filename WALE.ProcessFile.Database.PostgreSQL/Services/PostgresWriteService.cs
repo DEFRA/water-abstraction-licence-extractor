@@ -680,6 +680,26 @@ public class PostgresWriteService(INpgsqlDataSourceProvider dataSourceProvider, 
             });
     }
 
+    public async Task UpdateProcessRunNameAsync(int processRunId, string? name)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           UPDATE process_run
+                           SET name = @Name
+                           WHERE process_run_id = @ProcessRunId
+                           """;
+
+        await ExecuteAsync(
+            connection,
+            sql,
+            0,
+            new
+            {
+                ProcessRunId = processRunId,
+                Name = name
+            });
+    }
+
     public async Task UpdateProcessRunAsync(ProcessRun processRun)
     {
         await using var connection = GetPostgresConnection();

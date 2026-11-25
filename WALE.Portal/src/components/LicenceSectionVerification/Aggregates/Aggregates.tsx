@@ -399,8 +399,6 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                 const linkedMatchesResultId = getMatchesResultId(licenceNumber);
                                 const linkedFileId = getFileId(licenceNumber);
 
-                                const styledLicenceNumber = licenceNumber ?? '';
-
                                 if (linkedFileId) {
                                     return (
                                         <li key={index} title={aggregate?.id} >

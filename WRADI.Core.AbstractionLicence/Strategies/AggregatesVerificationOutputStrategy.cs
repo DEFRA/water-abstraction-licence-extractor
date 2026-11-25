@@ -16,14 +16,14 @@ public class AggregatesVerificationOutputStrategy : IVerificationOutputStrategy
             return; // no incoming-link concept for Aggregates — ByItemId is never consulted
         }
 
-        var (aggregateIds, summaries) = AggregateVerificationMergeHelper.MergeAggregateIds(
+        var (aggregateIds, aggregates, summaries) = AggregateVerificationMergeHelper.Merge(
             listRow.aggregateIds,
-            outgoingVerifications);
+            listRow.aggregates,
+            outgoingVerifications,
+            listRow.processRunId);
 
         listRow.aggregateIds = aggregateIds.ToArray(); // aggregatesCount recomputes automatically from this
-        listRow.aggregates = AggregateVerificationMergeHelper
-            .MergeAggregates(listRow.aggregates, outgoingVerifications)
-            .ToArray();
+        listRow.aggregates = aggregates.ToArray();
 
         var sectionSummaries = listRow.licenceSectionVerifications?.ToList() ?? [];
         sectionSummaries.Add(new LicenceSectionVerificationSummary

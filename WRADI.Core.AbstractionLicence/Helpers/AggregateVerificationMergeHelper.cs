@@ -7,12 +7,16 @@ public static class AggregateVerificationMergeHelper
 {
     public const string NoAggregatesSentinel = "None";
 
-    public static (List<string> AggregateIds, List<LicenceSectionItemSummary> Summaries) MergeAggregateIds(
+    public static (List<string> AggregateIds, List<Aggregate> Aggregates, List<LicenceSectionItemSummary> Summaries) Merge(
         IEnumerable<string>? scrapedIds,
-        IEnumerable<LicenceSectionVerification> verifications)
+        IEnumerable<Aggregate>? scrapedAggregates,
+        IEnumerable<LicenceSectionVerification> verifications,
+        int? processRunId)
     {
         var originalIds = (scrapedIds ?? []).ToList();
         var ids = originalIds.ToList();
+        var scrapedAggregateList = (scrapedAggregates ?? []).ToList();
+        var aggregates = scrapedAggregateList.ToList();
         var summaries = new List<LicenceSectionItemSummary>();
 
         foreach (var verification in OrderVerifications(verifications))
@@ -28,9 +32,22 @@ public static class AggregateVerificationMergeHelper
 
             if (itemId == NoAggregatesSentinel)
             {
-                if (ids.Count > 0)
+                if (ids.Count > 0 || aggregates.Count > 0)
                 {
                     FlagItemSummary(summaries, itemId, "'None' verification contradicted by existence of aggregates");
+                    ids.Clear();
+                    aggregates.Clear();
+
+                    var staleItemIds = summaries
+                        .Where(s => s.LicenceSectionItemId != NoAggregatesSentinel
+                                    && s.CurrentVerificationType != "Removed")
+                        .Select(s => s.LicenceSectionItemId)
+                        .ToList();
+
+                    foreach (var staleItemId in staleItemIds)
+                    {
+                        SimulateRemoval(summaries, staleItemId);
+                    }
                 }
 
                 continue;
@@ -42,61 +59,18 @@ public static class AggregateVerificationMergeHelper
                 continue;
             }
 
-            var wasScrapedThisRun = originalIds.Contains(itemId);
-            var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
-
-            if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+            if (verification.ProcessRunId < processRunId)
             {
-                var flagReason = wasScrapedThisRun
-                    ? "Aggregate added to scraper output since the verification run"
-                    : "Aggregate removed from scraper output since the verification run";
-                FlagItemSummary(summaries, itemId, flagReason);
-            }
+                var wasScrapedThisRun = originalIds.Contains(itemId);
+                var wasScrapedOnVerificationRun = !string.IsNullOrEmpty(verification.LicenceSectionScrapedValue);
 
-            switch (verification.VerificationType)
-            {
-                case "Confirmed":
-                case "CompleteBusinessReview":
-                case "AutoConfirm":
-                case "Edited":
-                case "Added":
-                    if (!ids.Contains(itemId))
-                    {
-                        ids.Add(itemId);
-                    }
-
-                    break;
-                case "Removed":
-                    ids.Remove(itemId);
-                    break;
-            }
-        }
-
-        // Drop entries that were Added and eventually Removed
-        var compactedSummaries = summaries
-            .Where(s => ids.Contains(s.LicenceSectionItemId)
-                        || !(s.VerificationTypes.Contains("Added") && s.VerificationTypes.Contains("Removed")))
-            .ToList();
-
-        return (ids, compactedSummaries);
-    }
-
-    public static List<Aggregate> MergeAggregates(
-        IEnumerable<Aggregate>? scrapedAggregates,
-        IEnumerable<LicenceSectionVerification> verifications)
-    {
-        var scrapedAggregateList = (scrapedAggregates ?? []).ToList();
-        var aggregates = scrapedAggregateList.ToList();
-
-        foreach (var verification in OrderVerifications(verifications))
-        {
-            var itemId = verification.LicenceSectionItemId!;
-
-            if (itemId == NoAggregatesSentinel
-                || IsAutoOrRequestBusinessReview(verification.VerificationType)
-                || VerificationMergeHelper.IsCompleteBusinessReviewMissingJson(verification))
-            {
-                continue;
+                if (wasScrapedThisRun != wasScrapedOnVerificationRun)
+                {
+                    var flagReason = wasScrapedThisRun
+                        ? "Aggregate added to scraper output since the verification run"
+                        : "Aggregate removed from scraper output since the verification run";
+                    FlagItemSummary(summaries, itemId, flagReason);
+                }
             }
 
             var existingAggregate = aggregates.FirstOrDefault(a => a.Id == itemId);
@@ -140,6 +114,18 @@ public static class AggregateVerificationMergeHelper
                         }
 
                         aggregates.Add(verificationAggregate);
+
+                        if (!ids.Contains(itemId))
+                        {
+                            ids.Add(itemId);
+                        }
+
+                        var noneSummary = summaries.FirstOrDefault(s => s.LicenceSectionItemId == NoAggregatesSentinel);
+                        if (noneSummary != null && noneSummary.CurrentVerificationType != "Removed")
+                        {
+                            // This aggregate contradicts the earlier "confirmed none" state
+                            SimulateRemoval(summaries, NoAggregatesSentinel);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -148,6 +134,7 @@ public static class AggregateVerificationMergeHelper
 
                     break;
                 case "Removed":
+                    ids.Remove(itemId);
                     if (existingAggregate != null)
                     {
                         aggregates.Remove(existingAggregate);
@@ -157,7 +144,13 @@ public static class AggregateVerificationMergeHelper
             }
         }
 
-        return aggregates;
+        // Drop entries that were Added and eventually Removed
+        var compactedSummaries = summaries
+            .Where(s => ids.Contains(s.LicenceSectionItemId)
+                        || !(s.VerificationTypes.Contains("Added") && s.VerificationTypes.Contains("Removed")))
+            .ToList();
+
+        return (ids, aggregates, compactedSummaries);
     }
 
     private static List<LicenceSectionVerification> OrderVerifications(
@@ -227,6 +220,17 @@ public static class AggregateVerificationMergeHelper
                 existingSummary.FlagReason = null;
             }
         }
+    }
+
+    private static void SimulateRemoval(List<LicenceSectionItemSummary> sectionSummaries, string itemId)
+    {
+        var syntheticVerification = new LicenceSectionVerification
+        {
+            LicenceSectionItemId = itemId,
+            VerificationType = "Removed"
+        };
+
+        UpdateSectionSummaries(sectionSummaries, syntheticVerification);
     }
 
     private static void FlagItemSummary(List<LicenceSectionItemSummary> sectionSummaries, string? itemId, string flagReason)

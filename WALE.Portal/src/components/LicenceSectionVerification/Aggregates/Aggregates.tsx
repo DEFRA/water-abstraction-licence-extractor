@@ -17,6 +17,7 @@ import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {getVerificationTypeBackgroundColor, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
+import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
 
@@ -380,13 +381,48 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                 </div>
                 <div style={{marginTop: '16px', textAlign: 'center'}}>
                     <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates;</p>
-                    <ul>
+                    <ul style={{
+                        listStyle: "none"
+                    }}>
                         {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                             .map((index) => {
                                 const aggregate = aggregates[index];
 
                                 if (aggregate.sourceLicenceNumber === licence?.licenceNumber?.value) {
                                     return false;
+                                }
+
+                                const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
+                                const licenceNumber = aggregate?.sourceLicenceNumber;
+
+                                const linkedLicenceId = getLicenceId(licenceNumber);
+                                const linkedMatchesResultId = getMatchesResultId(licenceNumber);
+                                const linkedFileId = getFileId(licenceNumber);
+
+                                const styledLicenceNumber = licenceNumber ?? '';
+
+                                if (linkedFileId) {
+                                    return (
+                                        <li key={index} title={aggregate?.id} >
+                                            <a  style={{
+                                                color: '#888',
+                                                textAlign: 'center'
+                                            }}
+                                                href="#"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+
+                                                    onOpenReport?.(
+                                                        linkedFileId,
+                                                        linkedLicenceId!,
+                                                        linkedMatchesResultId!
+                                                    );
+                                                }}
+                                            >
+                                                {aggregate?.id}
+                                            </a>
+                                        </li>
+                                    );
                                 }
 
                                 return (

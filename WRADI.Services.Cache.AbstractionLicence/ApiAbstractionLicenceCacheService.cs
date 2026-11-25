@@ -1,6 +1,5 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -130,6 +129,15 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             HashSet<(string, int)> Revoked,
             HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public  Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }

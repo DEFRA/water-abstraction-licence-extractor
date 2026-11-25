@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -46,7 +45,16 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     {
         throw new NotImplementedException();
     }
-    
+
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         throw new NotImplementedException();

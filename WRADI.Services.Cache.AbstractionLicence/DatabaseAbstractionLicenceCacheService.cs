@@ -1,6 +1,4 @@
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
-using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -48,10 +46,16 @@ public class DatabaseAbstractionLicenceCacheService(
         int take)
     {
         var impoundmentLicencesTask = databaseReadService.GetNaldImpoundmentLicencesAsync(skip, take);
+        var impoundmentLicencesVersionsTask = databaseReadService.GetNaldImpoundmentLicenceVersionsAsync(
+            regionCode,
+            allVersions,
+            skip,
+            take);
         
         return new NaldImpoundmentDataCollection
         {
-            ImpoundmentLicences = await impoundmentLicencesTask
+            ImpoundmentLicences = await impoundmentLicencesTask,
+            ImpoundmentLicenceVersions = await impoundmentLicencesVersionsTask,
         };
     }
 
@@ -70,7 +74,16 @@ public class DatabaseAbstractionLicenceCacheService(
     {
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
     }
-    
+
+    public  Task<(
+            HashSet<(string, int)> Live,
+            HashSet<(string, int)> Terminated,
+            HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseReadService.GetNaldImpoundmentLicenceNumbersAsync(regionCode);
+    }
+
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);

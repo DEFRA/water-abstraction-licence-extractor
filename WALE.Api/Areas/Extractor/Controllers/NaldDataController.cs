@@ -58,7 +58,27 @@ public class NaldDataController(
     [HttpGet]
     public async Task<IActionResult> GetImpoundmentLicenceStatusDataAsync([FromQuery] short? regionCode = null)
     {
-        return Ok(new NaldImpoundmentLicenceStatusData()); // TODO more
+        var naldLicenceNumbers =
+            await abstractionLicenceCacheService.GetNaldImpoundmentLicenceNumbersAsync(regionCode);
+
+        return Ok(new NaldImpoundmentLicenceStatusData
+        {
+            LiveLicences = naldLicenceNumbers.Live
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),
+            TerminatedLicences = naldLicenceNumbers.Terminated
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),
+            RevokedLicences = naldLicenceNumbers.Revoked
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet()
+        });
     }
 
     [HttpGet]

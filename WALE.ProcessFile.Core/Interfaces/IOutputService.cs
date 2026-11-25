@@ -19,7 +19,7 @@ public interface IOutputService
         string pdfServiceName,
         Guid fileId);
 
-    public Task<List<byte[]>> GetPageScreenshotDataAsync(
+    public Task<List<byte[]?>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
         Guid fileId);

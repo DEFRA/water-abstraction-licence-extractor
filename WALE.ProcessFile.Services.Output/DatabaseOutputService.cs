@@ -39,15 +39,15 @@ public class DatabaseOutputService(
             ?? await databaseReadService.GetPageScreenshotThumbnailAsync(pageNumber, fileId, pdfServiceName);
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
-        var bytes1 = await GetPageScreenshotAsync(pageNumber, fileId, pdfServiceName);
-        var bytes2 = await GetPageScreenshotAsync(pageNumber, fileId, GeneralConstants.DocnetExtractorServiceName); // TODO tidy this up
+        var requested = await GetPageScreenshotAsync(pageNumber, fileId, pdfServiceName);
+        var docnet = await GetPageScreenshotAsync(pageNumber, fileId, GeneralConstants.DocnetExtractorServiceName);
 
         return
         [
-            bytes1!,
-            bytes2!
+            requested,
+            docnet
         ];
     }
 
@@ -183,7 +183,7 @@ public class DatabaseOutputService(
 
             await SavePageScreenshotInternalAsync(
                 pageNumber,
-                noOcrServiceName,
+                providerName,
                 fileId,
                 bytes,
                 processRunId);

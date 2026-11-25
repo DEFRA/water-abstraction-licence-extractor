@@ -44,7 +44,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<byte[]?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
         Guid fileId)
@@ -60,7 +60,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             throw new NullReferenceException("Page screenshot data returned null");
         }
 
-        return JsonSerializer.Deserialize<List<byte[]>?>(content, JsonHelper.GetWireSerializerOptions())!;
+        return JsonSerializer.Deserialize<List<byte[]?>?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)

@@ -96,17 +96,44 @@ public interface IAbstractionLicenceDatabaseReadService
         ProcessRunQuery query,
         CancellationToken cancellationToken = default);
     
-    Task<List<string>> GetLicenceListDistinctIssuersAsync(int processRunId);
+    Task<List<string>> GetLicenceListDistinctIssuersAsync(int? processRunId);
+
+    Task<List<string>> GetLicenceListStatusesAsync(int? processRunId);
+
+    Task<List<int>> GetLicenceListProcessRunIdsAsync();
+
+    Task<List<string>> GetLicenceEstateLicenceNumbersAsync();
     
     Task<List<int>> GetLicenceListRegionIdsAsync(int processRunId);
     
-    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId);
+    Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId);
     
-    Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId);
+    Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId);
 
     Task<int> GetLicencesListSearchCountAsync(
         int processRunId,
         ProcessRunQuery query);
+
+    Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<int> GetLicenceEstateCountAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(
+        LicenceEstateQuery query,
+        CancellationToken cancellationToken = default);
+
+    Task<List<LicenceRunHistoryItem>> GetLicenceRunHistoryAsync(
+        string licenceNumber,
+        CancellationToken cancellationToken = default);
+
+    Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds,
+        CancellationToken cancellationToken = default);
 
     Task<List<NaldLicenceNumberHistoryDb>> GetNaldLicenceNumberHistoryAsync();
     

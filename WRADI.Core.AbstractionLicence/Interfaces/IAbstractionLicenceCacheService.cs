@@ -52,6 +52,8 @@ public interface IAbstractionLicenceCacheService
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+    
+    Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
     Task ClearLicenceFinderResultsAsync(string licenceType);
     

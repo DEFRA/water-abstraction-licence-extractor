@@ -21,6 +21,8 @@ public interface IAbstractionLicenceDatabaseWriteService
 
     Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
 
+    Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results);
+    
     Task ClearLicenceFinderResultsAsync(string licenceType);
 
     Task ClearVersionFilesAsync();

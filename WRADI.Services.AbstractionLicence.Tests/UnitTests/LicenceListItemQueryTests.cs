@@ -85,4 +85,29 @@ public class LicenceListItemQueryTests
         Assert.Empty(
             count.Parameters.ParameterNames.Except(page.Parameters.ParameterNames));
     }
+
+    [Theory]
+    [InlineData(true, "ASC NULLS FIRST")]
+    [InlineData(false, "DESC NULLS LAST")]
+    public void WhenSortingByVerified_ThenOrdersByLatestNonDeletedVerificationWithUnverifiedAsOldest(
+        bool sortAscending,
+        string expectedDirection)
+    {
+        var query = new ProcessRunQuery
+        {
+            SortField = "latestLicenceSectionVerifications",
+            SortAscending = sortAscending
+        };
+
+        var page = PostgresAbstractionLicenceReadService.BuildLicenceListItemPageQuery(
+            175,
+            query);
+
+        var ordering = page.Sql[page.Sql.IndexOf("ORDER BY", StringComparison.Ordinal)..];
+
+        Assert.Contains("max(v.created_date_time_utc)", ordering);
+        Assert.Contains("v.deleted_date_time_utc IS NULL", ordering);
+        Assert.Contains("v.process_run_id <= licence_list_item.process_run_id", ordering);
+        Assert.Contains($") {expectedDirection},", ordering);
+    }
 }

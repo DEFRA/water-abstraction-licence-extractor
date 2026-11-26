@@ -184,19 +184,11 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
     
-    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
         foreach (var result in results)
         {
-            await SaveLicenceFinderResultAsync(result);
-        }
-    }
-
-    public async Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results)
-    {
-        foreach (var result in results)
-        {
-            await SaveImpoundmentLicenceFinderResultAsync(result);
+            await SaveLicenceFinderResultAsync(result, licenceType);
         }
     }
 
@@ -314,11 +306,19 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
     
-    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result)
+    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result, string licenceType)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_finder_result (
+
+        var licenceTypeSanitised = licenceType.ToLower() switch
+        {
+            "abstraction" => "Abstraction",
+            "impoundment" => "Impoundment",
+            _ => throw new Exception($"Unknown licence type: {licenceType}")
+        };
+
+        var sql = @$"
+                            INSERT INTO licence_finder_result (
                                     permit_number,
                                     dms_permit_number,
                                     file_url,
@@ -387,9 +387,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     @SeenInDmsExtract,
                                     @WeHaveDownloaded,
                                     @LiveLicenceFound,
-                                    'Abstraction')
-                           """;
-
+                                    {licenceTypeSanitised};";
+ 
         await ExecuteAsync(
             connection,
             sql,

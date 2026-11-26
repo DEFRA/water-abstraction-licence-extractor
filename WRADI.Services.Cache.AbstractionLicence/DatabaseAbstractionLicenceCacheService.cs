@@ -99,16 +99,11 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
     }
 
-    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
-        return databaseWriteService.SaveLicenceFinderResultsAsync(results);
+        return databaseWriteService.SaveLicenceFinderResultsAsync(results, licenceType);
     }
-
-    public Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results)
-    {
-        return databaseWriteService.SaveImpoundmentLicenceFinderResultsAsync(results);
-    }
-
+    
     public Task ClearLicenceFinderResultsAsync(string licenceType)
     {
         return databaseWriteService.ClearLicenceFinderResultsAsync(licenceType);

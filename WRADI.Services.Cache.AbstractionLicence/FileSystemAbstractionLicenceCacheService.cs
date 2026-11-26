@@ -70,16 +70,11 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
-    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
         throw new NotImplementedException();
     }
-
-    public Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public Task ClearLicenceFinderResultsAsync(string licenceType)
     {
         throw new NotImplementedException();

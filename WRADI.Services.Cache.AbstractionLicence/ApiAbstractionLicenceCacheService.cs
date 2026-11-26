@@ -196,23 +196,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         return list;
     }
 
-    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
-        var path = "/Extractor/LicenceFinder/SaveResults";
-        var json = JsonSerializer.Serialize(new
-        {
-            results
-        }, JsonHelper.GetSerializerOptions());
-        
-        var httpContent = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-        var response = await HttpHelper.RateLimiter.Enqueue(() =>
-            httpClient.PostAsync(new Uri(httpClient.BaseAddress!, path), httpContent));
-        response.EnsureSuccessStatusCode();
-    }
-
-    public async Task SaveImpoundmentLicenceFinderResultsAsync(List<LicenceFinderResult> results)
-    {
-        var path = "/Extractor/LicenceFinder/SaveImpoundmentResults";
+        var path = $"/Extractor/LicenceFinder/SaveResults?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results

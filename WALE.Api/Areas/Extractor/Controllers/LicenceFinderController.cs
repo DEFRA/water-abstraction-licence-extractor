@@ -34,18 +34,9 @@ public class LicenceFinderController(
     }
     
     [HttpPost]
-    public async Task<ActionResult> SaveResultsAsync(
-        [FromBody] LicenceFinderCreateRequest request)
+    public async Task<ActionResult> SaveResultsAsync([FromBody] LicenceFinderCreateRequest request)
     {
-        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!);
-        return Ok();
-    }
-    
-    [HttpPost]
-    public async Task<ActionResult> SaveImpoundmentResultsAsync(
-        [FromBody] LicenceFinderCreateRequest request)
-    {
-        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!);
+        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!, licenceType);
         return Ok();
     }
 }

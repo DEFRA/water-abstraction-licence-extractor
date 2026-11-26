@@ -17,7 +17,6 @@ import {AggregateItem} from "./AggregateItem";
 import {LicenceSectionVerificationInfo} from "../LicenceSectionVerificationInfo";
 import {getVerificationTypeBackgroundColor, hasAnyOutgoingSections} from "../../../utils/verificationUtils.ts";
 import {compareAlphanumeric} from "../../../utils/formatting.ts";
-import {useFileIdMap} from "../../../utils/useFileIdMap.tsx";
 
 const NO_AGGREGATES_ITEM_ID = 'None';
 
@@ -380,51 +379,56 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                         })}
                 </div>
                 <div style={{marginTop: '16px', textAlign: 'center'}}>
-                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates;</p>
+                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates:</p>
                     <ul style={{
                         listStyle: "none"
                     }}>
                         {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                             .map((index) => {
                                 const aggregate = aggregates[index];
-
+                                const itemId = aggregateIds[index];
                                 if (aggregate.sourceLicenceNumber === licence?.licenceNumber?.value) {
                                     return false;
                                 }
 
-                                const {getFileId, getLicenceId, getMatchesResultId} = useFileIdMap();
-                                const licenceNumber = aggregate?.sourceLicenceNumber;
-
-                                const linkedLicenceId = getLicenceId(licenceNumber);
-                                const linkedMatchesResultId = getMatchesResultId(licenceNumber);
-                                const linkedFileId = getFileId(licenceNumber);
-
-                                if (linkedFileId) {
-                                    return (
-                                        <li key={index} title={aggregate?.id} >
-                                            <a  style={{
-                                                color: '#888',
-                                                textAlign: 'center'
-                                            }}
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-
-                                                    onOpenReport?.(
-                                                        linkedFileId,
-                                                        linkedLicenceId!,
-                                                        linkedMatchesResultId!
-                                                    );
-                                                }}
-                                            >
-                                                {aggregate?.id}
-                                            </a>
-                                        </li>
-                                    );
-                                }
-
                                 return (
-                                    <li>{aggregate.id}</li>);
+                                    <AggregateItem
+                                        key={index}
+                                        aggregate={aggregate}
+                                        itemId={itemId}
+                                        linkedLicenceOptions={linkedLicenceOptions}
+                                        pointDescriptions={pointDescriptions}
+                                        purposeDescriptions={purposeDescriptions}
+                                        isNotReadOnly={false}
+                                        isEditing={false}
+                                        isAddingNew={false}
+                                        onUpdate={(updated) => handleUpdateAggregate(index, updated)}
+                                        onRemove={() => handleRemoveAggregate(index)}
+                                        onDiscard={handleDiscard}
+                                        onJumpToPage={onJumpToPage}
+                                        onVerify={() => onItemVerificationRequested?.('Confirm', itemId)}
+                                        onReject={() => onItemVerificationRequested?.('Remove', itemId)}
+                                        onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
+                                        onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
+                                        onOverride={async () => {
+                                            if (editingIndex === index) {
+                                                setIsWaitingForVerification(true);
+                                                const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
+                                                onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
+                                            } else {
+                                                setFrozenOrder(getSortedIndices());
+                                                setEditingIndex(index);
+                                                setIsAddingNew(false);
+                                                setOriginalItem(Aggregate.fromJS(aggregate));
+                                                setIsWaitingForVerification(false);
+                                            }
+                                        }}
+                                        onOpenReport={onOpenReport}
+                                        outputListDataItem={outputListDataItem}
+                                        scrapedView={scrapedView}
+                                        history={history}
+                                    />
+                                );
                             })}
                     </ul>
                 </div>

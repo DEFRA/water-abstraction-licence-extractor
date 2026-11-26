@@ -44,6 +44,7 @@ interface AggregateItemProps {
     linkedLicenceOptions?: LinkedLicence[];
     pointDescriptions?: Map<string, string>;
     purposeDescriptions?: Map<string, string>;
+    isNotReadOnly?: boolean;
 }
 
 const UNRECOGNISED_LINKED_LICENCE_MESSAGE = "This licence number is not in the document's current Linked Licences list";
@@ -82,7 +83,8 @@ export const AggregateItem = ({
                                    history,
                                    linkedLicenceOptions,
                                    pointDescriptions,
-                                   purposeDescriptions
+                                   purposeDescriptions,
+                                  isNotReadOnly = true,
                                }: AggregateItemProps) => {
     const [errors, setErrors] = React.useState<Record<string, string>>({});
     const [showTimePeriod, setShowTimePeriod] = React.useState<boolean>(!!aggregateProp?.timePeriod);
@@ -747,6 +749,7 @@ export const AggregateItem = ({
                 </div>
             )}
             <ContainedInList sections={containedIn} onJumpToPage={onJumpToPage}/>
+            {isNotReadOnly && ( 
             <VerificationActions
                 scrapedView={scrapedView}
                 history={history}
@@ -758,6 +761,7 @@ export const AggregateItem = ({
                 onRequestBusinessReview={onRequestBusinessReview}
                 onCompleteBusinessReview={onCompleteBusinessReview}
             />
+                )}
         </CollapsibleItem>
     );
 };

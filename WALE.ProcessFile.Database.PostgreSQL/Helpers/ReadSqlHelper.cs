@@ -571,12 +571,24 @@ public static class ReadSqlHelper
                 .ToArray());
     }
 
+    private const string LatestVerificationDateTimeUtc =
+        """
+        (SELECT max(v.created_date_time_utc)
+           FROM licence_section_verification v
+          WHERE v.licence_file_id = licence_list_item.file_id
+            AND v.source_licence_number = licence_list_item.licence_number
+            AND v.process_run_id <= licence_list_item.process_run_id
+            AND v.deleted_date_time_utc IS NULL)
+        """;
+
     public static void AddOrdering(
         StringBuilder sql,
         string? sortField,
         bool sortAscending)
     {
-        var column = sortField?.Trim().ToLowerInvariant() switch
+        var normalisedSortField = sortField?.Trim().ToLowerInvariant();
+
+        var column = normalisedSortField switch
         {
             "filename" => "filename",
             "licencenumber" => "licence_number",
@@ -598,12 +610,22 @@ public static class ReadSqlHelper
                 "verification_sections_count",
             "verificationitemscount" =>
                 "verification_items_count",
+            "latestlicencesectionverifications" =>
+                LatestVerificationDateTimeUtc,
             _ => "licence_number"
         };
 
         var direction = sortAscending
             ? "ASC"
             : "DESC";
+
+        // Unverified licences sort as the oldest: first ascending, last descending.
+        if (normalisedSortField == "latestlicencesectionverifications")
+        {
+            direction += sortAscending
+                ? " NULLS FIRST"
+                : " NULLS LAST";
+        }
 
         sql.AppendLine(
             $"""

@@ -66,7 +66,10 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
             .sort((a, b) =>
                 compareAlphanumeric(aggregates[a].documentIdentifier, aggregates[b].documentIdentifier)
                 || compareAlphanumeric(aggregateIds[a], aggregateIds[b]));
-
+        
+        const hasIncomingAggregates = aggregates.some(
+            aggregate => aggregate.sourceLicenceNumber !== licence?.licenceNumber?.value
+        );
         // Expose data to parent via ref
         useImperativeHandle(ref, () => ({
             getData: async (itemId?: string) => {
@@ -378,11 +381,11 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                             );
                         })}
                 </div>
-                <div style={{marginTop: '16px', textAlign: 'center'}}>
-                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates:</p>
-                    <ul style={{
-                        listStyle: "none"
-                    }}>
+                <div style={{marginTop: '16px'}}>
+                    <p style={{color: '#888', marginBottom: '16px', textAlign: "center"}}> {hasIncomingAggregates
+                        ? "Incoming aggregates:"
+                        : "No Incoming aggregates"} </p>
+                 
                         {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                             .map((index) => {
                                 const aggregate = aggregates[index];
@@ -430,7 +433,7 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                                     />
                                 );
                             })}
-                    </ul>
+               
                 </div>
                 <div style={{marginTop: '16px', display: 'flex', justifyContent: 'center'}}>
                     {!scrapedView && (

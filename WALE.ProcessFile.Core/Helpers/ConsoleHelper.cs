@@ -1,41 +1,89 @@
+using System.Collections.Concurrent;
+
 namespace WALE.ProcessFile.Core.Helpers;
 
 public static class ConsoleHelper
 {
-    public static bool WriteToBuffer;
-    private static readonly Lock BufferLock = new();
-    
+    public static bool WriteToConsoleBuffer;
+    private static readonly Lock ConsoleBufferLock = new();
     private static int _writeCount;
-    private static readonly List<string> Buffer = [];
+    private static readonly List<string> ConsoleBuffer = [];
+
+    private const bool WriteToFile = true;
+    private const int FileFlushAfterXLines = 100;
+    private static readonly ConcurrentQueue<string> FileBuffer = [];
+    private static readonly Lock FlushLock = new();
     
     public static void WriteLine(object text)
     {
-        if (WriteToBuffer)
+        if (WriteToConsoleBuffer)
         {
-            lock (BufferLock)
+            lock (ConsoleBufferLock)
             {
-                Buffer.Add(text.ToString()!);
+                ConsoleBuffer.Add(text.ToString()!);
             }
 
             return;
         }
 
-        if (Buffer.Count > 0)
+        if (ConsoleBuffer.Count > 0)
         {
-            lock (BufferLock)
+            lock (ConsoleBufferLock)
             {
-                foreach (var bufferLine in Buffer)
+                foreach (var bufferLine in ConsoleBuffer)
                 {
                     Console.WriteLine(bufferLine);
+
+                    if (WriteToFile)
+                    {
+                        FileBuffer.Enqueue(bufferLine);
+                    }
+
                     _writeCount += 1;
                 }
 
-                Buffer.Clear();
+                ConsoleBuffer.Clear();
             }
         }
 
         Console.WriteLine(text);
+
+        if (WriteToFile)
+        {
+            FileBuffer.Enqueue(text.ToString() ?? string.Empty);
+
+            if (ShouldFlush())
+            {
+                lock (FlushLock)
+                {
+                    Flush();   
+                }
+            }
+        }
+
         _writeCount += 1;
+    }
+
+    private static bool ShouldFlush()
+    {
+        return FileBuffer.Count >= FileFlushAfterXLines;
+    }
+    
+    public static void Flush()
+    {
+        if (!ShouldFlush())
+        {
+            return;
+        }
+        
+        var fileBufferCopy = FileBuffer.ToList();
+        using var w = File.AppendText("log.txt");
+        
+        foreach (var fileLine in fileBufferCopy)
+        {
+            w.WriteLine(fileLine);
+            FileBuffer.TryDequeue(out _);
+        }
     }
 
     public static void TryRemoveLastLine()

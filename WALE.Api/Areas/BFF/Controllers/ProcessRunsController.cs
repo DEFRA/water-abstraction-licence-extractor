@@ -27,6 +27,7 @@ public class ProcessRunsController(
     IUiProcessRunService uiProcessRunService,
     IWrInspectionReportProjectionService wrInspectionReportProjectionService,
     IFileService fileService,
+    IThumbnailUrlService thumbnailUrlService,
     IMemoryCache memoryCache) : Controller
 {
     [HttpGet]
@@ -143,12 +144,8 @@ public class ProcessRunsController(
             CumulativeFilterCounts = GetCumulativeFilterCounts(outputList, query.VerificationType, query.VerificationSections)
         };
         
-        var thumbnailPaths = await GetThumbnailPathsAsync(
-            processRun.Records
-                .Select(r => r.fileId)
-                .Where(fid => fid != Guid.Empty)
-                .Distinct()
-                .ToList());
+        var thumbnailPaths = await thumbnailUrlService.GetThumbnailUrlsAsync(
+            processRun.Records.Select(r => r.fileId));
 
         foreach (var record in processRun.Records)
         {
@@ -164,6 +161,34 @@ public class ProcessRunsController(
         return Ok(processRun);
     }
     
+    [HttpGet("{processRunId:int}")]
+    public async Task<ActionResult<ProcessRunNonOkFilesResponse>> GetProcessRunNonOkFilesAsync(
+        [FromRoute] int processRunId,
+        [FromQuery] string? status,
+        [FromQuery] string? exception,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50)
+    {
+        var countsTask = outputService.GetProcessRunFileCountsAsync(processRunId);
+        var groupsTask = outputService.GetProcessRunFailureGroupsAsync(processRunId);
+        var countTask = outputService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
+
+        var items = take <= 0
+            ? []
+            : await outputService.GetProcessRunNonOkFilesAsync(processRunId, status, exception, skip, take);
+
+        var counts = await countsTask;
+
+        return Ok(new ProcessRunNonOkFilesResponse
+        {
+            Items = items,
+            TotalCount = await countTask,
+            DeclaredFileCount = counts.Declared,
+            ProcessedFileCount = counts.Processed,
+            FailureGroups = await groupsTask
+        });
+    }
+
     [HttpPost("{processRunId:int}")]
     public async Task<ActionResult> UpdateProcessRunNameAsync(
         [FromRoute] int processRunId,
@@ -387,36 +412,6 @@ public class ProcessRunsController(
         return count;
     }
     
-    private async Task<Dictionary<Guid, string>> GetThumbnailPathsAsync(List<Guid> fileIds)
-    {
-        var templateUrl = "thumbnail_{0}.jpg";
-        
-        var returnDict = new Dictionary<Guid, string>();
-        var fileIdChunks = fileIds.Chunk(20);
-
-        foreach (var fileIdChunk in fileIdChunks)
-        {
-            var kvps = new List<(Guid, Task<string>)>();
-            
-            foreach (var fileId in fileIdChunk)
-            {
-                var lowercaseFileName = string.Format(templateUrl, fileId);
-                var task = fileService.GetPresignedUrlAsync(
-                    lowercaseFileName,
-                    StorageFolder.Assets);
-                
-                kvps.Add((fileId, task));
-            }
-
-            foreach (var kvp in kvps)
-            {
-                var url = await kvp.Item2;
-                returnDict.Add(kvp.Item1, url);
-            }
-        }
-
-        return returnDict;
-    }
     
     private async Task<List<Guid>> GetFileIdsAsync(int processRunId)
     {

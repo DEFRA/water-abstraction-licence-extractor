@@ -379,18 +379,56 @@ export const Aggregates = forwardRef<ILicenceSectionBody, AggregatesProps>(
                         })}
                 </div>
                 <div style={{marginTop: '16px', textAlign: 'center'}}>
-                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates;</p>
-                    <ul>
+                    <p style={{color: '#888', marginBottom: '16px',}}>Incoming aggregates:</p>
+                    <ul style={{
+                        listStyle: "none"
+                    }}>
                         {!isLoading && !error && (editingIndex !== null && frozenOrder ? frozenOrder : getSortedIndices())
                             .map((index) => {
                                 const aggregate = aggregates[index];
-
+                                const itemId = aggregateIds[index];
                                 if (aggregate.sourceLicenceNumber === licence?.licenceNumber?.value) {
                                     return false;
                                 }
 
                                 return (
-                                    <li>{aggregate.id}</li>);
+                                    <AggregateItem
+                                        key={index}
+                                        aggregate={aggregate}
+                                        itemId={itemId}
+                                        linkedLicenceOptions={linkedLicenceOptions}
+                                        pointDescriptions={pointDescriptions}
+                                        purposeDescriptions={purposeDescriptions}
+                                        isNotReadOnly={false}
+                                        isEditing={false}
+                                        isAddingNew={false}
+                                        onUpdate={(updated) => handleUpdateAggregate(index, updated)}
+                                        onRemove={() => handleRemoveAggregate(index)}
+                                        onDiscard={handleDiscard}
+                                        onJumpToPage={onJumpToPage}
+                                        onVerify={() => onItemVerificationRequested?.('Confirm', itemId)}
+                                        onReject={() => onItemVerificationRequested?.('Remove', itemId)}
+                                        onRequestBusinessReview={() => onItemVerificationRequested?.('RequestBusinessReview', itemId)}
+                                        onCompleteBusinessReview={() => onItemVerificationRequested?.('CompleteBusinessReview', itemId)}
+                                        onOverride={async () => {
+                                            if (editingIndex === index) {
+                                                setIsWaitingForVerification(true);
+                                                const [freshId] = await waleApiClient.aggregateIds([aggregates[index]]);
+                                                onItemVerificationRequested?.(isAddingNew ? 'Added' : 'Edit', freshId);
+                                            } else {
+                                                setFrozenOrder(getSortedIndices());
+                                                setEditingIndex(index);
+                                                setIsAddingNew(false);
+                                                setOriginalItem(Aggregate.fromJS(aggregate));
+                                                setIsWaitingForVerification(false);
+                                            }
+                                        }}
+                                        onOpenReport={onOpenReport}
+                                        outputListDataItem={outputListDataItem}
+                                        scrapedView={scrapedView}
+                                        history={history}
+                                    />
+                                );
                             })}
                     </ul>
                 </div>

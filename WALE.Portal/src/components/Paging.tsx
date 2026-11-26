@@ -9,6 +9,7 @@ type PagingProps = {
     setPageNumber: (pageNumber: number) => void;
     setPageSize: (pageSize: number) => void;
     setSearchTerm: (searchTerm: string) => void;
+    alignLeft?: boolean;
 };
 
 export default function Paging({
@@ -19,7 +20,8 @@ export default function Paging({
                                    searchTerm,
                                    setPageNumber,
                                    setPageSize,
-                                   setSearchTerm
+                                   setSearchTerm,
+                                   alignLeft
                                }: PagingProps) {
     const [searchText, setSearchText] = useState(searchTerm);
 
@@ -64,7 +66,7 @@ export default function Paging({
                 display: 'block',
                 width: '100%',
                 marginTop: '10px',
-                marginLeft: '250px'
+                marginLeft: alignLeft ? '0' : '250px'
             }}
         >
             <label>

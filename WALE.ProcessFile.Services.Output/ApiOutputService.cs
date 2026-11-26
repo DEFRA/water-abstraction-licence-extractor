@@ -44,7 +44,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return JsonSerializer.Deserialize<byte[]?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(
         int pageNumber,
         string pdfServiceName,
         Guid fileId)
@@ -60,7 +60,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
             throw new NullReferenceException("Page screenshot data returned null");
         }
 
-        return JsonSerializer.Deserialize<List<byte[]>?>(content, JsonHelper.GetWireSerializerOptions())!;
+        return JsonSerializer.Deserialize<List<byte[]?>?>(content, JsonHelper.GetWireSerializerOptions())!;
     }
 
     public async Task<ProcessRun> StartProcessRunAsync(ProcessRun processRun)
@@ -107,7 +107,7 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
 
     public async Task UpdateProcessRunNameAsync(int processRunId, string? name)
     {
-        var path = "/Extractor/ProcessRun/UpdateProcessRunName";
+        var path = "/Extractor/ProcessRun/SetProcessRunName";
 
         var json = JsonSerializer.Serialize(new
         {
@@ -292,6 +292,72 @@ public class ApiOutputService(HttpClient httpClient) : IOutputService
         return int.Parse(content);
     }
     
+    public async Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}"
+                   + $"?skip={skip}&take={take}"
+                   + (string.IsNullOrEmpty(status) ? string.Empty : $"&status={Uri.EscapeDataString(status)}");
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.Items;
+    }
+
+    public async Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        var result = JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!;
+
+        return new ProcessRunFileCounts
+        {
+            Declared = result.DeclaredFileCount,
+            Processed = result.ProcessedFileCount
+        };
+    }
+
+    public async Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0";
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.FailureGroups;
+    }
+
+    public async Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
+    {
+        var path = $"/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?skip=0&take=0"
+                   + (string.IsNullOrEmpty(status) ? string.Empty : $"&status={Uri.EscapeDataString(status)}");
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        var content = await response.Content.ReadAsStringAsync();
+
+        return JsonSerializer.Deserialize<ProcessRunNonOkFilesResponse>(
+            content,
+            JsonHelper.GetWireSerializerOptions())!.TotalCount;
+    }
+
     public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         var path = $"/BFF/FileData/GetSimpleMatchResults?processRunId={processRunId}";

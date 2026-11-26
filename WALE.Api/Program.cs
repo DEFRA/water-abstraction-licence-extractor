@@ -161,6 +161,8 @@ static void ConfigureServices(IServiceCollection services, IConfigurationRoot co
         .AddTransient<IUiProcessRunService, UiProcessRunService>()
         .AddTransient<ILicenceEstateExportService, LicenceEstateExportService>()
         .AddTransient<ILicenceEstateExportRunner, LicenceEstateExportRunner>()
+        .AddTransient<IThumbnailUrlService, ThumbnailUrlService>()
+        .AddTransient<ILicenceRunComparisonService, LicenceRunComparisonService>()
         .AddTransient<ILicenceListRepository, DatabaseAbstractionLicenceOutputService>()
         .AddTransient<INoOcrDataExtractorService, PdfPigNoOcrDataExtractorService>()
         .AddTransient<INoOcrPdfDocumentService, PdfPigNoOcrPdfDocumentService>()

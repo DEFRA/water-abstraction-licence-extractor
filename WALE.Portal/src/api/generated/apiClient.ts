@@ -3452,6 +3452,43 @@ export class Client {
     /**
      * @return OK
      */
+    setProcessRunName(body: SetProcessRunNameRequest): Promise<void> {
+        let url_ = this.baseUrl + "/Extractor/ProcessRun/SetProcessRunName";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processSetProcessRunName(_response);
+        });
+    }
+
+    protected processSetProcessRunName(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     addProcessRunFile(body: ProcessRunFileRequest): Promise<void> {
         let url_ = this.baseUrl + "/Extractor/ProcessRun/AddProcessRunFile";
         url_ = url_.replace(/[?&]$/, "");
@@ -5920,6 +5957,316 @@ export class Client {
     }
 
     /**
+     * @param licenceNumber (optional) 
+     * @return OK
+     */
+    getLicenceDetail(licenceNumber: string | undefined): Promise<LicenceDetailResponse> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceDetail?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceDetail(_response);
+        });
+    }
+
+    protected processGetLicenceDetail(response: Response): Promise<LicenceDetailResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceDetailResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceDetailResponse>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @return OK
+     */
+    getLicenceRunHistory(licenceNumber: string | undefined): Promise<LicenceRunHistoryItem[]> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceRunHistory?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceRunHistory(_response);
+        });
+    }
+
+    protected processGetLicenceRunHistory(response: Response): Promise<LicenceRunHistoryItem[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(LicenceRunHistoryItem.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceRunHistoryItem[]>(null as any);
+    }
+
+    /**
+     * @param licenceNumber (optional) 
+     * @param newerRunId (optional) 
+     * @param olderRunId (optional) 
+     * @return OK
+     */
+    getLicenceRunComparison(licenceNumber: string | undefined, newerRunId: number | undefined, olderRunId: number | undefined): Promise<LicenceRunComparison> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceRunComparison?";
+        if (licenceNumber === null)
+            throw new globalThis.Error("The parameter 'licenceNumber' cannot be null.");
+        else if (licenceNumber !== undefined)
+            url_ += "licenceNumber=" + encodeURIComponent("" + licenceNumber) + "&";
+        if (newerRunId === null)
+            throw new globalThis.Error("The parameter 'newerRunId' cannot be null.");
+        else if (newerRunId !== undefined)
+            url_ += "newerRunId=" + encodeURIComponent("" + newerRunId) + "&";
+        if (olderRunId === null)
+            throw new globalThis.Error("The parameter 'olderRunId' cannot be null.");
+        else if (olderRunId !== undefined)
+            url_ += "olderRunId=" + encodeURIComponent("" + olderRunId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceRunComparison(_response);
+        });
+    }
+
+    protected processGetLicenceRunComparison(response: Response): Promise<LicenceRunComparison> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceRunComparison.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceRunComparison>(null as any);
+    }
+
+    /**
+     * @param projectedStatus (optional) 
+     * @param processRunId (optional) 
+     * @param queue (optional) 
+     * @param minimumDocumentCount (optional) 
+     * @param maximumRunCount (optional) 
+     * @param searchTerm (optional) 
+     * @param searchTermClean (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @param issuer (optional) 
+     * @param limitsEmpty (optional) 
+     * @param aggregatesFilter (optional) 
+     * @param aggregatePrimaryTypeFilter (optional) 
+     * @param ocrScan (optional) 
+     * @param purposesEmpty (optional) 
+     * @param pointsEmpty (optional) 
+     * @param issueYear (optional) 
+     * @param meansFound (optional) 
+     * @param isLicenceNumberFlagged (optional) 
+     * @param isIssueDateFlagged (optional) 
+     * @param shortLicenceSetId (optional) 
+     * @param linkedLicencesType (optional) 
+     * @param verificationType (optional) 
+     * @param sortField (optional) 
+     * @param sortAscending (optional) 
+     * @param licenceNumbers (optional) 
+     * @return OK
+     */
+    getLicenceEstate(projectedStatus: string | undefined, processRunId: number | undefined, queue: number | undefined, minimumDocumentCount: number | undefined, maximumRunCount: number | undefined, searchTerm: string | undefined, searchTermClean: string | undefined, skip: number | undefined, take: number | undefined, issuer: string | undefined, limitsEmpty: boolean | undefined, aggregatesFilter: string | undefined, aggregatePrimaryTypeFilter: string | undefined, ocrScan: boolean | undefined, purposesEmpty: boolean | undefined, pointsEmpty: boolean | undefined, issueYear: number | undefined, meansFound: boolean | undefined, isLicenceNumberFlagged: boolean | undefined, isIssueDateFlagged: boolean | undefined, shortLicenceSetId: string | undefined, linkedLicencesType: string | undefined, verificationType: string | undefined, sortField: string | undefined, sortAscending: boolean | undefined, licenceNumbers: string[] | undefined): Promise<LicenceEstateResponse> {
+        let url_ = this.baseUrl + "/BFF/Licences/GetLicenceEstate?";
+        if (projectedStatus === null)
+            throw new globalThis.Error("The parameter 'projectedStatus' cannot be null.");
+        else if (projectedStatus !== undefined)
+            url_ += "ProjectedStatus=" + encodeURIComponent("" + projectedStatus) + "&";
+        if (processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' cannot be null.");
+        else if (processRunId !== undefined)
+            url_ += "ProcessRunId=" + encodeURIComponent("" + processRunId) + "&";
+        if (queue === null)
+            throw new globalThis.Error("The parameter 'queue' cannot be null.");
+        else if (queue !== undefined)
+            url_ += "Queue=" + encodeURIComponent("" + queue) + "&";
+        if (minimumDocumentCount === null)
+            throw new globalThis.Error("The parameter 'minimumDocumentCount' cannot be null.");
+        else if (minimumDocumentCount !== undefined)
+            url_ += "MinimumDocumentCount=" + encodeURIComponent("" + minimumDocumentCount) + "&";
+        if (maximumRunCount === null)
+            throw new globalThis.Error("The parameter 'maximumRunCount' cannot be null.");
+        else if (maximumRunCount !== undefined)
+            url_ += "MaximumRunCount=" + encodeURIComponent("" + maximumRunCount) + "&";
+        if (searchTerm === null)
+            throw new globalThis.Error("The parameter 'searchTerm' cannot be null.");
+        else if (searchTerm !== undefined)
+            url_ += "SearchTerm=" + encodeURIComponent("" + searchTerm) + "&";
+        if (searchTermClean === null)
+            throw new globalThis.Error("The parameter 'searchTermClean' cannot be null.");
+        else if (searchTermClean !== undefined)
+            url_ += "SearchTermClean=" + encodeURIComponent("" + searchTermClean) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "Skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "Take=" + encodeURIComponent("" + take) + "&";
+        if (issuer === null)
+            throw new globalThis.Error("The parameter 'issuer' cannot be null.");
+        else if (issuer !== undefined)
+            url_ += "Issuer=" + encodeURIComponent("" + issuer) + "&";
+        if (limitsEmpty === null)
+            throw new globalThis.Error("The parameter 'limitsEmpty' cannot be null.");
+        else if (limitsEmpty !== undefined)
+            url_ += "LimitsEmpty=" + encodeURIComponent("" + limitsEmpty) + "&";
+        if (aggregatesFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatesFilter' cannot be null.");
+        else if (aggregatesFilter !== undefined)
+            url_ += "AggregatesFilter=" + encodeURIComponent("" + aggregatesFilter) + "&";
+        if (aggregatePrimaryTypeFilter === null)
+            throw new globalThis.Error("The parameter 'aggregatePrimaryTypeFilter' cannot be null.");
+        else if (aggregatePrimaryTypeFilter !== undefined)
+            url_ += "AggregatePrimaryTypeFilter=" + encodeURIComponent("" + aggregatePrimaryTypeFilter) + "&";
+        if (ocrScan === null)
+            throw new globalThis.Error("The parameter 'ocrScan' cannot be null.");
+        else if (ocrScan !== undefined)
+            url_ += "OcrScan=" + encodeURIComponent("" + ocrScan) + "&";
+        if (purposesEmpty === null)
+            throw new globalThis.Error("The parameter 'purposesEmpty' cannot be null.");
+        else if (purposesEmpty !== undefined)
+            url_ += "PurposesEmpty=" + encodeURIComponent("" + purposesEmpty) + "&";
+        if (pointsEmpty === null)
+            throw new globalThis.Error("The parameter 'pointsEmpty' cannot be null.");
+        else if (pointsEmpty !== undefined)
+            url_ += "PointsEmpty=" + encodeURIComponent("" + pointsEmpty) + "&";
+        if (issueYear === null)
+            throw new globalThis.Error("The parameter 'issueYear' cannot be null.");
+        else if (issueYear !== undefined)
+            url_ += "IssueYear=" + encodeURIComponent("" + issueYear) + "&";
+        if (meansFound === null)
+            throw new globalThis.Error("The parameter 'meansFound' cannot be null.");
+        else if (meansFound !== undefined)
+            url_ += "MeansFound=" + encodeURIComponent("" + meansFound) + "&";
+        if (isLicenceNumberFlagged === null)
+            throw new globalThis.Error("The parameter 'isLicenceNumberFlagged' cannot be null.");
+        else if (isLicenceNumberFlagged !== undefined)
+            url_ += "IsLicenceNumberFlagged=" + encodeURIComponent("" + isLicenceNumberFlagged) + "&";
+        if (isIssueDateFlagged === null)
+            throw new globalThis.Error("The parameter 'isIssueDateFlagged' cannot be null.");
+        else if (isIssueDateFlagged !== undefined)
+            url_ += "IsIssueDateFlagged=" + encodeURIComponent("" + isIssueDateFlagged) + "&";
+        if (shortLicenceSetId === null)
+            throw new globalThis.Error("The parameter 'shortLicenceSetId' cannot be null.");
+        else if (shortLicenceSetId !== undefined)
+            url_ += "ShortLicenceSetId=" + encodeURIComponent("" + shortLicenceSetId) + "&";
+        if (linkedLicencesType === null)
+            throw new globalThis.Error("The parameter 'linkedLicencesType' cannot be null.");
+        else if (linkedLicencesType !== undefined)
+            url_ += "LinkedLicencesType=" + encodeURIComponent("" + linkedLicencesType) + "&";
+        if (verificationType === null)
+            throw new globalThis.Error("The parameter 'verificationType' cannot be null.");
+        else if (verificationType !== undefined)
+            url_ += "VerificationType=" + encodeURIComponent("" + verificationType) + "&";
+        if (sortField === null)
+            throw new globalThis.Error("The parameter 'sortField' cannot be null.");
+        else if (sortField !== undefined)
+            url_ += "SortField=" + encodeURIComponent("" + sortField) + "&";
+        if (sortAscending === null)
+            throw new globalThis.Error("The parameter 'sortAscending' cannot be null.");
+        else if (sortAscending !== undefined)
+            url_ += "SortAscending=" + encodeURIComponent("" + sortAscending) + "&";
+        if (licenceNumbers === null)
+            throw new globalThis.Error("The parameter 'licenceNumbers' cannot be null.");
+        else if (licenceNumbers !== undefined)
+            licenceNumbers && licenceNumbers.forEach(item => { url_ += "LicenceNumbers=" + encodeURIComponent("" + item) + "&"; });
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetLicenceEstate(_response);
+        });
+    }
+
+    protected processGetLicenceEstate(response: Response): Promise<LicenceEstateResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = LicenceEstateResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<LicenceEstateResponse>(null as any);
+    }
+
+    /**
      * @param delayInSeconds (optional) 
      * @param regionId (optional) 
      * @param maxLicencesToTake (optional) 
@@ -6700,6 +7047,66 @@ export class Client {
             });
         }
         return Promise.resolve<ProcessRunResponse>(null as any);
+    }
+
+    /**
+     * @param status (optional) 
+     * @param exception (optional) 
+     * @param skip (optional) 
+     * @param take (optional) 
+     * @return OK
+     */
+    getProcessRunNonOkFiles(processRunId: number, status: string | undefined, exception: string | undefined, skip: number | undefined, take: number | undefined): Promise<ProcessRunNonOkFilesResponse> {
+        let url_ = this.baseUrl + "/BFF/ProcessRuns/GetProcessRunNonOkFiles/{processRunId}?";
+        if (processRunId === undefined || processRunId === null)
+            throw new globalThis.Error("The parameter 'processRunId' must be defined.");
+        url_ = url_.replace("{processRunId}", encodeURIComponent("" + processRunId));
+        if (status === null)
+            throw new globalThis.Error("The parameter 'status' cannot be null.");
+        else if (status !== undefined)
+            url_ += "status=" + encodeURIComponent("" + status) + "&";
+        if (exception === null)
+            throw new globalThis.Error("The parameter 'exception' cannot be null.");
+        else if (exception !== undefined)
+            url_ += "exception=" + encodeURIComponent("" + exception) + "&";
+        if (skip === null)
+            throw new globalThis.Error("The parameter 'skip' cannot be null.");
+        else if (skip !== undefined)
+            url_ += "skip=" + encodeURIComponent("" + skip) + "&";
+        if (take === null)
+            throw new globalThis.Error("The parameter 'take' cannot be null.");
+        else if (take !== undefined)
+            url_ += "take=" + encodeURIComponent("" + take) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetProcessRunNonOkFiles(_response);
+        });
+    }
+
+    protected processGetProcessRunNonOkFiles(response: Response): Promise<ProcessRunNonOkFilesResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = ProcessRunNonOkFilesResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ProcessRunNonOkFilesResponse>(null as any);
     }
 
     /**
@@ -9498,6 +9905,245 @@ export interface ILicence {
     [key: string]: any;
 }
 
+export class LicenceDetailResponse implements ILicenceDetailResponse {
+    licenceNumber!: string;
+    runs!: LicenceRunHistoryItem[];
+    verifications!: LicenceSectionVerification[];
+    successors?: string[] | undefined;
+    possibleVariants?: string[] | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceDetailResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.runs = [];
+            this.verifications = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumber = _data["licenceNumber"];
+            if (Array.isArray(_data["runs"])) {
+                this.runs = [] as any;
+                for (let item of _data["runs"])
+                    this.runs!.push(LicenceRunHistoryItem.fromJS(item));
+            }
+            if (Array.isArray(_data["verifications"])) {
+                this.verifications = [] as any;
+                for (let item of _data["verifications"])
+                    this.verifications!.push(LicenceSectionVerification.fromJS(item));
+            }
+            if (Array.isArray(_data["successors"])) {
+                this.successors = [] as any;
+                for (let item of _data["successors"])
+                    this.successors!.push(item);
+            }
+            if (Array.isArray(_data["possibleVariants"])) {
+                this.possibleVariants = [] as any;
+                for (let item of _data["possibleVariants"])
+                    this.possibleVariants!.push(item);
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceDetailResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceDetailResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumber"] = this.licenceNumber;
+        if (Array.isArray(this.runs)) {
+            data["runs"] = [];
+            for (let item of this.runs)
+                data["runs"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.verifications)) {
+            data["verifications"] = [];
+            for (let item of this.verifications)
+                data["verifications"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.successors)) {
+            data["successors"] = [];
+            for (let item of this.successors)
+                data["successors"].push(item);
+        }
+        if (Array.isArray(this.possibleVariants)) {
+            data["possibleVariants"] = [];
+            for (let item of this.possibleVariants)
+                data["possibleVariants"].push(item);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceDetailResponse {
+    licenceNumber: string;
+    runs: LicenceRunHistoryItem[];
+    verifications: LicenceSectionVerification[];
+    successors?: string[] | undefined;
+    possibleVariants?: string[] | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceEstateResponse implements ILicenceEstateResponse {
+    totalRecords!: number;
+    records!: OutputListDataItem[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
+    statuses?: string[] | undefined;
+    processRunIds?: number[] | undefined;
+    queueCounts?: { [key: string]: number; } | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceEstateResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+        if (!data) {
+            this.records = [];
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.totalRecords = _data["totalRecords"];
+            if (Array.isArray(_data["records"])) {
+                this.records = [] as any;
+                for (let item of _data["records"])
+                    this.records!.push(OutputListDataItem.fromJS(item));
+            }
+            if (Array.isArray(_data["issuers"])) {
+                this.issuers = [] as any;
+                for (let item of _data["issuers"])
+                    this.issuers!.push(item);
+            }
+            if (Array.isArray(_data["issueDates"])) {
+                this.issueDates = [] as any;
+                for (let item of _data["issueDates"])
+                    this.issueDates!.push(item);
+            }
+            if (Array.isArray(_data["licenceSetIds"])) {
+                this.licenceSetIds = [] as any;
+                for (let item of _data["licenceSetIds"])
+                    this.licenceSetIds!.push(item);
+            }
+            if (Array.isArray(_data["statuses"])) {
+                this.statuses = [] as any;
+                for (let item of _data["statuses"])
+                    this.statuses!.push(item);
+            }
+            if (Array.isArray(_data["processRunIds"])) {
+                this.processRunIds = [] as any;
+                for (let item of _data["processRunIds"])
+                    this.processRunIds!.push(item);
+            }
+            if (_data["queueCounts"]) {
+                this.queueCounts = {} as any;
+                for (let key in _data["queueCounts"]) {
+                    if (_data["queueCounts"].hasOwnProperty(key))
+                        (this.queueCounts as any)![key] = _data["queueCounts"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceEstateResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceEstateResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["totalRecords"] = this.totalRecords;
+        if (Array.isArray(this.records)) {
+            data["records"] = [];
+            for (let item of this.records)
+                data["records"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.issuers)) {
+            data["issuers"] = [];
+            for (let item of this.issuers)
+                data["issuers"].push(item);
+        }
+        if (Array.isArray(this.issueDates)) {
+            data["issueDates"] = [];
+            for (let item of this.issueDates)
+                data["issueDates"].push(item);
+        }
+        if (Array.isArray(this.licenceSetIds)) {
+            data["licenceSetIds"] = [];
+            for (let item of this.licenceSetIds)
+                data["licenceSetIds"].push(item);
+        }
+        if (Array.isArray(this.statuses)) {
+            data["statuses"] = [];
+            for (let item of this.statuses)
+                data["statuses"].push(item);
+        }
+        if (Array.isArray(this.processRunIds)) {
+            data["processRunIds"] = [];
+            for (let item of this.processRunIds)
+                data["processRunIds"].push(item);
+        }
+        if (this.queueCounts) {
+            data["queueCounts"] = {};
+            for (let key in this.queueCounts) {
+                if (this.queueCounts.hasOwnProperty(key))
+                    (data["queueCounts"] as any)[key] = (this.queueCounts as any)[key];
+            }
+        }
+        return data;
+    }
+}
+
+export interface ILicenceEstateResponse {
+    totalRecords: number;
+    records: OutputListDataItem[];
+    issuers?: string[] | undefined;
+    issueDates?: string[] | undefined;
+    licenceSetIds?: string[] | undefined;
+    statuses?: string[] | undefined;
+    processRunIds?: number[] | undefined;
+    queueCounts?: { [key: string]: number; } | undefined;
+
+    [key: string]: any;
+}
+
 export class LicenceFileMapEntry implements ILicenceFileMapEntry {
     licenceNumber?: string | undefined;
     licenceId?: number;
@@ -9846,6 +10492,369 @@ export interface ILicenceNaldData {
     naldStatus?: NaldLicenceStatus;
     licenceType?: LicenceType;
     regionId?: number | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceRunComparison implements ILicenceRunComparison {
+    licenceNumber!: string;
+    newerRunId?: number;
+    olderRunId?: number;
+    newerRunHasData?: boolean;
+    olderRunHasData?: boolean;
+    identical?: boolean;
+    differences?: LicenceRunDifference[];
+    lines?: LicenceRunDiffLine[];
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunComparison) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.licenceNumber = _data["licenceNumber"];
+            this.newerRunId = _data["newerRunId"];
+            this.olderRunId = _data["olderRunId"];
+            this.newerRunHasData = _data["newerRunHasData"];
+            this.olderRunHasData = _data["olderRunHasData"];
+            this.identical = _data["identical"];
+            if (Array.isArray(_data["differences"])) {
+                this.differences = [] as any;
+                for (let item of _data["differences"])
+                    this.differences!.push(LicenceRunDifference.fromJS(item));
+            }
+            if (Array.isArray(_data["lines"])) {
+                this.lines = [] as any;
+                for (let item of _data["lines"])
+                    this.lines!.push(LicenceRunDiffLine.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): LicenceRunComparison {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunComparison();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["licenceNumber"] = this.licenceNumber;
+        data["newerRunId"] = this.newerRunId;
+        data["olderRunId"] = this.olderRunId;
+        data["newerRunHasData"] = this.newerRunHasData;
+        data["olderRunHasData"] = this.olderRunHasData;
+        data["identical"] = this.identical;
+        if (Array.isArray(this.differences)) {
+            data["differences"] = [];
+            for (let item of this.differences)
+                data["differences"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.lines)) {
+            data["lines"] = [];
+            for (let item of this.lines)
+                data["lines"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface ILicenceRunComparison {
+    licenceNumber: string;
+    newerRunId?: number;
+    olderRunId?: number;
+    newerRunHasData?: boolean;
+    olderRunHasData?: boolean;
+    identical?: boolean;
+    differences?: LicenceRunDifference[];
+    lines?: LicenceRunDiffLine[];
+
+    [key: string]: any;
+}
+
+export class LicenceRunDifference implements ILicenceRunDifference {
+    path!: string;
+    older?: string | undefined;
+    newer?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunDifference) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.path = _data["path"];
+            this.older = _data["older"];
+            this.newer = _data["newer"];
+        }
+    }
+
+    static fromJS(data: any): LicenceRunDifference {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunDifference();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["path"] = this.path;
+        data["older"] = this.older;
+        data["newer"] = this.newer;
+        return data;
+    }
+}
+
+export interface ILicenceRunDifference {
+    path: string;
+    older?: string | undefined;
+    newer?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class LicenceRunDiffLine implements ILicenceRunDiffLine {
+    kind?: LicenceRunDiffLineKind;
+    olderLineNumber?: number | undefined;
+    newerLineNumber?: number | undefined;
+    text!: string;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunDiffLine) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.kind = _data["kind"];
+            this.olderLineNumber = _data["olderLineNumber"];
+            this.newerLineNumber = _data["newerLineNumber"];
+            this.text = _data["text"];
+        }
+    }
+
+    static fromJS(data: any): LicenceRunDiffLine {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunDiffLine();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["kind"] = this.kind;
+        data["olderLineNumber"] = this.olderLineNumber;
+        data["newerLineNumber"] = this.newerLineNumber;
+        data["text"] = this.text;
+        return data;
+    }
+}
+
+export interface ILicenceRunDiffLine {
+    kind?: LicenceRunDiffLineKind;
+    olderLineNumber?: number | undefined;
+    newerLineNumber?: number | undefined;
+    text: string;
+
+    [key: string]: any;
+}
+
+export enum LicenceRunDiffLineKind {
+    Context = "Context",
+    Removed = "Removed",
+    Added = "Added",
+    Skipped = "Skipped",
+}
+
+export class LicenceRunHistoryItem implements ILicenceRunHistoryItem {
+    processRunId?: number;
+    licenceListItemId?: number;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
+    filename!: string;
+    status?: string | undefined;
+    queue?: number;
+    limitsCount?: number;
+    pointsCount?: number;
+    purposesCount?: number;
+    aggregatesCount?: number;
+    linkedLicencesCount?: number;
+    licenceSetsCount?: number;
+    meansFound?: boolean;
+    ocr?: boolean;
+    issueDate?: Date | undefined;
+    isLicenceNumberFlagged?: boolean;
+    isIssueDateFlagged?: boolean;
+    createdDateTimeUtc?: Date;
+    licenceVersionId?: string | undefined;
+    naldIssueNumber?: number | undefined;
+    naldIncrementNumber?: number | undefined;
+    naldUpdateReason?: string | undefined;
+    changedFromPrevious?: boolean | undefined;
+    runLicenceCount?: number;
+
+    [key: string]: any;
+
+    constructor(data?: ILicenceRunHistoryItem) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.processRunId = _data["processRunId"];
+            this.licenceListItemId = _data["licenceListItemId"];
+            this.licenceId = _data["licenceId"];
+            this.matchesResultId = _data["matchesResultId"];
+            this.fileId = _data["fileId"];
+            this.filename = _data["filename"];
+            this.status = _data["status"];
+            this.queue = _data["queue"];
+            this.limitsCount = _data["limitsCount"];
+            this.pointsCount = _data["pointsCount"];
+            this.purposesCount = _data["purposesCount"];
+            this.aggregatesCount = _data["aggregatesCount"];
+            this.linkedLicencesCount = _data["linkedLicencesCount"];
+            this.licenceSetsCount = _data["licenceSetsCount"];
+            this.meansFound = _data["meansFound"];
+            this.ocr = _data["ocr"];
+            this.issueDate = _data["issueDate"] ? new Date(_data["issueDate"].toString()) : undefined as any;
+            this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
+            this.isIssueDateFlagged = _data["isIssueDateFlagged"];
+            this.createdDateTimeUtc = _data["createdDateTimeUtc"] ? new Date(_data["createdDateTimeUtc"].toString()) : undefined as any;
+            this.licenceVersionId = _data["licenceVersionId"];
+            this.naldIssueNumber = _data["naldIssueNumber"];
+            this.naldIncrementNumber = _data["naldIncrementNumber"];
+            this.naldUpdateReason = _data["naldUpdateReason"];
+            this.changedFromPrevious = _data["changedFromPrevious"];
+            this.runLicenceCount = _data["runLicenceCount"];
+        }
+    }
+
+    static fromJS(data: any): LicenceRunHistoryItem {
+        data = typeof data === 'object' ? data : {};
+        let result = new LicenceRunHistoryItem();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["processRunId"] = this.processRunId;
+        data["licenceListItemId"] = this.licenceListItemId;
+        data["licenceId"] = this.licenceId;
+        data["matchesResultId"] = this.matchesResultId;
+        data["fileId"] = this.fileId;
+        data["filename"] = this.filename;
+        data["status"] = this.status;
+        data["queue"] = this.queue;
+        data["limitsCount"] = this.limitsCount;
+        data["pointsCount"] = this.pointsCount;
+        data["purposesCount"] = this.purposesCount;
+        data["aggregatesCount"] = this.aggregatesCount;
+        data["linkedLicencesCount"] = this.linkedLicencesCount;
+        data["licenceSetsCount"] = this.licenceSetsCount;
+        data["meansFound"] = this.meansFound;
+        data["ocr"] = this.ocr;
+        data["issueDate"] = this.issueDate ? formatDate(this.issueDate) : undefined as any;
+        data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
+        data["isIssueDateFlagged"] = this.isIssueDateFlagged;
+        data["createdDateTimeUtc"] = this.createdDateTimeUtc ? this.createdDateTimeUtc.toISOString() : undefined as any;
+        data["licenceVersionId"] = this.licenceVersionId;
+        data["naldIssueNumber"] = this.naldIssueNumber;
+        data["naldIncrementNumber"] = this.naldIncrementNumber;
+        data["naldUpdateReason"] = this.naldUpdateReason;
+        data["changedFromPrevious"] = this.changedFromPrevious;
+        data["runLicenceCount"] = this.runLicenceCount;
+        return data;
+    }
+}
+
+export interface ILicenceRunHistoryItem {
+    processRunId?: number;
+    licenceListItemId?: number;
+    licenceId?: number;
+    matchesResultId?: number;
+    fileId?: string;
+    filename: string;
+    status?: string | undefined;
+    queue?: number;
+    limitsCount?: number;
+    pointsCount?: number;
+    purposesCount?: number;
+    aggregatesCount?: number;
+    linkedLicencesCount?: number;
+    licenceSetsCount?: number;
+    meansFound?: boolean;
+    ocr?: boolean;
+    issueDate?: Date | undefined;
+    isLicenceNumberFlagged?: boolean;
+    isIssueDateFlagged?: boolean;
+    createdDateTimeUtc?: Date;
+    licenceVersionId?: string | undefined;
+    naldIssueNumber?: number | undefined;
+    naldIncrementNumber?: number | undefined;
+    naldUpdateReason?: string | undefined;
+    changedFromPrevious?: boolean | undefined;
+    runLicenceCount?: number;
 
     [key: string]: any;
 }
@@ -10772,6 +11781,74 @@ export interface IMatchesResult2 {
     [key: string]: any;
 }
 
+export class MatchResultError implements IMatchResultError {
+    matchesResultId?: number;
+    fileId?: string;
+    filename?: string | undefined;
+    status?: string | undefined;
+    error?: string | undefined;
+    dateTimeUtc?: Date | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: IMatchResultError) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.matchesResultId = _data["matchesResultId"];
+            this.fileId = _data["fileId"];
+            this.filename = _data["filename"];
+            this.status = _data["status"];
+            this.error = _data["error"];
+            this.dateTimeUtc = _data["dateTimeUtc"] ? new Date(_data["dateTimeUtc"].toString()) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): MatchResultError {
+        data = typeof data === 'object' ? data : {};
+        let result = new MatchResultError();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["matchesResultId"] = this.matchesResultId;
+        data["fileId"] = this.fileId;
+        data["filename"] = this.filename;
+        data["status"] = this.status;
+        data["error"] = this.error;
+        data["dateTimeUtc"] = this.dateTimeUtc ? this.dateTimeUtc.toISOString() : undefined as any;
+        return data;
+    }
+}
+
+export interface IMatchResultError {
+    matchesResultId?: number;
+    fileId?: string;
+    filename?: string | undefined;
+    status?: string | undefined;
+    error?: string | undefined;
+    dateTimeUtc?: Date | undefined;
+
+    [key: string]: any;
+}
+
 export class MatchToSave implements IMatchToSave {
     matchesResultId?: number;
     labelName?: string | undefined;
@@ -11248,6 +12325,9 @@ export class OutputListDataItem implements IOutputListDataItem {
     isLicenceNumberFlagged?: boolean;
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
+    queue?: number | undefined;
+    documentCount?: number | undefined;
+    runCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -11312,6 +12392,9 @@ export class OutputListDataItem implements IOutputListDataItem {
             this.isLicenceNumberFlagged = _data["isLicenceNumberFlagged"];
             this.licenceNumberFlagReason = _data["licenceNumberFlagReason"];
             this.thumbnailUrl = _data["thumbnailUrl"];
+            this.queue = _data["queue"];
+            this.documentCount = _data["documentCount"];
+            this.runCount = _data["runCount"];
             if (Array.isArray(_data["linkedLicences"])) {
                 this.linkedLicences = [] as any;
                 for (let item of _data["linkedLicences"])
@@ -11386,6 +12469,9 @@ export class OutputListDataItem implements IOutputListDataItem {
         data["isLicenceNumberFlagged"] = this.isLicenceNumberFlagged;
         data["licenceNumberFlagReason"] = this.licenceNumberFlagReason;
         data["thumbnailUrl"] = this.thumbnailUrl;
+        data["queue"] = this.queue;
+        data["documentCount"] = this.documentCount;
+        data["runCount"] = this.runCount;
         if (Array.isArray(this.linkedLicences)) {
             data["linkedLicences"] = [];
             for (let item of this.linkedLicences)
@@ -11433,6 +12519,9 @@ export interface IOutputListDataItem {
     isLicenceNumberFlagged?: boolean;
     licenceNumberFlagReason?: string | undefined;
     thumbnailUrl?: string | undefined;
+    queue?: number | undefined;
+    documentCount?: number | undefined;
+    runCount?: number | undefined;
     linkedLicences?: LinkedLicence[] | undefined;
     licenceSets?: OutputListDataItemLicenceSet[] | undefined;
     licenceSectionVerifications?: LicenceSectionVerificationSummary[] | undefined;
@@ -12045,6 +13134,7 @@ export class ProcessRun implements IProcessRun {
     status?: string | undefined;
     filesProcessed?: number;
     filesErrored?: number;
+    filesTransientErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
     documentType?: string;
@@ -12076,6 +13166,7 @@ export class ProcessRun implements IProcessRun {
             this.status = _data["status"];
             this.filesProcessed = _data["filesProcessed"];
             this.filesErrored = _data["filesErrored"];
+            this.filesTransientErrored = _data["filesTransientErrored"];
             this.licenceCount = _data["licenceCount"];
             this.liveLicenceCount = _data["liveLicenceCount"];
             this.documentType = _data["documentType"];
@@ -12105,6 +13196,7 @@ export class ProcessRun implements IProcessRun {
         data["status"] = this.status;
         data["filesProcessed"] = this.filesProcessed;
         data["filesErrored"] = this.filesErrored;
+        data["filesTransientErrored"] = this.filesTransientErrored;
         data["licenceCount"] = this.licenceCount;
         data["liveLicenceCount"] = this.liveLicenceCount;
         data["documentType"] = this.documentType;
@@ -12123,6 +13215,7 @@ export interface IProcessRun {
     status?: string | undefined;
     filesProcessed?: number;
     filesErrored?: number;
+    filesTransientErrored?: number;
     licenceCount?: number;
     liveLicenceCount?: number;
     documentType?: string;
@@ -12238,6 +13331,58 @@ export interface IProcessRunEndRequest {
     [key: string]: any;
 }
 
+export class ProcessRunFailureGroup implements IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunFailureGroup) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.exception = _data["exception"];
+            this.files = _data["files"];
+        }
+    }
+
+    static fromJS(data: any): ProcessRunFailureGroup {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunFailureGroup();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["exception"] = this.exception;
+        data["files"] = this.files;
+        return data;
+    }
+}
+
+export interface IProcessRunFailureGroup {
+    exception?: string | undefined;
+    files?: number;
+
+    [key: string]: any;
+}
+
 export class ProcessRunFileRequest implements IProcessRunFileRequest {
     fileName?: string | undefined;
     processRunId?: number;
@@ -12342,6 +13487,86 @@ export class ProcessRunNameRequest implements IProcessRunNameRequest {
 
 export interface IProcessRunNameRequest {
     name?: string | undefined;
+
+    [key: string]: any;
+}
+
+export class ProcessRunNonOkFilesResponse implements IProcessRunNonOkFilesResponse {
+    items?: MatchResultError[];
+    totalCount?: number;
+    declaredFileCount?: number;
+    processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
+
+    [key: string]: any;
+
+    constructor(data?: IProcessRunNonOkFilesResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(MatchResultError.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.declaredFileCount = _data["declaredFileCount"];
+            this.processedFileCount = _data["processedFileCount"];
+            if (Array.isArray(_data["failureGroups"])) {
+                this.failureGroups = [] as any;
+                for (let item of _data["failureGroups"])
+                    this.failureGroups!.push(ProcessRunFailureGroup.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ProcessRunNonOkFilesResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new ProcessRunNonOkFilesResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["declaredFileCount"] = this.declaredFileCount;
+        data["processedFileCount"] = this.processedFileCount;
+        if (Array.isArray(this.failureGroups)) {
+            data["failureGroups"] = [];
+            for (let item of this.failureGroups)
+                data["failureGroups"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IProcessRunNonOkFilesResponse {
+    items?: MatchResultError[];
+    totalCount?: number;
+    declaredFileCount?: number;
+    processedFileCount?: number;
+    failureGroups?: ProcessRunFailureGroup[];
 
     [key: string]: any;
 }
@@ -13720,6 +14945,58 @@ export interface ISendFileProcessSingleMessagesResponse {
     [key: string]: any;
 }
 
+export class SetProcessRunNameRequest implements ISetProcessRunNameRequest {
+    processRunId?: number;
+    name?: string | undefined;
+
+    [key: string]: any;
+
+    constructor(data?: ISetProcessRunNameRequest) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.processRunId = _data["processRunId"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): SetProcessRunNameRequest {
+        data = typeof data === 'object' ? data : {};
+        let result = new SetProcessRunNameRequest();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["processRunId"] = this.processRunId;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface ISetProcessRunNameRequest {
+    processRunId?: number;
+    name?: string | undefined;
+
+    [key: string]: any;
+}
+
 export class TimeCutoff implements ITimeCutoff {
     cutoffType?: NullableOfCutoffType | undefined;
     date?: string | undefined;
@@ -14475,6 +15752,12 @@ export interface IBody2 {
     fileName?: string;
 
     [key: string]: any;
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export class ApiException extends Error {

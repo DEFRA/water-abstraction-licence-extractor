@@ -39,15 +39,15 @@ public class DatabaseOutputService(
             ?? await databaseReadService.GetPageScreenshotThumbnailAsync(pageNumber, fileId, pdfServiceName);
     }
 
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
-        var bytes1 = await GetPageScreenshotAsync(pageNumber, fileId, pdfServiceName);
-        var bytes2 = await GetPageScreenshotAsync(pageNumber, fileId, GeneralConstants.DocnetExtractorServiceName); // TODO tidy this up
+        var requested = await GetPageScreenshotAsync(pageNumber, fileId, pdfServiceName);
+        var docnet = await GetPageScreenshotAsync(pageNumber, fileId, GeneralConstants.DocnetExtractorServiceName);
 
         return
         [
-            bytes1!,
-            bytes2!
+            requested,
+            docnet
         ];
     }
 
@@ -137,6 +137,32 @@ public class DatabaseOutputService(
         return databaseWriteService.SaveMatchesResultAsync(matchesResultStr, fileId, processRunId, isUpdate);
     }
     
+    public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesAsync(
+            processRunId, status, exception, skip, take);
+    }
+
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
+    {
+        return databaseReadService.GetProcessRunNonOkFilesCountAsync(processRunId, status, exception);
+    }
+
+    public Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFailureGroupsAsync(processRunId);
+    }
+
+    public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        return databaseReadService.GetProcessRunFileCountsAsync(processRunId);
+    }
+
     public async Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         return await databaseReadService.GetSimpleMatchResults(processRunId);
@@ -157,7 +183,7 @@ public class DatabaseOutputService(
 
             await SavePageScreenshotInternalAsync(
                 pageNumber,
-                noOcrServiceName,
+                providerName,
                 fileId,
                 bytes,
                 processRunId);

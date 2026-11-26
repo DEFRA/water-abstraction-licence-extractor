@@ -222,14 +222,14 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         }
     }
     
-    public async Task<List<byte[]>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
+    public async Task<List<byte[]?>> GetPageScreenshotDataAsync(int pageNumber, string pdfServiceName, Guid fileId)
     {
         var pageScreenshotPaths = GetPageScreenshotPaths(
             pageNumber,
             pdfServiceName,
             fileId);
 
-        var returnList = new List<byte[]>();
+        var returnList = new List<byte[]?>();
         
         foreach (var pageScreenshotPath in pageScreenshotPaths)
         {
@@ -284,6 +284,31 @@ public class FileSystemOutputService(string outputFolder) : IOutputService
         throw new NotImplementedException();
     }
     
+    public Task<List<MatchResultError>> GetProcessRunNonOkFilesAsync(
+        int processRunId,
+        string? status,
+        string? exception,
+        int skip,
+        int take)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<int> GetProcessRunNonOkFilesCountAsync(int processRunId, string? status, string? exception)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<List<ProcessRunFailureGroup>> GetProcessRunFailureGroupsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<ProcessRunFileCounts> GetProcessRunFileCountsAsync(int processRunId)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<List<MatchResultSimple>> GetSimpleMatchResults(int processRunId)
     {
         throw new NotImplementedException();

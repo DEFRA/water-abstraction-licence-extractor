@@ -2361,7 +2361,8 @@ public static partial class AbstractionLicenceLabelConfiguration
                         [
                             new("Up to and including "),
                             new("From "),
-                            new("Until "),                            
+                            new("Until "),
+                            new("Between "),
                             new("aggregate quantity of water authorised")
                         ],
                         IgnoreBlockIfContains =

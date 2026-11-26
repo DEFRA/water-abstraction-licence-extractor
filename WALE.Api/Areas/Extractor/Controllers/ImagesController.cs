@@ -292,7 +292,14 @@ public class ImagesController(
             serviceName,
             fileId);
 
-        var originalResImage = SKImage.FromEncodedData(data[0]);
+        var stored = data.FirstOrDefault();
+
+        if (stored is null || stored.Length == 0)
+        {
+            return NotFound();
+        }
+
+        var originalResImage = SKImage.FromEncodedData(stored);
         var originalRegBitmap = SKBitmap.FromImage(originalResImage);
         var resizedBitmap = originalRegBitmap.Resize(
             new SKSizeI(240, 320),

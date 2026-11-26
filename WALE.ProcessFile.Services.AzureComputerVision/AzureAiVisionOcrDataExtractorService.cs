@@ -68,7 +68,7 @@ public class AzureAiVisionOcrDataExtractorService(
         }
         else
         {
-            List<byte[]> bytesList;
+            List<byte[]?> bytesList;
 
             if (isPageScreenshot)
             {
@@ -103,6 +103,11 @@ public class AzureAiVisionOcrDataExtractorService(
 
             foreach (var bytes in bytesList)
             {
+                if (bytes is null || bytes.Length == 0)
+                {
+                    continue;
+                }
+
                 var textLines = await GetTextLinesAsync(
                     bytes,
                     isPageScreenshot,

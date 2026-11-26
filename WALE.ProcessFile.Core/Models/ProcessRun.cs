@@ -22,6 +22,8 @@ public class ProcessRun
 
     public int FilesErrored { get; set; }
 
+    public int FilesTransientErrored { get; set; }
+
     public int LicenceCount { get; set; }
 
     public int LiveLicenceCount { get; set; }

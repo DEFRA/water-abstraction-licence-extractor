@@ -565,7 +565,49 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetLicencesListSearchCountAsync(processRunId, query);
     }
 
-    public async Task<List<string>> GetLicenceListIssuersAsync(int processRunId)
+    public async Task<List<LicenceListItemAggregate>> GetLicenceEstateAsync(LicenceEstateQuery query)
+    {
+        return await databaseReadService.GetLicenceEstateAsync(query);
+    }
+
+    public async Task<int> GetLicenceEstateCountAsync(LicenceEstateQuery query)
+    {
+        return await databaseReadService.GetLicenceEstateCountAsync(query);
+    }
+
+    public async Task<Dictionary<int, int>> GetLicenceEstateQueueCountsAsync(LicenceEstateQuery query)
+    {
+        return await databaseReadService.GetLicenceEstateQueueCountsAsync(query);
+    }
+
+    public async Task<List<LicenceRunHistoryItem>> GetLicenceRunHistoryAsync(string licenceNumber)
+    {
+        return await databaseReadService.GetLicenceRunHistoryAsync(licenceNumber);
+    }
+
+    public async Task<Dictionary<int, string>> GetLicenceRunDataAsync(
+        string licenceNumber,
+        int[] processRunIds)
+    {
+        return await databaseReadService.GetLicenceRunDataAsync(licenceNumber, processRunIds);
+    }
+
+    public async Task<List<string>> GetLicenceListStatusesAsync(int? processRunId)
+    {
+        return await databaseReadService.GetLicenceListStatusesAsync(processRunId);
+    }
+
+    public async Task<List<int>> GetLicenceListProcessRunIdsAsync()
+    {
+        return await databaseReadService.GetLicenceListProcessRunIdsAsync();
+    }
+
+    public async Task<List<string>> GetLicenceEstateLicenceNumbersAsync()
+    {
+        return await databaseReadService.GetLicenceEstateLicenceNumbersAsync();
+    }
+
+    public async Task<List<string>> GetLicenceListIssuersAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListDistinctIssuersAsync(processRunId);
     }
@@ -575,12 +617,12 @@ public class DatabaseAbstractionLicenceOutputService(
         return await databaseReadService.GetLicenceListRegionIdsAsync(processRunId);
     }
 
-    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListLicenceSetIdsAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListLicenceSetIdsAsync(processRunId);
     }
 
-    public async Task<List<string>> GetLicenceListIssueYearsAsync(int processRunId)
+    public async Task<List<string>> GetLicenceListIssueYearsAsync(int? processRunId)
     {
         return await databaseReadService.GetLicenceListIssueYearsAsync(processRunId);
     }

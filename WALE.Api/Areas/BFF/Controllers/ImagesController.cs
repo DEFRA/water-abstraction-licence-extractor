@@ -37,7 +37,14 @@ public class ImagesController(
             serviceName,
             fileId);
 
-        return File(data[0], "image/jpeg");
+        var image = data.FirstOrDefault();
+
+        if (image is null || image.Length == 0)
+        {
+            return NotFound();
+        }
+
+        return File(image, "image/jpeg");
     }
 
     [HttpGet]

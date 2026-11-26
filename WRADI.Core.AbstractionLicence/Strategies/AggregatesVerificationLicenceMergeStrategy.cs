@@ -17,8 +17,12 @@ public class AggregatesVerificationLicenceMergeStrategy : IVerificationLicenceMe
             return licence;
         }
 
-        var merged = AggregateVerificationMergeHelper.MergeAggregates(
-            licence.AbstractionLimits.Aggregates, aggregateVerifications);
+        var scrapedAggregates = licence.AbstractionLimits.Aggregates;
+        var (_, merged, _) = AggregateVerificationMergeHelper.Merge(
+            scrapedAggregates?.Select(a => a.Id),
+            scrapedAggregates,
+            aggregateVerifications,
+            licence.ProcessRunId);
 
         return licence.CloneWithAbstractionLimits(
             new AbstractionLimits

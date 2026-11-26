@@ -104,9 +104,9 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseWriteService.SaveLicenceFinderResultsAsync(results);
     }
 
-    public Task ClearLicenceFinderResultsAsync()
+    public Task ClearLicenceFinderResultsAsync(string licenceType)
     {
-        return databaseWriteService.ClearLicenceFinderResultsAsync();
+        return databaseWriteService.ClearLicenceFinderResultsAsync(licenceType);
     }
 
     public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()

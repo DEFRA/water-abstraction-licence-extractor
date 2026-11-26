@@ -210,9 +210,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task ClearLicenceFinderResultsAsync()
+    public async Task ClearLicenceFinderResultsAsync(string licenceType)
     {
-        var path = "/Extractor/LicenceFinder/ClearResults";
+        var path = $"/Extractor/LicenceFinder/ClearResults?licenceType={licenceType}";
         
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>

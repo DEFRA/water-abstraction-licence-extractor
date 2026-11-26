@@ -288,17 +288,22 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             0);
     }
     
-    public async Task ClearLicenceFinderResultsAsync()
+    public async Task ClearLicenceFinderResultsAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM licence_finder_result;
+                           DELETE FROM licence_finder_result
+                               WHERE licence_type = @LicenceType;
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
     }
     
     private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result)

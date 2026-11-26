@@ -27,9 +27,9 @@ public class LicenceFinderController(
     }
     
     [HttpPost]
-    public async Task<ActionResult> ClearResultsAsync()
+    public async Task<ActionResult> ClearResultsAsync([FromQuery] string licenceType)
     {
-        await abstractionLicenceCacheService.ClearLicenceFinderResultsAsync();
+        await abstractionLicenceCacheService.ClearLicenceFinderResultsAsync(licenceType);
         return Ok();
     }
     

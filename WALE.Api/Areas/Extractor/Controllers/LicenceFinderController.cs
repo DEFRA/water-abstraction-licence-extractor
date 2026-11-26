@@ -36,7 +36,7 @@ public class LicenceFinderController(
     [HttpPost]
     public async Task<ActionResult> SaveResultsAsync([FromBody] LicenceFinderCreateRequest request)
     {
-        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!, licenceType);
+        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!, request.licenceType!);
         return Ok();
     }
 }

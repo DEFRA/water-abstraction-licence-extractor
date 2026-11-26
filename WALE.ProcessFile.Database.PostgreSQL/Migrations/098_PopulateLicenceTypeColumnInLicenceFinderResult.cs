@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(96)]
+[Migration(98)]
 public class PopulateLicenceTypeColumnInLicenceFinderResult : Migration
 {
     public override void Up()

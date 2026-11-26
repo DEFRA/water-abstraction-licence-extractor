@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace WALE.ProcessFile.Database.PostgreSQL.Migrations;
 
-[Migration(95)]
+[Migration(97)]
 public class AddLicenceTypeColumnToLicenceFinderResult : Migration
 {
     private const string LicenceFinderResultTable = "licence_finder_result";

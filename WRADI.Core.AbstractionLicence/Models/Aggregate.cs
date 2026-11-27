@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Helpers;
 
 namespace WRADI.Core.AbstractionLicence.Models;
 
@@ -95,6 +96,65 @@ public class Aggregate : AbstractionLimitGroup
     public string[]? LinkedLicences { get; set; } = [];
     
     public AggregateVariation[]? Variations { get; set; }
+
+    public bool? HasDiscrepancy(string sourceLicenceNumber)
+    {
+        var isForAnotherLicence = sourceLicenceNumber != SourceLicenceNumber;
+
+        if (isForAnotherLicence)
+        {
+            return true;
+        }
+
+        var noOutgoing = ContainedIn?
+                .All(ci => ci.Direction != InformationDirection.Outgoing) == true;
+
+        if (noOutgoing)
+        {
+            return true;
+        }
+
+        if (Variations == null || Variations.Length == 0)
+        {
+            return false;
+        }
+
+        var linkedLicencesStr = GetOrderedLicenceNumberString(this);
+        var combinedTotal = GetCombinedLimitValue();
+        
+        foreach (var variation in Variations)
+        {
+            var variationLinkedLicencesStr =  GetOrderedLicenceNumberString(variation);
+            var diffLinkedLicences = linkedLicencesStr != variationLinkedLicencesStr;
+            
+            if (diffLinkedLicences)
+            {
+                return true;
+            }
+            
+            var variationCombinedTotal = variation.GetCombinedLimitValue();
+            var diffCombinedTotal = !ComparisonHelper.AreValuesEqual(combinedTotal, variationCombinedTotal);
+            
+            if (diffCombinedTotal)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private static string GetOrderedLicenceNumberString(Aggregate aggregate)
+    {
+        var allLicences = (aggregate.LinkedLicences ?? []).ToList();
+        
+        if (!string.IsNullOrWhiteSpace(aggregate.SourceLicenceNumber))
+        {
+            allLicences.Add(aggregate.SourceLicenceNumber);
+        }
+
+        return string.Join('_', allLicences.OrderBy(ll => ll));
+    }
 
     // Placeholder for user-entered aggregate description - not populated in scrape output.
     public string? Description { get; set; }

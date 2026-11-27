@@ -1,6 +1,7 @@
 using WALE.ProcessFile.Core.Enums;
 using WALE.ProcessFile.Core.Helpers;
 using WRADI.Core.AbstractionLicence.Enums;
+using WRADI.Core.AbstractionLicence.Helpers;
 using WRADI.Core.AbstractionLicence.Models;
 using WRADI.DocumentType.AbstractionLicence.Enums;
 
@@ -252,19 +253,14 @@ public static class AbstractionLimitHelper
 
         individuals.Add(newGroup);
     }
+    
     public static bool AreValuesEqual(double? value1, double? value2)
     {
-        if (value1 == null || value2 == null)
-        {
-            return false;
-        }
-
         // Tolerances work for comparing 0.42 (document) and 0.417 (NALD) in one of the tests + 41369.419 and 41360
         const double maxTolerance = 0.75;
-
-        var percentageDiff = Math.Abs(100.0 - (100.0 / value1.Value) * value2.Value);
-        return percentageDiff is >= 0 and <= maxTolerance;
+        return ComparisonHelper.AreValuesEqual(value1, value2, maxTolerance);
     }
+    
     public static double? ValueInBaseUnits(double? value, string? units)
     {
         const string baseUnit = "litres";

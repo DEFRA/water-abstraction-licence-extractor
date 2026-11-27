@@ -1,6 +1,5 @@
 using System.Text.Json;
 using WALE.ProcessFile.Core.Helpers;
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WALE.ProcessFile.Database.PostgreSQL.Helpers;
 using WRADI.Core.AbstractionLicence.Interfaces;
@@ -76,6 +75,34 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
 
+    public async Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        var path = $"/Extractor/NaldData/GetAllImpoundment?skip={skip}&take={take}";
+
+        if (regionCode != null)
+        {
+            path += $"&regionCode={regionCode}";
+        }
+        
+        if (allVersions)
+        {
+            path += "&allVersions=true";
+        }
+
+        var response = await HttpHelper.RateLimiter.Enqueue(() =>
+            httpClient.GetAsync(path));
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        return JsonSerializer.Deserialize<NaldImpoundmentDataCollection>(
+            content,
+            JsonHelper.GetSerializerOptions())!;
+    }
+
     public async Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         var path = "/Extractor/NaldData/GetLicenceStatusData";
@@ -102,6 +129,15 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             HashSet<(string, int)> Revoked,
             HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
+    public  Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
     {
         throw new NotImplementedException();
     }
@@ -160,9 +196,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         return list;
     }
 
-    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
-        var path = "/Extractor/LicenceFinder/SaveResults";
+        var path = $"/Extractor/LicenceFinder/SaveResults?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results
@@ -174,9 +210,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task ClearLicenceFinderResultsAsync()
+    public async Task ClearLicenceFinderResultsAsync(string licenceType)
     {
-        var path = "/Extractor/LicenceFinder/ClearResults";
+        var path = $"/Extractor/LicenceFinder/ClearResults?licenceType={licenceType}";
         
         var httpContent = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
         var response = await HttpHelper.RateLimiter.Enqueue(() =>

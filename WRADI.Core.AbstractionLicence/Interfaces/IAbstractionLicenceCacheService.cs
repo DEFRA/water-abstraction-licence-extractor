@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Models;
 
@@ -16,14 +15,27 @@ public interface IAbstractionLicenceCacheService
         int skip,
         int take);
     
+    Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take);
+    
     Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null);
+    
     Task<(
-            HashSet<(string, int)> Live,
-            HashSet<(string, int)> Lapsed,
-            HashSet<(string, int)> Expired,
-            HashSet<(string, int)> Revoked,
-            HashSet<(string, int)> Impoundment)>
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode);
+
+    Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode);    
     
     Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber);
     
@@ -39,9 +51,9 @@ public interface IAbstractionLicenceCacheService
     
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
-    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results);
-
-    Task ClearLicenceFinderResultsAsync();
+    Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType);
+    
+    Task ClearLicenceFinderResultsAsync(string licenceType);
     
     Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
 

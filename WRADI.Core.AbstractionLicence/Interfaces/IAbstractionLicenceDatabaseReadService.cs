@@ -48,6 +48,8 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<NaldLinkedLicenceRawData>> GetNaldLinkedLicenceRawDataAsync();
 
+    Task<List<NaldLicence>> GetNaldImpoundmentLicencesAsync(int skip, int take);
+    
     Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take);
 
     Task<(
@@ -56,10 +58,17 @@ public interface IAbstractionLicenceDatabaseReadService
         HashSet<(string, int)> Expired,
         HashSet<(string, int)> Revoked,
         HashSet<(string, int)> Impoundment)> GetNaldLicenceNumbersAsync(short? regionCode);
+    
+    Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)> GetNaldImpoundmentLicenceNumbersAsync(short? regionCode);
 
     Task<List<NaldAbstractionLicenceDataLine>> GetNaldAbsLicencesAsync(short? regionCode, int skip, int take);
 
     Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take);
+    
+    Task<List<NaldImpoundmentLicenceVersionDataLine>> GetNaldImpoundmentLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take);
 
     Task<List<NaldLicencePurposeDataLine>> GetNaldLicencePurposesAsync(short? regionCode, int skip, int take);
 

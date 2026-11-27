@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -40,6 +39,26 @@ public class DatabaseAbstractionLicenceCacheService(
         };
     }
 
+    public async Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        var impoundmentLicencesTask = databaseReadService.GetNaldImpoundmentLicencesAsync(skip, take);
+        var impoundmentLicencesVersionsTask = databaseReadService.GetNaldImpoundmentLicenceVersionsAsync(
+            regionCode,
+            allVersions,
+            skip,
+            take);
+        
+        return new NaldImpoundmentDataCollection
+        {
+            ImpoundmentLicences = await impoundmentLicencesTask,
+            ImpoundmentLicenceVersions = await impoundmentLicencesVersionsTask,
+        };
+    }
+
     public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
@@ -55,7 +74,16 @@ public class DatabaseAbstractionLicenceCacheService(
     {
         return databaseReadService.GetNaldLicenceNumbersAsync(regionCode);
     }
-    
+
+    public  Task<(
+            HashSet<(string, int)> Live,
+            HashSet<(string, int)> Terminated,
+            HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
+    {
+        return databaseReadService.GetNaldImpoundmentLicenceNumbersAsync(regionCode);
+    }
+
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         return databaseReadService.GetNaldLicenceIncrementNumberAsync(permitNumber, issueNumber);
@@ -71,14 +99,14 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseReadService.GetLicenceFinderResultsAsync(skip, take);
     }
 
-    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
-        return databaseWriteService.SaveLicenceFinderResultsAsync(results);
+        return databaseWriteService.SaveLicenceFinderResultsAsync(results, licenceType);
     }
-
-    public Task ClearLicenceFinderResultsAsync()
+    
+    public Task ClearLicenceFinderResultsAsync(string licenceType)
     {
-        return databaseWriteService.ClearLicenceFinderResultsAsync();
+        return databaseWriteService.ClearLicenceFinderResultsAsync(licenceType);
     }
 
     public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()

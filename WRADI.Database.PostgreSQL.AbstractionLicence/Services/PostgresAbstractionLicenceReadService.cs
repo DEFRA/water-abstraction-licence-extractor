@@ -2063,6 +2063,33 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         return result.ToList();
     }
 
+    public async Task<List<NaldLicence>> GetNaldImpoundmentLicencesAsync(int skip, int take)
+    {
+        await using var connection = GetPostgresConnection();
+        const string sql = """
+                           
+                           SELECT 
+                               "LIC_NO" AS LicenceNumber,
+                               "FGAC_REGION_CODE" AS RegionCode,
+                               "ID" AS Id,
+                               4 AS Type
+                           FROM nald."NALD_IMP_LICENCES"
+                           ORDER BY
+                                "LIC_NO",
+                                "FGAC_REGION_CODE"
+                           LIMIT @take
+                           OFFSET @skip;
+                           """;
+
+        var result = await QueryAsync<NaldLicence>(
+            connection,
+            sql,
+            0,
+            new { Skip = skip, Take = take });
+
+        return result.ToList();
+    }
+
     public async Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync(int skip, int take)
     {
         await using var connection = GetPostgresConnection();
@@ -2101,11 +2128,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
     }
 
     public async Task<(
-            HashSet<(string, int)> Live,
-            HashSet<(string, int)> Lapsed,
-            HashSet<(string, int)> Expired,
-            HashSet<(string, int)> Revoked,
-            HashSet<(string, int)> Impoundment)>
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Lapsed,
+        HashSet<(string, int)> Expired,
+        HashSet<(string, int)> Revoked,
+        HashSet<(string, int)> Impoundment)>
         GetNaldLicenceNumbersAsync(short? regionCode)
     {
         // Run the 5 lookups concurrently.
@@ -2121,6 +2148,31 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             await expiredTask,
             await revokedTask,
             await impoundmentTask);
+
+        // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
+        async Task<HashSet<(string, int)>> RunWithNewConnectionAsync(
+            Func<NpgsqlConnection, Task<HashSet<(string, int)>>> query)
+        {
+            await using var connection = GetPostgresConnection();
+            return await query(connection);
+        }
+    }
+
+    public async  Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+    GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
+    {
+        // Run the 3 lookups concurrently.
+        var liveTask = RunWithNewConnectionAsync(c => GetLiveImpoundmentLicenceNumbersAsync(c, regionCode));
+        var terminatedTask = RunWithNewConnectionAsync(c => GetTerminatedImpoundmentLicenceNumbersAsync(c, regionCode));
+        var revokedTask = RunWithNewConnectionAsync(c => GetRevokedImpoundmentLicenceNumbersAsync(c, regionCode));
+
+        return (
+            await liveTask,
+            await terminatedTask,
+            await revokedTask);
 
         // Important: NpgsqlConnection is not safe for concurrent commands, so each task gets its own connection.
         async Task<HashSet<(string, int)>> RunWithNewConnectionAsync(
@@ -2181,7 +2233,104 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .Select(r => (r.LicenceNumber, (int)r.RegionCode))
             .ToHashSet();
     }
+    
+    private async Task<HashSet<(string, int)>> GetLiveImpoundmentLicenceNumbersAsync(
+        NpgsqlConnection connection,
+        short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                               NALD_IMP_LICENCES."LIC_NO",
+                               NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                           FROM nald."NALD_IMP_LICENCES" NALD_IMP_LICENCES
+                           INNER JOIN nald."NALD_IMP_LIC_VERSIONS" NALD_IMP_LIC_VERSIONS
+                               ON NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                               AND NALD_IMP_LIC_VERSIONS."AIMP_ID" = NALD_IMP_LICENCES."ID"
+                           WHERE
+                               (
+                               (NALD_IMP_LICENCES."TERM_DATE" IS NULL OR NALD_IMP_LICENCES."TERM_DATE" >= CURRENT_DATE)
+                               AND (NALD_IMP_LICENCES."REV_DATE" IS NULL OR NALD_IMP_LICENCES."REV_DATE" >= CURRENT_DATE)
+                               )
+                               AND NALD_IMP_LIC_VERSIONS."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY."EFF_ST_DATE" <= CURRENT_DATE
+                                   AND (LIC_VER_SUBQUERY."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY."EFF_END_DATE" IS NULL)
+                                   AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                               )
+                               AND NALD_IMP_LIC_VERSIONS."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY_2."EFF_ST_DATE" <= CURRENT_DATE
+                                   AND (LIC_VER_SUBQUERY_2."EFF_END_DATE" >= CURRENT_DATE OR LIC_VER_SUBQUERY_2."EFF_END_DATE" IS NULL)
+                                   AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                               )
+                               AND (@RegionCode IS NULL OR NALD_IMP_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
 
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+
+        return results
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
+            .ToHashSet();
+    }
+
+    private async Task<HashSet<(string, int)>> GetRevokedImpoundmentLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                               NALD_IMP_LICENCES."LIC_NO",
+                               NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                           FROM nald."NALD_IMP_LICENCES" NALD_IMP_LICENCES
+                           INNER JOIN nald."NALD_IMP_LIC_VERSIONS" NALD_IMP_LIC_VERSIONS
+                               ON NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                               AND NALD_IMP_LIC_VERSIONS."AIMP_ID" = NALD_IMP_LICENCES."ID"
+                           WHERE
+                               NALD_IMP_LICENCES."REV_DATE" < CURRENT_DATE
+                               AND NALD_IMP_LIC_VERSIONS."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                               )
+                               AND NALD_IMP_LIC_VERSIONS."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                   AND LIC_VER_SUBQUERY_2."ISSUE_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY_3."ISSUE_NO")
+                                   FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY_3
+                                   WHERE LIC_VER_SUBQUERY_3."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                       AND LIC_VER_SUBQUERY_3."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY_3."STATUS" <> 'DRAFT'
+                                   )
+                               )
+                                AND (@RegionCode IS NULL OR NALD_IMP_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
+
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+
+        return results
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
+            .ToHashSet();
+    }
+    
     private async Task<HashSet<(string, int)>> GetRevokedLicenceNumbersAsync(NpgsqlConnection connection,
         short? regionCode)
     {
@@ -2230,6 +2379,54 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             .ToHashSet();
     }
 
+        private async Task<HashSet<(string, int)>> GetTerminatedImpoundmentLicenceNumbersAsync(NpgsqlConnection connection,
+        short? regionCode)
+    {
+        const string sql = """
+                           SELECT
+                               NALD_IMP_LICENCES."LIC_NO",
+                               NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                           FROM nald."NALD_IMP_LICENCES" NALD_IMP_LICENCES
+                           INNER JOIN nald."NALD_IMP_LIC_VERSIONS" NALD_IMP_LIC_VERSIONS
+                               ON NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE" = NALD_IMP_LICENCES."FGAC_REGION_CODE"
+                               AND NALD_IMP_LIC_VERSIONS."AIMP_ID" = NALD_IMP_LICENCES."ID"
+                           WHERE
+                               NALD_IMP_LICENCES."TERM_DATE" < CURRENT_DATE
+                               AND NALD_IMP_LIC_VERSIONS."ISSUE_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY."ISSUE_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY
+                               WHERE LIC_VER_SUBQUERY."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY."STATUS" <> 'DRAFT'
+                               )
+                               AND NALD_IMP_LIC_VERSIONS."INCR_NO" = (
+                               SELECT MAX(LIC_VER_SUBQUERY_2."INCR_NO")
+                               FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY_2
+                               WHERE LIC_VER_SUBQUERY_2."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                   AND LIC_VER_SUBQUERY_2."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                   AND LIC_VER_SUBQUERY_2."STATUS" <> 'DRAFT'
+                                   AND LIC_VER_SUBQUERY_2."ISSUE_NO" = (
+                                   SELECT MAX(LIC_VER_SUBQUERY_3."ISSUE_NO")
+                                   FROM nald."NALD_IMP_LIC_VERSIONS" LIC_VER_SUBQUERY_3
+                                   WHERE LIC_VER_SUBQUERY_3."AIMP_ID" = NALD_IMP_LIC_VERSIONS."AIMP_ID"
+                                       AND LIC_VER_SUBQUERY_3."FGAC_REGION_CODE" = NALD_IMP_LIC_VERSIONS."FGAC_REGION_CODE"
+                                       AND LIC_VER_SUBQUERY_3."STATUS" <> 'DRAFT'
+                                   )
+                               )
+                               AND (@RegionCode IS NULL OR NALD_IMP_LICENCES."FGAC_REGION_CODE" = @RegionCode);
+                           """;
+
+        var results = await QueryAsync<(string LicenceNumber, short RegionCode)>(
+            connection,
+            sql,
+            0,
+            new { RegionCode = regionCode });
+
+        return results
+            .Select(r => (r.LicenceNumber, (int)r.RegionCode))
+            .ToHashSet();
+    }
+    
     private async Task<HashSet<(string, int)>> GetLapsedLicenceNumbersAsync(NpgsqlConnection connection,
         short? regionCode)
     {
@@ -2435,7 +2632,11 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             })).ToList();
     }
 
-    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(short? regionCode, bool allVersions, int skip, int take)
+    public async Task<List<NaldLicenceVersionDataLine>> GetNaldLicenceVersionsAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
     {
         await using var connection = GetPostgresConnection();
         var sql = """
@@ -2503,6 +2704,79 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
         """;
 
         return (await QueryAsync<NaldLicenceVersionDataLine>(
+            connection,
+            sql,
+            0,
+            new
+            {
+                RegionCode = regionCode,
+                Skip = skip,
+                Take = take
+            })).ToList();
+    }
+
+    public async Task<List<NaldImpoundmentLicenceVersionDataLine>> GetNaldImpoundmentLicenceVersionsAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        await using var connection = GetPostgresConnection();
+        var sql = """
+                           SELECT
+                             "AIMP_ID" AS AimpId,
+                             "ISSUE_NO" AS IssueNo,
+                             "INCR_NO" AS IncrNo,
+                             "AIMV_TYPE" AS AimvType,
+                             "EFF_ST_DATE" AS EffStDate,
+                             "STATUS" AS Status,
+                             "ASRC_CODE" AS AsrcCode,
+                             "ACON_APAR_ID" AS AconAparId,
+                             "ACON_AADD_ID" AS AconAaddId,
+                             "MULTIPLE_LH" AS MultipleLh,
+                             "LIC_SIG_DATE" AS LicSigDate,
+                             "APP_NO" AS AppNo,
+                             "LIC_DOC_FLAG" AS LicDocFlag,
+                             "EFF_END_DATE" AS EffEndDate,
+                             "FGAC_REGION_CODE" AS FgacRegionCode
+                           FROM nald."NALD_IMP_LIC_VERSIONS"
+                           WHERE (@RegionCode is null or "FGAC_REGION_CODE" = @RegionCode)
+                           """;
+
+        if (!allVersions)
+        {
+            sql += """
+                    AND "ISSUE_NO" = (
+                        SELECT max(lic_ver_subquery."ISSUE_NO")
+                        FROM nald."NALD_IMP_LIC_VERSIONS" lic_ver_subquery
+                        WHERE lic_ver_subquery."AIMP_ID" = "NALD_IMP_LIC_VERSIONS"."AIMP_ID"
+                          AND lic_ver_subquery."FGAC_REGION_CODE" = "NALD_IMP_LIC_VERSIONS"."FGAC_REGION_CODE"
+                          AND lic_ver_subquery."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                          AND (lic_ver_subquery."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery."EFF_END_DATE" IS NULL)
+                          AND lic_ver_subquery."STATUS" <> 'DRAFT'
+                    )
+                    AND "INCR_NO" = (
+                          SELECT max(lic_ver_subquery_2."INCR_NO")
+                          FROM nald."NALD_IMP_LIC_VERSIONS" lic_ver_subquery_2
+                          WHERE lic_ver_subquery_2."AIMP_ID" = "NALD_IMP_LIC_VERSIONS"."AIMP_ID"
+                            AND lic_ver_subquery_2."FGAC_REGION_CODE" = "NALD_IMP_LIC_VERSIONS"."FGAC_REGION_CODE"
+                            AND lic_ver_subquery_2."EFF_ST_DATE" <= CURRENT_TIMESTAMP
+                            AND (lic_ver_subquery_2."EFF_END_DATE" >= CURRENT_TIMESTAMP OR lic_ver_subquery_2."EFF_END_DATE" IS NULL)
+                            AND lic_ver_subquery_2."STATUS" <> 'DRAFT'
+                      )
+                    """;
+        }
+            
+        sql += """
+            ORDER BY
+                "AIMP_ID",
+                "ISSUE_NO",
+                "INCR_NO"
+            LIMIT @take
+            OFFSET @skip;
+        """;
+
+        return (await QueryAsync<NaldImpoundmentLicenceVersionDataLine>(
             connection,
             sql,
             0,

@@ -72,3 +72,4 @@ WALE.Portal/coverage/
 .output.txt
 /Tools/WALE.Tools/Resources
 /Tools/WALE.Tools/Temp
+WALE.Api/log.txt

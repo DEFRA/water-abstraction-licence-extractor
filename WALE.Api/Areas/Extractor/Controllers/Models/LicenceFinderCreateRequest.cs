@@ -5,4 +5,6 @@ namespace WALE.Api.Areas.Extractor.Controllers.Models;
 public class LicenceFinderCreateRequest
 {
     public List<LicenceFinderResult>? results { get; set; }
+    
+    public string? licenceType { get; set; }
 }

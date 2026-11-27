@@ -1,4 +1,3 @@
-using WALE.ProcessFile.Core.Models;
 using WALE.ProcessFile.Core.Models.Nald;
 using WRADI.Core.AbstractionLicence.Interfaces;
 using WRADI.Core.AbstractionLicence.Models;
@@ -23,6 +22,15 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
+    public Task<NaldImpoundmentDataCollection> GetImpoundmentNaldDataAsync(
+        short? regionCode,
+        bool allVersions,
+        int skip,
+        int take)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<NaldLicenceStatusData> GetNaldLicenceStatusDataAsync(short? regionCode = null)
     {
         throw new NotImplementedException();
@@ -37,7 +45,16 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
     {
         throw new NotImplementedException();
     }
-    
+
+    public Task<(
+        HashSet<(string, int)> Live,
+        HashSet<(string, int)> Terminated,
+        HashSet<(string, int)> Revoked)>
+        GetNaldImpoundmentLicenceNumbersAsync(short? regionCode)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<int> GetNaldLicenceIncrementNumberAsync(string permitNumber, int issueNumber)
     {
         throw new NotImplementedException();
@@ -53,12 +70,12 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
-    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
         throw new NotImplementedException();
     }
-
-    public Task ClearLicenceFinderResultsAsync()
+    
+    public Task ClearLicenceFinderResultsAsync(string licenceType)
     {
         throw new NotImplementedException();
     }

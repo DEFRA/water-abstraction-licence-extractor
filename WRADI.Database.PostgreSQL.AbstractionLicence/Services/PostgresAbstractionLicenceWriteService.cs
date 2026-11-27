@@ -184,11 +184,11 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             });
     }
     
-    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results)
+    public async Task SaveLicenceFinderResultsAsync(List<LicenceFinderResult> results, string licenceType)
     {
         foreach (var result in results)
         {
-            await SaveLicenceFinderResultAsync(result);
+            await SaveLicenceFinderResultAsync(result, licenceType);
         }
     }
 
@@ -288,24 +288,37 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
             0);
     }
     
-    public async Task ClearLicenceFinderResultsAsync()
+    public async Task ClearLicenceFinderResultsAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM licence_finder_result;
+                           DELETE FROM licence_finder_result
+                               WHERE licence_type = @LicenceType;
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
     }
     
-    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result)
+    private async Task SaveLicenceFinderResultAsync(LicenceFinderResult result, string licenceType)
     {
         await using var connection = GetPostgresConnection();
-        const string sql = """
-                           INSERT INTO licence_finder_result (
+
+        var licenceTypeSanitised = licenceType.ToLower() switch
+        {
+            "abstraction" => "Abstraction",
+            "impoundment" => "Impoundment",
+            _ => throw new Exception($"Unknown licence type: {licenceType}")
+        };
+
+        var sql = @$"
+                            INSERT INTO licence_finder_result (
                                     permit_number,
                                     dms_permit_number,
                                     file_url,
@@ -338,7 +351,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     folder_name_auto_correct,
                                     seen_in_dms_extract,
                                     we_have_downloaded,
-                                    live_licence_found)
+                                    live_licence_found,
+                                    licence_type)
                                VALUES (
                                     @PermitNumber,
                                     @DmsPermitNumber,
@@ -372,9 +386,9 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     @FolderNameAutoCorrect,
                                     @SeenInDmsExtract,
                                     @WeHaveDownloaded,
-                                    @LiveLicenceFound)
-                           """;
-
+                                    @LiveLicenceFound,
+                                    {licenceTypeSanitised};";
+ 
         await ExecuteAsync(
             connection,
             sql,

@@ -29,6 +29,22 @@ public class NaldDataController(
         
         return Ok(naldData);
     }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetAllImpoundmentAsync(
+        [FromQuery] short? regionCode = null,
+        [FromQuery] bool? allVersions = null,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = int.MaxValue)
+    {
+        var naldData = await abstractionLicenceCacheService.GetImpoundmentNaldDataAsync(
+            regionCode,
+            allVersions ?? false,
+            skip,
+            take);
+        
+        return Ok(naldData);
+    }    
 
     [OutputCache(Duration=60)] // Doesn't change often at all
     [HttpGet]
@@ -37,6 +53,32 @@ public class NaldDataController(
         var naldLicences =
             await abstractionLicenceCacheService.GetNaldImpoundmentAndAbstractionLicencesAsync();
         return Ok(naldLicences);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetImpoundmentLicenceStatusDataAsync([FromQuery] short? regionCode = null)
+    {
+        var naldLicenceNumbers =
+            await abstractionLicenceCacheService.GetNaldImpoundmentLicenceNumbersAsync(regionCode);
+
+        return Ok(new NaldImpoundmentLicenceStatusData
+        {
+            LiveLicences = naldLicenceNumbers.Live
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),
+            TerminatedLicences = naldLicenceNumbers.Terminated
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet(),
+            RevokedLicences = naldLicenceNumbers.Revoked
+                .Select(l => FormattingHelper.StripForComparison(l.Item1, l.Item2))
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x!)
+                .ToHashSet()
+        });
     }
 
     [HttpGet]

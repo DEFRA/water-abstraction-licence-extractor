@@ -27,17 +27,16 @@ public class LicenceFinderController(
     }
     
     [HttpPost]
-    public async Task<ActionResult> ClearResultsAsync()
+    public async Task<ActionResult> ClearResultsAsync([FromQuery] string licenceType)
     {
-        await abstractionLicenceCacheService.ClearLicenceFinderResultsAsync();
+        await abstractionLicenceCacheService.ClearLicenceFinderResultsAsync(licenceType);
         return Ok();
     }
     
     [HttpPost]
-    public async Task<ActionResult> SaveResultsAsync(
-        [FromBody] LicenceFinderCreateRequest request)
+    public async Task<ActionResult> SaveResultsAsync([FromBody] LicenceFinderCreateRequest request)
     {
-        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!);
+        await abstractionLicenceCacheService.SaveLicenceFinderResultsAsync(request.results!, request.licenceType!);
         return Ok();
     }
 }

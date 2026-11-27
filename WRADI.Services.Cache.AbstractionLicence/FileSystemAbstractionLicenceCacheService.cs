@@ -80,32 +80,32 @@ public class FileSystemAbstractionLicenceCacheService(string cacheFolder) : IAbs
         throw new NotImplementedException();
     }
 
-    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync(string licenceType)
     {
         throw new NotImplementedException();
     }
 
-    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results, string licenceType)
     {
         throw new NotImplementedException();
     }
 
-    public Task<List<VersionFile>> GetVersionFilesAsync()
+    public Task<List<VersionFile>> GetVersionFilesAsync(string licenceType)
     {
         throw new NotImplementedException();
     }
 
-    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    public Task SaveVersionFilesAsync(List<VersionFile> results, string licenceType)
     {
         throw new NotImplementedException();
     }
 
-    public Task ClearVersionFilesAsync()
+    public Task ClearVersionFilesAsync(string licenceType)
     {
         throw new NotImplementedException();
     }
 
-    public Task ClearVersionFilesToDownloadAsync()
+    public Task ClearVersionFilesToDownloadAsync(string licenceType)
     {
         throw new NotImplementedException();
     }

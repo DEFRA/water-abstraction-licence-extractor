@@ -23,13 +23,13 @@ public interface IAbstractionLicenceDatabaseWriteService
     
     Task ClearLicenceFinderResultsAsync(string licenceType);
 
-    Task ClearVersionFilesAsync();
+    Task ClearVersionFilesAsync(string licenceType);
 
-    Task ClearVersionFilesToDownloadAsync();
+    Task ClearVersionFilesToDownloadAsync(string licenceType);
     
-    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results);
+    Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results, string licenceType);
 
-    Task SaveVersionFilesAsync(List<VersionFile> results);
+    Task SaveVersionFilesAsync(List<VersionFile> results, string licenceType);
     
     public Task<int> SaveLicenceSetAsync(string licenceSetId, string shortLicenceSetId, int processRunId);
 

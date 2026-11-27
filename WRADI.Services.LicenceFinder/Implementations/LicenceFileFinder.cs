@@ -630,7 +630,7 @@ public class LicenceFileFinder : ILicenceFileFinder
         List<DownloadInfoAll> results)
     {
         Console.WriteLine("ClearVersionFilesAsync started");
-        await apiClient.ClearVersionFilesAsync();
+        await apiClient.ClearVersionFilesAsync("Abstraction");
         Console.WriteLine("ClearVersionFilesAsync finished");
         
         const int chunkSize = 10_000;
@@ -639,7 +639,7 @@ public class LicenceFileFinder : ILicenceFileFinder
         
         foreach (var chunk in chunks)
         {
-            await apiClient.SaveVersionFilesAsync(chunk.ToList());    
+            await apiClient.SaveVersionFilesAsync(chunk.ToList(), "Abstraction");
             Console.WriteLine($"SaveVersionFilesAsync - Chunk {idx++} of {chunks.Count}");
         }
     }
@@ -649,7 +649,7 @@ public class LicenceFileFinder : ILicenceFileFinder
         List<DownloadInfoMissing> missingRecords)
     {
         Console.WriteLine("ClearVersionFilesToDownloadAsync started");
-        await apiClient.ClearVersionFilesToDownloadAsync();
+        await apiClient.ClearVersionFilesToDownloadAsync("Abstraction");
         Console.WriteLine("ClearVersionFilesToDownloadAsync started");
         
         const int chunkSize = 10_000;
@@ -658,7 +658,7 @@ public class LicenceFileFinder : ILicenceFileFinder
 
         foreach (var chunk in chunks)
         {
-            await apiClient.SaveVersionFilesToDownloadAsync(chunk.ToList());
+            await apiClient.SaveVersionFilesToDownloadAsync(chunk.ToList(), "Abstraction");
             Console.WriteLine($"SaveVersionFilesToDownloadAsync - Chunk {idx++} of {chunks.Count}");
         }
     }

@@ -135,9 +135,9 @@ public class GeneralApiClient(IHttpClientFactory httpClientFactory) : IGeneralAp
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task SaveVersionFilesToDownloadAsync(List<DownloadInfoMissing> results)
+    public async Task SaveVersionFilesToDownloadAsync(List<DownloadInfoMissing> results, string licenceType)
     {
-        var path = "/Extractor/VersionFiles/SaveToDownload";
+        var path = $"/Extractor/VersionFiles/SaveToDownload?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results
@@ -148,9 +148,9 @@ public class GeneralApiClient(IHttpClientFactory httpClientFactory) : IGeneralAp
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task SaveVersionFilesAsync(List<DownloadInfoAll> results)
+    public async Task SaveVersionFilesAsync(List<DownloadInfoAll> results, string licenceType)
     {
-        var path = "/Extractor/VersionFiles/SaveAll";
+        var path = $"/Extractor/VersionFiles/SaveAll?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results
@@ -161,17 +161,17 @@ public class GeneralApiClient(IHttpClientFactory httpClientFactory) : IGeneralAp
         response.EnsureSuccessStatusCode();
     }
     
-    public async Task ClearVersionFilesAsync()
+    public async Task ClearVersionFilesAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/ClearAllFiles";
+        var path = $"/Extractor/VersionFiles/ClearAllFiles?licenceType={licenceType}";
         
         var response = await _httpClient.DeleteAsync(new Uri(_httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task ClearVersionFilesToDownloadAsync()
+    public async Task ClearVersionFilesToDownloadAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/ClearDownloadFiles";
+        var path = $"/Extractor/VersionFiles/ClearDownloadFiles?licenceType={licenceType}";
         
         var response = await _httpClient.DeleteAsync(new Uri(_httpClient.BaseAddress!, path));
         response.EnsureSuccessStatusCode();

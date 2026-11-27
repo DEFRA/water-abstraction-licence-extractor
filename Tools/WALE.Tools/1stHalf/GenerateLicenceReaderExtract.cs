@@ -430,7 +430,7 @@ public static class GenerateLicenceReaderExtract
         
         if (includeVersionMatch)
         {
-            var versionFiles = await abstractionLicenceCacheService.GetVersionFilesAsync();
+            var versionFiles = await abstractionLicenceCacheService.GetVersionFilesAsync("Abstraction");
             versionFilesCount =  versionFiles.Count;
 
             foreach (var versionFile in versionFiles)

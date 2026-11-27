@@ -3178,7 +3178,7 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
             })).ToList();
     }
 
-    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -3188,17 +3188,22 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                 site_path,
                                 library_and_file_path
                            FROM public.version_files_to_download
+                               WHERE licence_type = @LicenceType;
                            """;
 
         var results = await QueryAsync<VersionFileToDownload>(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
 
         return results.ToList();
     }
 
-    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    public async Task<List<VersionFile>> GetVersionFilesAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -3212,12 +3217,17 @@ public class PostgresAbstractionLicenceReadService(INpgsqlDataSourceProvider dat
                                 file_name,
                                 file_size
                            FROM public.version_files
+                            WHERE licence_type = @LicenceType;
                            """;
 
         var results = await QueryAsync<VersionFile>(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
 
         return results.ToList();
     }

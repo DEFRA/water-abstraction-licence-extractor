@@ -109,34 +109,34 @@ public class DatabaseAbstractionLicenceCacheService(
         return databaseWriteService.ClearLicenceFinderResultsAsync(licenceType);
     }
 
-    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    public Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync(string licenceType)
     {
-        return databaseReadService.GetVersionFilesToDownloadAsync();
+        return databaseReadService.GetVersionFilesToDownloadAsync(licenceType);
     }
 
-    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    public Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results, string licenceType)
     {
-        return databaseWriteService.SaveVersionFilesToDownloadAsync(results);
+        return databaseWriteService.SaveVersionFilesToDownloadAsync(results, licenceType);
     }
 
-    public Task<List<VersionFile>> GetVersionFilesAsync()
+    public Task<List<VersionFile>> GetVersionFilesAsync(string licenceType)
     {
-        return databaseReadService.GetVersionFilesAsync();
+        return databaseReadService.GetVersionFilesAsync(licenceType);
     }
 
-    public Task SaveVersionFilesAsync(List<VersionFile> results)
+    public Task SaveVersionFilesAsync(List<VersionFile> results, string licenceType)
     {
-        return databaseWriteService.SaveVersionFilesAsync(results);
+        return databaseWriteService.SaveVersionFilesAsync(results, licenceType);
     }
 
-    public Task ClearVersionFilesAsync()
+    public Task ClearVersionFilesAsync(string licenceType)
     {
-        return databaseWriteService.ClearVersionFilesAsync();
+        return databaseWriteService.ClearVersionFilesAsync(licenceType);
     }
 
-    public Task ClearVersionFilesToDownloadAsync()
+    public Task ClearVersionFilesToDownloadAsync(string licenceType)
     {
-        return databaseWriteService.ClearVersionFilesToDownloadAsync();
+        return databaseWriteService.ClearVersionFilesToDownloadAsync(licenceType);
     }
     
     public Task<List<NaldLicence>> GetNaldImpoundmentAndAbstractionLicencesAsync()

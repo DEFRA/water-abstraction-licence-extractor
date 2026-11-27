@@ -192,23 +192,23 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
         }
     }
 
-    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results, string licenceType)
     {
         foreach (var result in results)
         {
-            await SaveVersionFileToDownloadAsync(result);
+            await SaveVersionFileToDownloadAsync(result, licenceType);
         }
     }
 
-    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    public async Task SaveVersionFilesAsync(List<VersionFile> results, string licenceType)
     {
         foreach (var result in results)
         {
-            await SaveVersionFileAsync(result);
+            await SaveVersionFileAsync(result, licenceType);
         }
     }
     
-    private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result)
+    private async Task SaveVersionFileToDownloadAsync(VersionFileToDownload result, string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -216,22 +216,31 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     permit_number,
                                     full_path,
                                     site_path,
-                                    library_and_file_path)
+                                    library_and_file_path,
+                                    licence_type)
                                VALUES (
                                     @PermitNumber,
                                     @FullPath,
                                     @SitePath,
-                                    @LibraryAndFilePath)
+                                    @LibraryAndFilePath,
+                                    @LicenceType)
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
             0,
-            result);
+            new
+            {
+                result.PermitNumber,
+                result.FullPath,
+                result.SitePath,
+                result.LibraryAndFilePath,
+                LicenceType = licenceType
+            });
     }
     
-    private async Task SaveVersionFileAsync(VersionFile result)
+    private async Task SaveVersionFileAsync(VersionFile result, string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
@@ -243,7 +252,8 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     region_id,
                                     file_name,
                                     file_id,
-                                    file_size)
+                                    file_size,
+                                    licence_type)
                                VALUES (
                                     @PermitNumber,
                                     @FullPath,
@@ -252,40 +262,62 @@ public class PostgresAbstractionLicenceWriteService(INpgsqlDataSourceProvider da
                                     @RegionId,
                                     @FileName,
                                     @FileId,
-                                    @FileSize)
+                                    @FileSize,
+                                    @LicenceType)
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
             0,
-            result);
+            new
+            {
+                result.PermitNumber,
+                result.FullPath,
+                result.SitePath,
+                result.LibraryAndFilePath,
+                result.RegionId,
+                result.FileName,
+                result.FileId,
+                result.FileSize,
+                LicenceType = licenceType
+            });
     }
 
-    public async Task ClearVersionFilesToDownloadAsync()
+    public async Task ClearVersionFilesToDownloadAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM version_files_to_download;
+                           DELETE FROM version_files_to_download
+                            WHERE licence_type = @LicenceType;
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
     }
     
-    public async Task ClearVersionFilesAsync()
+    public async Task ClearVersionFilesAsync(string licenceType)
     {
         await using var connection = GetPostgresConnection();
         const string sql = """
-                           DELETE FROM version_files;
+                           DELETE FROM version_files
+                            WHERE licence_type = @LicenceType;
                            """;
 
         await ExecuteAsync(
             connection,
             sql,
-            0);
+            0,
+            new
+            {
+                LicenceType = licenceType
+            });
     }
     
     public async Task ClearLicenceFinderResultsAsync(string licenceType)

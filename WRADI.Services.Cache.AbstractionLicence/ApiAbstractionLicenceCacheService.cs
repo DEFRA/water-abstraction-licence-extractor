@@ -220,9 +220,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync()
+    public async Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/GetToDownload";
+        var path = $"/Extractor/VersionFiles/GetToDownload?licenceType={licenceType}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -234,9 +234,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results)
+    public async Task SaveVersionFilesToDownloadAsync(List<VersionFileToDownload> results, string licenceType)
     {
-        var path = "/Extractor/VersionFiles/SaveToDownload";
+        var path = $"/Extractor/VersionFiles/SaveToDownload?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results
@@ -248,9 +248,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<List<VersionFile>> GetVersionFilesAsync()
+    public async Task<List<VersionFile>> GetVersionFilesAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/GetAll";
+        var path = $"/Extractor/VersionFiles/GetAll?licenceType={licenceType}";
 
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.GetAsync(path));
@@ -262,9 +262,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
             JsonHelper.GetSerializerOptions())!;
     }
 
-    public async Task SaveVersionFilesAsync(List<VersionFile> results)
+    public async Task SaveVersionFilesAsync(List<VersionFile> results, string licenceType)
     {
-        var path = "/Extractor/VersionFiles/SaveAll";
+        var path = $"/Extractor/VersionFiles/SaveAll?licenceType={licenceType}";
         var json = JsonSerializer.Serialize(new
         {
             results
@@ -276,9 +276,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task ClearVersionFilesAsync()
+    public async Task ClearVersionFilesAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/ClearAllFiles";
+        var path = $"/Extractor/VersionFiles/ClearAllFiles?licenceType={licenceType}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));
@@ -286,9 +286,9 @@ public class ApiAbstractionLicenceCacheService(HttpClient httpClient) : IAbstrac
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task ClearVersionFilesToDownloadAsync()
+    public async Task ClearVersionFilesToDownloadAsync(string licenceType)
     {
-        var path = "/Extractor/VersionFiles/ClearDownloadFiles";
+        var path = $"/Extractor/VersionFiles/ClearDownloadFiles?licenceType={licenceType}";
         
         var response = await HttpHelper.RateLimiter.Enqueue(() =>
             httpClient.DeleteAsync(new Uri(httpClient.BaseAddress!, path)));

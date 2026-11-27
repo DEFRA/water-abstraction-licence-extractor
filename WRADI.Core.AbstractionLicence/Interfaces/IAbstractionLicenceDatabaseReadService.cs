@@ -82,9 +82,9 @@ public interface IAbstractionLicenceDatabaseReadService
     
     Task<List<LicenceFinderResult>> GetLicenceFinderResultsAsync(int skip, int take);
     
-    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync();
+    Task<List<VersionFileToDownload>> GetVersionFilesToDownloadAsync(string licenceType);
     
-    Task<List<VersionFile>> GetVersionFilesAsync();
+    Task<List<VersionFile>> GetVersionFilesAsync(string licenceType);
     
     Task<LicenceFinderResult> GetLicenceFinderResultAsync(Guid fileId);
     

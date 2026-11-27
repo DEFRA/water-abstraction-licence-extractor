@@ -141,7 +141,7 @@ public static class AggregateVariationHelper
                 foreach (var otherAggregate in otherAggregates)
                 {
                     var matchingSourceAggregate = sourceAggregates
-                        .FirstOrDefault(sourceAggregate => AggregateHelper.AreAggregatesFundamentallyEqual(
+                        .FirstOrDefault(sourceAggregate => AggregateHelper.AreAggregatesSimilarEnoughToGroup(
                             sourceAggregate,
                             otherAggregate));
 

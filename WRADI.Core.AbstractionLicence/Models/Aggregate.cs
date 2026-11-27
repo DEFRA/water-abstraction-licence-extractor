@@ -94,29 +94,40 @@ public class Aggregate : AbstractionLimitGroup
     public string? NaldType { get; set; }
     
     public string[]? LinkedLicences { get; set; } = [];
-    
+
     public AggregateVariation[]? Variations { get; set; }
 
-    public bool? HasDiscrepancy(string sourceLicenceNumber)
+    public bool? HasDiscrepancy { get; private set; }
+    
+    public string? DiscrepancyReason { get; private set; }
+
+    public void SetHasDiscrepancy(string? sourceLicenceNumber)
     {
-        var isForAnotherLicence = sourceLicenceNumber != SourceLicenceNumber;
+        var isForAnotherLicence = sourceLicenceNumber != null && sourceLicenceNumber != SourceLicenceNumber;
 
         if (isForAnotherLicence)
         {
-            return true;
+            HasDiscrepancy = true;
+            DiscrepancyReason = "Source licence is different - means we must have preffered a different one (as it was richer or whatever)";
+            
+            return;
         }
 
         var noOutgoing = ContainedIn?
-                .All(ci => ci.Direction != InformationDirection.Outgoing) == true;
+            .All(ci => ci.Direction != InformationDirection.Outgoing) == true;
 
         if (noOutgoing)
         {
-            return true;
+            HasDiscrepancy = true;
+            DiscrepancyReason = "This is incoming or in same group. We didn't link back which is odd";
+            
+            return;
         }
 
         if (Variations == null || Variations.Length == 0)
         {
-            return false;
+            HasDiscrepancy = true;
+            return;
         }
 
         var linkedLicencesStr = GetOrderedLicenceNumberString(this);
@@ -129,7 +140,10 @@ public class Aggregate : AbstractionLimitGroup
             
             if (diffLinkedLicences)
             {
-                return true;
+                HasDiscrepancy = true;
+                DiscrepancyReason = "We had either more, or had less linked licences then the other one";
+                
+                return;
             }
             
             var variationCombinedTotal = variation.GetCombinedLimitValue();
@@ -137,11 +151,17 @@ public class Aggregate : AbstractionLimitGroup
             
             if (diffCombinedTotal)
             {
-                return true;
+                HasDiscrepancy = true;
+                DiscrepancyReason = "The combined total was different between this and a variation";
+                
+                return;
             }
+            
+            // TODO check on other properties too
         }
         
-        return false;
+        HasDiscrepancy = false;
+        DiscrepancyReason = null;
     }
 
     private static string GetOrderedLicenceNumberString(Aggregate aggregate)

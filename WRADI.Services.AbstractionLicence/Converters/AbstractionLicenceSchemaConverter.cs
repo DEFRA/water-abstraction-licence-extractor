@@ -1365,10 +1365,10 @@ public static class AbstractionLicenceSchemaConverter
                     }
 
                     if (matchingLicenceSet.AggregateSets.Any(
-                        agg => AggregateHelper.AreAggregatesFundamentallyEqual(agg, aggregate)))
+                        agg => AggregateHelper.AreAggregatesSimilarEnoughToGroup(agg, aggregate)))
                     {
                         var primary = matchingLicenceSet.AggregateSets.First(agg =>
-                            AggregateHelper.AreAggregatesFundamentallyEqual(agg, aggregate));
+                            AggregateHelper.AreAggregatesSimilarEnoughToGroup(agg, aggregate));
 
                         var variations = new List<AggregateVariation>();
                         variations.AddRange(primary.Variations ?? []);
@@ -1612,11 +1612,10 @@ public static class AbstractionLicenceSchemaConverter
             true,
             primaryLicence.LicenceNumber?.Value);
 
+        AggregateHelper.SetDiscrepancyInfo(returnLicenceSets);
+        
         return returnLicenceSets;
     }
-
-    
-
 
     private static List<LicenceSet> RemoveSingleLicenceSetsWhenOtherLicenceSetsArePresent(
         IEnumerable<LicenceSet> licenceSets,

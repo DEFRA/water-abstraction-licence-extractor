@@ -48,33 +48,60 @@ public static class AggregateHelper
 
     public static bool AreAggregatesFundamentallyEqual(
         Aggregate sourceAggregate,
-        Aggregate otherAggregate) 
+        Aggregate otherAggregate)
     {
+        var percentageLikeness = CalculateAggregatesSimilarity(sourceAggregate, otherAggregate);
+        const int equalityCutoff = 100;
+        
+        return percentageLikeness == equalityCutoff;
+    }
+    
+    public static bool AreAggregatesSimilarEnoughToGroup(
+        Aggregate sourceAggregate,
+        Aggregate otherAggregate)
+    {
+        var percentageLikeness = CalculateAggregatesSimilarity(sourceAggregate, otherAggregate);
+        const int similarCutoff = 90;
+        
+        return percentageLikeness >= similarCutoff;
+    }
+
+    private static int CalculateAggregatesSimilarity(
+        Aggregate sourceAggregate,
+        Aggregate otherAggregate)
+    {
+        var percentageLikeness = 100;
+        
         if (sourceAggregate.PrimaryType == PrimaryType.InLicence
             || otherAggregate.PrimaryType == PrimaryType.InLicence)
         {
-            return false;
+            percentageLikeness -= 90;
         }
         
         if (sourceAggregate.LinkedLicences?.Length != otherAggregate.LinkedLicences?.Length)
         {
-            return false;
+            percentageLikeness -= 5;
         }
         
         if (sourceAggregate.Limits.Count != otherAggregate.Limits.Count)
         {
-            return false;
+            percentageLikeness -= 5;
         }
 
         if (sourceAggregate.LinkedLicences != null && otherAggregate.LinkedLicences != null)
         {
+            const int onlyItemValue = 50;
+            const int multipleItemsValue = 5;
+            
             // Source contains a linked licence not in other
             foreach (var sourceLinkedLicence in sourceAggregate.LinkedLicences!)
             {
                 if (sourceLinkedLicence != otherAggregate.SourceLicenceNumber
                     && !otherAggregate.LinkedLicences.Contains(sourceLinkedLicence))
                 {
-                    return false;
+                    percentageLikeness -= sourceAggregate.LinkedLicences.Length == 1
+                        ? onlyItemValue
+                        : multipleItemsValue;
                 }
             }
 
@@ -84,7 +111,9 @@ public static class AggregateHelper
                 if (otherLinkedLicence != sourceAggregate.SourceLicenceNumber
                     && !sourceAggregate.LinkedLicences.Contains(otherLinkedLicence))
                 {
-                    return false;
+                    percentageLikeness -= otherAggregate.LinkedLicences.Length == 1
+                        ? onlyItemValue
+                        : multipleItemsValue;
                 }
             }
         }
@@ -93,7 +122,7 @@ public static class AggregateHelper
         {
             if (otherAggregate.Limits.All(otherLimit => !otherLimit.Value.FloatingEqualTo(sourceLimit.Value)))
             {
-                return false;
+                percentageLikeness -= 5;
             }
         }
         
@@ -101,11 +130,54 @@ public static class AggregateHelper
         {
             if (sourceAggregate.Limits.All(sourceLimit => !sourceLimit.Value.FloatingEqualTo(otherLimit.Value)))
             {
-                return false;
+                percentageLikeness -= 5;
             }
         }
         
-        return true;
+        return percentageLikeness;
+    }
+    
+    public static void SetDiscrepancyInfo(List<LicenceSet> licenceSets)
+    {
+        foreach (var licenceSet in licenceSets)
+        {
+            SetDiscrepancyInfo(licenceSet.Licences);
+            
+            if (licenceSet.AggregateSets == null)
+            {
+                continue;
+            }
+
+            foreach (var aggregate in licenceSet.AggregateSets!)
+            {
+                aggregate.SetHasDiscrepancy(null);
+            }
+        }
+    }
+    
+    private static void SetDiscrepancyInfo(IEnumerable<Licence> licences)
+    {
+        var okayLicences = licences
+            .Where(l => l.Status == ScrapeStatus.Ok)
+            .ToList();
+
+        foreach (var licence in okayLicences)
+        {
+            if (string.IsNullOrWhiteSpace(licence.LicenceNumber?.Value))
+            {
+                continue;
+            }
+            
+            if (licence.AbstractionLimits.Aggregates == null)
+            {
+                continue;
+            }
+            
+            foreach (var aggregate in licence.AbstractionLimits.Aggregates)
+            {
+                aggregate.SetHasDiscrepancy(licence.LicenceNumber!.Value!);
+            }
+        }
     }
 
     public static void DeDuplicateAggregates(IEnumerable<Licence> licences)
@@ -305,7 +377,7 @@ public static class AggregateHelper
                     var newAggregates = new List<Aggregate>();
 
                     var licenceAlreadyHasAggregate = licenceSetLicence.AbstractionLimits.Aggregates!
-                        .Any(agg => AreAggregatesFundamentallyEqual(agg, aggregate));
+                        .Any(agg => AreAggregatesSimilarEnoughToGroup(agg, aggregate));
 
                     foreach (var licenceAggregate in licenceSetLicence.AbstractionLimits.Aggregates!)
                     {

@@ -240,6 +240,8 @@ public static class SharedHelper
                 }
             }
         }
+        
+        AggregateHelper.SetDiscrepancyInfo(allLicenceSets);
     }
 
     private static int GetInt32(object jsonObject)

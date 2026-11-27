@@ -104,6 +104,7 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].Variations);
         Assert.Equal(2, licence1.AbstractionLimits.Aggregates[0].Variations!.Length);
         Assert.False(licence1.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Null(licence1.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal("10101002-LVUNKNOWN-LL-10101001-10101003-C30", licence1.AbstractionLimits.Aggregates[0].Variations![0].Id);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C30", licence1.AbstractionLimits.Aggregates[0].Variations![1].Id);
         Assert.Equal("Different source licence / different order", licence1.AbstractionLimits.Aggregates[0].Variations![0].Difference);
@@ -129,7 +130,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licence2.AbstractionLimits.Aggregates);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0]);
         Assert.Equal("10101002-LVUNKNOWN-LL-10101001-10101003-C30", licence2.AbstractionLimits.Aggregates[0].Id);
-        Assert.False(licence2.AbstractionLimits.Aggregates[0].HasDiscrepancy);
         Assert.False(licence2.AbstractionLimits.Aggregates[0].ContainsLegalText);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(2, licence2.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
@@ -145,6 +145,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C30", licence2.AbstractionLimits.Aggregates[0].Variations![1].Id);
         Assert.Equal("Different source licence / different order", licence2.AbstractionLimits.Aggregates[0].Variations![0].Difference);
         Assert.Equal("Different source licence / different order", licence2.AbstractionLimits.Aggregates[0].Variations![1].Difference);
+        Assert.False(licence2.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Null(licence2.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal(expectedLicenceSetId, licence2.LicenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence2.LicenceSets[0].LicenceSetType);
         
@@ -165,7 +167,6 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licence3.AbstractionLimits.Aggregates);
         Assert.NotNull(licence3.AbstractionLimits.Aggregates[0]);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-C30", licence3.AbstractionLimits.Aggregates[0].Id);
-        Assert.False(licence3.AbstractionLimits.Aggregates[0].HasDiscrepancy);
         Assert.False(licence3.AbstractionLimits.Aggregates[0].ContainsLegalText);
         Assert.NotNull(licence3.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(2, licence3.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
@@ -181,6 +182,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Equal("10101002-LVUNKNOWN-LL-10101001-10101003-C30", licence3.AbstractionLimits.Aggregates[0].Variations![1].Id);
         Assert.Equal("Different source licence / different order", licence3.AbstractionLimits.Aggregates[0].Variations![0].Difference);
         Assert.Equal("Different source licence / different order", licence3.AbstractionLimits.Aggregates[0].Variations![1].Difference);
+        Assert.False(licence3.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Null(licence3.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal(expectedLicenceSetId, licence3.LicenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence3.LicenceSets[0].LicenceSetType);
         
@@ -364,7 +367,7 @@ public class PdfPigNoOcrPdfTests
     }
     
     [Fact]
-    public async Task When3LicencesEachLinkingToEachOther_SameLicences_1ValueDoesNotMatch_ThenSingleLicenceSetWithSingleAggregateSetAnd2AggregatesMade() // TODO check title
+    public async Task When3LicencesEachLinkingToEachOther_SameLicences_1ValueDoesNotMatch_ThenSingleLicenceSetWithSingleAggregateSetAnd2VariationsMade_HasDiscrepancySet()
     {
         var licence1MatchesResult = GetLicenceMatchesResult(
             "1/01/01/001",
@@ -441,6 +444,7 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licence1.AbstractionLimits.Aggregates);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0]);
         Assert.True(licence1.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Equal("CombinedTotalDifferent", licence1.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.False(licence1.AbstractionLimits.Aggregates[0].ContainsLegalText);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(2, licence1.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
@@ -478,6 +482,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licence2.AbstractionLimits.Aggregates[0].Limits);
         Assert.Equal("cubic meters", licence2.AbstractionLimits.Aggregates[0].Limits[0].Units);
         Assert.Equal(30, licence2.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.True(licence2.AbstractionLimits.Aggregates![0].HasDiscrepancy);
+        Assert.Equal("CombinedTotalDifferent", licence2.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Single(licence2.LicenceSets);
         Assert.Equal(expectedLicenceSetId, licence2.LicenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence2.LicenceSets[0].LicenceSetType);
@@ -506,6 +512,8 @@ public class PdfPigNoOcrPdfTests
         Assert.Single(licence3.AbstractionLimits.Aggregates[0].Limits);
         Assert.Equal("cubic meters", licence3.AbstractionLimits.Aggregates[0].Limits[0].Units);
         Assert.Equal(60, licence3.AbstractionLimits.Aggregates[0].Limits[0].Value);
+        Assert.True(licence3.AbstractionLimits.Aggregates![0].HasDiscrepancy);
+        Assert.Equal("CombinedTotalDifferent", licence3.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Single(licence3.LicenceSets);
         Assert.Equal(expectedLicenceSetId, licence3.LicenceSets[0].LicenceSetId);
         Assert.Equal(LicenceSetType.LicencesGroupedByAbstractionLimits, licence3.LicenceSets[0].LicenceSetType);
@@ -623,6 +631,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence1.AbstractionLimits.Aggregates);
         Assert.Single(licence1.AbstractionLimits.Aggregates);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0]);
+        Assert.True(licence1.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Equal("IsSuperset", licence1.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-10101004-C30", licence1.AbstractionLimits.Aggregates[0].Id);
         Assert.True(licence1.AbstractionLimits.Aggregates[0].ContainsLegalText);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].LinkedLicences);
@@ -661,6 +671,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence2.AbstractionLimits.Aggregates);
         Assert.Single(licence2.AbstractionLimits.Aggregates);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0]);
+        Assert.True(licence2.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Equal("IsSuperset", licence2.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-10101004-C30", licence2.AbstractionLimits.Aggregates[0].Id);
         Assert.Equal("1/01/01/003", licence2.AbstractionLimits.Aggregates[0].SourceLicenceNumber);
         Assert.NotNull(licence2.AbstractionLimits.Aggregates[0].LinkedLicences);
@@ -699,6 +711,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence3.AbstractionLimits.Aggregates);
         Assert.Single(licence3.AbstractionLimits.Aggregates);
         Assert.NotNull(licence3.AbstractionLimits.Aggregates[0]);
+        Assert.True(licence3.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Equal("IsSuperset", licence3.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-10101004-C30", licence3.AbstractionLimits.Aggregates[0].Id);
         Assert.NotNull(licence3.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(3, licence3.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);
@@ -720,6 +734,8 @@ public class PdfPigNoOcrPdfTests
         // Check aggregate sets
         Assert.NotNull(licenceSets[0].AggregateSets!);
         Assert.Single(licenceSets[0].AggregateSets!);
+        Assert.True(licenceSets[0].AggregateSets![0].HasDiscrepancy);
+        Assert.Equal("IsSuperset", licenceSets[0].AggregateSets![0].DiscrepancyReason);
         Assert.Equal("10101003-LVUNKNOWN-LL-10101001-10101002-10101004-C30", licenceSets[0].AggregateSets![0].Id);
         Assert.True(licenceSets[0].AggregateSets![0].ContainsLegalText);
         Assert.Equal("1/01/01/003", licenceSets[0].AggregateSets![0].SourceLicenceNumber);
@@ -845,6 +861,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence1.AbstractionLimits.Aggregates);
         Assert.Single(licence1.AbstractionLimits.Aggregates);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0]);
+        Assert.True(licence1.AbstractionLimits.Aggregates[0].HasDiscrepancy); // TODOO HERE
+        Assert.Equal("IsSuperset", licence1.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.Equal("10101004-LVUNKNOWN-LL-10101001-10101002-10101003-10101005-C30", licence1.AbstractionLimits.Aggregates[0].Id);
         Assert.Equal("1/01/01/004", licence1.AbstractionLimits.Aggregates[0].SourceLicenceNumber);
         Assert.True(licence1.AbstractionLimits.Aggregates[0].ContainsLegalText);
@@ -1127,6 +1145,8 @@ public class PdfPigNoOcrPdfTests
         Assert.NotNull(licence1.AbstractionLimits.Aggregates);
         Assert.Equal(2, licence1.AbstractionLimits.Aggregates.Length);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0]);
+        Assert.False(licence1.AbstractionLimits.Aggregates[0].HasDiscrepancy);
+        Assert.Null(licence1.AbstractionLimits.Aggregates[0].DiscrepancyReason);
         Assert.True(licence1.AbstractionLimits.Aggregates[0].ContainsLegalText);
         Assert.NotNull(licence1.AbstractionLimits.Aggregates[0].LinkedLicences);
         Assert.Equal(2, licence1.AbstractionLimits.Aggregates[0].LinkedLicences!.Length);

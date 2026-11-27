@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using WRADI.Core.AbstractionLicence.Constants;
 using WRADI.Core.AbstractionLicence.Enums;
 using WRADI.Core.AbstractionLicence.Helpers;
 
@@ -103,23 +104,13 @@ public class Aggregate : AbstractionLimitGroup
 
     public void SetHasDiscrepancy(string? sourceLicenceNumber)
     {
-        var isForAnotherLicence = sourceLicenceNumber != null && sourceLicenceNumber != SourceLicenceNumber;
-
-        if (isForAnotherLicence)
-        {
-            HasDiscrepancy = true;
-            DiscrepancyReason = "Source licence is different - means we must have preffered a different one (as it was richer or whatever)";
-            
-            return;
-        }
-
         var noOutgoing = ContainedIn?
             .All(ci => ci.Direction != InformationDirection.Outgoing) == true;
 
         if (noOutgoing)
         {
             HasDiscrepancy = true;
-            DiscrepancyReason = "This is incoming or in same group. We didn't link back which is odd";
+            DiscrepancyReason = DiscrepancyReasons.NoLinkBack;
             
             return;
         }
@@ -135,14 +126,23 @@ public class Aggregate : AbstractionLimitGroup
         
         foreach (var variation in Variations)
         {
-            var variationLinkedLicencesStr =  GetOrderedLicenceNumberString(variation);
+            var variationLinkedLicencesStr = GetOrderedLicenceNumberString(variation);
+            
             var diffLinkedLicences = linkedLicencesStr != variationLinkedLicencesStr;
             
             if (diffLinkedLicences)
             {
                 HasDiscrepancy = true;
-                DiscrepancyReason = "We had either more, or had less linked licences then the other one";
                 
+                if (linkedLicencesStr.Length > variationLinkedLicencesStr.Length)
+                {
+                    DiscrepancyReason = DiscrepancyReasons.IsSuperset; // TODO more checks to confirm this
+                }
+                else
+                {
+                    DiscrepancyReason = DiscrepancyReasons.DiffLinkedLicences;
+                }
+
                 return;
             }
             
@@ -152,7 +152,7 @@ public class Aggregate : AbstractionLimitGroup
             if (diffCombinedTotal)
             {
                 HasDiscrepancy = true;
-                DiscrepancyReason = "The combined total was different between this and a variation";
+                DiscrepancyReason = DiscrepancyReasons.CombinedTotalDifferent;
                 
                 return;
             }
